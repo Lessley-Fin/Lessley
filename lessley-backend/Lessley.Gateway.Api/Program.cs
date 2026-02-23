@@ -85,6 +85,12 @@ builder.Services.Configure<AuthConfig>(builder.Configuration.GetSection(nameof(A
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection(nameof(JwtConfig)));
 builder.Services.AddScoped<IJwtService, JwtService>();
 
+builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =>
+{
+    var baseUrl = builder.Configuration["OpenFinanceConfig:BaseUrl"] ?? throw new InvalidOperationException("base url for open finance must be initialized");
+    client.BaseAddress = new Uri(baseUrl);
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
