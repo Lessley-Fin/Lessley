@@ -54,32 +54,33 @@ services:
       - mongodb
 
 # --- Your Microservices ---
-  # proxy:
-  #   build:
-  #     context: .             # Context is solution root so it can see shared libs
-  #     dockerfile: aero-auth/Dockerfile
-  #   restart: always
-  #   ports:
-  #     - "5002:8080"          # Map host 5002 to container 8080
-  #   environment:
-  #     # 1. Development Mode (Enables Swagger)
-  #     - ASPNETCORE_ENVIRONMENT=Development
+  gateway:
+    image: lessley/gateway:dev
+    build:
+      context: ../lessley-backend/Lessley.Gateway.Api
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5202:8080"          # Map host 5002 to container 8080
+    environment:
+      # 1. Development Mode (Enables Swagger)
+      - ASPNETCORE_ENVIRONMENT=Development
 
-  #     # CRITICAL: Use the service names (rabbitmq, postgres) not localhost
-  #     - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASS}
+      # CRITICAL: Use the service names (rabbitmq, postgres) not localhost
+      - ConnectionStrings__MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
 
-  #     # 2. JWT Config (Using double underscore __ to represent nesting)
-  #     - JwtConfig__Key=${JWT_KEY}
-  #     - JwtConfig__Issuer=${JWT_ISSUER}
-  #     - JwtConfig__Audience=${JWT_AUDIENCE}
+      # 2. JWT Config (Using double underscore __ to represent nesting)
+      - JwtConfig__Key=${JWT_KEY}
+      - JwtConfig__Issuer=${JWT_ISSUER}
+      - JwtConfig__Audience=${JWT_AUDIENCE}
 
-  #     # 3. Bootstrap Config
-  #     - Bootstrap__Key=${BOOTSTRAP_KEY}
-  #     - Bootstrap__Username=${BOOTSTRAP_USER}
-  #     - Bootstrap__Password=${BOOTSTRAP_PASS}
-  #     - Bootstrap__Email=${BOOTSTRAP_EMAIL}
-  #   depends_on:
-  #     - postgres
+      # 3. Bootstrap Config
+      - Bootstrap__Key=${BOOTSTRAP_KEY}
+      - Bootstrap__Username=${BOOTSTRAP_USER}
+      - Bootstrap__Password=${BOOTSTRAP_PASS}
+      - Bootstrap__Email=${BOOTSTRAP_EMAIL}
+    depends_on:
+      - mongodb
 
 # Defined volumes for persistence
 volumes:

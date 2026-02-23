@@ -1,10 +1,9 @@
-using Lessley.Gateway.Api.Configuration;
+﻿using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Enums;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
