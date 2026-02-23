@@ -1,0 +1,87 @@
+services:
+  # --- RabbitMQ Service ---
+  rabbitmq:
+    image: rabbitmq:4.1.4-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- MongoDB Service ---
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Mongo Express (MongoDB GUI) ---
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASS}
+      ME_CONFIG_MONGODB_URL: mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${DB_PASS}
+    depends_on:
+      - mongodb
+
+# --- Your Microservices ---
+  # proxy:
+  #   build:
+  #     context: .             # Context is solution root so it can see shared libs
+  #     dockerfile: aero-auth/Dockerfile
+  #   restart: always
+  #   ports:
+  #     - "5002:8080"          # Map host 5002 to container 8080
+  #   environment:
+  #     # 1. Development Mode (Enables Swagger)
+  #     - ASPNETCORE_ENVIRONMENT=Development
+
+  #     # CRITICAL: Use the service names (rabbitmq, postgres) not localhost
+  #     - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASS}
+
+  #     # 2. JWT Config (Using double underscore __ to represent nesting)
+  #     - JwtConfig__Key=${JWT_KEY}
+  #     - JwtConfig__Issuer=${JWT_ISSUER}
+  #     - JwtConfig__Audience=${JWT_AUDIENCE}
+
+  #     # 3. Bootstrap Config
+  #     - Bootstrap__Key=${BOOTSTRAP_KEY}
+  #     - Bootstrap__Username=${BOOTSTRAP_USER}
+  #     - Bootstrap__Password=${BOOTSTRAP_PASS}
+  #     - Bootstrap__Email=${BOOTSTRAP_EMAIL}
+  #   depends_on:
+  #     - postgres
+
+# Defined volumes for persistence
+volumes:
+  rabbitmq_data:
+  mongodb_data:
