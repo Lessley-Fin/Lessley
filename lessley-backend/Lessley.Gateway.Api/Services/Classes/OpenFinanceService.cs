@@ -36,6 +36,31 @@ namespace Lessley.Gateway.Api.Services.Classes
             return res?.AccessToken ?? throw new InvalidOperationException("Failed to extract the access token from the API response.");
         }
 
+        public async Task<ConnectionResponse> InitiateConnectionJourney(string username)
+        {
+            var accessToken = await CreateAccessToken(username);
+
+            var payload = new
+            {
+                includeFakeProviders = true
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "v2/connections")
+            {
+                Content = JsonContent.Create(payload)
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var res = await response.Content.ReadFromJsonAsync<ConnectionResponse>(options);
+
+            return res ?? throw new InvalidOperationException("Failed to generate connect URL.");
+        }
+
         public async Task<OBTransactionsResponse> GetTransactions(string username)
         {
             var clientId = _configuration["OpenFinanceConfig:ClientId"];
