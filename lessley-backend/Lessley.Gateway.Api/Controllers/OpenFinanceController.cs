@@ -1,4 +1,4 @@
-﻿using Lessley.Gateway.Api.Services.Interfaces;
+using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lessley.Gateway.Api.Controllers
@@ -20,6 +20,13 @@ namespace Lessley.Gateway.Api.Controllers
         public async Task<IActionResult> CreateAccessToken([FromRoute] string userId)
         {
             var accessToken = await _openFinanceService.CreateAccessToken(userId);
+            return Ok(accessToken);
+        }
+
+        [HttpGet("transactions/{userId}")]
+        public async Task<IActionResult> GetTransactions([FromRoute] string userId)
+        {
+            var accessToken = await _openFinanceService.GetTransactions(userId);
             return Ok(accessToken);
         }
     }
