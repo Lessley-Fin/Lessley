@@ -79,6 +79,9 @@ services:
       - Bootstrap__Username=${BOOTSTRAP_USER}
       - Bootstrap__Password=${BOOTSTRAP_PASS}
       - Bootstrap__Email=${BOOTSTRAP_EMAIL}
+
+      - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
+      - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
     depends_on:
       - mongodb
 
