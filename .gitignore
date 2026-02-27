@@ -1,0 +1,30 @@
+# Environment variables - DO NOT COMMIT
+.env
+.env.local
+.env.*.local
+# Explicit project env file
+/lessley-cd/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+bin/
+obj/
+dist/
+build/
+
+# Dependencies
+node_modules/
+venv/
+
+# Logs
+*.log
+logs/
