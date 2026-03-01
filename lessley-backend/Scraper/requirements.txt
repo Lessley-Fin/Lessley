@@ -1,0 +1,4 @@
+httpx[http2]==0.28.1
+motor==3.7.1
+python-dotenv==1.1.1
+openai==1.108.1
