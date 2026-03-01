@@ -85,6 +85,26 @@ services:
     depends_on:
       - mongodb
 
+  # scraper-hot:
+  #   image: lessley/scraper-hot:dev
+  #   build:
+  #     context: ../lessley-backend/Scraper
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   environment:
+  #     - SCRAPER_NAME=hot
+  #     - SCRAPER_PAGE_START=${HOT_SCRAPER_PAGE_START}
+  #     - SCRAPER_MAX_PAGES=${HOT_SCRAPER_MAX_PAGES}
+  #     - SCRAPER_REQUEST_DELAY=${HOT_SCRAPER_REQUEST_DELAY}
+  #     - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+  #     - MONGO_DATABASE=${DB_NAME}
+  #     - MONGO_OFFERS_COLLECTION=${SCRAPER_OFFERS_COLLECTION}
+  #     - MONGO_CARDS_COLLECTION=${SCRAPER_CARDS_COLLECTION}
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #     - OPENAI_MODEL=${OPENAI_MODEL}
+  #   depends_on:
+  #     - mongodb
+
 # Defined volumes for persistence
 volumes:
   rabbitmq_data:
