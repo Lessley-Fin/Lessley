@@ -20,6 +20,8 @@ bin/
 obj/
 dist/
 build/
+__pycache__/
+*.pyc
 
 # Dependencies
 node_modules/
@@ -28,3 +30,5 @@ venv/
 # Logs
 *.log
 logs/
+
+/lessley-backend/Scraper/outputs/*

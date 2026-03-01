@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  scraper-hot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lessley-scraper-hot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SCRAPER_NAME: hot
