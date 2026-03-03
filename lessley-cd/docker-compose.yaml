@@ -53,7 +53,7 @@ services:
     depends_on:
       - mongodb
 
-# --- Your Microservices ---
+  # --- Your Microservices ---
   gateway:
     image: lessley/gateway:dev
     build:
@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "5202:8080"          # Map host 5002 to container 8080
+      - "5202:8080" # Map host 5002 to container 8080
     environment:
       # 1. Development Mode (Enables Swagger)
       - ASPNETCORE_ENVIRONMENT=Development
@@ -77,7 +77,7 @@ services:
       # 3. Bootstrap Config
       - Bootstrap__Key=${BOOTSTRAP_KEY}
       - Bootstrap__Username=${BOOTSTRAP_USER}
-      - Bootstrap__Password=${BOOTSTRAP_PASS}
+      - Bootstrap__Password=${BOOTSTRAP_PASSWORD}
       - Bootstrap__Email=${BOOTSTRAP_EMAIL}
 
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
