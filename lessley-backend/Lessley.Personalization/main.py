@@ -4,8 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import aio_pika
 
+from config import settings
+
 # --- RabbitMQ Configuration ---
-RABBITMQ_URL = "amqp://guest:guest@localhost/"
 QUEUE_NAME = "personalize_calc_history_queue"
 ROUTING_KEY = "Personalize.calc_history"
 
@@ -30,7 +31,7 @@ async def consume_rabbitmq():
     Background task to maintain the RabbitMQ connection and listen for events.
     """
     try:
-        connection = await aio_pika.connect_robust(RABBITMQ_URL)
+        connection = await aio_pika.connect_robust(settings.ConnectionStrings__Rabbit)
         channel = await connection.channel()
 
         # Declare the exchange and queue to ensure they exist
@@ -42,7 +43,9 @@ async def consume_rabbitmq():
         # Bind the queue to the specific event topic
         await queue.bind(exchange, routing_key=ROUTING_KEY)
 
-        print(f"[*] Waiting for messages on '{ROUTING_KEY}'. To exit press CTRL+C")
+        print(
+            f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C"
+        )
         await queue.consume(process_calc_history_message)
 
         # Keep the connection open indefinitely
@@ -73,5 +76,10 @@ app = FastAPI(
 # --- REST Endpoints ---
 @app.get("/health")
 async def health_check():
-    """Simple HTTP endpoint for the API Gateway or Kubernetes to verify the service is alive."""
-    return {"status": "healthy", "service": "Personalization"}
+    """Simple HTTP endpoint for the API Gateway to verify the service is alive."""
+    # Returning data from our config to prove it works!
+    return {
+        "status": "healthy",
+        "environment": settings.environment,
+        "rabbitmq_configured": bool(settings.rabbitmq_url),
+    }
