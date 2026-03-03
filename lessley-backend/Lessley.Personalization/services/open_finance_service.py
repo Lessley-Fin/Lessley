@@ -9,17 +9,12 @@ class OpenFinanceService:
         self.client_id = settings.OpenFinanceConfig_ClientId
         self.client_secret = settings.OpenFinanceConfig_ClientSecret
 
-    async def get_user_transactions_last_3_months(self, user_id: str):
+    async def http_get_access_token(self, user_id: str) -> str:
         """
-        Retrieves banking data for the past 90 days.
+        Retrieves an access token for the given user ID.
         """
-        # Calculate the date 90 days ago
-        from_date = (datetime.utcnow() - timedelta(days=90)).date()
-
-        # We use httpx.AsyncClient exactly like HttpClient in C#
         async with httpx.AsyncClient(base_url=self.base_url) as client:
-            # 1. Get Token [cite: 388]
-            token_response = await client.post(
+            response = await client.post(
                 "/oauth/token",
                 json={
                     "userId": user_id,
@@ -27,43 +22,67 @@ class OpenFinanceService:
                     "clientSecret": self.client_secret,
                 },
             )
-            token_response.raise_for_status()
-            token_data = token_response.json()
-            token = token_data.get("accessToken")
-            headers = {"Authorization": f"Bearer {token}"}
+            response.raise_for_status()
+            token_data = response.json()
+            return token_data.get("accessToken")
 
-            # 2. Get Accounts [cite: 389]
-            # accounts_response = await client.get(
-            #     f"/data/accounts?userId={user_id}", headers=headers
-            # )
-            # accounts_response.raise_for_status()
-            # accounts = accounts_response.json().get("accounts", [])
+    async def http_get_accounts(self, token: str):
+        """
+        Retrieves accounts for the given user ID.
+        """
+        headers = {"Authorization": f"Bearer {token}"}
 
-            # all_transactions = []
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get("/v2/data/accounts", headers=headers)
+            response.raise_for_status()
+            return response.json().get("items", [])
 
-            # 3. Get Transactions for each account [cite: 390]
-            # for account in accounts:
-            #     account_id = account.get("id")
-            #     trans_response = await client.get(
-            #         f"/data/transactions?accountId={account_id}&from_date={from_date}",
-            #         headers=headers,
-            #     )
-            #     trans_response.raise_for_status()
-            #     all_transactions.extend(trans_response.json().get("transactions", []))
+    async def http_get_transactions(self, token: str, params: any):
+        """
+        Retrieves transactions for the given user ID starting from the specified date.
+        """
+        headers = {"Authorization": f"Bearer {token}"}
 
-            # return all_transactions
-
-            trans_response = await client.get(
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            response = await client.get(
                 "/v2/data/transactions",
-                params={"dateFrom": from_date},
+                params=params,
                 headers=headers,
             )
-            trans_response.raise_for_status()
-            transaction_data = trans_response.json()
-            print(f"Obtained transactions for user {user_id}: {transaction_data}")
-            all_transactions = transaction_data.get("items")
+            response.raise_for_status()
+            return response.json().get("items", [])
 
-            return all_transactions
+    async def get_user_accounts(self, user_id: str):
+        """
+        Retrieves user accounts for the given user ID.
+        """
+        token = await self.http_get_access_token(user_id)
+        accounts = await self.http_get_accounts(token)
+        return accounts
+
+    async def get_user_transactions_last_3_months(self, user_id: str):
+        """
+        Retrieves banking data for the past 90 days.
+        """
+        # Calculate the date 90 days ago
+        from_date = (datetime.utcnow() - timedelta(days=90)).date()
+
+        # 1. Get Token [cite: 388]
+        token = await self.http_get_access_token(user_id)
+
+        # 2. Get Accounts [cite: 389]
+        accounts = await self.http_get_accounts(token)
+
+        # 3. Get Transactions for each account [cite: 390]
+        all_transactions = []
+        for account in accounts:
+            account_id = account.get("id")
+            transactions = await self.http_get_transactions(
+                token, {"dateFrom": from_date, "accountId": account_id}
+            )
+            all_transactions.extend(transactions)
+
+        return all_transactions
 
 
 # Dependency Injection provider function

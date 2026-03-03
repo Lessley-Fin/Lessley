@@ -32,3 +32,27 @@ async def calculate_clubs(
         raise HTTPException(
             status_code=500, detail=f"Failed to calculate clubs: {str(e)}"
         )
+
+
+@router.get("/accounts")
+async def get_user_accounts(
+    userId: str = Query(..., description="The unique identifier of the user"),
+    open_finance_service: OpenFinanceService = Depends(get_open_finance_service),
+):
+    """
+    Retrieves user accounts for the given user ID.
+    """
+    try:
+        accounts = await open_finance_service.get_user_accounts(userId)
+
+        return {
+            "message": f"Successfully retrieved data for user {userId}",
+            "accounts_count": len(accounts),
+            "items": accounts,
+            "status": "Accounts retrieved",
+        }
+    except Exception as e:
+        # Return a 500 error if the external API fails
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve accounts: {str(e)}"
+        )
