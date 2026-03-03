@@ -31,7 +31,7 @@ async def consume_rabbitmq():
     Background task to maintain the RabbitMQ connection and listen for events.
     """
     try:
-        connection = await aio_pika.connect_robust(settings.ConnectionStrings__Rabbit)
+        connection = await aio_pika.connect_robust(settings.ConnectionStrings_Rabbit)
         channel = await connection.channel()
 
         # Declare the exchange and queue to ensure they exist

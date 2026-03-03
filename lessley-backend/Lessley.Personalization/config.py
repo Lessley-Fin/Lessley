@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Pydantic will automatically look for these keys in the .env file or system environment variables
     Environment: str
-    ConnectionStrings__Rabbit: str
+    ConnectionStrings_Rabbit: str
     OpenFinanceConfig_ClientId: str | None = None  # Optional setting
     OpenFinanceConfig_ClientSecret: str | None = None  # Optional setting
 
