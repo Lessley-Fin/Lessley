@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ConnectionStrings_Rabbit: str
     OpenFinanceConfig_ClientId: str | None = None  # Optional setting
     OpenFinanceConfig_ClientSecret: str | None = None  # Optional setting
+    OpenFinanceConfig_BaseUrl: str | None = None  # Optional setting
 
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
