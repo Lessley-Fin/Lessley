@@ -79,3 +79,23 @@ async def get_user_access_token(
         raise HTTPException(
             status_code=500, detail=f"Failed to retrieve access token: {str(e)}"
         )
+
+
+@router.post("/calc-categories")
+async def calculate_categories(
+    userId: str = Query(..., description="The unique identifier of the user"),
+    open_finance_service: OpenFinanceService = Depends(get_open_finance_service),
+):
+    """
+    Triggers the calculation of optimal categories based on the last 3 months of Open Finance data.
+    """
+    try:
+        # Await the async service call
+        categories = await open_finance_service.calc_user_categories(userId)
+
+        return {"categories": categories}
+    except Exception as e:
+        # Return a 500 error if the external API fails
+        raise HTTPException(
+            status_code=500, detail=f"Failed to calculate categories: {str(e)}"
+        )
