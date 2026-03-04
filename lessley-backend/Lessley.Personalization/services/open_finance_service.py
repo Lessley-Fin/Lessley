@@ -97,7 +97,7 @@ class OpenFinanceService:
 
         file = get_files_utils_service()
         transactions = file.read_json("transactions.json")  # For testing purposes
-        categories = self.insights_service.get_top_3_spending_categories(transactions)
+        categories = self.insights_service.get_top_spending_categories(transactions)
         return categories
 
 
