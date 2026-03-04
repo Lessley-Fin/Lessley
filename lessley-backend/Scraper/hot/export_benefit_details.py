@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from core.config import Settings
-from Websites.HotScraper import HotScraper
+from hot.hot_scraper import HotScraper
 
 
 async def export_benefit_details(benefit_id: str, is_commerce: str, output_path: Path) -> None:
@@ -37,14 +37,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         default=None,
-        help="Output JSON path (default: outputs/hot_benefit_<benefit_id>.json)",
+        help="Output JSON path (default: hot/outputs/hot_benefit_<benefit_id>.json)",
     )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    output = args.output or f"outputs/hot_benefit_{args.benefit_id}.json"
+    output = args.output or f"hot/outputs/hot_benefit_{args.benefit_id}.json"
     asyncio.run(export_benefit_details(args.benefit_id, args.is_commerce, Path(output)))
 
 

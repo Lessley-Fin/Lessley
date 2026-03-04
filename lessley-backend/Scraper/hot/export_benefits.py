@@ -4,14 +4,14 @@ import os
 from pathlib import Path
 
 from core.config import Settings
-from Websites.HotScraper import HotScraper
+from hot.hot_scraper import HotScraper
 
 
 async def export_hot_benefits() -> None:
     settings = Settings.from_env()
     scraper = HotScraper(settings)
 
-    output_path = Path(os.getenv("HOT_BENEFITS_OUTPUT", "outputs/hot_getAllBenefits.json"))
+    output_path = Path(os.getenv("HOT_BENEFITS_OUTPUT", "hot/outputs/hot_getAllBenefits.json"))
     start_page = settings.page_start
 
     all_records: list[dict] = []

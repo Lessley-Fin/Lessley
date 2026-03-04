@@ -31,4 +31,4 @@ venv/
 *.log
 logs/
 
-/lessley-backend/Scraper/outputs/*
+/lessley-backend/Scraper/hot/outputs/*

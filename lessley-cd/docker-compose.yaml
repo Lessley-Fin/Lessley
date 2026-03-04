@@ -85,25 +85,49 @@ services:
     depends_on:
       - mongodb
 
-  # scraper-hot:
-  #   image: lessley/scraper-hot:dev
-  #   build:
-  #     context: ../lessley-backend/Scraper
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   environment:
-  #     - SCRAPER_NAME=hot
-  #     - SCRAPER_PAGE_START=${HOT_SCRAPER_PAGE_START}
-  #     - SCRAPER_MAX_PAGES=${HOT_SCRAPER_MAX_PAGES}
-  #     - SCRAPER_REQUEST_DELAY=${HOT_SCRAPER_REQUEST_DELAY}
-  #     - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
-  #     - MONGO_DATABASE=${DB_NAME}
-  #     - MONGO_OFFERS_COLLECTION=${SCRAPER_OFFERS_COLLECTION}
-  #     - MONGO_CARDS_COLLECTION=${SCRAPER_CARDS_COLLECTION}
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
-  #     - OPENAI_MODEL=${OPENAI_MODEL}
-  #   depends_on:
-  #     - mongodb
+  scraper-hot:
+    image: lessley/scraper-hot:dev
+    build:
+      context: ../lessley-backend/Scraper
+      dockerfile: Dockerfile
+    restart: always
+    command: >
+      sh -c "while true; do
+      if [ \"${HOT_IMPORT_SOURCE:-file}\" = \"api\" ]; then
+      python -m hot.import_businesses --from-api
+      --page-start ${HOT_API_PAGE_START:-1}
+      --max-pages ${HOT_API_MAX_PAGES:-2}
+      --request-delay ${HOT_API_REQUEST_DELAY:-1.0}
+      --mongo-uri mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      --db ${DB_NAME};
+      else
+      python -m hot.import_businesses --input ${HOT_OUTPUT_FILE}
+      --mongo-uri mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      --db ${DB_NAME};
+      fi;
+      sleep ${HOT_SCRAPER_INTERVAL_SECONDS:-604800};
+      done"
+    environment:
+      - SCRAPER_NAME=hot
+      - SCRAPER_PAGE_START=${HOT_SCRAPER_PAGE_START}
+      - SCRAPER_MAX_PAGES=${HOT_SCRAPER_MAX_PAGES}
+      - SCRAPER_REQUEST_DELAY=${HOT_SCRAPER_REQUEST_DELAY}
+      - HOT_SCRAPER_INTERVAL_SECONDS=${HOT_SCRAPER_INTERVAL_SECONDS}
+      - HOT_IMPORT_SOURCE=${HOT_IMPORT_SOURCE}
+      - HOT_API_PAGE_START=${HOT_API_PAGE_START}
+      - HOT_API_MAX_PAGES=${HOT_API_MAX_PAGES}
+      - HOT_API_REQUEST_DELAY=${HOT_API_REQUEST_DELAY}
+      - HOT_OUTPUT_FILE=${HOT_OUTPUT_FILE}
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DATABASE=${DB_NAME}
+      - MONGO_OFFERS_COLLECTION=${SCRAPER_OFFERS_COLLECTION}
+      - MONGO_CARDS_COLLECTION=${SCRAPER_CARDS_COLLECTION}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+    volumes:
+      - ../lessley-backend/Scraper:/app
+    depends_on:
+      - mongodb
 
 # Defined volumes for persistence
 volumes:

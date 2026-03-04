@@ -1,0 +1,26 @@
+[
+  {
+    "club_id": 1,
+    "name": "בהצדעה",
+    "website": "https://www.behatsdaa.org.il",
+    "logo_url": ""
+  },
+  {
+    "club_id": 2,
+    "name": "HTZ",
+    "website": "https://www.htzone.co.il",
+    "logo_url": ""
+  },
+  {
+    "club_id": 3,
+    "name": "פיס",
+    "website": "https://www.pais.co.il",
+    "logo_url": ""
+  },
+  {
+    "club_id": 4,
+    "name": "HOT",
+    "website": "https://www.hot.co.il",
+    "logo_url": ""
+  }
+]

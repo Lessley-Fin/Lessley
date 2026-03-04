@@ -7,7 +7,31 @@ services:
       dockerfile: Dockerfile
     container_name: lessley-scraper-hot
     restart: unless-stopped
+    command: >
+      sh -c "while true; do
+      if [ \"${HOT_IMPORT_SOURCE:-file}\" = \"api\" ]; then
+      python -m hot.import_businesses --from-api
+      --page-start ${HOT_API_PAGE_START:-1}
+      --max-pages ${HOT_API_MAX_PAGES:-2}
+      --request-delay ${HOT_API_REQUEST_DELAY:-1.0}
+      --mongo-uri ${MONGO_URI}
+      --db ${MONGO_DATABASE:-lessley};
+      else
+      python -m hot.import_businesses --input ${HOT_OUTPUT_FILE:-hot/outputs/hot_getAllBenefits.json}
+      --mongo-uri ${MONGO_URI}
+      --db ${MONGO_DATABASE:-lessley};
+      fi;
+      sleep ${HOT_SCRAPER_INTERVAL_SECONDS:-604800};
+      done"
     env_file:
       - .env
     environment:
       SCRAPER_NAME: hot
+      HOT_SCRAPER_INTERVAL_SECONDS: ${HOT_SCRAPER_INTERVAL_SECONDS:-604800}
+      HOT_IMPORT_SOURCE: ${HOT_IMPORT_SOURCE:-file}
+      HOT_API_PAGE_START: ${HOT_API_PAGE_START:-1}
+      HOT_API_MAX_PAGES: ${HOT_API_MAX_PAGES:-2}
+      HOT_API_REQUEST_DELAY: ${HOT_API_REQUEST_DELAY:-1.0}
+      HOT_OUTPUT_FILE: ${HOT_OUTPUT_FILE:-hot/outputs/hot_getAllBenefits.json}
+    volumes:
+      - ./:/app

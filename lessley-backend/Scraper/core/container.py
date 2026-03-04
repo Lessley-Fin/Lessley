@@ -4,7 +4,7 @@ from core.config import Settings
 from core.llm_normalizer import LLMNormalizer
 from core.mongo_repository import MongoRepository
 from core.pipeline import ScrapePipeline
-from Websites.HotScraper import HotScraper
+from hot.hot_scraper import HotScraper
 
 
 class ScraperContainer:

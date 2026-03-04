@@ -33,11 +33,11 @@ class ScrapePipeline:
                 # await self.mongo_repository.upsert_offer(self.settings.offers_collection, enriched_offer)
                 offers_count += 1
 
-            async for raw_card in self.scraper.iter_cards():
-                normalized_card = self.scraper.normalize_card(raw_card)
-                enriched_card = await self.llm_normalizer.normalize_card(normalized_card)
-                await self.mongo_repository.upsert_card(self.settings.cards_collection, enriched_card)
-                cards_count += 1
+            # async for raw_card in self.scraper.iter_cards():
+            #     normalized_card = self.scraper.normalize_card(raw_card)
+            #     enriched_card = await self.llm_normalizer.normalize_card(normalized_card)
+            #     await self.mongo_repository.upsert_card(self.settings.cards_collection, enriched_card)
+            #     cards_count += 1
         finally:
             await self.scraper.close()
             await self.mongo_repository.close()
