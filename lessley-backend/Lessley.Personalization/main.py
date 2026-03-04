@@ -6,6 +6,7 @@ import aio_pika
 
 from config import settings
 from routers import open_finance_controller  # Import your new controller
+from routers import mcc_controller  # Import your new controller
 
 # --- RabbitMQ Configuration ---
 QUEUE_NAME = "personalize_calc_history_queue"
@@ -74,6 +75,7 @@ app = FastAPI(
 )
 
 app.include_router(open_finance_controller.router)
+app.include_router(mcc_controller.router)
 
 
 # --- REST Endpoints ---
