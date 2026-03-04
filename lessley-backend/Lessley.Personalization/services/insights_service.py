@@ -1,11 +1,11 @@
 import pandas as pd
 
-from services.mcc_service import get_mcc_service
+from services.mcc_service import MccService
 
 
 class InsightsService:
-    def __init__(self):
-        self.mcc_service = get_mcc_service()  # Inject the MCC service dependency
+    def __init__(self, mcc_service: MccService):
+        self.mcc_service = mcc_service  # Inject the MCC service dependency
 
     def get_top_3_spending_categories(self, transactions: dict) -> list[dict]:
         """

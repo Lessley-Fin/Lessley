@@ -52,9 +52,5 @@ class MccService:
         return self._mcc_map.get(str(category_code), "Unknown Category")
 
 
-# Instantiate it once as a Singleton for Dependency Injection
-mcc_service_singleton = MccService()
-
-
 def get_mcc_service() -> MccService:
-    return mcc_service_singleton
+    return MccService()
