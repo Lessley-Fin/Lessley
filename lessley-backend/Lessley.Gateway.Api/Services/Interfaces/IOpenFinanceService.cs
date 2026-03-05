@@ -8,7 +8,7 @@ namespace Lessley.Gateway.Api.Services.Interfaces
 
         public Task<OBTransactionsResponse> GetTransactions(string username);
 
-        public Task<ConnectionResponse> InitiateConnectionJourney(string username);
+        public Task<ConnectionResponse> InitiateConnectionJourney(string username, string expiryDate);
 
     }
 }

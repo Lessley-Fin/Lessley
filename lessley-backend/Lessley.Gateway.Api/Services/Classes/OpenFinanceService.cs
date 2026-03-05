@@ -36,14 +36,14 @@ namespace Lessley.Gateway.Api.Services.Classes
             return res?.AccessToken ?? throw new InvalidOperationException("Failed to extract the access token from the API response.");
         }
 
-        public async Task<ConnectionResponse> InitiateConnectionJourney(string username)
+        public async Task<ConnectionResponse> InitiateConnectionJourney(string username, string expiryDate)
         {
             var accessToken = await CreateAccessToken(username);
 
             var payload = new
             {
                 includeFakeProviders = true,
-                expiryDate = DateTime.UtcNow.AddYears(3).ToString("yyyy-MM-dd")
+                expiryDate
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, "v2/connections")
