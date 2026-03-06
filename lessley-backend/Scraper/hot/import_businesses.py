@@ -22,6 +22,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from core.config import Settings
 from hot.hot_scraper import HotScraper
+from Websites.Behatsdaa import BehatsdaaScraper
 
 
 DEFAULT_CLUBS = [
@@ -188,8 +189,108 @@ class HotBusinessImporter(BaseClubBusinessImporter):
             await scraper.close()
 
 
+class BehatsdaaBusinessImporter(BaseClubBusinessImporter):
+    club_key = "behatsdaa"
+    club_id = 1
+    club_name = "בהצדעה"
+    generic_brand_patterns = (
+        r"^\s*בהצדעה\s*$",
+        r"^\s*behatsdaa\s*$",
+    )
+
+    def extract_file_records(self, payload: Any) -> list[dict[str, Any]]:
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+        if isinstance(payload, dict):
+            data = payload.get("data")
+            if isinstance(data, dict) and isinstance(data.get("wallets"), list):
+                return [item for item in data["wallets"] if isinstance(item, dict)]
+        raise ValueError("Behatsdaa input JSON must be a list or response payload with data.wallets.")
+
+    def normalize_record(self, record: dict[str, Any], tag_generic: bool) -> BusinessRecord | None:
+        chain_name = normalize_brand(record.get("chainName"))
+        wallet_name = normalize_brand(record.get("walletName"))
+        brand = chain_name or wallet_name
+        if not brand:
+            return None
+
+        slug = to_slug(brand)
+        if not slug:
+            return None
+
+        is_generic = self.is_generic_brand(brand)
+        if is_generic and not tag_generic:
+            return None
+
+        tags: set[str] = set()
+        if wallet_name:
+            tags.add(wallet_name)
+        discount_rate = record.get("discountRate")
+        if isinstance(discount_rate, (int, float)):
+            tags.add(f"discount:{float(discount_rate):g}%")
+
+        if tag_generic and is_generic:
+            tags.add("__generic_behatsdaa__")
+
+        external_id = str(record.get("chainID") or "").strip()
+        wallet_id = str(record.get("walletID") or "").strip()
+        if not external_id:
+            if wallet_id:
+                external_id = f"{wallet_id}:{slug}"
+            else:
+                external_id = slug
+
+        return BusinessRecord(
+            brand=brand,
+            slug=slug,
+            website=normalize_website(record.get("webSite")),
+            external_id=external_id,
+            tags=sorted(tags),
+            is_generic=is_generic,
+        )
+
+    async def iter_api_records(self, args: argparse.Namespace) -> AsyncIterator[dict[str, Any]]:
+        settings = Settings.from_env()
+        if args.request_delay is not None:
+            settings.request_delay_seconds = args.request_delay
+
+        scraper = BehatsdaaScraper(
+            settings=settings,
+            access_token=str(args.behatsdaa_access_token or "").strip(),
+            organization_id=str(args.behatsdaa_organization_id or "").strip(),
+            native=str(args.behatsdaa_native or "").strip(),
+            cookie_header=str(args.behatsdaa_cookie or "").strip(),
+            origin=str(args.behatsdaa_origin or "").strip(),
+            referer=str(args.behatsdaa_referer or "").strip(),
+        )
+
+        try:
+            await scraper.initialize_session()
+            async for wallet_payload in scraper.iter_cards():
+                wallet = wallet_payload.get("wallet", {})
+                chains = wallet_payload.get("chains", [])
+                if not isinstance(wallet, dict):
+                    wallet = {}
+                if not isinstance(chains, list):
+                    chains = []
+                for chain in chains:
+                    if not isinstance(chain, dict):
+                        continue
+                    yield {
+                        "walletID": wallet.get("walletID"),
+                        "walletName": wallet.get("walletName"),
+                        "discountRate": wallet.get("discountRate"),
+                        "chainID": chain.get("chainID"),
+                        "chainName": chain.get("chainName"),
+                        "webSite": chain.get("webSite"),
+                    }
+        finally:
+            await scraper.close()
+
+
 IMPORTERS: dict[str, BaseClubBusinessImporter] = {
     HotBusinessImporter.club_key: HotBusinessImporter(),
+    BehatsdaaBusinessImporter.club_key: BehatsdaaBusinessImporter(),
 }
 
 
@@ -257,6 +358,36 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=None,
         help="Override request delay seconds when using --from-api.",
+    )
+    parser.add_argument(
+        "--behatsdaa-access-token",
+        default=os.getenv("BEHATSDAA_ACCESS_TOKEN", ""),
+        help="AccessToken header for Behatsdaa API requests.",
+    )
+    parser.add_argument(
+        "--behatsdaa-cookie",
+        default=os.getenv("BEHATSDAA_COOKIE", ""),
+        help="Cookie header for Behatsdaa API requests when required.",
+    )
+    parser.add_argument(
+        "--behatsdaa-organization-id",
+        default=os.getenv("BEHATSDAA_ORGANIZATION_ID", "20"),
+        help="organizationid header for Behatsdaa API requests.",
+    )
+    parser.add_argument(
+        "--behatsdaa-native",
+        default=os.getenv("BEHATSDAA_NATIVE", "true"),
+        help="native header for Behatsdaa API requests.",
+    )
+    parser.add_argument(
+        "--behatsdaa-origin",
+        default=os.getenv("BEHATSDAA_ORIGIN", "https://www.behatsdaa.org.il"),
+        help="origin header for Behatsdaa API requests.",
+    )
+    parser.add_argument(
+        "--behatsdaa-referer",
+        default=os.getenv("BEHATSDAA_REFERER", "https://www.behatsdaa.org.il/"),
+        help="referer header for Behatsdaa API requests.",
     )
     return parser.parse_args()
 

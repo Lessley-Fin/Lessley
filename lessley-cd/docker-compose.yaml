@@ -94,21 +94,20 @@ services:
     command: >
       sh -c "while true; do
       if [ \"${HOT_IMPORT_SOURCE:-file}\" = \"api\" ]; then
-      python -m hot.import_businesses --from-api
+      python -m hot.import_businesses --club hot --from-api
       --page-start ${HOT_API_PAGE_START:-1}
       --max-pages ${HOT_API_MAX_PAGES:-2}
       --request-delay ${HOT_API_REQUEST_DELAY:-1.0}
       --mongo-uri mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
       --db ${DB_NAME};
       else
-      python -m hot.import_businesses --input ${HOT_OUTPUT_FILE}
+      python -m hot.import_businesses --club hot --input ${HOT_OUTPUT_FILE}
       --mongo-uri mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
       --db ${DB_NAME};
       fi;
       sleep ${HOT_SCRAPER_INTERVAL_SECONDS:-604800};
       done"
     environment:
-      - SCRAPER_NAME=hot
       - SCRAPER_PAGE_START=${HOT_SCRAPER_PAGE_START}
       - SCRAPER_MAX_PAGES=${HOT_SCRAPER_MAX_PAGES}
       - SCRAPER_REQUEST_DELAY=${HOT_SCRAPER_REQUEST_DELAY}
@@ -124,6 +123,57 @@ services:
       - MONGO_CARDS_COLLECTION=${SCRAPER_CARDS_COLLECTION}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL}
+    volumes:
+      - ../lessley-backend/Scraper:/app
+    depends_on:
+      - mongodb
+
+  scraper-behatsdaa:
+    image: lessley/scraper-hot:dev
+    build:
+      context: ../lessley-backend/Scraper
+      dockerfile: Dockerfile
+    restart: always
+    command: >
+      sh -c "if [ \"${BEHATSDAA_KEEPALIVE_ENABLED:-true}\" = \"true\" ]; then
+      python -m behatsdaa.keepalive
+      --interval-seconds ${BEHATSDAA_KEEPALIVE_SECONDS:-300}
+      --endpoint ${BEHATSDAA_KEEPALIVE_ENDPOINT:-/api/category/GetCategoryHeader}
+      &
+      fi;
+      while true; do
+      if [ \"${BEHATSDAA_IMPORT_SOURCE:-api}\" = \"api\" ]; then
+      python -m behatsdaa.import_businesses --club behatsdaa --from-api
+      --request-delay ${BEHATSDAA_API_REQUEST_DELAY:-1.0}
+      --mongo-uri mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      --db ${DB_NAME};
+      else
+      python -m behatsdaa.import_businesses --club behatsdaa --input ${BEHATSDAA_INPUT_FILE}
+      --mongo-uri mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      --db ${DB_NAME};
+      fi;
+      sleep ${BEHATSDAA_SCRAPER_INTERVAL_SECONDS:-604800};
+      done"
+    environment:
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DATABASE=${DB_NAME}
+      - MONGO_OFFERS_COLLECTION=${SCRAPER_OFFERS_COLLECTION}
+      - MONGO_CARDS_COLLECTION=${SCRAPER_CARDS_COLLECTION}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - BEHATSDAA_IMPORT_SOURCE=${BEHATSDAA_IMPORT_SOURCE}
+      - BEHATSDAA_API_REQUEST_DELAY=${BEHATSDAA_API_REQUEST_DELAY}
+      - BEHATSDAA_SCRAPER_INTERVAL_SECONDS=${BEHATSDAA_SCRAPER_INTERVAL_SECONDS}
+      - BEHATSDAA_KEEPALIVE_ENABLED=${BEHATSDAA_KEEPALIVE_ENABLED}
+      - BEHATSDAA_KEEPALIVE_SECONDS=${BEHATSDAA_KEEPALIVE_SECONDS}
+      - BEHATSDAA_KEEPALIVE_ENDPOINT=${BEHATSDAA_KEEPALIVE_ENDPOINT}
+      - BEHATSDAA_INPUT_FILE=${BEHATSDAA_INPUT_FILE}
+      - BEHATSDAA_ACCESS_TOKEN=${BEHATSDAA_ACCESS_TOKEN}
+      - BEHATSDAA_COOKIE=${BEHATSDAA_COOKIE}
+      - BEHATSDAA_ORGANIZATION_ID=${BEHATSDAA_ORGANIZATION_ID}
+      - BEHATSDAA_NATIVE=${BEHATSDAA_NATIVE}
+      - BEHATSDAA_ORIGIN=${BEHATSDAA_ORIGIN}
+      - BEHATSDAA_REFERER=${BEHATSDAA_REFERER}
     volumes:
       - ../lessley-backend/Scraper:/app
     depends_on:

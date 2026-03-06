@@ -10,14 +10,14 @@ services:
     command: >
       sh -c "while true; do
       if [ \"${HOT_IMPORT_SOURCE:-file}\" = \"api\" ]; then
-      python -m hot.import_businesses --from-api
+      python -m hot.import_businesses --club hot --from-api
       --page-start ${HOT_API_PAGE_START:-1}
       --max-pages ${HOT_API_MAX_PAGES:-2}
       --request-delay ${HOT_API_REQUEST_DELAY:-1.0}
       --mongo-uri ${MONGO_URI}
       --db ${MONGO_DATABASE:-lessley};
       else
-      python -m hot.import_businesses --input ${HOT_OUTPUT_FILE:-hot/outputs/hot_getAllBenefits.json}
+      python -m hot.import_businesses --club hot --input ${HOT_OUTPUT_FILE:-hot/outputs/hot_getAllBenefits.json}
       --mongo-uri ${MONGO_URI}
       --db ${MONGO_DATABASE:-lessley};
       fi;
@@ -26,12 +26,56 @@ services:
     env_file:
       - .env
     environment:
-      SCRAPER_NAME: hot
       HOT_SCRAPER_INTERVAL_SECONDS: ${HOT_SCRAPER_INTERVAL_SECONDS:-604800}
       HOT_IMPORT_SOURCE: ${HOT_IMPORT_SOURCE:-file}
       HOT_API_PAGE_START: ${HOT_API_PAGE_START:-1}
       HOT_API_MAX_PAGES: ${HOT_API_MAX_PAGES:-2}
       HOT_API_REQUEST_DELAY: ${HOT_API_REQUEST_DELAY:-1.0}
       HOT_OUTPUT_FILE: ${HOT_OUTPUT_FILE:-hot/outputs/hot_getAllBenefits.json}
+    volumes:
+      - ./:/app
+
+  scraper-behatsdaa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lessley-scraper-behatsdaa
+    restart: unless-stopped
+    command: >
+      sh -c "if [ \"${BEHATSDAA_KEEPALIVE_ENABLED:-true}\" = \"true\" ]; then
+      python -m behatsdaa.keepalive
+      --interval-seconds ${BEHATSDAA_KEEPALIVE_SECONDS:-300}
+      --endpoint ${BEHATSDAA_KEEPALIVE_ENDPOINT:-/api/category/GetCategoryHeader}
+      &
+      fi;
+      while true; do
+      if [ \"${BEHATSDAA_IMPORT_SOURCE:-api}\" = \"api\" ]; then
+      python -m behatsdaa.import_businesses --club behatsdaa --from-api
+      --request-delay ${BEHATSDAA_API_REQUEST_DELAY:-1.0}
+      --mongo-uri ${MONGO_URI}
+      --db ${MONGO_DATABASE:-lessley};
+      else
+      python -m behatsdaa.import_businesses --club behatsdaa --input ${BEHATSDAA_INPUT_FILE:-outputs/behatsdaa_wallets.json}
+      --mongo-uri ${MONGO_URI}
+      --db ${MONGO_DATABASE:-lessley};
+      fi;
+      sleep ${BEHATSDAA_SCRAPER_INTERVAL_SECONDS:-604800};
+      done"
+    env_file:
+      - .env
+    environment:
+      BEHATSDAA_IMPORT_SOURCE: ${BEHATSDAA_IMPORT_SOURCE:-api}
+      BEHATSDAA_API_REQUEST_DELAY: ${BEHATSDAA_API_REQUEST_DELAY:-1.0}
+      BEHATSDAA_SCRAPER_INTERVAL_SECONDS: ${BEHATSDAA_SCRAPER_INTERVAL_SECONDS:-604800}
+      BEHATSDAA_KEEPALIVE_ENABLED: ${BEHATSDAA_KEEPALIVE_ENABLED:-true}
+      BEHATSDAA_KEEPALIVE_SECONDS: ${BEHATSDAA_KEEPALIVE_SECONDS:-300}
+      BEHATSDAA_KEEPALIVE_ENDPOINT: ${BEHATSDAA_KEEPALIVE_ENDPOINT:-/api/category/GetCategoryHeader}
+      BEHATSDAA_INPUT_FILE: ${BEHATSDAA_INPUT_FILE:-outputs/behatsdaa_wallets.json}
+      BEHATSDAA_ACCESS_TOKEN: ${BEHATSDAA_ACCESS_TOKEN:-}
+      BEHATSDAA_COOKIE: ${BEHATSDAA_COOKIE:-}
+      BEHATSDAA_ORGANIZATION_ID: ${BEHATSDAA_ORGANIZATION_ID:-20}
+      BEHATSDAA_NATIVE: ${BEHATSDAA_NATIVE:-true}
+      BEHATSDAA_ORIGIN: ${BEHATSDAA_ORIGIN:-https://www.behatsdaa.org.il}
+      BEHATSDAA_REFERER: ${BEHATSDAA_REFERER:-https://www.behatsdaa.org.il/}
     volumes:
       - ./:/app
