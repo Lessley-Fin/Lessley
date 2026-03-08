@@ -25,7 +25,7 @@ class OpenFinanceClient:
             token_data = response.json()
             return token_data.get("accessToken")
 
-    async def get_accounts(self, token: str):
+    async def get_accounts(self, token: str) -> list[dict]:
         """
         Retrieves accounts for the given user ID.
         """
@@ -36,7 +36,7 @@ class OpenFinanceClient:
             response.raise_for_status()
             return response.json().get("items", [])
 
-    async def get_transactions(self, token: str, params: any):
+    async def get_transactions(self, token: str, params: any) -> list[dict]:
         """
         Retrieves transactions for the given user ID starting from the specified date.
         """

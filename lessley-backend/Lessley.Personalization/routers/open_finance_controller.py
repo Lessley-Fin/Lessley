@@ -23,9 +23,7 @@ async def get_user_access_token(
         }
     except Exception as e:
         # Return a 500 error if the external API fails
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve access token: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve access token: {str(e)}")
 
 
 @router.get("/accounts")
@@ -47,17 +45,15 @@ async def get_user_accounts(
         }
     except Exception as e:
         # Return a 500 error if the external API fails
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve accounts: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve accounts: {str(e)}")
 
 
-@router.get("/transactions")
-async def get_user_transactions(
+@router.get("/transactions/by-account")
+async def get_user_transactions_by_account(
     userId: str = Query(..., description="The unique identifier of the user"),
-    days: int = Query(
-        ..., description="The number of days of transaction data to retrieve"
-    ),
+    accountId: str = Query(..., description="The identifier of the account for which to retrieve transactions"),
+    timeFilter: bool = Query(True, description="Whether to filter transactions by time"),
+    days: int = Query(..., description="The number of days of transaction data to retrieve"),
 ):
     """
     Triggers the calculation of optimal clubs based on the last 3 months of Open Finance data.
@@ -65,7 +61,7 @@ async def get_user_transactions(
     try:
         # Await the async service call
         service = DIContainer.get_open_finance_service()
-        transactions = await service.get_user_transactions_async(userId, days)
+        transactions = await service.get_user_transactions_by_account_async(userId, accountId, timeFilter, days)
 
         return {
             "message": f"Successfully retrieved data for user {userId}",
@@ -75,34 +71,14 @@ async def get_user_transactions(
         }
     except Exception as e:
         # Return a 500 error if the external API fails
-        raise HTTPException(
-            status_code=500, detail=f"Failed to calculate clubs: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to calculate clubs: {str(e)}")
 
 
-@router.get("/categories")
-async def get_user_categories(
+@router.get("/transactions")
+async def get_user_transactions(
     userId: str = Query(..., description="The unique identifier of the user"),
-):
-    """
-    Triggers the calculation of optimal categories based on the last 3 months of Open Finance data.
-    """
-    try:
-        # Await the async service call
-        service = DIContainer.get_open_finance_service()
-        categories = await service.get_user_categories(userId)
-
-        return {"categories": categories}
-    except Exception as e:
-        # Return a 500 error if the external API fails
-        raise HTTPException(
-            status_code=500, detail=f"Failed to calculate categories: {str(e)}"
-        )
-
-
-@router.post("/calc-clubs")
-async def calculate_clubs(
-    userId: str = Query(..., description="The unique identifier of the user"),
+    timeFilter: bool = Query(True, description="Whether to filter transactions by time"),
+    days: int = Query(..., description="The number of days of transaction data to retrieve"),
 ):
     """
     Triggers the calculation of optimal clubs based on the last 3 months of Open Finance data.
@@ -110,39 +86,14 @@ async def calculate_clubs(
     try:
         # Await the async service call
         service = DIContainer.get_open_finance_service()
-        categories = await service.calculate_user_categories_async(userId)
+        transactions = await service.get_user_transactions_async(userId, timeFilter, days)
 
         return {
             "message": f"Successfully retrieved data for user {userId}",
-            "categories": categories,
+            "transactions_analyzed": len(transactions),
+            "items": transactions,
             "status": "Calculation initiated",
         }
     except Exception as e:
         # Return a 500 error if the external API fails
-        raise HTTPException(
-            status_code=500, detail=f"Failed to calculate clubs: {str(e)}"
-        )
-
-
-@router.get("/top-accounts")
-async def calculate_top_accounts(
-    userId: str = Query(..., description="The unique identifier of the user"),
-):
-    """
-    Triggers the calculation of top accounts based on the last 3 months of Open Finance data.
-    """
-    try:
-        # Await the async service call
-        service = DIContainer.get_open_finance_service()
-        accounts = await service.calculate_top_accounts_async(userId)
-
-        return {
-            "message": f"Successfully retrieved data for user {userId}",
-            "accounts": accounts,
-            "status": "Calculation initiated",
-        }
-    except Exception as e:
-        # Return a 500 error if the external API fails
-        raise HTTPException(
-            status_code=500, detail=f"Failed to calculate top accounts: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to calculate clubs: {str(e)}")

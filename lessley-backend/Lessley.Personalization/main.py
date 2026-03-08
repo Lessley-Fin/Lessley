@@ -7,6 +7,7 @@ import aio_pika
 from config import settings
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
+from routers import insights_controller  # Import your new controller
 
 # --- RabbitMQ Configuration ---
 QUEUE_NAME = "personalize_calc_history_queue"
@@ -37,17 +38,13 @@ async def consume_rabbitmq():
         channel = await connection.channel()
 
         # Declare the exchange and queue to ensure they exist
-        exchange = await channel.declare_exchange(
-            "lessley_events", aio_pika.ExchangeType.TOPIC, durable=True
-        )
+        exchange = await channel.declare_exchange("lessley_events", aio_pika.ExchangeType.TOPIC, durable=True)
         queue = await channel.declare_queue(QUEUE_NAME, durable=True)
 
         # Bind the queue to the specific event topic
         await queue.bind(exchange, routing_key=ROUTING_KEY)
 
-        print(
-            f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C"
-        )
+        print(f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C")
         await queue.consume(process_calc_history_message)
 
         # Keep the connection open indefinitely
@@ -76,6 +73,7 @@ app = FastAPI(
 
 app.include_router(open_finance_controller.router)
 app.include_router(mcc_controller.router)
+app.include_router(insights_controller.router)
 
 
 # --- REST Endpoints ---

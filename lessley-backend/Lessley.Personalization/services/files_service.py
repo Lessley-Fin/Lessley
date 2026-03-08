@@ -12,4 +12,4 @@ class FilesUtilsService:
 
         with open(transactions_file, "r", encoding="utf-8") as file:
             data = json.load(file)
-            return data
+            return data.get("items", [])
