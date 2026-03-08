@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "5202:8080" # Map host 5002 to container 8080
+      - "5001:8080" # Map host 5001 to container 8080
     environment:
       # 1. Development Mode (Enables Swagger)
       - ASPNETCORE_ENVIRONMENT=Development
