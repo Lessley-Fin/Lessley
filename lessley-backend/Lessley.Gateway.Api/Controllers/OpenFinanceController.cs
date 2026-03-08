@@ -23,10 +23,10 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(accessToken);
         }
 
-        [HttpGet("connection/{userId}/{expiryDate}")]
-        public async Task<IActionResult> CreateNewConnection([FromRoute] string userId, [FromRoute] string expiryDate)
+        [HttpGet("connection/{userId}")]
+        public async Task<IActionResult> CreateNewConnection([FromRoute] string userId)
         {
-            var accessToken = await _openFinanceService.InitiateConnectionJourney(userId, expiryDate);
+            var accessToken = await _openFinanceService.InitiateConnectionJourney(userId);
 
             // TODO: In a real application, we want the client to handle the redirection to the Connect URL, but for demonstration purposes, we will redirect directly from the API.
             return Redirect(accessToken.ConnectUrl);
