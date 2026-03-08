@@ -31,7 +31,7 @@ namespace Lessley.Gateway.Api.Controllers
             // TODO: In a real application, we want the client to handle the redirection to the Connect URL, but for demonstration purposes, we will redirect directly from the API.
             return Redirect(accessToken.ConnectUrl);
 
-            // return Ok(accessToken);
+            //return Ok(accessToken);
         }
 
         [HttpGet("transactions/{userId}")]
