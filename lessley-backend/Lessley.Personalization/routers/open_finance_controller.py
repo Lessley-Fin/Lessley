@@ -122,3 +122,27 @@ async def calculate_clubs(
         raise HTTPException(
             status_code=500, detail=f"Failed to calculate clubs: {str(e)}"
         )
+
+
+@router.get("/top-accounts")
+async def calculate_top_accounts(
+    userId: str = Query(..., description="The unique identifier of the user"),
+):
+    """
+    Triggers the calculation of top accounts based on the last 3 months of Open Finance data.
+    """
+    try:
+        # Await the async service call
+        service = DIContainer.get_open_finance_service()
+        accounts = await service.calculate_top_accounts_async(userId)
+
+        return {
+            "message": f"Successfully retrieved data for user {userId}",
+            "accounts": accounts,
+            "status": "Calculation initiated",
+        }
+    except Exception as e:
+        # Return a 500 error if the external API fails
+        raise HTTPException(
+            status_code=500, detail=f"Failed to calculate top accounts: {str(e)}"
+        )

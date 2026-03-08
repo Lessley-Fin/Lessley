@@ -78,3 +78,19 @@ class OpenFinanceService:
         # then send to insights service for further processing, or return directly
 
         return categories
+
+    async def calculate_top_accounts_async(self, user_id: str, days: int = 90):
+        """
+        Calculates top accounts based on transactions.
+        """
+        transactions = await self.get_user_transactions_async(user_id, days=days)
+        print(
+            f"Retrieved {len(transactions)} transactions for user {user_id}, {transactions.items}"
+        )
+        accounts = self.insights_service.get_top_spending_accounts(
+            transactions,
+            flat_columns=["accountId", "amount.chargedAmount.amount"],
+            group_by_column="accountId",
+        )
+
+        return accounts
