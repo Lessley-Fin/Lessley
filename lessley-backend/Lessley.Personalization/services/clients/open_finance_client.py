@@ -50,8 +50,3 @@ class OpenFinanceClient:
             )
             response.raise_for_status()
             return response.json().get("items", [])
-
-
-# Dependency Injection provider function
-def get_open_finance_client():
-    return OpenFinanceClient()

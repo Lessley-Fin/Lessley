@@ -85,6 +85,6 @@ async def health_check():
     # Returning data from our config to prove it works!
     return {
         "status": "healthy",
-        "environment": settings.environment,
-        "rabbitmq_configured": bool(settings.rabbitmq_url),
+        "environment": settings.Environment,
+        "rabbitmq_configured": bool(settings.ConnectionStrings_Rabbit),
     }

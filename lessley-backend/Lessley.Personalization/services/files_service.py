@@ -13,8 +13,3 @@ class FilesUtilsService:
         with open(transactions_file, "r", encoding="utf-8") as file:
             data = json.load(file)
             return data
-
-
-# Dependency Injection provider function
-def get_files_utils_service():
-    return FilesUtilsService()

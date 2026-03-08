@@ -1,24 +1,22 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from services.mcc_service import MccService, get_mcc_service
+from fastapi import APIRouter, Query, HTTPException
+from services.di_container import DIContainer
 
 # The APIRouter acts just like a [Route("mcc")] attribute on a Controller class
 router = APIRouter(prefix="/mcc", tags=["MCC Codes"])
 
 
 @router.get("/all")
-async def get_mcc(
-    mcc_service: MccService = Depends(get_mcc_service),
-):
+async def get_mcc():
     """
-    Retrieves MCC codes.
+    Retrieves all MCC codes.
     """
     try:
-        # Await the async service call
-        mcc = mcc_service.get_mcc()
+        service = DIContainer.get_mcc_service()
+        mcc = service.get_mcc()
 
         return {"mcc": mcc}
     except Exception as e:
-        # Return a 500 error if the external API fails
+        # Return a 500 error if loading MCC data fails
         raise HTTPException(
             status_code=500, detail=f"Failed to retrieve MCC codes: {str(e)}"
         )
@@ -26,19 +24,18 @@ async def get_mcc(
 
 @router.get("/")
 async def get_mcc_by_id(
-    categoryCode: str = Query(..., description="The unique identifier of the user"),
-    mcc_service: MccService = Depends(get_mcc_service),
+    categoryCode: str = Query(..., description="The MCC category code"),
 ):
     """
-    Retrieves MCC codes.
+    Retrieves the description for a specific MCC code.
     """
     try:
-        # Await the async service call
-        mcc = mcc_service.get_mcc_by_id(categoryCode)
+        service = DIContainer.get_mcc_service()
+        mcc = service.get_mcc_by_id(categoryCode)
 
         return {"mcc": mcc}
     except Exception as e:
-        # Return a 500 error if the external API fails
+        # Return a 500 error if loading MCC data fails
         raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve MCC codes: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve MCC code: {str(e)}"
         )

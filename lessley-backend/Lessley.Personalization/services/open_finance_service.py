@@ -78,8 +78,3 @@ class OpenFinanceService:
         # then send to insights service for further processing, or return directly
 
         return categories
-
-
-# Dependency Injection provider function
-def get_open_finance_service():
-    return OpenFinanceService()
