@@ -44,8 +44,7 @@ namespace Lessley.Gateway.Api.Services.Classes
             {
                 includeFakeProviders = true,
                 expiryDate = DateTime.UtcNow.AddYears(3).ToString("yyyy-MM-dd"),
-                allowBusiness = true,
-                redirectWithoutButtonClick = true
+                allowBusiness = true
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, "v2/connections")
