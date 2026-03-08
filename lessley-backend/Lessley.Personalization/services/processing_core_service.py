@@ -1,6 +1,104 @@
 import pandas as pd
+from typing import Callable, Optional, Dict, List, Any
 
 from services.mcc_service import MccService
+
+
+class DataFrameBuilder:
+    """
+    Generic DataFrame processing builder that allows composing operations in a fluent style.
+    This eliminates code duplication and provides reusable building blocks.
+    """
+    
+    def __init__(self, data: Any):
+        """Initialize with raw data (list, dict, or already a DataFrame)"""
+        self.df = None
+        if isinstance(data, pd.DataFrame):
+            self.df = data
+        elif isinstance(data, list):
+            self.df = pd.json_normalize(data)
+        elif isinstance(data, dict):
+            # Handle dict with "items" key or raw dict
+            items = data.get("items", [data])
+            self.df = pd.json_normalize(items)
+        else:
+            raise ValueError("Data must be a DataFrame, list, or dict")
+    
+    def extract_columns(self, columns: List[str]) -> "DataFrameBuilder":
+        """
+        STEP: Extract specific columns and create a copy to avoid modifying original.
+        
+        Args:
+            columns: List of column names to extract
+            
+        Returns:
+            Self for method chaining
+        """
+        self.df = self.df[columns].copy()
+        return self
+    
+    def apply_row_logic(self, new_column: str, logic: Callable) -> "DataFrameBuilder":
+        """
+        STEP: Apply custom lambda/function logic to each row and create new column.
+        
+        Args:
+            new_column: Name of the new column to create
+            logic: Callable that takes a row and returns a value
+                  Example: lambda row: abs(row["amount"]) if row["amount"] else 0
+        
+        Returns:
+            Self for method chaining
+        """
+        self.df[new_column] = self.df.apply(logic, axis=1)
+        return self
+    
+    def group_and_aggregate(
+        self,
+        group_by: str,
+        aggregations: Dict[str, str],
+        sort_by: str = None,
+        ascending: bool = False,
+    ) -> "DataFrameBuilder":
+        """
+        STEP: Group by column, apply aggregations, and sort results.
+        
+        Args:
+            group_by: Column name to group by
+            aggregations: Dict mapping column names to aggregation functions
+                         Example: {"amount": "sum", "account": "first", "type": "first"}
+                         Valid functions: "sum", "mean", "first", "last", "count", "max", "min"
+            sort_by: Column to sort by (default: first aggregation column)
+            ascending: Sort order (default: False = descending)
+        
+        Returns:
+            Self for method chaining
+        """
+        self.df = (
+            self.df.groupby(group_by, as_index=False)
+            .agg(aggregations)
+        )
+        
+        if sort_by is None:
+            # Default to first aggregation column if not specified
+            sort_by = list(aggregations.keys())[0]
+        
+        self.df = self.df.sort_values(by=sort_by, ascending=ascending)
+        return self
+    
+    def limit_and_convert(self, limit: Optional[int] = None) -> List[Dict]:
+        """
+        STEP: Take top N rows and convert to list of dictionaries.
+        
+        Args:
+            limit: Number of rows to keep (None = keep all)
+        
+        Returns:
+            List of dictionaries (one dict per row)
+        """
+        if limit is not None:
+            self.df = self.df.head(limit)
+        
+        return self.df.to_dict(orient="records")
 
 
 class ProcessingCoreService:
@@ -21,67 +119,55 @@ class ProcessingCoreService:
         if not transactions:
             return []
 
-        # 1. Load the raw JSON array into a Pandas DataFrame
-        df = pd.json_normalize(transactions)
-
-        # 2. Extract the main category, sub category and the charged amount
-        analysis_df = df[
-            [
+        # BUILDING BLOCK PIPELINE:
+        # 1. Normalize JSON → 2. Extract columns → 3. Create category name → 4. Calculate amounts → 5. Group & aggregate → 6. Limit & convert
+        
+        return (
+            DataFrameBuilder(transactions)
+            .extract_columns([
                 "category.main",
                 "category.sub",
                 "categoryCode",
                 "amount.chargedAmount.amount",
                 "amount.originalAmount.amount",
-            ]
-        ].copy()
-
-        # 3. Create concatenated category name (main + sub if sub exists)
-        analysis_df["category"] = analysis_df.apply(
-            lambda row: (
-                f"{row['category.main']} - {row['category.sub']}"
-                if pd.notna(row["category.sub"]) and row["category.sub"]
-                else row["category.main"]
-            ),
-            axis=1,
-        )
-        analysis_df["category"] = analysis_df["category"].fillna("Uncategorized")
-
-        # 4. Expenses are negative (e.g., -326). We want the absolute value to calculate total spend.
-        analysis_df["amount_spent"] = analysis_df.apply(
-            lambda row: (
-                abs(row["amount.chargedAmount.amount"])
-                if pd.notna(row["amount.chargedAmount.amount"]) and row["amount.chargedAmount.amount"] != ""
-                else (
-                    abs(row["amount.originalAmount.amount"])
-                    if pd.notna(row["amount.originalAmount.amount"]) and row["amount.originalAmount.amount"] != ""
-                    else 0
+            ])
+            # Create concatenated category name (main + sub if exists)
+            .apply_row_logic(
+                "category",
+                lambda row: (
+                    f"{row['category.main']} - {row['category.sub']}"
+                    if pd.notna(row["category.sub"]) and row["category.sub"]
+                    else row["category.main"]
+                ) or "Uncategorized"
+            )
+            # Calculate amount_spent with fallback logic
+            .apply_row_logic(
+                "amount_spent",
+                lambda row: (
+                    abs(row["amount.chargedAmount.amount"])
+                    if pd.notna(row["amount.chargedAmount.amount"]) and row["amount.chargedAmount.amount"] != ""
+                    else (
+                        abs(row["amount.originalAmount.amount"])
+                        if pd.notna(row["amount.originalAmount.amount"]) and row["amount.originalAmount.amount"] != ""
+                        else 0
+                    )
                 )
-            ),
-            axis=1,
+            )
+            # Group by category and sum amounts
+            .group_and_aggregate(
+                group_by="category",
+                aggregations={"amount_spent": "sum"},
+                sort_by="amount_spent",
+                ascending=False,
+            )
+            # Limit and convert to list of dicts
+            .limit_and_convert(limit)
         )
-
-        # 5. Group by the category, sum the amounts, and sort descending
-        top_categories = (
-            analysis_df.groupby("category")["amount_spent"]
-            .sum()
-            .reset_index()
-            .sort_values(by="amount_spent", ascending=False)
-        )
-
-        # 6. Take the top N and convert back to a standard Python dictionary list
-        top_n = top_categories.head(limit).to_dict(orient="records")
-
-        return top_n
 
     def get_top_spending_accounts(
         self,
         transactions: dict,
-        flat_columns: list[str] = [
-            "accountId",
-            "accountNumber",
-            "amount.chargedAmount.amount",
-            "amount.originalAmount.amount",
-        ],
+        flat_columns: list[str] = None,
         group_by_column: str = "accountId",
         ascending: bool = False,
         limit: int = 3,
@@ -95,7 +181,7 @@ class ProcessingCoreService:
 
         Args:
             transactions: Dictionary containing transaction items
-            flat_columns: List of columns to extract (optional, for compatibility)
+            flat_columns: List of columns to extract (default: standard account columns)
             group_by_column: Column name to group by (default: "accountId")
             ascending: Sort order (default: False = descending)
             limit: Number of top accounts to return (default: 3)
@@ -106,53 +192,44 @@ class ProcessingCoreService:
         if not transactions:
             return []
 
-        # STEP 1: Flatten nested JSON structure into a flat DataFrame
-        # pd.json_normalize converts nested JSON (like amount.chargedAmount.amount)
-        # into flat columns with dot notation (amount.chargedAmount.amount becomes a column name)
-        df = pd.json_normalize(transactions)
+        # Set default columns if not provided
+        if flat_columns is None:
+            flat_columns = [
+                "accountId",
+                "accountNumber",
+                "amount.chargedAmount.amount",
+                "amount.originalAmount.amount",
+            ]
 
-        # STEP 2: Select only the columns we need
-        # .copy() creates a new DataFrame so we don't modify the original
-        # We extract: accountId (group key), accountNumber (for display), and amount fields (for calculation)
-        analysis_df = df[flat_columns].copy()
-
-        # STEP 3: Create amount_spent column with fallback logic
-        # For each row:
-        # - Use chargedAmount if it exists and is not empty
-        # - Fall back to originalAmount if chargedAmount is missing/empty
-        # - Default to 0 if both are missing
-        # abs() gives us positive values (expenses are stored as negative numbers)
-        analysis_df["amount_spent"] = analysis_df.apply(
-            lambda row: (
-                abs(row["amount.chargedAmount.amount"])
-                if pd.notna(row["amount.chargedAmount.amount"]) and row["amount.chargedAmount.amount"] != ""
-                else (
-                    abs(row["amount.originalAmount.amount"])
-                    if pd.notna(row["amount.originalAmount.amount"]) and row["amount.originalAmount.amount"] != ""
-                    else 0
+        # BUILDING BLOCK PIPELINE:
+        # 1. Normalize JSON → 2. Extract columns → 3. Calculate amounts → 4. Group & aggregate → 5. Limit & convert
+        
+        return (
+            DataFrameBuilder(transactions)
+            .extract_columns(flat_columns)
+            # Calculate amount_spent with fallback logic
+            .apply_row_logic(
+                "amount_spent",
+                lambda row: (
+                    abs(row["amount.chargedAmount.amount"])
+                    if pd.notna(row["amount.chargedAmount.amount"]) and row["amount.chargedAmount.amount"] != ""
+                    else (
+                        abs(row["amount.originalAmount.amount"])
+                        if pd.notna(row["amount.originalAmount.amount"]) and row["amount.originalAmount.amount"] != ""
+                        else 0
+                    )
                 )
-            ),
-            axis=1,
-        )
-
-        # STEP 4: Group by accountId and aggregate
-        # .groupby() partitions the data by accountId so each account is one group
-        # For each group, we need to preserve accountNumber (use 'first' since all rows with same accountId have same accountNumber)
-        # and sum up all the amount_spent values
-        top_accounts = (
-            analysis_df.groupby(group_by_column, as_index=False)
-            .agg(
-                {
-                    "accountNumber": "first",  # Get the first accountNumber (they're all the same per account)
-                    "providerId": "first",  # Get the first providerId (they're all the same per account)
-                    "type": "first",  # Get the first type (they're all the same per account)
-                    "amount_spent": "sum",  # Sum all transactions for this account
-                }
             )
-            .sort_values(by="amount_spent", ascending=ascending)
+            # Group by account and aggregate
+            .group_and_aggregate(
+                group_by=group_by_column,
+                aggregations={
+                    "accountNumber": "first",
+                    "amount_spent": "sum",
+                },
+                sort_by="amount_spent",
+                ascending=ascending,
+            )
+            # Limit and convert to list of dicts
+            .limit_and_convert(limit)
         )
-
-        # STEP 5: Select top N results and convert to list of dictionaries
-        # .head(limit) keeps only the top N rows (ordered by amount_spent from step 4)
-        # .to_dict(orient="records") converts each row into a dictionary
-        return top_accounts.head(limit).to_dict(orient="records")

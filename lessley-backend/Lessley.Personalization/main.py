@@ -71,8 +71,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(open_finance_controller.router)
 app.include_router(mcc_controller.router)
+app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
 
 

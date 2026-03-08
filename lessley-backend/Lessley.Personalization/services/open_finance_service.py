@@ -27,14 +27,12 @@ class OpenFinanceService:
         """
         Retrieves banking data for the past {days} days.
         """
-        # Calculate the date {days} days ago
-        from_date = (datetime.utcnow() - timedelta(days=days)).date()
-
         # 1. Get Token [cite: 388]
         token = await self.client.get_access_token(user_id)
 
         # 2. Get Transactions for each account [cite: 390]
         if is_time_filter:
+            from_date = (datetime.utcnow() - timedelta(days=days)).date()
             params = {"dateFrom": from_date, "accountId": account_id}
         else:
             params = {"accountId": account_id}
@@ -47,9 +45,6 @@ class OpenFinanceService:
         """
         Retrieves banking data for the past {days} days.
         """
-        # Calculate the date {days} days ago
-        from_date = (datetime.utcnow() - timedelta(days=days)).date()
-
         # 1. Get Token [cite: 388]
         token = await self.client.get_access_token(user_id)
 
@@ -61,11 +56,11 @@ class OpenFinanceService:
         for account in accounts:
             account_id = account.get("id")
             if is_time_filter:
+                from_date = (datetime.utcnow() - timedelta(days=days)).date()
                 params = {"dateFrom": from_date, "accountId": account_id}
             else:
                 params = {"accountId": account_id}
             transactions = await self.client.get_transactions(token, params)
             all_transactions.extend(transactions)
 
-        print(f"Retrieved {len(all_transactions)} transactions for user {all_transactions}")
         return all_transactions
