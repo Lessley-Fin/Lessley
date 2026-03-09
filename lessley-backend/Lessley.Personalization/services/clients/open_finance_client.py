@@ -1,6 +1,6 @@
 import httpx
 from config import settings
-
+from services.utils.normalise_data import NormaliseData
 
 class OpenFinanceClient:
     def __init__(self):
@@ -49,4 +49,5 @@ class OpenFinanceClient:
                 headers=headers,
             )
             response.raise_for_status()
-            return response.json().get("items", [])
+            normalized_transactions = NormaliseData().normalise_data(response)
+            return normalized_transactions
