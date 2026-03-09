@@ -1,4 +1,4 @@
-from services.files_service import FilesUtilsService
+from services.transaction_stash_service import TransactionStashService
 from services.open_finance_service import OpenFinanceService
 from services.processing_core_service import ProcessingCoreService
 
@@ -7,7 +7,7 @@ class InsightsService:
     def __init__(
         self,
         open_finance_service=OpenFinanceService,
-        files_service=FilesUtilsService,
+        files_service=TransactionStashService,
         processing_core_service=ProcessingCoreService,
     ):
         self.open_finance_service = open_finance_service

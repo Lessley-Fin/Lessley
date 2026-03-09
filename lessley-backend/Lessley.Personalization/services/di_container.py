@@ -2,7 +2,7 @@
 from .clients.open_finance_client import OpenFinanceClient
 from .open_finance_service import OpenFinanceService
 from .insights_service import InsightsService
-from .files_service import FilesUtilsService
+from .transaction_stash_service import TransactionStashService
 from .processing_core_service import ProcessingCoreService
 from .mcc_service import MccService
 
@@ -11,10 +11,10 @@ class DIContainer:
     _instances = {}
 
     @staticmethod
-    def get_files_service() -> FilesUtilsService:
-        if "files_service" not in DIContainer._instances:
-            DIContainer._instances["files_service"] = FilesUtilsService()
-        return DIContainer._instances["files_service"]
+    def get_transaction_stash_service() -> TransactionStashService:
+        if "transaction_stash_service" not in DIContainer._instances:
+            DIContainer._instances["transaction_stash_service"] = TransactionStashService()
+        return DIContainer._instances["transaction_stash_service"]
 
     @staticmethod
     def get_processing_service() -> ProcessingCoreService:
@@ -35,7 +35,7 @@ class DIContainer:
         if "insights_service" not in DIContainer._instances:
             DIContainer._instances["insights_service"] = InsightsService(
                 open_finance_service=DIContainer.get_open_finance_service(),
-                files_service=DIContainer.get_files_service(),
+                files_service=DIContainer.get_transaction_stash_service(),
                 processing_core_service=DIContainer.get_processing_service(),
             )
         return DIContainer._instances["insights_service"]
