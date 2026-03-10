@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from core.config import Settings
-from Websites.BaseScraper import BaseScraper
+from BaseScraper import BaseScraper
 
 
 class HotScraper(BaseScraper):
@@ -46,16 +46,19 @@ class HotScraper(BaseScraper):
                 "Continuing without token (endpoint usually works without it)."
             )
 
-    async def fetch_benefits(self, page_num: int) -> dict[str, Any] | None:
+    async def fetch_benefits(self, page_num: int, benefit_type: str = "") -> dict[str, Any] | None:
         payload = {
             "radius": "0",
             "page": str(page_num),
             "platform": "web",
             "size": "50",
         }
+        query_params = {}
+        if benefit_type: 
+            query_params = {"benefitType": benefit_type}
 
         try:
-            response = await self.client.post(self.api_url, data=payload)
+            response = await self.client.post(self.api_url, params=query_params, data=payload)
             response.raise_for_status()
             return response.json()
         except Exception as exc:

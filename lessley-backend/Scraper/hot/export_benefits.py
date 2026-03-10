@@ -2,6 +2,10 @@ import asyncio
 import json
 import os
 from pathlib import Path
+import sys
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from core.config import Settings
 from hot.hot_scraper import HotScraper
@@ -11,7 +15,7 @@ async def export_hot_benefits() -> None:
     settings = Settings.from_env()
     scraper = HotScraper(settings)
 
-    output_path = Path(os.getenv("HOT_BENEFITS_OUTPUT", "hot/outputs/hot_getAllBenefits.json"))
+    output_path = Path(os.getenv("HOT_BENEFITS_OUTPUT", "./outputs/hot_getAllBenefits.json"))
     start_page = settings.page_start
 
     all_records: list[dict] = []

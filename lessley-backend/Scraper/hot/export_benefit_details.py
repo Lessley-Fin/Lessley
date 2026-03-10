@@ -2,6 +2,11 @@ import argparse
 import asyncio
 import json
 from pathlib import Path
+import sys
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from core.config import Settings
 from hot.hot_scraper import HotScraper
@@ -44,7 +49,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    output = args.output or f"hot/outputs/hot_benefit_{args.benefit_id}.json"
+    output = args.output or f"./outputs/hot_benefit_{args.benefit_id}.json"
     asyncio.run(export_benefit_details(args.benefit_id, args.is_commerce, Path(output)))
 
 

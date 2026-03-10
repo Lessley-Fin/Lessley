@@ -22,7 +22,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from core.config import Settings
 from hot.hot_scraper import HotScraper
-from Websites.Behatsdaa import BehatsdaaScraper
+from behatsdaa.Behatsdaa import BehatsdaaScraper
 
 
 DEFAULT_CLUBS = [
