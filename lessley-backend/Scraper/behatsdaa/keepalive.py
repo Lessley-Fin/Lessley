@@ -14,7 +14,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.config import Settings
-from Websites.Behatsdaa import BehatsdaaScraper
+from behatsdaa.behatsdaa_scraper import BehatsdaaScraper
 
 
 def _load_behatsdaa_env() -> None:

@@ -16,13 +16,13 @@ from urllib.parse import urlparse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.config import Settings
 from hot.hot_scraper import HotScraper
-from behatsdaa.Behatsdaa import BehatsdaaScraper
+from behatsdaa.behatsdaa_scraper import BehatsdaaScraper
 
 
 DEFAULT_CLUBS = [

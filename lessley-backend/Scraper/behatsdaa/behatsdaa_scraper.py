@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, AsyncIterator
 
 from core.config import Settings
-from Websites.BaseScraper import BaseScraper
+from core.base_scraper import BaseScraper
 
 
 class BehatsdaaScraper(BaseScraper):

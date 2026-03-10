@@ -3,7 +3,7 @@ from __future__ import annotations
 from core.config import Settings
 from core.llm_normalizer import LLMNormalizer
 from core.mongo_repository import MongoRepository
-from Websites.BaseScraper import BaseScraper
+from core.base_scraper import BaseScraper
 
 
 class ScrapePipeline:
