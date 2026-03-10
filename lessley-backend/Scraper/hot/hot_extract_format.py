@@ -188,7 +188,7 @@ def convert_file(input_filename, output_filename):
 if __name__ == "__main__":
     # Assumes you have a file named 'hot_discounts_raw.json' in the same folder.
     # You can change the names below to match your actual files.
-    INPUT_FILE = "..\outputs\hot_benefit_57329.json"  # Replace with your bulk file name
-    OUTPUT_FILE = "..\outputs\hot_unified_discounts.json"
+    INPUT_FILE = "outputs\hot_details_1300.json"  # Replace with your bulk file name
+    OUTPUT_FILE = "outputs\hot_unified_discounts_3.json"
     
     convert_file(INPUT_FILE, OUTPUT_FILE)

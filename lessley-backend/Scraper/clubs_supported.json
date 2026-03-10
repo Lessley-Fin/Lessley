@@ -1,26 +1,611 @@
 [
   {
     "club_id": 1,
+    "hot_benefit_type": "BEHATSDAA",
     "name": "בהצדעה",
     "website": "https://www.behatsdaa.org.il",
     "logo_url": ""
   },
   {
     "club_id": 2,
+    "hot_benefit_type": "HTZ",
     "name": "HTZ",
     "website": "https://www.htzone.co.il",
     "logo_url": ""
   },
   {
     "club_id": 3,
+    "hot_benefit_type": "PAIS_PLUS",
     "name": "פיס",
     "website": "https://www.pais.co.il",
     "logo_url": ""
   },
   {
     "club_id": 4,
+    "hot_benefit_type": "HOT",
     "name": "HOT",
     "website": "https://www.hot.co.il",
+    "logo_url": ""
+  },
+  {
+    "club_id": 5,
+    "hot_benefit_type": "CAL",
+    "name": "כאל",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 6,
+    "hot_benefit_type": "MAX",
+    "name": "מקס",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 7,
+    "hot_benefit_type": "BEHATSDAA_LOADABLE",
+    "name": "בהצדעה טעינה",
+    "website": "https://www.behatsdaa.org.il",
+    "logo_url": ""
+  },
+  {
+    "club_id": 8,
+    "hot_benefit_type": "PAIS_PLUS_CARD",
+    "name": "פיס פלוס כרטיס",
+    "website": "https://www.pais.co.il",
+    "logo_url": ""
+  },
+  {
+    "club_id": 9,
+    "hot_benefit_type": "OLAM_HATAVOT",
+    "name": "עולם התבות",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 10,
+    "hot_benefit_type": "NOFSHONIT",
+    "name": "נופשונית",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 11,
+    "hot_benefit_type": "WONDER",
+    "name": "Wonder",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 12,
+    "hot_benefit_type": "HVR_BLUE_CARD",
+    "name": "הבר כרטיס כחול",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 13,
+    "hot_benefit_type": "HVR_YELLOW_CARD",
+    "name": "הבר כרטיס צהוב",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 14,
+    "hot_benefit_type": "HVR_GREEN_CARD",
+    "name": "הבר כרטיס ירוק",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 15,
+    "hot_benefit_type": "HVR",
+    "name": "הבר",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 16,
+    "hot_benefit_type": "KSP",
+    "name": "KSP",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 17,
+    "hot_benefit_type": "IVORY",
+    "name": "Ivory",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 18,
+    "hot_benefit_type": "MANIA_JEANS",
+    "name": "מאניה ג'ינס",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 19,
+    "hot_benefit_type": "LAST_PRICE",
+    "name": "לאסט פרייס",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 20,
+    "hot_benefit_type": "TERMINALX",
+    "name": "TerminalX",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 21,
+    "hot_benefit_type": "TIMBERLAND",
+    "name": "Timberland",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 22,
+    "hot_benefit_type": "NAUTICA",
+    "name": "Nautica",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 23,
+    "hot_benefit_type": "YOTER",
+    "name": "יותר",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 24,
+    "hot_benefit_type": "AMERICAN_EXPRESS",
+    "name": "American Express",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 25,
+    "hot_benefit_type": "MEGALEAN",
+    "name": "מגלין",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 26,
+    "hot_benefit_type": "LEUMI_GOODIES",
+    "name": "לאומי גודיס",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 27,
+    "hot_benefit_type": "DINERS",
+    "name": "Diners",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 28,
+    "hot_benefit_type": "KRANOT",
+    "name": "קרנות",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 29,
+    "hot_benefit_type": "ISRACARD_TOP",
+    "name": "ישראכארט טופ",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 30,
+    "hot_benefit_type": "LIVING",
+    "name": "Living",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 31,
+    "hot_benefit_type": "ACE",
+    "name": "ACE",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 32,
+    "hot_benefit_type": "MAFTEACH",
+    "name": "מפתח",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 33,
+    "hot_benefit_type": "LIFE_STYLE",
+    "name": "Life Style",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 34,
+    "hot_benefit_type": "WISHING_WELL",
+    "name": "Wishing Well",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 35,
+    "hot_benefit_type": "BUYME",
+    "name": "BuyMe",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 36,
+    "hot_benefit_type": "STRAUSS_PLUS",
+    "name": "שטראוס פלוס",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 37,
+    "hot_benefit_type": "TMURA",
+    "name": "תמורה",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 38,
+    "hot_benefit_type": "MIZRAHI",
+    "name": "מזרחי",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 39,
+    "hot_benefit_type": "YOURS",
+    "name": "Yours",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 40,
+    "hot_benefit_type": "ISRACARD",
+    "name": "ישראכארט",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 41,
+    "hot_benefit_type": "TOV",
+    "name": "טוב",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 42,
+    "hot_benefit_type": "ADIF",
+    "name": "עדיף",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 43,
+    "hot_benefit_type": "TAU",
+    "name": "TAU",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 44,
+    "hot_benefit_type": "MERCANTILE_SMILE",
+    "name": "מרקנטיל סמייל",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 45,
+    "hot_benefit_type": "ISTUDENT",
+    "name": "iStudent",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 46,
+    "hot_benefit_type": "STUDENT_GROUP",
+    "name": "קבוצת סטודנטים",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 47,
+    "hot_benefit_type": "MOADON_YASHIR",
+    "name": "מועדון ישיר",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 48,
+    "hot_benefit_type": "FLY_CARD",
+    "name": "Fly Card",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 49,
+    "hot_benefit_type": "CUPONOFESH",
+    "name": "קופונופש",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 50,
+    "hot_benefit_type": "POWER_CARD",
+    "name": "Power Card",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 51,
+    "hot_benefit_type": "RAMI_LEVY",
+    "name": "רמי לוי",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 52,
+    "hot_benefit_type": "TAV_ZAHAV",
+    "name": "תו זהב",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 53,
+    "hot_benefit_type": "MASHBIR365",
+    "name": "המשביר 365",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 54,
+    "hot_benefit_type": "ALM",
+    "name": "ALM",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 55,
+    "hot_benefit_type": "CWC",
+    "name": "CWC",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 56,
+    "hot_benefit_type": "MESHEKARD",
+    "name": "משקארד",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 57,
+    "hot_benefit_type": "SHUFERSAL4U",
+    "name": "שופרסל",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 58,
+    "hot_benefit_type": "FRIENDS",
+    "name": "Friends",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 59,
+    "hot_benefit_type": "SHW",
+    "name": "SHW",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 60,
+    "hot_benefit_type": "WESHOES",
+    "name": "WeShoes",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 61,
+    "hot_benefit_type": "RAZILI",
+    "name": "רזילי",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 62,
+    "hot_benefit_type": "SUPER_PHARM",
+    "name": "סופר-פארם",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 63,
+    "hot_benefit_type": "SOHO",
+    "name": "Soho",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 64,
+    "hot_benefit_type": "SOLTAM",
+    "name": "סולתם",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 65,
+    "hot_benefit_type": "COOK_BAKE",
+    "name": "Cook & Bake",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 66,
+    "hot_benefit_type": "CHEF",
+    "name": "Chef",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 67,
+    "hot_benefit_type": "TO_MIX",
+    "name": "To Mix",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 68,
+    "hot_benefit_type": "ALI_EXPRESS",
+    "name": "AliExpress",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 69,
+    "hot_benefit_type": "JD_SPORTS",
+    "name": "JD Sports",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 70,
+    "hot_benefit_type": "ROZENFELD",
+    "name": "רוזנפלד",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 71,
+    "hot_benefit_type": "HOME_CENTER",
+    "name": "Home Center",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 72,
+    "hot_benefit_type": "ARAD_TEXTILE",
+    "name": "ערד טקסטיל",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 73,
+    "hot_benefit_type": "EURO_SPORT",
+    "name": "Euro Sport",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 74,
+    "hot_benefit_type": "DANON",
+    "name": "דנון",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 75,
+    "hot_benefit_type": "MULTI_STORE",
+    "name": "Multi Store",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 76,
+    "hot_benefit_type": "NETO",
+    "name": "נטו",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 77,
+    "hot_benefit_type": "BEYAHAD",
+    "name": "ביחד",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 78,
+    "hot_benefit_type": "UNIQ",
+    "name": "Uniq",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 79,
+    "hot_benefit_type": "CAMPUS_CARD",
+    "name": "Campus Card",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 80,
+    "hot_benefit_type": "KETER",
+    "name": "כתר",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 81,
+    "hot_benefit_type": "YOURSG",
+    "name": "Yours G",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 82,
+    "hot_benefit_type": "CORPORATE",
+    "name": "Corporate",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 83,
+    "hot_benefit_type": "TFS",
+    "name": "TFS",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 84,
+    "hot_benefit_type": "RENUAR",
+    "name": "רנואר",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 85,
+    "hot_benefit_type": "BEYAHAD_LOADABLE",
+    "name": "ביחד טעינה",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 86,
+    "hot_benefit_type": "HO",
+    "name": "HO",
+    "website": "",
+    "logo_url": ""
+  },
+  {
+    "club_id": 87,
+    "hot_benefit_type": "FOX",
+    "name": "פוקס",
+    "website": "",
     "logo_url": ""
   }
 ]

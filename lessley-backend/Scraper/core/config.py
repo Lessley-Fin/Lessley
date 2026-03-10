@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 import os
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*args, **kwargs) -> bool:
+        return False
 
 
 @dataclass(slots=True)

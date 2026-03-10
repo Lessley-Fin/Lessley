@@ -67,21 +67,24 @@ async def run() -> None:
             name = str(club.get("name") or "").strip()
             website = str(club.get("website") or "").strip()
             logo_url = str(club.get("logo_url") or "").strip()
+            hot_benefit_type = str(club.get("hot_benefit_type") or "").strip()
 
             if club_id is None or not name:
                 skipped_invalid += 1
                 continue
 
+            doc: dict[str, Any] = {
+                "club_id": club_id,
+                "name": name,
+                "website": website,
+                "logo_url": logo_url,
+            }
+            if hot_benefit_type:
+                doc["hot_benefit_type"] = hot_benefit_type
+
             await collection.update_one(
                 {"club_id": club_id},
-                {
-                    "$set": {
-                        "club_id": club_id,
-                        "name": name,
-                        "website": website,
-                        "logo_url": logo_url,
-                    }
-                },
+                {"$set": doc},
                 upsert=True,
             )
             inserted_or_updated += 1
