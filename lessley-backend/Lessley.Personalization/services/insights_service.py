@@ -59,3 +59,19 @@ class InsightsService:
         )
 
         return accounts
+
+    async def calculate_top_stores_async(self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False):
+        """
+        Calculates top stores based on transactions.
+        """
+
+        if use_mock:
+            transactions = self.files_service.read_json("transactions_roee_all.json")
+        else:
+            transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+
+        print(f"Retrieved {len(transactions)} transactions for user {user_id}")
+
+        accounts = self.processing_core_service.get_top_spending_stores(transactions)
+
+        return accounts
