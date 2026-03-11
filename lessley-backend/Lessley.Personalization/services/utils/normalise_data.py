@@ -1,21 +1,23 @@
-class NormaliseData:
-    def __init__(self):
-        self.id = None
-        self.userId = None
-        self.providerId = None
-        self.accountNumber = None
-        self.status = None
-        self.categoryCode = None
-        self.ammount = None
-        self.description = None
-        self.category = None
-        self.type = None
-        self.date = None
-        self.merchantName = None
-        self.merchantAddress = None
-        self.createdAt = None
+from dataclasses import dataclass
 
-    def normalise_data(self, response):
+@dataclass
+class NormaliseData:
+    id: str =  None
+    userId: str = None
+    providerId: str = None
+    accountNumber: str = None
+    status: str = None
+    categoryCode: str = None
+    ammount: float = None
+    description: str = None
+    category: str = None
+    type: str = None
+    date: str = None
+    merchantName: str = None
+    merchantAddress: str = None
+    createdAt: str = None
+
+    def normalise_data(self, response) -> list[dict]:
         """
         Normalises the input data by filtering out any unnecessary transactions data
         """
