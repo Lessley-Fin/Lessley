@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 
-class FilesUtilsService:
+class TransactionStashService:
     def read_json(self, file_path: str):
         """
         Reads a JSON file and returns its content.
