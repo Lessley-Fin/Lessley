@@ -145,31 +145,33 @@ class DataFrameBuilder:
             if primary_value not in nested_structure:
                 nested_structure[primary_value] = {
                     primary_key: primary_value,
-                    "total_count": 0,
-                    "total_amount": 0.0,
-                    "items": [],
+                    count_col: 0,
+                    amount_col: 0.0,
+                    "spend_by_account": [],
                 }
 
             # Accumulate totals
-            nested_structure[primary_value]["total_count"] += count_value
-            nested_structure[primary_value]["total_amount"] += amount_value
+            nested_structure[primary_value][count_col] += count_value
+            nested_structure[primary_value][amount_col] += amount_value
 
             # Add secondary item
-            nested_structure[primary_value]["items"].append(
+            nested_structure[primary_value]["spend_by_account"].append(
                 {
                     secondary_key: secondary_value,
-                    "total_count": count_value,
-                    "total_amount": amount_value,
+                    "account_total_count": count_value,
+                    "account_total_amount": amount_value,
                 }
             )
 
         # Sort items within each group by amount (descending)
         for group_data in nested_structure.values():
-            group_data["items"].sort(key=lambda x: x["total_amount"], reverse=True)
+            group_data["spend_by_account"].sort(
+                key=lambda x: (x["account_total_count"], x["account_total_amount"]), reverse=True
+            )
 
-        # Convert to list and sort groups by total_count then total_amount (both descending)
+        # Convert to list and sort groups by count then amount (both descending)
         result = list(nested_structure.values())
-        result.sort(key=lambda x: (x["total_count"], x["total_amount"]), reverse=True)
+        result.sort(key=lambda x: (x[count_col], x[amount_col]), reverse=True)
 
         # Apply limit
         if limit is not None:

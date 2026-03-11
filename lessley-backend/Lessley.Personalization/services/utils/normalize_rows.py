@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def calc_amount_spent(row) -> float:
+def normalize_amount_spent(row: dict) -> float:
     """Reusable logic to calculate the absolute spent amount with fallbacks."""
     charged = row.get("amount.chargedAmount.amount")
     if pd.notna(charged) and charged != "":
@@ -14,7 +14,7 @@ def calc_amount_spent(row) -> float:
     return 0.0
 
 
-def clean_merchant_name(row) -> str:
+def normalize_merchant_name(row: dict) -> str:
     """Reusable logic to safely extract and trim the merchant name."""
     name = row.get("merchantName")
     # str.strip() removes leading/trailing whitespaces

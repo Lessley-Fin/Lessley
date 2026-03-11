@@ -54,8 +54,8 @@ async def calculate_top_accounts(
 async def calculate_top_stores(
     userId: str = Query(..., description="The unique identifier of the user"),
     timeFilter: bool = Query(True, description="Whether to filter transactions by time"),
-    days: int = Query(..., description="The number of days of transaction data to analyze"),
-    useMock: bool = Query(False, description="Whether to use mock data instead of real transactions"),
+    days: int = Query(60, description="The number of days of transaction data to analyze"),
+    useMock: bool = Query(True, description="Whether to use mock data instead of real transactions"),
 ):
     """
     Triggers the calculation of top stores based on Open Finance data.
@@ -63,11 +63,11 @@ async def calculate_top_stores(
     try:
         # Await the async service call
         service = DIContainer.get_insights_service()
-        accounts = await service.calculate_top_stores_async(userId, timeFilter, days, useMock)
+        stores = await service.calculate_top_stores_async(userId, timeFilter, days, useMock)
 
         return {
             "message": f"Successfully retrieved data for user {userId}",
-            "accounts": accounts,
+            "stores": stores,
             "status": "Calculation initiated",
         }
     except Exception as e:

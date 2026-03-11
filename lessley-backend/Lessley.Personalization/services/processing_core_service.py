@@ -1,6 +1,6 @@
 import pandas as pd
-from .data_frame_service import DataFrameBuilder
-from .utils import calc_amount_spent, clean_merchant_name
+from .utils.data_frame_builder import DataFrameBuilder
+from .utils.normalize_rows import normalize_amount_spent, normalize_merchant_name
 
 from services.mcc_service import MccService
 
@@ -53,7 +53,7 @@ class ProcessingCoreService:
                 ),
             )
             # Calculate amount_spent with fallback logic
-            .apply_row_logic("amount_spent", calc_amount_spent)
+            .apply_row_logic("amount_spent", normalize_amount_spent)
             # Group by category: count transactions and sum amounts
             .group_and_aggregate(
                 group_by="category",
@@ -111,7 +111,7 @@ class ProcessingCoreService:
             DataFrameBuilder(transactions)
             .extract_columns(flat_columns)
             # Calculate amount_spent with fallback logic
-            .apply_row_logic("amount_spent", calc_amount_spent)
+            .apply_row_logic("amount_spent", normalize_amount_spent)
             # Group by account: count transactions and sum amounts, also preserve account details
             .group_and_aggregate(
                 group_by=group_by_column,
@@ -172,8 +172,8 @@ class ProcessingCoreService:
         return (
             DataFrameBuilder(transactions)
             .extract_columns(flat_columns)
-            .apply_row_logic("amount_spent", calc_amount_spent)
-            .apply_row_logic("normalized_merchantName", clean_merchant_name)
+            .apply_row_logic("amount_spent", normalize_amount_spent)
+            .apply_row_logic("normalized_merchantName", normalize_merchant_name)
             # Group by merchant and account: count transactions and sum amounts
             .group_and_aggregate(
                 group_by=["normalized_merchantName", "accountNumber"],
