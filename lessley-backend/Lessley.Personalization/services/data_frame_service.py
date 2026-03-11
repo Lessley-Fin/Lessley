@@ -93,24 +93,86 @@ class DataFrameBuilder:
 
         return self.df.to_dict(orient="records")
 
-    def to_nested_list(self, primary_key: str, nested_key_name: str = "items", limit: int = None) -> List[Dict]:
+    def build_nested_structure(
+        self,
+        primary_key: str,
+        secondary_key: str,
+        count_col: str,
+        amount_col: str,
+        limit: Optional[int] = None,
+    ) -> List[Dict]:
         """
-        Transforms a flat grouped dataframe into a nested dictionary structure.
-        Example: Groups by 'category', nests the rest under 'items'.
+        STEP: Creates a hierarchical structure where:
+        - Primary key groups with aggregated counts/amounts
+        - Secondary key items nested under each primary group
+        - Items sorted by amount within each group (descending)
+        - Groups sorted by count then amount (both descending)
+
+        Args:
+            primary_key: Column name for top-level grouping (e.g., "merchantName")
+            secondary_key: Column name for nested items (e.g., "accountNumber")
+            count_col: Column name for transaction count
+            amount_col: Column name for total amount
+            limit: Maximum number of primary groups to return
+
+        Returns:
+            List of nested dictionaries:
+            [
+                {
+                    "merchantName": "STARBUCKS",
+                    "total_count": 10,
+                    "total_amount": 500.50,
+                    "items": [
+                        {"accountNumber": "****1234", "total_count": 6, "total_amount": 300.00},
+                        {"accountNumber": "****5678", "total_count": 4, "total_amount": 200.50}
+                    ]
+                }
+            ]
         """
         if self.df.empty:
             return []
 
-        print(f"DataFrame before nesting: {self.df.head()}")
+        nested_structure = {}
+
+        # Build nested dict from flat grouped data
+        for _, row in self.df.iterrows():
+            primary_value = row[primary_key]
+            secondary_value = row[secondary_key]
+            count_value = row[count_col]
+            amount_value = row[amount_col]
+
+            # Initialize primary group if not exists
+            if primary_value not in nested_structure:
+                nested_structure[primary_value] = {
+                    primary_key: primary_value,
+                    "total_count": 0,
+                    "total_amount": 0.0,
+                    "items": [],
+                }
+
+            # Accumulate totals
+            nested_structure[primary_value]["total_count"] += count_value
+            nested_structure[primary_value]["total_amount"] += amount_value
+
+            # Add secondary item
+            nested_structure[primary_value]["items"].append(
+                {
+                    secondary_key: secondary_value,
+                    "total_count": count_value,
+                    "total_amount": amount_value,
+                }
+            )
+
+        # Sort items within each group by amount (descending)
+        for group_data in nested_structure.values():
+            group_data["items"].sort(key=lambda x: x["total_amount"], reverse=True)
+
+        # Convert to list and sort groups by total_count then total_amount (both descending)
+        result = list(nested_structure.values())
+        result.sort(key=lambda x: (x["total_count"], x["total_amount"]), reverse=True)
+
+        # Apply limit
         if limit is not None:
-            self.df = self.df.head(limit)
+            result = result[:limit]
 
-        # Group by the primary key, and convert all other columns into a list of dictionaries
-        nested_series = self.df.groupby(primary_key).apply(
-            lambda x: x.drop(columns=[primary_key]).to_dict(orient="records")
-        )
-
-        # Convert the resulting pandas Series back into a clean list of dictionaries
-        nested_list = [{primary_key: key, nested_key_name: values} for key, values in nested_series.items()]
-
-        return nested_list
+        return result
