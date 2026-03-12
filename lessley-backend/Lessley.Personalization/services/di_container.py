@@ -1,4 +1,5 @@
 # services/di_container.py
+from functools import lru_cache
 from .clients.open_finance_client import OpenFinanceClient
 from .open_finance_service import OpenFinanceService
 from .insights_service import InsightsService
@@ -10,12 +11,14 @@ from .mcc_service import MccService
 class DIContainer:
     _instances = {}
 
+    @lru_cache(maxsize=1)
     @staticmethod
     def get_transaction_stash_service() -> TransactionStashService:
         if "transaction_stash_service" not in DIContainer._instances:
             DIContainer._instances["transaction_stash_service"] = TransactionStashService()
         return DIContainer._instances["transaction_stash_service"]
 
+    @lru_cache(maxsize=1)
     @staticmethod
     def get_processing_service() -> ProcessingCoreService:
         if "processing_service" not in DIContainer._instances:
@@ -24,12 +27,14 @@ class DIContainer:
             )
         return DIContainer._instances["processing_service"]
 
+    @lru_cache(maxsize=1)
     @staticmethod
     def get_mcc_service() -> MccService:
         if "mcc_service" not in DIContainer._instances:
             DIContainer._instances["mcc_service"] = MccService()
         return DIContainer._instances["mcc_service"]
 
+    @lru_cache(maxsize=1)
     @staticmethod
     def get_insights_service() -> InsightsService:
         if "insights_service" not in DIContainer._instances:
@@ -40,12 +45,14 @@ class DIContainer:
             )
         return DIContainer._instances["insights_service"]
 
+    @lru_cache(maxsize=1)
     @staticmethod
     def get_open_finance_client() -> OpenFinanceClient:
         if "open_finance_client" not in DIContainer._instances:
             DIContainer._instances["open_finance_client"] = OpenFinanceClient()
         return DIContainer._instances["open_finance_client"]
 
+    @lru_cache(maxsize=1)
     @staticmethod
     def get_open_finance_service() -> OpenFinanceService:
         if "open_finance_service" not in DIContainer._instances:

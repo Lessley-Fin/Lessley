@@ -1,5 +1,5 @@
 import httpx
-from config import settings
+from config.settings import settings
 
 
 class OpenFinanceClient:

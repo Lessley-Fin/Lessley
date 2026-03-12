@@ -9,6 +9,7 @@ class ProcessingCoreService:
     def __init__(self, mcc_service: MccService):
         self.mcc_service = mcc_service  # Inject the MCC service dependency
 
+    # TODO: receive List[Transaction]
     def get_top_spending_categories(self, transactions: dict, limit: int = 20) -> list[dict]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top spending categories by total spend.
@@ -68,6 +69,7 @@ class ProcessingCoreService:
             .limit_and_convert(limit)
         )
 
+    # TODO: receive List[Transaction]
     def get_top_spending_accounts(
         self,
         transactions: dict,
@@ -127,6 +129,7 @@ class ProcessingCoreService:
             .limit_and_convert(limit)
         )
 
+    # TODO: receive List[Transaction]
     def get_top_spending_stores(
         self,
         transactions: dict,

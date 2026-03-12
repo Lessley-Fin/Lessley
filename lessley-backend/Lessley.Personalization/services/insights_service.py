@@ -15,7 +15,7 @@ class InsightsService:
         self.processing_core_service = processing_core_service
 
     async def calculate_user_categories_async(
-        self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False
+        self, user_id: str, time_filter: bool, days: int = 60, use_mock: bool = False
     ) -> list[dict]:
         """
         Calculates user categories based on transactions.
@@ -30,8 +30,8 @@ class InsightsService:
         return categories
 
     async def calculate_top_accounts_async(
-        self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False
-    ):
+        self, user_id: str, time_filter: bool, days: int = 60, use_mock: bool = False
+    ) -> list[dict]:
         """
         Calculates top accounts based on transactions.
         """
@@ -60,7 +60,9 @@ class InsightsService:
 
         return accounts
 
-    async def calculate_top_stores_async(self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False):
+    async def calculate_top_stores_async(
+        self, user_id: str, time_filter: bool, days: int = 60, use_mock: bool = False
+    ) -> list[dict]:
         """
         Calculates top stores based on transactions.
         """

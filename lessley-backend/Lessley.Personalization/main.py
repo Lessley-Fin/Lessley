@@ -1,10 +1,10 @@
+# from contextlib import asynccontextmanager
 import asyncio
 import json
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import aio_pika
 
-from config import settings
+from config.settings import settings
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
@@ -54,13 +54,16 @@ async def consume_rabbitmq():
 
 
 # --- FastAPI Lifespan Management ---
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: Launch the RabbitMQ consumer as a background task
-    task = asyncio.create_task(consume_rabbitmq())
-    yield
-    # Shutdown: Clean up tasks when the server stops
-    task.cancel()
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     if settings.RabbitMQ_Enabled:
+#         # Startup: Launch the RabbitMQ consumer as a background task
+#         task = asyncio.create_task(consume_rabbitmq())
+#         yield
+#         # Shutdown: Clean up tasks when the server stops
+#         task.cancel()
+#     else:
+#         yield
 
 
 # --- Application Initialization ---
@@ -68,7 +71,7 @@ app = FastAPI(
     title="Lessley Personalization Engine",
     description="AI-driven financial gap analysis and recommendations",
     version="1.0.0",
-    lifespan=lifespan,
+    # lifespan=lifespan,
 )
 
 app.include_router(mcc_controller.router)

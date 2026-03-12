@@ -8,6 +8,7 @@ class DataFrameBuilder:
     This eliminates code duplication and provides reusable building blocks.
     """
 
+    # TODO: receive List[Transaction]
     def __init__(self, data: Any):
         """Initialize with raw data (list, dict, or already a DataFrame)"""
         self.df = None
@@ -32,7 +33,9 @@ class DataFrameBuilder:
         Returns:
             Self for method chaining
         """
-        # existing_cols = [col for col in columns if col in self.df.columns]
+        missing = [col for col in columns if col not in self.df.columns]
+        if missing:
+            raise ValueError(f"Missing columns: {missing}. Available: {list(self.df.columns)}")
         self.df = self.df[columns].copy()
         return self
 
