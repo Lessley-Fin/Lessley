@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from .clients.open_finance_client import OpenFinanceClient
+from config.constants import LIMITS
 
 
 class OpenFinanceService:
@@ -15,7 +16,7 @@ class OpenFinanceService:
         """
         return await self.client.get_access_token(user_id)
 
-    async def get_user_accounts_async(self, user_id: str):
+    async def get_user_accounts_async(self, user_id: str) -> list[dict]:
         """
         Retrieves user accounts for the given user ID.
         """
@@ -25,8 +26,8 @@ class OpenFinanceService:
 
     # TODO: return List[Transaction]
     async def get_user_transactions_by_account_async(
-        self, user_id: str, account_id: str, is_time_filter: bool, days: int = 90
-    ):
+        self, user_id: str, account_id: str, is_time_filter: bool, days: int = LIMITS.DAYS
+    ) -> list[dict]:
         """
         Retrieves banking data for the past {days} days.
         """
@@ -45,7 +46,9 @@ class OpenFinanceService:
         return all_transactions
 
     # TODO: return List[Transaction]
-    async def get_user_transactions_async(self, user_id: str, is_time_filter: bool, days: int = 90):
+    async def get_user_transactions_async(
+        self, user_id: str, is_time_filter: bool, days: int = LIMITS.DAYS
+    ) -> list[dict]:
         """
         Retrieves banking data for the past {days} days.
         """

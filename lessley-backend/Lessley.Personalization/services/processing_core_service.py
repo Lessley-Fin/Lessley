@@ -3,6 +3,7 @@ from .utils.data_frame_builder import DataFrameBuilder
 from .utils.normalize_rows import normalize_amount_spent, normalize_merchant_name
 
 from services.mcc_service import MccService
+from config.constants import LIMITS
 
 
 class ProcessingCoreService:
@@ -10,7 +11,7 @@ class ProcessingCoreService:
         self.mcc_service = mcc_service  # Inject the MCC service dependency
 
     # TODO: receive List[Transaction]
-    def get_top_spending_categories(self, transactions: dict, limit: int = 20) -> list[dict]:
+    def get_top_spending_categories(self, transactions: dict, limit: int = LIMITS.TOP_CATEGORIES) -> list[dict]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top spending categories by total spend.
 
@@ -76,7 +77,7 @@ class ProcessingCoreService:
         flat_columns: list[str] = None,
         group_by_column: str = "accountId",
         ascending: bool = False,
-        limit: int = 10,
+        limit: int = LIMITS.TOP_ACCOUNTS,
     ) -> list[dict]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top accounts by total spend.
@@ -133,7 +134,7 @@ class ProcessingCoreService:
     def get_top_spending_stores(
         self,
         transactions: dict,
-        limit: int = 50,
+        limit: int = LIMITS.TOP_STORES,
     ) -> list[dict]:
         """
         INFRASTRUCTURE: Analyzes transactions and returns stores with nested accounts.
