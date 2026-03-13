@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, Query
 from services.di_container import DIContainer
 from .schemas import UserRequests, GetTransactionsRequest, GetTransactionsByAccountRequest
-from .responses import PaginatedResponse
+from .responses import PaginatedResponse, BasicResponse
 
 router = APIRouter(prefix="/open-finance", tags=["Open Finance"])
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ async def get_user_access_token(
     service = DIContainer.get_open_finance_service()
     token = await service.get_access_token_async(request.user_id)
 
-    return PaginatedResponse(status="success", data={"token": token}, count=1)
+    return BasicResponse(status="success", data={"access_token": token})
 
 
 @router.get("/accounts")

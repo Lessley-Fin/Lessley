@@ -5,7 +5,7 @@ from config.settings import settings
 
 class OpenFinanceClient:
     TOKEN_EXPIRY_SECONDS = 86400  # 24 hours
-    
+
     def __init__(self):
         self.base_url = settings.OpenFinanceConfig_BaseUrl
         self.client_id = settings.OpenFinanceConfig_ClientId
@@ -33,7 +33,7 @@ class OpenFinanceClient:
     def _is_token_expired(self, timestamp: float) -> bool:
         """Check if a cached token has expired"""
         return time.time() - timestamp > self.TOKEN_EXPIRY_SECONDS
-    
+
     async def get_access_token(self, user_id: str) -> str:
         """
         Retrieves an access token for the given user ID.
@@ -44,8 +44,10 @@ class OpenFinanceClient:
         if user_id in self._token_cache:
             token, timestamp = self._token_cache[user_id]
             if not self._is_token_expired(timestamp):
+                print("Returning cached token")
                 return token
-        
+
+        print("Fetching new token due to cache miss or expired")
         # Fetch new token if not cached or expired
         client = await self._get_client()
         response = await client.post(
@@ -60,7 +62,7 @@ class OpenFinanceClient:
         response.raise_for_status()
         token_data = response.json()
         access_token = token_data.get("accessToken")
-        
+
         # Store in cache with current timestamp
         self._token_cache[user_id] = (access_token, time.time())
         return access_token
@@ -68,7 +70,7 @@ class OpenFinanceClient:
     def clear_token_cache(self) -> None:
         """Clear the access token cache"""
         self._token_cache.clear()
-    
+
     def invalidate_token(self, user_id: str) -> None:
         """Remove a specific user's token from cache (e.g., on logout)"""
         self._token_cache.pop(user_id, None)
