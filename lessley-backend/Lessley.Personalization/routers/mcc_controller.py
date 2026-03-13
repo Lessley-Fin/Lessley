@@ -1,6 +1,7 @@
 import logging
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Query
 from services.di_container import DIContainer
+from .responses import PaginatedResponse
 
 router = APIRouter(prefix="/mcc", tags=["MCC Codes"])
 logger = logging.getLogger(__name__)
@@ -11,18 +12,10 @@ async def get_mcc():
     """
     Retrieves all MCC codes.
     """
-    try:
-        service = DIContainer.get_mcc_service()
-        mcc = service.get_mcc()
+    service = DIContainer.get_mcc_service()
+    mcc = service.get_mcc()
 
-        return {"mcc": mcc}
-
-    except ValueError as e:
-        logger.warning(f"Invalid input for MCC codes: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parameters")
-    except Exception as e:
-        logger.error(f"Failed to retrieve MCC codes: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Service error")
+    return PaginatedResponse(status="success", data=mcc, count=len(mcc))
 
 
 @router.get("/")
@@ -32,14 +25,7 @@ async def get_mcc_by_id(
     """
     Retrieves the description for a specific MCC code.
     """
-    try:
-        service = DIContainer.get_mcc_service()
-        mcc = service.get_mcc_by_id(category_code)
+    service = DIContainer.get_mcc_service()
+    mcc = service.get_mcc_by_id(category_code)
 
-        return {"mcc": mcc}
-    except ValueError as e:
-        logger.warning(f"Invalid input for Mcc code {category_code}: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parameters")
-    except Exception as e:
-        logger.error(f"Failed to retrieve MCC code {category_code}: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Service error")
+    return PaginatedResponse(status="success", data=mcc, count=len(mcc))
