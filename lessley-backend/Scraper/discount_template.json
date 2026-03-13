@@ -1,0 +1,81 @@
+{
+    "_id": "deal_123",
+    "source_id": "src_haver",
+    "external_id": "987654",
+  
+    "store_id": "store_fox",
+    "club_id": "club_hever",
+    "category_id": "cat_fashion",
+    "product_id": null,
+  
+    "title": "10% הנחה בפוקס",
+    "description": "הנחה לחברי המועדון ברכישה באתר ובחנויות נבחרות",
+    "terms_and_conditions": "לא כולל כפל מבצעים. לא כולל עודפים.",
+  
+    "store_url": "https://fox.co.il/",
+    "benefit_url": "https://club-site.co.il/benefit/987654",
+    "image_url": "https://cdn.site.com/image.jpg",
+    
+    "trigger_type": "coupon",
+    "coupon_code": "HOT",
+    
+    "discount_type":[ "percentage_at_checkout"
+     ,"coupon", "amount at checkout", ""],
+  
+    "condition": {
+        "type": "min_quantity",
+        "value": 1
+      },
+      "reward": {
+        "type": "percentage_off",
+        "value": 0.1
+      },
+  
+    "is_specific_items_only": false,
+    "is_stackable": false,
+  
+    "valid_from": "2026-03-01T00:00:00Z",
+    "valid_until": "2026-03-31T23:59:59Z",
+  
+    "redeem_channels": ["online", "physical_store"],
+  
+    "redeem_days": ["sunday", "monday", "tuesday", "wednesday", "thursday"],
+  
+    "redeem_hours": [
+      {
+        "from": "09:00",
+        "to": "21:00"
+      }
+    ],
+  
+    "redeem_date_ranges": [
+      {
+        "from": "2026-03-01",
+        "to": "2026-03-31"
+      }
+    ],
+  
+    "applicable_branch_ids": ["branch_1", "branch_2"],
+    "excluded_branch_ids": ["branch_eilat"],
+  
+    "applicable_product_ids": [],
+    "excluded_product_ids": [],
+  
+    "constraints": {
+      "min_purchase_amount": 100,
+      "max_discount_amount": 75,
+      "max_monthly_spend_limit": null,
+      "max_vouchers_per_transaction": null,
+      "club_members_only": true,
+      "requires_specific_credit_card": true,
+      "not_valid_with_other_promotions": true,
+      "usage_limit_per_user": 1
+  
+    },
+  
+    "status": "active",
+    "scraped_at": "2026-03-10T16:00:00Z",
+    "last_seen_at": "2026-03-10T16:00:00Z",
+    "created_at": "2026-03-10T16:00:00Z",
+    "updated_at": "2026-03-10T16:00:00Z"
+  }
