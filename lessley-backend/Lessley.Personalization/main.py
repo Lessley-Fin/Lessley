@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
         yield
 
     client = DIContainer.get_open_finance_client()
-    await client._get_client().close()  # Ensure the HTTP client is properly closed on
+    await client.close_client()  # Ensure the HTTP client is properly closed on shutdown
 
 
 # --- Rate Limiter Configuration ---
