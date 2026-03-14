@@ -1,6 +1,7 @@
 import httpx
 import time
 from config.settings import settings
+from services.utils.normalise_data import NormaliseData
 
 
 class OpenFinanceClient:
@@ -100,4 +101,5 @@ class OpenFinanceClient:
             timeout=10.0,  # Add timeout for transactions request
         )
         response.raise_for_status()
-        return response.json().get("items", [])
+        normalized_transactions = NormaliseData().normalise_data(response)
+        return normalized_transactions
