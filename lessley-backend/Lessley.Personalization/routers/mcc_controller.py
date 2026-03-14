@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Query, HTTPException
+import logging
+from fastapi import APIRouter, Query, HTTPException, status
 from services.di_container import DIContainer
+from .responses import BasicResponse, PaginatedResponse
 
 router = APIRouter(prefix="/mcc", tags=["MCC Codes"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/all")
@@ -9,28 +12,24 @@ async def get_mcc():
     """
     Retrieves all MCC codes.
     """
-    try:
-        service = DIContainer.get_mcc_service()
-        mcc = service.get_mcc()
+    service = DIContainer.get_mcc_service()
+    mcc = service.get_mcc()
 
-        return {"mcc": mcc}
-    except Exception as e:
-        # Return a 500 error if loading MCC data fails
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve MCC codes: {str(e)}")
+    return PaginatedResponse(status="success", data=mcc, count=len(mcc))
 
 
 @router.get("/")
 async def get_mcc_by_id(
-    categoryCode: str = Query(..., description="The MCC category code"),
+    category_code: str = Query(..., description="The MCC category code"),
 ):
     """
     Retrieves the description for a specific MCC code.
     """
-    try:
-        service = DIContainer.get_mcc_service()
-        mcc = service.get_mcc_by_id(categoryCode)
-
-        return {"mcc": mcc}
-    except Exception as e:
-        # Return a 500 error if loading MCC data fails
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve MCC code: {str(e)}")
+    service = DIContainer.get_mcc_service()
+    mcc = service.get_mcc_by_id(category_code)
+    if mcc == "Unknown Category":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"MCC code {category_code} not found",
+        )
+    return BasicResponse(status="success", data=mcc)

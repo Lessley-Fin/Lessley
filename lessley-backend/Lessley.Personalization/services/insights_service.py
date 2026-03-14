@@ -1,6 +1,7 @@
 from services.transaction_stash_service import TransactionStashService
 from services.open_finance_service import OpenFinanceService
 from services.processing_core_service import ProcessingCoreService
+from config.constants import LIMITS
 
 
 class InsightsService:
@@ -15,7 +16,7 @@ class InsightsService:
         self.processing_core_service = processing_core_service
 
     async def calculate_user_categories_async(
-        self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
     ) -> list[dict]:
         """
         Calculates user categories based on transactions.
@@ -26,12 +27,12 @@ class InsightsService:
         else:
             transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
-        categories = self.processing_core_service.get_top_spending_categories(transactions, limit=10)
+        categories = self.processing_core_service.get_top_spending_categories(transactions)
         return categories
 
     async def calculate_top_accounts_async(
-        self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False
-    ):
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> list[dict]:
         """
         Calculates top accounts based on transactions.
         """
@@ -55,12 +56,13 @@ class InsightsService:
             ],
             group_by_column="accountId",
             ascending=False,
-            limit=5,
         )
 
         return accounts
 
-    async def calculate_top_stores_async(self, user_id: str, time_filter: bool, days: int = 90, use_mock: bool = False):
+    async def calculate_top_stores_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> list[dict]:
         """
         Calculates top stores based on transactions.
         """

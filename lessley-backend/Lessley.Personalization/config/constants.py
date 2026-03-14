@@ -1,0 +1,6 @@
+class LIMITS:
+    TOP_CATEGORIES = 20
+    TOP_ACCOUNTS = 10
+    TOP_STORES = 50
+    MAX_PAGE_SIZE = 1000
+    DAYS = 90
