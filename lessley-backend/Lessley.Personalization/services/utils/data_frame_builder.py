@@ -9,7 +9,6 @@ class DataFrameBuilder:
     This eliminates code duplication and provides reusable building blocks.
     """
 
-    # TODO: receive List[Transaction]
     def __init__(self, data: list[Transaction]):
         """Initialize with raw data (list, dict, or already a DataFrame)"""
         self.df = None

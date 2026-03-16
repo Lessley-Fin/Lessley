@@ -3,7 +3,6 @@ from pathlib import Path
 from services.utils.normalise_data import Transaction
 
 class TransactionStashService:
-    # TODO: return list[Transaction] instead of dict
     def read_json(self, file_path: str) -> list[Transaction]:
         """
         Reads a JSON file and returns its content.
