@@ -8,7 +8,7 @@ class Transaction:
     accountNumber: str | None = None
     status: str | None = None
     categoryCode: str | None = None
-    ammount: float | None = None
+    amount: float | None = None
     description: str | None = None
     category: str | None = None
     type: str | None = None
