@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Callable, Optional, Dict, List, Any, Union
+from typing import Callable, Optional, Dict, List, Union
 from models.transaction import Transaction
 
 
@@ -15,11 +15,8 @@ class DataFrameBuilder:
         if isinstance(data, pd.DataFrame):
             self.df = data
         elif isinstance(data, list):
+            data = [item.model_dump() for item in data]
             self.df = pd.json_normalize(data)
-        elif isinstance(data, dict):
-            # Handle dict with "items" key or raw dict
-            items = data.get("items", [data])
-            self.df = pd.json_normalize(items)
         else:
             raise ValueError("Data must be a DataFrame, list, or dict")
 

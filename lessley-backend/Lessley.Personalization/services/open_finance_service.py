@@ -10,7 +10,6 @@ class OpenFinanceService:
 
         self.client = client
 
-    
     async def get_access_token_async(self, user_id: str) -> str:
         """
         Retrieves an access token for the given user ID.
@@ -22,10 +21,8 @@ class OpenFinanceService:
         Retrieves user accounts for the given user ID.
         """
         token = await self.client.get_access_token(user_id)
-        accounts = await self.client.get_accounts(token)
-        return accounts
+        return await self.client.get_accounts(token)
 
-    
     async def get_user_transactions_by_account_async(
         self, user_id: str, account_id: str, is_time_filter: bool, days: int = LIMITS.DAYS
     ) -> list[Transaction]:
@@ -42,11 +39,8 @@ class OpenFinanceService:
         else:
             params = {"accountId": account_id}
 
-        all_transactions = await self.client.get_transactions(token, params)
+        return await self.client.get_transactions(token, params)
 
-        return all_transactions
-
-    
     async def get_user_transactions_async(
         self, user_id: str, is_time_filter: bool, days: int = LIMITS.DAYS
     ) -> list[Transaction]:
@@ -60,17 +54,6 @@ class OpenFinanceService:
         accounts = await self.client.get_accounts(token)
 
         # 3. Get Transactions for each account [cite: 390]
-        # all_transactions = []
-        # for account in accounts:
-        #     account_id = account.get("id")
-        #     if is_time_filter:
-        #         from_date = (datetime.utcnow() - timedelta(days=days)).date()
-        #         params = {"dateFrom": from_date, "accountId": account_id}
-        #     else:
-        #         params = {"accountId": account_id}
-        #     transactions = await self.client.get_transactions(token, params)
-        #     all_transactions.extend(transactions)
-
         params = {}
         if is_time_filter:
             params = {"dateFrom": (datetime.utcnow() - timedelta(days=days)).date()}

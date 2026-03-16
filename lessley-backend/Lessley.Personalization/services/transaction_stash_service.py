@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
-from models.transaction import Transaction
+from models.transaction import PaginatedTransactionsResponse, Transaction
+
 
 class TransactionStashService:
     def read_json(self, file_path: str) -> list[Transaction]:
@@ -12,4 +13,4 @@ class TransactionStashService:
 
         with open(transactions_file, "r", encoding="utf-8") as file:
             data = json.load(file)
-            return data.get("items", [])
+            return PaginatedTransactionsResponse.normalize_data(data)

@@ -42,8 +42,6 @@ class InsightsService:
         else:
             transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
-        print(f"Retrieved {len(transactions)} transactions for user {user_id}")
-
         accounts = self.processing_core_service.get_top_spending_accounts(
             transactions,
             flat_columns=[
@@ -72,8 +70,5 @@ class InsightsService:
         else:
             transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
-        print(f"Retrieved {len(transactions)} transactions for user {user_id}")
-
-        accounts = self.processing_core_service.get_top_spending_stores(transactions)
-
-        return accounts
+        stores = self.processing_core_service.get_top_spending_stores(transactions)
+        return stores

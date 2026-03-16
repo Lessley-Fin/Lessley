@@ -65,16 +65,6 @@ namespace Lessley.Gateway.Api.Services.Classes
 
         public async Task<OBTransactionsResponse> GetTransactions(string username)
         {
-            var clientId = _configuration["OpenFinanceConfig:ClientId"];
-            var clientSecret = _configuration["OpenFinanceConfig:ClientSecret"];
-
-            var payload = new
-            {
-                userId = username,
-                clientId,
-                clientSecret
-            };
-
             var accessToken = await CreateAccessToken(username);
 
             var request = new HttpRequestMessage(HttpMethod.Get, "v2/data/transactions");
