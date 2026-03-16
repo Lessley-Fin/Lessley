@@ -1,7 +1,7 @@
 import httpx
 import time
 from config.settings import settings
-from models.transaction import Transaction
+from models.transaction import PaginatedTransactionsResponse, Transaction
 
 
 class OpenFinanceClient:
@@ -101,5 +101,4 @@ class OpenFinanceClient:
             timeout=10.0,  # Add timeout for transactions request
         )
         response.raise_for_status()
-        normalized_transactions = Transaction.normalise_data(response)
-        return normalized_transactions
+        return PaginatedTransactionsResponse.normalize_data(response)

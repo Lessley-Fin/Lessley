@@ -18,7 +18,6 @@ namespace Lessley.Gateway.Api.Contracts
         public string? UserId { get; set; }
         public string? ProviderId { get; set; }
         public string? AccountId { get; set; }
-        public string? RelatedPaymentId { get; set; }
         public string? AccountNumber { get; set; }
         public string? Status { get; set; }
         public string? CategoryCode { get; set; }
