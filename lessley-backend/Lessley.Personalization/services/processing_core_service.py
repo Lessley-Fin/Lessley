@@ -1,7 +1,7 @@
 import pandas as pd
 from .utils.data_frame_builder import DataFrameBuilder
 from .utils.normalize_rows import normalize_amount_spent, normalize_merchant_name
-from services.utils.normalise_data import Transaction
+from models.transaction import Transaction
 
 
 from services.mcc_service import MccService

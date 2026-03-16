@@ -17,10 +17,8 @@ class Transaction:
     merchantAddress: str | None = None
     createdAt: str | None = None
 
-class NormaliseData:
-    
     @staticmethod
-    def normalise_data(response) -> list[Transaction]:
+    def normalise_data(response) -> list["Transaction"]:
         """
         Normalises the input data by filtering out any unnecessary transactions data
         """

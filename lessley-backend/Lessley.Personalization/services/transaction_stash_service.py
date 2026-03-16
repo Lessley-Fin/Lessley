@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from services.utils.normalise_data import Transaction
+from models.transaction import Transaction
 
 class TransactionStashService:
     def read_json(self, file_path: str) -> list[Transaction]:

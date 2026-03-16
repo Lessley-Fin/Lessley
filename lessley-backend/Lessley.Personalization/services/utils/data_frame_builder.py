@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Callable, Optional, Dict, List, Any, Union
-from services.utils.normalise_data import Transaction
+from models.transaction import Transaction
 
 
 class DataFrameBuilder:

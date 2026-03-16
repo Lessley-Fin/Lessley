@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timedelta
 from .clients.open_finance_client import OpenFinanceClient
 from config.constants import LIMITS
-from services.utils.normalise_data import Transaction
+from models.transaction import Transaction
 
 
 class OpenFinanceService:
