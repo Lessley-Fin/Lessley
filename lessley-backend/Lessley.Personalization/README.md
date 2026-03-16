@@ -10,6 +10,7 @@ AI-driven financial insights service for transaction analysis and categorization
 2. Create .env from .env.override
 3. Install dependencies: `pip install -r requirements.txt`
 4. Run: `uvicorn main:app --reload --port 8001`
+5. Update dependencies: `pip freeze > requirements.txt`
 
 ## Architecture
 
