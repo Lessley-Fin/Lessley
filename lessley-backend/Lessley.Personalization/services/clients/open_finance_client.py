@@ -1,6 +1,7 @@
 import httpx
 import time
 from config.settings import settings
+from models.transaction import Transaction
 
 
 class OpenFinanceClient:
@@ -86,7 +87,7 @@ class OpenFinanceClient:
         response.raise_for_status()
         return response.json().get("items", [])
 
-    async def get_transactions(self, token: str, params: dict[str, str]) -> list[dict]:
+    async def get_transactions(self, token: str, params: dict[str, str]) -> list[Transaction]:
         """
         Retrieves transactions for the given user ID starting from the specified date.
         """
@@ -100,4 +101,5 @@ class OpenFinanceClient:
             timeout=10.0,  # Add timeout for transactions request
         )
         response.raise_for_status()
-        return response.json().get("items", [])
+        normalized_transactions = Transaction.normalise_data(response)
+        return normalized_transactions

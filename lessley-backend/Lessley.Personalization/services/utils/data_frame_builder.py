@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Callable, Optional, Dict, List, Any, Union
+from models.transaction import Transaction
 
 
 class DataFrameBuilder:
@@ -8,8 +9,7 @@ class DataFrameBuilder:
     This eliminates code duplication and provides reusable building blocks.
     """
 
-    # TODO: receive List[Transaction]
-    def __init__(self, data: Any):
+    def __init__(self, data: list[Transaction]):
         """Initialize with raw data (list, dict, or already a DataFrame)"""
         self.df = None
         if isinstance(data, pd.DataFrame):
