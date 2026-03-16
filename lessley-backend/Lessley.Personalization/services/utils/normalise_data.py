@@ -3,20 +3,20 @@ from typing import Optional
 
 @dataclass
 class Transaction:
-    id: Optional[str] = None
-    userId: Optional[str] = None
-    providerId: Optional[str] = None
-    accountNumber: Optional[str] = None
-    status: Optional[str] = None
-    categoryCode: Optional[str] = None
-    ammount: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-    type: Optional[str] = None
-    date: Optional[str] = None
-    merchantName: Optional[str] = None
-    merchantAddress: Optional[str] = None
-    createdAt: Optional[str] = None
+    id = None
+    userId = None
+    providerId = None
+    accountNumber = None
+    status = None
+    categoryCode = None
+    ammount = None
+    description = None
+    category = None
+    type = None
+    date = None
+    merchantName = None
+    merchantAddress = None
+    createdAt = None
 
 class NormaliseData:
     
