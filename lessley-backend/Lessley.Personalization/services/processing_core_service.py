@@ -1,6 +1,8 @@
 import pandas as pd
 from .utils.data_frame_builder import DataFrameBuilder
 from .utils.normalize_rows import normalize_amount_spent, normalize_merchant_name
+from services.utils.normalise_data import Transaction
+
 
 from services.mcc_service import MccService
 from config.constants import LIMITS
@@ -11,14 +13,14 @@ class ProcessingCoreService:
         self.mcc_service = mcc_service  # Inject the MCC service dependency
 
     # TODO: receive List[Transaction]
-    def get_top_spending_categories(self, transactions: dict, limit: int = LIMITS.TOP_CATEGORIES) -> list[dict]:
+    def get_top_spending_categories(self, transactions: list[Transaction], limit: int = LIMITS.TOP_CATEGORIES) -> list[dict]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top spending categories by total spend.
 
         Sorts by transaction count first, then by amount (both descending).
 
         Args:
-            transactions: Dictionary containing transaction items
+            transactions: List of Transaction objects
             limit: Number of top categories to return (default: 20)
 
         Returns:
@@ -73,7 +75,7 @@ class ProcessingCoreService:
     # TODO: receive List[Transaction]
     def get_top_spending_accounts(
         self,
-        transactions: dict,
+        transactions: list[Transaction],
         flat_columns: list[str] = None,
         group_by_column: str = "accountId",
         ascending: bool = False,
@@ -133,7 +135,7 @@ class ProcessingCoreService:
     # TODO: receive List[Transaction]
     def get_top_spending_stores(
         self,
-        transactions: dict,
+        transactions: list[Transaction],
         limit: int = LIMITS.TOP_STORES,
     ) -> list[dict]:
         """

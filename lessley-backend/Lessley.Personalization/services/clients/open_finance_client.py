@@ -1,7 +1,7 @@
 import httpx
 import time
 from config.settings import settings
-from services.utils.normalise_data import NormaliseData
+from services.utils.normalise_data import NormaliseData, Transaction
 
 
 class OpenFinanceClient:
@@ -87,7 +87,7 @@ class OpenFinanceClient:
         response.raise_for_status()
         return response.json().get("items", [])
 
-    async def get_transactions(self, token: str, params: dict[str, str]) -> list[dict]:
+    async def get_transactions(self, token: str, params: dict[str, str]) -> list[Transaction]:
         """
         Retrieves transactions for the given user ID starting from the specified date.
         """
