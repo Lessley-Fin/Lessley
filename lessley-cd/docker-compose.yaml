@@ -85,6 +85,30 @@ services:
     depends_on:
       - mongodb
 
+  # --- Lessley Personalization Service ---
+  personalization:
+    image: lessley/personalization:dev
+    build:
+      context: ../lessley-backend/Lessley.Personalization
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5002:8001"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RabbitMQ_Enabled=False
+      - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+      - CONNECTIONSTRINGS_MONGODB=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
+      - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
+      - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
+    depends_on:
+      - rabbitmq
+      - mongodb
+
 # Defined volumes for persistence
 volumes:
   rabbitmq_data:
