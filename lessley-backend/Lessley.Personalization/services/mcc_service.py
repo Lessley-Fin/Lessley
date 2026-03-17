@@ -6,12 +6,9 @@ logger = logging.getLogger(__name__)
 
 
 class MccService:
-    ALLOWED_DATA_FILES = "main/config/mcc_codes.json"
-
     def __init__(self):
         self._mcc_map: dict[str, str] = {}  # Initialize before _load_mapping
-        path = Path(__file__).parent.parent.parent.parent / self.ALLOWED_DATA_FILES
-        path = path.resolve()
+        path = Path("./data/mcc_codes.json")
 
         if not path.exists() or not path.is_file():
             logger.error(f"MccService failed to initialize from {path}")
