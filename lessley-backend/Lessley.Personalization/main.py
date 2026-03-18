@@ -14,6 +14,7 @@ import logging_loki
 from services.di_container import DIContainer
 from middleware.request_id import RequestIDMiddleware
 from config.settings import settings
+from config.structured_logging import StructuredLogger, StructuredFormatter
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
@@ -23,30 +24,42 @@ QUEUE_NAME = "personalize_calc_history_queue"
 ROUTING_KEY = "Personalize.calc_history"
 
 # --- Logging Configuration ---
+# Create a structured formatter
+structured_formatter = StructuredFormatter()
+
+# Create Loki handler with structured formatter
 loki_handler = logging_loki.LokiHandler(
     url=settings.Loki_Url,
     tags={"Application": "lessley-personalization", "environment": getattr(settings, "Environment", "dev")},
     version="1",
 )
+loki_handler.setFormatter(structured_formatter)
 
 # Use QueueHandler to prevent Loki HTTP requests from blocking the async event loop
 log_queue = queue.Queue(-1)
 queue_handler = QueueHandler(log_queue)
-listener = QueueListener(log_queue, logging.StreamHandler(), loki_handler)
+
+# Stream handler for console output
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(structured_formatter)
+
+listener = QueueListener(log_queue, stream_handler, loki_handler)
 listener.start()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[queue_handler]
-)
+# Configure root logger
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.handlers.clear()
+root_logger.addHandler(queue_handler)
 
 # Route Uvicorn loggers to the queue handler so they are pushed to Loki
 for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
     log = logging.getLogger(logger_name)
     log.handlers = [queue_handler]
     log.propagate = False
+
 logger = logging.getLogger(__name__)
+
 
 async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMessage):
     """
@@ -57,7 +70,13 @@ async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMes
         data = json.loads(body)
         user_id = data.get("user_id")
 
-        logger.info(f"[x] Received calculation request for User: {user_id}")
+        StructuredLogger.log_with_context(
+            logger,
+            "info",
+            f"Calculation request received",
+            reason="RabbitMQ message processed",
+            extra_data={"user_id": user_id, "message_type": "calc_history"},
+        )
         # TODO: 1. Fetch Open Finance Data for this user
         # TODO: 2. Run Gap Analysis & Logic Check via Optimizer
         # TODO: 3. Publish personalize.money_calc or personalize.suggestion
@@ -119,49 +138,72 @@ app = FastAPI(
 # --- Global Exception Handlers ---
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-    request_id = getattr(request.state, "request_id", "unknown")
-    logger = logging.getLogger(__name__)
-    logger.warning(f"[{request_id}] Rate limit exceeded: {exc.detail}")
+    endpoint_logger = logging.getLogger(__name__)
+    StructuredLogger.log_with_context(
+        endpoint_logger,
+        "warning",
+        "Rate limit exceeded",
+        reason="Too many requests from client",
+        extra_data={"detail": exc.detail},
+    )
     return JSONResponse(
         status_code=429,
-        headers={"X-Request-ID": request_id},
-        content={"detail": "Rate limit exceeded", "request_id": request_id},
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={"detail": "Rate limit exceeded", "request_id": getattr(request.state, "request_id", "unknown")},
     )
 
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
-    request_id = getattr(request.state, "request_id", "unknown")
-    logger = logging.getLogger(__name__)
-    logger.warning(f"[{request_id}] Validation error: {exc}")
+    endpoint_logger = logging.getLogger(__name__)
+    StructuredLogger.log_with_context(
+        endpoint_logger,
+        "warning",
+        f"Validation error: {str(exc)}",
+        reason="Invalid request payload or parameters",
+        extra_data={"error_type": "ValueError"},
+    )
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        headers={"X-Request-ID": request_id},
-        content={"detail": str(exc), "request_id": request_id},
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={"detail": str(exc), "request_id": getattr(request.state, "request_id", "unknown")},
     )
 
 
 @app.exception_handler(ConnectionError)
 async def connection_error_handler(request: Request, exc: ConnectionError):
-    request_id = getattr(request.state, "request_id", "unknown")
-    logger = logging.getLogger(__name__)
-    logger.error(f"[{request_id}] Connection error: {exc}", exc_info=True)
+    endpoint_logger = logging.getLogger(__name__)
+    StructuredLogger.log_with_context(
+        endpoint_logger,
+        "error",
+        f"Connection error: {str(exc)}",
+        reason="Failed to connect to external service",
+        extra_data={"error_type": "ConnectionError"},
+    )
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        headers={"X-Request-ID": request_id},
-        content={"detail": "External service unavailable", "request_id": request_id},
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={
+            "detail": "External service unavailable",
+            "request_id": getattr(request.state, "request_id", "unknown"),
+        },
     )
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    request_id = getattr(request.state, "request_id", "unknown")
-    logger = logging.getLogger(__name__)
-    logger.error(f"[{request_id}] Unexpected error: {exc}", exc_info=True)
+    endpoint_logger = logging.getLogger(__name__)
+    StructuredLogger.log_with_context(
+        endpoint_logger,
+        "error",
+        f"Unexpected error: {str(exc)}",
+        reason="Unhandled exception during request processing",
+        extra_data={"error_type": type(exc).__name__},
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        headers={"X-Request-ID": request_id},
-        content={"detail": "Internal server error", "request_id": request_id},
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={"detail": "Internal server error", "request_id": getattr(request.state, "request_id", "unknown")},
     )
 
 
@@ -177,28 +219,54 @@ app.include_router(insights_controller.router)
 @app.on_event("startup")
 async def startup_event():
     """Validate dependencies on startup"""
-    logger = logging.getLogger(__name__)
+    startup_logger = logging.getLogger(__name__)
 
     # Check config
     if not settings.OpenFinanceConfig_BaseUrl:
-        logger.error("Missing OpenFinanceConfig_BaseUrl")
+        StructuredLogger.log_with_context(
+            startup_logger,
+            "error",
+            "Missing OpenFinanceConfig_BaseUrl",
+            reason="Configuration validation failed during startup",
+        )
         raise ValueError("Required config missing")
 
     # Check MCC service can load
     try:
         mcc_service = DIContainer.get_mcc_service()
-        logger.info(f"MCC service initialized with {len(mcc_service.get_mcc())} codes")
+        mcc_code_count = len(mcc_service.get_mcc())
+        StructuredLogger.log_with_context(
+            startup_logger,
+            "info",
+            f"MCC service initialized",
+            reason="Service dependency check",
+            extra_data={"mcc_codes_count": mcc_code_count},
+        )
     except Exception as e:
-        logger.error(f"Failed to initialize MCC service: {e}")
+        StructuredLogger.log_with_context(
+            startup_logger,
+            "error",
+            f"Failed to initialize MCC service",
+            reason="Service initialization failed",
+            extra_data={"error": str(e)},
+        )
         raise
 
     # Check external API connectivity
     try:
         await DIContainer.get_open_finance_client()._get_client()
         # Simple ping/health check
-        logger.info("Open Finance API connectivity verified")
+        StructuredLogger.log_with_context(
+            startup_logger, "info", "Open Finance API connectivity verified", reason="External service health check"
+        )
     except Exception as e:
-        logger.warning(f"Open Finance API connectivity check failed: {e}")
+        StructuredLogger.log_with_context(
+            startup_logger,
+            "warning",
+            f"Open Finance API connectivity check failed",
+            reason="External service may be temporarily unavailable",
+            extra_data={"error": str(e)},
+        )
         # Don't fail startup, but log warning
 
 

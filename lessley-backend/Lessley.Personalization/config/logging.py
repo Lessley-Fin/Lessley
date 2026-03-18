@@ -1,18 +1,24 @@
 from logging.config import dictConfig
+from config.structured_logging import StructuredFormatter
+import logging
+import sys
 
-# config.py
-logging_config = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {"default": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}},
-    "handlers": {
-        "default": {
-            "formatter": "default",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stdout",
-        }
-    },
-    "root": {"level": "INFO", "handlers": ["default"]},
-}
+# Setup structured formatter for JSON logs
+formatter = StructuredFormatter()
 
-dictConfig(logging_config)
+# Configure root logger
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+# Clear existing handlers
+root_logger.handlers.clear()
+
+# Add stream handler with structured formatter
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+root_logger.addHandler(stream_handler)
+
+# Suppress debug logs from external libraries
+logging.getLogger("aio_pika").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("pika").setLevel(logging.WARNING)
