@@ -1,7 +1,10 @@
 import httpx
 import time
+import logging
 from config.settings import settings
 from models.transaction import PaginatedTransactionsResponse, Transaction
+
+logger = logging.getLogger(__name__)
 
 
 class OpenFinanceClient:
@@ -45,10 +48,10 @@ class OpenFinanceClient:
         if user_id in self._token_cache:
             token, timestamp = self._token_cache[user_id]
             if not self._is_token_expired(timestamp):
-                print("Returning cached token")
+                logger.info("Returning cached token")
                 return token
 
-        print("Fetching new token due to cache miss or expired")
+        logger.info("Fetching new token due to cache miss or expired")
         # Fetch new token if not cached or expired
         client = await self._get_client()
         response = await client.post(
