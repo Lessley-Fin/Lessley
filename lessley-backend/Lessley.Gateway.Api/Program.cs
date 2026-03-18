@@ -11,8 +11,24 @@ using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
+using Serilog;
+using Serilog.Sinks.Grafana.Loki;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Read Loki URL from configuration (fallback to localhost for local dev without Docker)
+var lokiUrl = builder.Configuration["Loki:Url"] ?? "http://localhost:3100";
+
+// Configure Serilog to push logs to Loki and the Docker Console
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "lessley-gateway")
+    .WriteTo.Console()
+    .WriteTo.GrafanaLoki(lokiUrl, propertiesAsLabels: new[] { "Application" })
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // CORS
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -139,6 +155,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseSerilogRequestLogging(); // Logs streamlined HTTP request summaries
 
 app.UseCors(MyAllowSpecificOrigins);
 

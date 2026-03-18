@@ -82,8 +82,12 @@ services:
 
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
+      
+      # 4. Logging Configuration
+      - Loki__Url=http://loki:3100
     depends_on:
       - mongodb
+      - loki
 
   # --- Lessley Personalization Service ---
   personalization:
@@ -105,11 +109,39 @@ services:
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
       - rabbitmq
       - mongodb
+      - loki
+  
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/tmp/loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    depends_on:
+      - loki
 
 # Defined volumes for persistence
 volumes:
   rabbitmq_data:
   mongodb_data:
+  loki_data:

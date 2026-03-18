@@ -8,6 +8,9 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 import logging
+from logging.handlers import QueueHandler, QueueListener
+import queue
+import logging_loki
 from services.di_container import DIContainer
 from middleware.request_id import RequestIDMiddleware
 from config.settings import settings
@@ -19,6 +22,31 @@ from routers import insights_controller  # Import your new controller
 QUEUE_NAME = "personalize_calc_history_queue"
 ROUTING_KEY = "Personalize.calc_history"
 
+# --- Logging Configuration ---
+loki_handler = logging_loki.LokiHandler(
+    url=settings.Loki_Url,
+    tags={"Application": "lessley-personalization", "environment": getattr(settings, "Environment", "dev")},
+    version="1",
+)
+
+# Use QueueHandler to prevent Loki HTTP requests from blocking the async event loop
+log_queue = queue.Queue(-1)
+queue_handler = QueueHandler(log_queue)
+listener = QueueListener(log_queue, logging.StreamHandler(), loki_handler)
+listener.start()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[queue_handler]
+)
+
+# Route Uvicorn loggers to the queue handler so they are pushed to Loki
+for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+    log = logging.getLogger(logger_name)
+    log.handlers = [queue_handler]
+    log.propagate = False
+logger = logging.getLogger(__name__)
 
 async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMessage):
     """
@@ -29,7 +57,7 @@ async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMes
         data = json.loads(body)
         user_id = data.get("user_id")
 
-        print(f"[x] Received calculation request for User: {user_id}")
+        logger.info(f"[x] Received calculation request for User: {user_id}")
         # TODO: 1. Fetch Open Finance Data for this user
         # TODO: 2. Run Gap Analysis & Logic Check via Optimizer
         # TODO: 3. Publish personalize.money_calc or personalize.suggestion
@@ -50,13 +78,13 @@ async def consume_rabbitmq():
         # Bind the queue to the specific event topic
         await queue.bind(exchange, routing_key=ROUTING_KEY)
 
-        print(f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C")
+        logger.info(f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C")
         await queue.consume(process_calc_history_message)
 
         # Keep the connection open indefinitely
         await asyncio.Future()
     except Exception as e:
-        print(f"RabbitMQ connection failed: {e}")
+        logger.error(f"RabbitMQ connection failed: {e}")
 
 
 # --- FastAPI Lifespan Management ---
@@ -73,6 +101,7 @@ async def lifespan(app: FastAPI):
 
     client = DIContainer.get_open_finance_client()
     await client.close_client()  # Ensure the HTTP client is properly closed on shutdown
+    listener.stop()  # Gracefully stop the logging queue listener
 
 
 # --- Rate Limiter Configuration ---
