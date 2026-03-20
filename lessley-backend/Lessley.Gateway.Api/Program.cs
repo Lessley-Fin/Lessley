@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
+using Serilog.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +24,9 @@ var lokiUrl = builder.Configuration["Loki:Url"] ?? "http://localhost:3100";
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .Enrich.FromLogContext()
-    .Enrich.WithProperty("Application", "lessley-gateway")
-    .WriteTo.Console()
-    .WriteTo.GrafanaLoki(lokiUrl, propertiesAsLabels: new[] { "Application" })
+    .Enrich.WithProperty("app_name", "gateway")
+    .WriteTo.Console(new Lessley.Gateway.Api.Configuration.CustomLogFormatter())
+    .WriteTo.GrafanaLoki(lokiUrl, propertiesAsLabels: new[] { "app_name" }, textFormatter: new Lessley.Gateway.Api.Configuration.CustomLogFormatter())
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -156,11 +157,37 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        var exception = exceptionHandlerPathFeature?.Error;
+        
+        Log.Error(exception, "An unhandled exception occurred during request processing.");
+        
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { detail = "Internal server error" });
+    });
+});
+
 app.UseSerilogRequestLogging(); // Logs streamlined HTTP request summaries
 
 app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    var username = context.User?.FindFirst(ClaimTypes.Name)?.Value ?? context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anonymous";
+    var requestId = context.TraceIdentifier;
+    using (LogContext.PushProperty("username", username))
+    using (LogContext.PushProperty("request_id", requestId))
+    {
+        await next();
+    }
+});
+
 app.UseRateLimiter();
 app.UseAuthorization();
 

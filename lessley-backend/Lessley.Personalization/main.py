@@ -6,6 +6,7 @@ import aio_pika
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
 import logging
 from logging.handlers import QueueHandler, QueueListener
@@ -18,6 +19,8 @@ from config.structured_logging import StructuredLogger, StructuredFormatter
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
+from middleware.log_context_middleware import LogContextMiddleware, request_id_var, username_var
+import uuid
 
 # --- RabbitMQ Configuration ---
 QUEUE_NAME = "personalize_calc_history_queue"
@@ -30,7 +33,7 @@ structured_formatter = StructuredFormatter()
 # Create Loki handler with structured formatter
 loki_handler = logging_loki.LokiHandler(
     url=settings.Loki_Url,
-    tags={"Application": "lessley-personalization", "environment": getattr(settings, "Environment", "dev")},
+    tags={"app_name": "personalization", "environment": getattr(settings, "Environment", "dev")},
     version="1",
 )
 loki_handler.setFormatter(structured_formatter)
@@ -69,6 +72,10 @@ async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMes
         body = message.body.decode()
         data = json.loads(body)
         user_id = data.get("user_id")
+
+        # Set context variables for background RabbitMQ task logs
+        request_id_var.set(str(uuid.uuid4()))
+        username_var.set(user_id or "anonymous")
 
         StructuredLogger.log_with_context(
             logger,
@@ -145,6 +152,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         "Rate limit exceeded",
         reason="Too many requests from client",
         extra_data={"detail": exc.detail},
+        exc_info=exc,
     )
     return JSONResponse(
         status_code=429,
@@ -152,6 +160,22 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Rate limit exceeded", "request_id": getattr(request.state, "request_id", "unknown")},
     )
 
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    endpoint_logger = logging.getLogger(__name__)
+    StructuredLogger.log_with_context(
+        endpoint_logger,
+        "warning" if exc.status_code < 500 else "error",
+        f"HTTP Exception {exc.status_code}: {exc.detail}",
+        reason="HTTP Error",
+        extra_data={"error_type": "HTTPException", "status_code": exc.status_code},
+        exc_info=exc,
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={"detail": exc.detail, "request_id": getattr(request.state, "request_id", "unknown")},
+    )
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
@@ -162,6 +186,7 @@ async def value_error_handler(request: Request, exc: ValueError):
         f"Validation error: {str(exc)}",
         reason="Invalid request payload or parameters",
         extra_data={"error_type": "ValueError"},
+        exc_info=exc,
     )
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -179,6 +204,7 @@ async def connection_error_handler(request: Request, exc: ConnectionError):
         f"Connection error: {str(exc)}",
         reason="Failed to connect to external service",
         extra_data={"error_type": "ConnectionError"},
+        exc_info=exc,
     )
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -199,6 +225,7 @@ async def general_exception_handler(request: Request, exc: Exception):
         f"Unexpected error: {str(exc)}",
         reason="Unhandled exception during request processing",
         extra_data={"error_type": type(exc).__name__},
+        exc_info=exc,
     )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -211,72 +238,7 @@ app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
 app.add_middleware(RequestIDMiddleware)  # Add first so request_id is available to other middleware
+app.add_middleware(LogContextMiddleware) # Inject logging context
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Validate dependencies on startup"""
-    startup_logger = logging.getLogger(__name__)
-
-    # Check config
-    if not settings.OpenFinanceConfig_BaseUrl:
-        StructuredLogger.log_with_context(
-            startup_logger,
-            "error",
-            "Missing OpenFinanceConfig_BaseUrl",
-            reason="Configuration validation failed during startup",
-        )
-        raise ValueError("Required config missing")
-
-    # Check MCC service can load
-    try:
-        mcc_service = DIContainer.get_mcc_service()
-        mcc_code_count = len(mcc_service.get_mcc())
-        StructuredLogger.log_with_context(
-            startup_logger,
-            "info",
-            f"MCC service initialized",
-            reason="Service dependency check",
-            extra_data={"mcc_codes_count": mcc_code_count},
-        )
-    except Exception as e:
-        StructuredLogger.log_with_context(
-            startup_logger,
-            "error",
-            f"Failed to initialize MCC service",
-            reason="Service initialization failed",
-            extra_data={"error": str(e)},
-        )
-        raise
-
-    # Check external API connectivity
-    try:
-        await DIContainer.get_open_finance_client()._get_client()
-        # Simple ping/health check
-        StructuredLogger.log_with_context(
-            startup_logger, "info", "Open Finance API connectivity verified", reason="External service health check"
-        )
-    except Exception as e:
-        StructuredLogger.log_with_context(
-            startup_logger,
-            "warning",
-            f"Open Finance API connectivity check failed",
-            reason="External service may be temporarily unavailable",
-            extra_data={"error": str(e)},
-        )
-        # Don't fail startup, but log warning
-
-
-# --- REST Endpoints ---
-@app.get("/health")
-async def health_check():
-    """Simple HTTP endpoint for the API Gateway to verify the service is alive."""
-    # Returning data from our config to prove it works!
-    return {
-        "status": "healthy",
-        "environment": settings.Environment,
-        "rabbitmq_configured": bool(settings.ConnectionStrings_Rabbit),
-    }

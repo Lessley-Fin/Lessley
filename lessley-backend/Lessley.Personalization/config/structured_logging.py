@@ -1,12 +1,9 @@
 import logging
 import json
-import contextvars
 from typing import Any, Optional, Dict
 from datetime import datetime
+from middleware.log_context_middleware import request_id_var, username_var
 
-# Context variables for request-scoped data
-request_id_var = contextvars.ContextVar("request_id", default=None)
-username_var = contextvars.ContextVar("username", default=None)
 
 
 class StructuredFormatter(logging.Formatter):
@@ -15,52 +12,24 @@ class StructuredFormatter(logging.Formatter):
 
     Includes:
     - timestamp: ISO format datetime
-    - service: Application name (Personalization)
-    - class_name: The class where logging occurred
-    - level: Log level (INFO, ERROR, etc.)
+    - app_name: Application name (personalization)
+    - service_name: The class where logging occurred
     - message: Main log message
     - request_id: Trace ID for request correlation
     - username: User identifier
-    - reason: Additional context about why this log occurred
     - exception: Exception details if logging an error
-    - extra_data: Any additional structured data
     """
 
     def format(self, record: logging.LogRecord) -> str:
         log_obj = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "service": "Personalization",
-            "level": record.levelname,
+            "app_name": "personalization",
+            "service_name": record.name,
+            "username": username_var.get(),
+            "request_id": request_id_var.get(),
             "message": record.getMessage(),
-            "class_name": record.name.split(".")[-1],
-            "module": record.module,
-            "function": record.funcName,
-            "line": record.lineno,
+            "exception": self.formatException(record.exc_info) if record.exc_info else None,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
-
-        # Add request_id if available
-        if request_id := request_id_var.get():
-            log_obj["request_id"] = request_id
-
-        # Add username if available
-        if username := username_var.get():
-            log_obj["username"] = username
-
-        # Add reason if provided in extra
-        if hasattr(record, "reason"):
-            log_obj["reason"] = record.reason
-
-        # Add exception details if present
-        if record.exc_info:
-            log_obj["exception"] = {
-                "type": record.exc_info[0].__name__,
-                "message": str(record.exc_info[1]),
-                "traceback": self.formatException(record.exc_info),
-            }
-
-        # Add any extra structured data
-        if hasattr(record, "extra_data") and record.extra_data:
-            log_obj["extra_data"] = record.extra_data
 
         return json.dumps(log_obj, default=str)
 
@@ -94,8 +63,8 @@ class StructuredLogger:
     @staticmethod
     def clear_request_context() -> None:
         """Clear request context variables."""
-        request_id_var.set(None)
-        username_var.set(None)
+        request_id_var.set("N/A")
+        username_var.set("anonymous")
 
     @staticmethod
     def log_with_context(
@@ -104,6 +73,7 @@ class StructuredLogger:
         message: str,
         reason: Optional[str] = None,
         extra_data: Optional[Dict[str, Any]] = None,
+        exc_info: Any = None,
         **kwargs,
     ) -> None:
         """
@@ -115,6 +85,7 @@ class StructuredLogger:
             message: Main log message
             reason: Context about why this occurred
             extra_data: Additional structured data as dictionary
+            exc_info: Exception details for error logging
             **kwargs: Additional fields to include
         """
         log_level = getattr(logging, level.upper(), logging.INFO)
@@ -132,7 +103,7 @@ class StructuredLogger:
                     extra["extra_data"] = {}
                 extra["extra_data"][key] = value
 
-        logger.log(log_level, message, extra=extra)
+        logger.log(log_level, message, extra=extra, exc_info=exc_info)
 
 
 # Helper functions for common logging scenarios
@@ -161,6 +132,7 @@ def log_service_error(
         f"Error in {service_name}.{method_name}: {str(error)}",
         reason=f"Service execution failure",
         extra_data={"service": service_name, "method": method_name, **(context or {})},
+        exc_info=error,
     )
 
 
