@@ -1,0 +1,118 @@
+{
+    //should be deal_id in string format for db
+    "_id": ,
+    //should be site_id in string format for db
+    "source_id": ,
+    //id from the source site in string format
+    "external_id": ,
+  
+    //should be the name of the store in normalized in lower caps without spaces.
+    "store_id": ,
+    //should be the site the discount is coming from
+    "club_id": ,
+    //should be category_id in string format for db
+    "category_id": ,
+    //should be product_id in string format for db
+    "product_id": ,
+  
+    //should be title of the discount as a string 
+    "title": ,
+    //should be description of the discount as a string 
+    "description": ,
+    //should be terms and conditions of the discount as a string 
+    "terms_and_conditions": ,
+    //should be url of the store as a string 
+    "store_url": ,
+    //should be url of the benefit as a string 
+    "benefit_url": ,
+    //should be url of the image as a string 
+    "image_url": ,
+    //should be type of discount as a string, options are "percentage_off", "coupon", "amount at checkout"
+    "discount_type":[],
+    //should be copun code as a string or null
+    "coupon_code": ,
+
+    //the logic of the discount, usually if there is percentage off just write min_quantity 1 and the percentage of discount in the reward value.
+    "condition": {
+        //should be condition type as a sting, options are "min_quantity", "min_spend"
+        "type": ,
+        //should be integer or float
+        "value": 
+      },
+      "reward": {
+        //should be reward type as string, options are "percentage_off", "fixed_total_amount", "fix_amount_off"
+        "type": ,
+        //should be integer or float
+        "value": 
+      },
+    //should be boolean: true or false
+    "is_specific_items_only": ,
+    //should be boolean: true or false
+    "is_stackable": ,
+  
+    //shold be date format: "YYYY-MM-DDTHH:MM:SSZ"
+    "valid_from": ,
+    //shold be date format: "YYYY-MM-DDTHH:MM:SSZ"
+    "valid_until": ,
+  
+    //should be array of strings, options are "online", "physical_store", "mobile_app"
+    "redeem_channels": [],
+  
+    //should be array of strings
+    "redeem_days": [],
+  
+    "redeem_hours": [
+      {
+        //should be time format: "HH:MM"
+        "from": ,
+        "to": 
+      }
+    ],
+  
+    "redeem_date_ranges": [
+      {
+        //shold be date format: "YYYY-MM-DD"
+        "from": ,
+        "to": 
+      }
+    ],
+  
+    //should be array of strings
+    "applicable_branch_ids": [],
+    "excluded_branch_ids": [],
+  
+    "applicable_product_ids": [],
+    "excluded_product_ids": [],
+  
+    "constraints": {
+      //should be integer or null
+      "min_purchase_amount": ,
+      //should be integer or null
+      "max_discount_amount": ,
+      //should be integer or null
+      "max_monthly_spend_limit": ,
+      //should be integer or null
+      "max_vouchers_per_transaction": ,
+      //should be boolean: true or false
+      "club_members_only": ,
+      //should be boolean: true or false
+      "requires_specific_credit_card": ,
+      //should be boolean: true or false
+      "not_valid_with_other_promotions": ,
+      //should be integer: 1 or more
+      "usage_limit_per_user": 
+  
+    },
+  
+    //should be boolean: true or false
+    "status": ,
+    //shold be date format: "YYYY-MM-DDTHH:MM:SSZ"
+    "scraped_at": ,
+    //shold be date format: "YYYY-MM-DDTHH:MM:SSZ"
+    "last_seen_at": ,
+    //shold be date format: "YYYY-MM-DDTHH:MM:SSZ"
+    "created_at": ,
+    //shold be date format: "YYYY-MM-DDTHH:MM:SSZ"
+    "updated_at": 
+}
+
