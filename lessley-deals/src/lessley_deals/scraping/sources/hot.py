@@ -285,6 +285,29 @@ class HotAdapter(BaseSourceAdapter):
     # Mapping helpers
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # Brand cleaning
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _clean_brand(brand: str) -> str:
+        """Remove HOT-internal noise from a brand name.
+
+        HOT appends numeric suffixes (``_2``, ``_3``, …) to disambiguate
+        duplicate entries internally.  Strip them so downstream matching
+        sees a clean name.
+
+        Examples::
+
+            "ShareSpa - שר ספא הרצליה_2"  ->  "ShareSpa - שר ספא הרצליה"
+            "קפה עלית_1"                   ->  "קפה עלית"
+        """
+        return re.sub(r"_\d+$", "", brand).strip()
+
+    # ------------------------------------------------------------------
+    # Mapping helpers
+    # ------------------------------------------------------------------
+
     def _to_raw_store(
         self, record: dict[str, Any], now: datetime
     ) -> RawStore | None:
@@ -299,7 +322,7 @@ class HotAdapter(BaseSourceAdapter):
         return RawStore(
             id=generate_id(),
             source_id=self.source_id,
-            name=brand,
+            name=self._clean_brand(brand),
             scraped_at=now,
             raw_payload=record,
             url=record.get("supplierWebsite"),
@@ -310,6 +333,8 @@ class HotAdapter(BaseSourceAdapter):
     ) -> RawScrapedRecord:
         """Map a benefit record to a :class:`RawScrapedRecord`."""
         store_name = record.get("item_brand") or record.get("title", "")
+        if store_name:
+            store_name = self._clean_brand(store_name)
         title = record.get("title", "")
         description = record.get("description", "")
         deal_description = f"{title} - {description}" if description else title
