@@ -1,0 +1,54 @@
+{
+  "status": "success",
+  "data": {
+    "deals": [
+      {
+        "id": 20001,
+        "store": {
+          "name": "רמי לוי - שיווק השקמה",
+          "branch": "ראשון לציון",
+          "address": "רחוב הרצל 45, ראשון לציון"
+        },
+        "title": "שמן זית extra virgin 750ml",
+        "price": "29.90",
+        "original_price": "39.90",
+        "discount_text": "25% הנחה",
+        "url": "https://www.rami-levy.co.il/deals/20001",
+        "valid_until": "31/03/2024"
+      },
+      {
+        "id": 20002,
+        "store": {
+          "name": "רמי לוי",
+          "branch": "תל אביב",
+          "address": "דרך יפו 120, תל אביב"
+        },
+        "title": "קפה עלית נמס 200 גרם",
+        "price": "19.90",
+        "original_price": null,
+        "discount_text": "2 ב-35",
+        "url": "https://www.rami-levy.co.il/deals/20002",
+        "valid_until": "28/03/2024"
+      },
+      {
+        "id": 20003,
+        "store": {
+          "name": "רמי לוי שיווק השקמה בע\"מ",
+          "branch": "חיפה",
+          "address": "שדרות המגינים 12, חיפה"
+        },
+        "title": "בננות - השני בחצי מחיר",
+        "price": "5.90",
+        "original_price": "5.90",
+        "discount_text": "השני בחצי מחיר",
+        "url": "https://www.rami-levy.co.il/deals/20003",
+        "valid_until": "25/03/2024"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "total_pages": 1,
+      "total_items": 3
+    }
+  }
+}

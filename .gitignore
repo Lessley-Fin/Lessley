@@ -28,3 +28,15 @@ venv/
 # Logs
 *.log
 logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Deals data (keep seed files only)
+lessley-deals/data/*.json
+!lessley-deals/data/seed/

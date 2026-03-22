@@ -85,7 +85,46 @@ services:
     depends_on:
       - mongodb
 
+  # --- Deals Pipeline (on-demand) ---
+  deals-pipeline:
+    image: lessley/deals:dev
+    build:
+      context: ../lessley-deals
+      target: base
+    profiles: ["tools"]
+    volumes:
+      - deals_data:/app/data
+    environment:
+      - DEALS_LOG_LEVEL=${DEALS_LOG_LEVEL:-INFO}
+      - DEALS_AUTO_MATCH_THRESHOLD=${DEALS_AUTO_MATCH_THRESHOLD:-0.90}
+      - DEALS_REVIEW_THRESHOLD=${DEALS_REVIEW_THRESHOLD:-0.50}
+    entrypoint: ["python", "-m", "lessley_deals.cli.main"]
+    command: ["scrape", "--all"]
+
+  # --- Deals Review CLI (interactive) ---
+  deals-review:
+    image: lessley/deals:dev
+    profiles: ["tools"]
+    volumes:
+      - deals_data:/app/data
+    stdin_open: true
+    tty: true
+    entrypoint: ["python", "-m", "lessley_deals.cli.main"]
+    command: ["review"]
+
+  # --- Deals Tests ---
+  deals-test:
+    image: lessley/deals:test
+    build:
+      context: ../lessley-deals
+      target: test
+    profiles: ["test"]
+    volumes:
+      - deals_test_data:/app/test_data
+
 # Defined volumes for persistence
 volumes:
   rabbitmq_data:
   mongodb_data:
+  deals_data:
+  deals_test_data:
