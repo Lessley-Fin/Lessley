@@ -49,12 +49,35 @@ def _setup_logging(log_level: str) -> None:
 def scrape(
     source: Optional[str] = typer.Option(None, "--source", "-s", help="Specific source to scrape"),
     all_sources: bool = typer.Option(False, "--all", help="Scrape all registered sources"),
+    hot_benefit_type: Optional[list[str]] = typer.Option(
+        None,
+        "--hot-benefit-type",
+        help=(
+            "HOT benefit type(s) to scrape. "
+            "Allowed values: 100, 300, 700, 800, 1100, 1200, 1300. "
+            "Pass multiple times to include several types. "
+            "Defaults to all types when omitted."
+        ),
+    ),
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
     """Run the full scrape -> normalize -> match -> persist pipeline."""
     _setup_logging(log_level)
     config = _get_config(data_dir)
+
+    # Validate HOT benefit types early so we fail fast.
+    from lessley_deals.scraping.sources.hot import BENEFIT_TYPES, HotAdapter
+    from lessley_deals.scraping.base import SourceConfig as _SC
+
+    if hot_benefit_type:
+        invalid = [bt for bt in hot_benefit_type if bt not in BENEFIT_TYPES]
+        if invalid:
+            console.print(
+                f"[red]Invalid --hot-benefit-type value(s): {', '.join(invalid)}[/red]\n"
+                f"Allowed: {', '.join(BENEFIT_TYPES)}"
+            )
+            raise typer.Exit(code=1)
 
     # Build repositories
     raw_deal_repo = RawDealJsonRepository(config.raw_deals_path)
@@ -67,6 +90,14 @@ def scrape(
     # Build pipeline components
     registry = SourceRegistry()
     registry.register_defaults()
+
+    # Override the HOT adapter if custom benefit types were requested.
+    if hot_benefit_type:
+        registry._adapters["hot"] = HotAdapter(
+            _SC(base_url="https://www.hot.co.il", rate_limit_rps=0.7, timeout_seconds=30.0),
+            benefit_types=tuple(hot_benefit_type),
+        )
+
     orchestrator = ScraperOrchestrator.from_registry(registry)
     scrape_stage = ScrapeStage(orchestrator, raw_deal_repo, raw_store_repo)
     normalize_stage = NormalizeStage(create_default_pipeline())
