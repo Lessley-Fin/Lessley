@@ -38,7 +38,11 @@ class HotAdapter(BaseSourceAdapter):
     instances.
     """
 
-    def __init__(self, config: SourceConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: SourceConfig | None = None,
+        benefit_types: tuple[str, ...] | None = None,
+    ) -> None:
         super().__init__(
             config
             or SourceConfig(
@@ -47,6 +51,7 @@ class HotAdapter(BaseSourceAdapter):
                 timeout_seconds=30.0,
             ),
         )
+        self._benefit_types: tuple[str, ...] = benefit_types if benefit_types else BENEFIT_TYPES
         self._api_url = _API_URL
         self._details_url = _DETAILS_URL
         self._client: httpx.AsyncClient | None = None
@@ -221,7 +226,7 @@ class HotAdapter(BaseSourceAdapter):
         seen_ids: set[str] = set()
         all_records: list[dict[str, Any]] = []
 
-        for btype in BENEFIT_TYPES:
+        for btype in self._benefit_types:
             page = 1
             logger.debug(
                 "[%s] Fetching benefit type %s", self.source_id, btype
