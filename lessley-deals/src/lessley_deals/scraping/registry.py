@@ -54,13 +54,18 @@ class SourceRegistry:
 
     def register_defaults(self) -> None:
         """Register the built-in source adapters."""
+        from lessley_deals.scraping.sources.hot import HotAdapter
+        from lessley_deals.scraping.sources.mastercard import MastercardAdapter
         from lessley_deals.scraping.sources.rami_levy import RamiLevyAdapter
         from lessley_deals.scraping.sources.shufersal import ShufersalAdapter
 
-        for cls, url in [
+        defaults: list[tuple[type[BaseSourceAdapter], str]] = [
             (ShufersalAdapter, "https://www.shufersal.co.il"),
             (RamiLevyAdapter, "https://www.rami-levy.co.il"),
-        ]:
+            (HotAdapter, "https://www.hot.co.il"),
+            (MastercardAdapter, "https://www.mastercard.co.il"),
+        ]
+        for cls, url in defaults:
             try:
                 self.register(cls, SourceConfig(base_url=url))
             except ValueError:

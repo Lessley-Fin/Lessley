@@ -58,5 +58,29 @@
     "created_at": "2024-01-01T00:00:00+00:00",
     "updated_at": "2024-01-01T00:00:00+00:00",
     "metadata": {"category": "supermarket"}
+  },
+  {
+    "id": "seed_store_006",
+    "name": "HOT",
+    "name_forms": {
+      "normalized": "hot",
+      "compact": "hot",
+      "tokens": ["hot"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "benefits", "source": "hot"}
+  },
+  {
+    "id": "seed_store_007",
+    "name": "Mastercard",
+    "name_forms": {
+      "normalized": "mastercard",
+      "compact": "mastercard",
+      "tokens": ["mastercard"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "benefits", "source": "mastercard"}
   }
 ]
