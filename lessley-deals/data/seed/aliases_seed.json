@@ -1,0 +1,106 @@
+[
+  {
+    "id": "seed_alias_001",
+    "store_id": "seed_store_001",
+    "alias": "שופרסל",
+    "alias_forms": {"normalized": "שופרסל", "compact": "שופרסל", "tokens": ["שופרסל"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_002",
+    "store_id": "seed_store_001",
+    "alias": "שופרסל דיל",
+    "alias_forms": {"normalized": "שופרסל דיל", "compact": "שופרסלדיל", "tokens": ["דיל", "שופרסל"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_003",
+    "store_id": "seed_store_001",
+    "alias": "שופרסל אקספרס",
+    "alias_forms": {"normalized": "שופרסל אקספרס", "compact": "שופרסלאקספרס", "tokens": ["אקספרס", "שופרסל"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_004",
+    "store_id": "seed_store_001",
+    "alias": "Shufersal",
+    "alias_forms": {"normalized": "shufersal", "compact": "shufersal", "tokens": ["shufersal"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_005",
+    "store_id": "seed_store_002",
+    "alias": "רמי לוי",
+    "alias_forms": {"normalized": "רמי לוי", "compact": "רמילוי", "tokens": ["לוי", "רמי"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_006",
+    "store_id": "seed_store_002",
+    "alias": "רמי לוי שיווק השקמה",
+    "alias_forms": {"normalized": "רמי לוי שיווק השקמה", "compact": "רמילוישיווקהשקמה", "tokens": ["השקמה", "לוי", "רמי", "שיווק"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_007",
+    "store_id": "seed_store_002",
+    "alias": "Rami Levy",
+    "alias_forms": {"normalized": "rami levy", "compact": "ramilevy", "tokens": ["levy", "rami"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_008",
+    "store_id": "seed_store_003",
+    "alias": "ויקטורי",
+    "alias_forms": {"normalized": "ויקטורי", "compact": "ויקטורי", "tokens": ["ויקטורי"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_009",
+    "store_id": "seed_store_003",
+    "alias": "Victory",
+    "alias_forms": {"normalized": "victory", "compact": "victory", "tokens": ["victory"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_010",
+    "store_id": "seed_store_004",
+    "alias": "יינות ביתן",
+    "alias_forms": {"normalized": "יינות ביתן", "compact": "יינותביתנ", "tokens": ["ביתן", "יינות"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_011",
+    "store_id": "seed_store_004",
+    "alias": "Yeinot Bitan",
+    "alias_forms": {"normalized": "yeinot bitan", "compact": "yeinotbitan", "tokens": ["bitan", "yeinot"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_012",
+    "store_id": "seed_store_005",
+    "alias": "מגה",
+    "alias_forms": {"normalized": "מגה", "compact": "מגה", "tokens": ["מגה"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_013",
+    "store_id": "seed_store_005",
+    "alias": "Mega",
+    "alias_forms": {"normalized": "mega", "compact": "mega", "tokens": ["mega"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  }
+]

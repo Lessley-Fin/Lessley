@@ -1,0 +1,62 @@
+[
+  {
+    "id": "seed_store_001",
+    "name": "שופרסל",
+    "name_forms": {
+      "normalized": "שופרסל",
+      "compact": "שופרסל",
+      "tokens": ["שופרסל"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "supermarket"}
+  },
+  {
+    "id": "seed_store_002",
+    "name": "רמי לוי",
+    "name_forms": {
+      "normalized": "רמי לוי",
+      "compact": "רמילוי",
+      "tokens": ["לוי", "רמי"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "supermarket"}
+  },
+  {
+    "id": "seed_store_003",
+    "name": "ויקטורי",
+    "name_forms": {
+      "normalized": "ויקטורי",
+      "compact": "ויקטורי",
+      "tokens": ["ויקטורי"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "supermarket"}
+  },
+  {
+    "id": "seed_store_004",
+    "name": "יינות ביתן",
+    "name_forms": {
+      "normalized": "יינות ביתן",
+      "compact": "יינותביתנ",
+      "tokens": ["ביתן", "יינות"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "supermarket"}
+  },
+  {
+    "id": "seed_store_005",
+    "name": "מגה",
+    "name_forms": {
+      "normalized": "מגה",
+      "compact": "מגה",
+      "tokens": ["מגה"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "supermarket"}
+  }
+]
