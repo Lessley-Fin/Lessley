@@ -387,5 +387,207 @@ def discover_stores(
         )
 
 
+@app.command(name="seed-from-raw")
+def seed_from_raw(
+    source: Optional[str] = typer.Option(None, "--source", "-s", help="Filter to one source (hot, mastercard, …)"),
+    write: bool = typer.Option(False, "--write", "-w", help="Write directly into the seed files (appends)"),
+    export: Optional[str] = typer.Option(None, "--export", "-e", help="Write seed JSON snippets to this file instead"),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    seed_dir: str = typer.Option("data/seed", "--seed-dir", help="Location of the seed JSON files"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Scan raw_source_stores.json and generate seed entries for unmatched stores.
+
+    Reads raw stores (already scraped, deduplicated per brand), normalizes
+    each name, checks the alias index, then generates seed_store / seed_alias
+    entries for every store that has no canonical match.
+
+    For HOT stores the raw_payload supplies:
+      - supplierWebsite  → metadata.domain
+      - item_category    → metadata.category hint
+
+    Use --write to append directly into data/seed/stores_seed.json and
+    data/seed/aliases_seed.json, or --export <file> to review first.
+    """
+    import json
+    import re as _re
+    from collections import defaultdict
+    from urllib.parse import urlparse
+    from rich.table import Table
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.normalization.pipeline import NormalizationPipeline
+    from lessley_deals.normalization.hebrew_utils import normalize_final_forms, normalize_hebrew
+    from lessley_deals.normalization.text import collapse_whitespace
+
+    _setup_logging(log_level)
+    config = _get_config(data_dir)
+    seed_path = Path(seed_dir)
+
+    raw_store_repo = RawStoreJsonRepository(config.raw_stores_path)
+    store_repo = CanonicalStoreJsonRepository(config.stores_path)
+    alias_repo = AliasJsonRepository(config.aliases_path)
+
+    raw_stores = raw_store_repo.get_by_source(source) if source else raw_store_repo.get_all()
+    if not raw_stores:
+        console.print("[yellow]No raw stores found. Run 'deals scrape' first.[/yellow]")
+        raise typer.Exit()
+
+    console.print(f"Loaded [bold]{len(raw_stores)}[/bold] raw stores. Checking against alias index…")
+
+    # Build alias index
+    index = AliasIndex(aliases=alias_repo.get_all(), stores=store_repo.get_all())
+
+    def _build_compact(text: str) -> str:
+        normalized = collapse_whitespace(normalize_hebrew(text)).lower()
+        compact = _re.sub(r"[\s\W]+", "", normalized)
+        return normalize_final_forms(compact)
+
+    def _build_normalized(text: str) -> str:
+        return collapse_whitespace(normalize_hebrew(text)).lower()
+
+    def _extract_domain(url: str | None) -> str | None:
+        if not url:
+            return None
+        if not url.startswith("http"):
+            url = "https://" + url
+        try:
+            host = urlparse(url).hostname or ""
+            return host.lstrip("www.") or None
+        except Exception:
+            return None
+
+    # Deduplicate raw stores by normalized name + source
+    seen: dict[tuple[str, str], object] = {}  # (source_id, compact) -> RawStore
+    for rs in raw_stores:
+        compact = _build_compact(rs.name)
+        key = (rs.source_id, compact)
+        if key not in seen:
+            seen[key] = rs
+    unique_raw = list(seen.values())
+
+    # Check each against alias index
+    matched_names: list[str] = []
+    unmatched: list[object] = []
+    for rs in unique_raw:
+        compact = _build_compact(rs.name)
+        if index.exact_lookup(compact) is not None:
+            matched_names.append(rs.name)
+        else:
+            unmatched.append(rs)
+
+    console.print(
+        f"[green]Already matched:[/green] {len(matched_names)}  "
+        f"[red]Unmatched (will be seeded):[/red] {len(unmatched)}\n"
+    )
+
+    if not unmatched:
+        console.print("[green]All raw stores are already in the seed — nothing to do.[/green]")
+        raise typer.Exit()
+
+    # Preview table
+    table = Table(title=f"Stores to seed ({len(unmatched)})")
+    table.add_column("Source")
+    table.add_column("Raw Name")
+    table.add_column("Domain")
+    table.add_column("Category hint")
+
+    for rs in unmatched:
+        domain = _extract_domain(rs.url)
+        category_hint = rs.raw_payload.get("item_category") or rs.raw_payload.get("category") or "-"
+        table.add_row(rs.source_id, rs.name, domain or "-", str(category_hint))
+
+    console.print(table)
+
+    # Find highest existing IDs
+    existing_stores = store_repo.get_all()
+    existing_aliases = alias_repo.get_all()
+
+    def _next_id(prefix: str, ids: list[str]) -> int:
+        nums = [int(i[len(prefix):]) for i in ids if i.startswith(prefix) and i[len(prefix):].isdigit()]
+        return max(nums, default=0) + 1
+
+    store_counter = _next_id("seed_store_", [s.id for s in existing_stores])
+    alias_counter = _next_id("seed_alias_", [a.id for a in existing_aliases])
+
+    new_stores = []
+    new_aliases = []
+
+    for rs in unmatched:
+        normalized_name = _build_normalized(rs.name)
+        compact = _build_compact(rs.name)
+        tokens = sorted({w for w in normalized_name.split() if len(w) > 1})
+        domain = _extract_domain(rs.url)
+        category_hint = rs.raw_payload.get("item_category") or rs.raw_payload.get("category") or "TODO"
+
+        store_id = f"seed_store_{store_counter:03d}"
+        store_counter += 1
+        alias_id = f"seed_alias_{alias_counter:03d}"
+        alias_counter += 1
+
+        metadata: dict = {"category": str(category_hint), "source": rs.source_id}
+        if domain:
+            metadata["domain"] = domain
+
+        new_stores.append({
+            "id": store_id,
+            "name": rs.name,
+            "name_forms": {"normalized": normalized_name, "compact": compact, "tokens": tokens},
+            "created_at": "2024-01-01T00:00:00+00:00",
+            "updated_at": "2024-01-01T00:00:00+00:00",
+            "metadata": metadata,
+        })
+        new_aliases.append({
+            "id": alias_id,
+            "store_id": store_id,
+            "alias": rs.name,
+            "alias_forms": {"normalized": normalized_name, "compact": compact, "tokens": tokens},
+            "source": "seed",
+            "created_at": "2024-01-01T00:00:00+00:00",
+        })
+
+    # --write: append directly into seed files
+    if write:
+        stores_seed_path = seed_path / "stores_seed.json"
+        aliases_seed_path = seed_path / "aliases_seed.json"
+
+        existing_s = json.loads(stores_seed_path.read_text(encoding="utf-8")) if stores_seed_path.exists() else []
+        existing_a = json.loads(aliases_seed_path.read_text(encoding="utf-8")) if aliases_seed_path.exists() else []
+
+        existing_s.extend(new_stores)
+        existing_a.extend(new_aliases)
+
+        stores_seed_path.write_text(json.dumps(existing_s, ensure_ascii=False, indent=2), encoding="utf-8")
+        aliases_seed_path.write_text(json.dumps(existing_a, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        console.print(
+            f"\n[green]Written {len(new_stores)} stores → [bold]{stores_seed_path}[/bold][/green]\n"
+            f"[green]Written {len(new_aliases)} aliases → [bold]{aliases_seed_path}[/bold][/green]\n"
+            "\n[yellow]Review metadata.category for each new entry — "
+            "the value is taken from HOT's item_category and may need tidying.[/yellow]"
+        )
+        return
+
+    # --export: write to a file for review
+    if export:
+        output = {
+            "instructions": (
+                "Append stores_seed entries to data/seed/stores_seed.json and "
+                "aliases_seed entries to data/seed/aliases_seed.json. "
+                "Review metadata.category — it is taken from item_category and may need tidying. "
+                "Add extra alias rows for any other name variants (e.g. Hebrew-only, English-only)."
+            ),
+            "stores_seed": new_stores,
+            "aliases_seed": new_aliases,
+        }
+        Path(export).write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+        console.print(f"\n[green]Exported → [bold]{export}[/bold][/green]")
+        return
+
+    console.print(
+        "\nRun with [bold]--write[/bold] to append directly into the seed files, "
+        "or [bold]--export <file>[/bold] to review first."
+    )
+
+
 if __name__ == "__main__":
     app()
