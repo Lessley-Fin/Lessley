@@ -43,3 +43,4 @@ __pycache__/
 # Deals data (keep seed files only)
 lessley-deals/data/*.json
 !lessley-deals/data/seed/
+lessley-deals/.venv/

@@ -3,10 +3,9 @@ FROM python:3.12-slim AS base
 WORKDIR /app
 
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
 COPY src/ src/
 COPY data/seed/ data/seed/
+RUN pip install --no-cache-dir .
 
 ENTRYPOINT ["python", "-m", "lessley_deals.cli.main"]
 

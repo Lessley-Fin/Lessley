@@ -178,6 +178,7 @@ services:
   #     - ../lessley-backend/Scraper:/app
   #   depends_on:
   #     - mongodb
+  
   # --- Deals Pipeline (on-demand) ---
   deals-pipeline:
     image: lessley/deals:dev

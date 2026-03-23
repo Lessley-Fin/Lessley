@@ -56,12 +56,8 @@ class SourceRegistry:
         """Register the built-in source adapters."""
         from lessley_deals.scraping.sources.hot import HotAdapter
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
-        from lessley_deals.scraping.sources.rami_levy import RamiLevyAdapter
-        from lessley_deals.scraping.sources.shufersal import ShufersalAdapter
 
         defaults: list[tuple[type[BaseSourceAdapter], str]] = [
-            (ShufersalAdapter, "https://www.shufersal.co.il"),
-            (RamiLevyAdapter, "https://www.rami-levy.co.il"),
             (HotAdapter, "https://www.hot.co.il"),
             (MastercardAdapter, "https://www.mastercard.co.il"),
         ]
