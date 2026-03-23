@@ -59,6 +59,14 @@ def scrape(
             "Defaults to all types when omitted."
         ),
     ),
+    hot_fetch_details: bool = typer.Option(
+        False,
+        "--hot-fetch-details",
+        help=(
+            "Fetch full detail data for every HOT benefit (terms, locations, "
+            "discount mechanics). Significantly slower but produces richer data."
+        ),
+    ),
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
@@ -91,11 +99,12 @@ def scrape(
     registry = SourceRegistry()
     registry.register_defaults()
 
-    # Override the HOT adapter if custom benefit types were requested.
-    if hot_benefit_type:
+    # Override the HOT adapter if custom benefit types or detail mode requested.
+    if hot_benefit_type or hot_fetch_details:
         registry._adapters["hot"] = HotAdapter(
             _SC(base_url="https://www.hot.co.il", rate_limit_rps=0.7, timeout_seconds=30.0),
-            benefit_types=tuple(hot_benefit_type),
+            benefit_types=tuple(hot_benefit_type) if hot_benefit_type else None,
+            fetch_details=hot_fetch_details,
         )
 
     orchestrator = ScraperOrchestrator.from_registry(registry)

@@ -82,5 +82,17 @@
     "created_at": "2024-01-01T00:00:00+00:00",
     "updated_at": "2024-01-01T00:00:00+00:00",
     "metadata": {"category": "benefits", "source": "mastercard"}
+  },
+  {
+    "id": "seed_store_008",
+    "name": "בהצדעה",
+    "name_forms": {
+      "normalized": "בהצדעה",
+      "compact": "בהצדעה",
+      "tokens": ["בהצדעה"]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {"category": "benefits", "source": "behatsdaa"}
   }
 ]

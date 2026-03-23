@@ -102,5 +102,21 @@
     "alias_forms": {"normalized": "mega", "compact": "mega", "tokens": ["mega"]},
     "source": "seed",
     "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_014",
+    "store_id": "seed_store_008",
+    "alias": "בהצדעה",
+    "alias_forms": {"normalized": "בהצדעה", "compact": "בהצדעה", "tokens": ["בהצדעה"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_015",
+    "store_id": "seed_store_008",
+    "alias": "Behatsdaa",
+    "alias_forms": {"normalized": "behatsdaa", "compact": "behatsdaa", "tokens": ["behatsdaa"]},
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
   }
 ]

@@ -54,6 +54,7 @@ class SourceRegistry:
 
     def register_defaults(self) -> None:
         """Register the built-in source adapters."""
+        from lessley_deals.scraping.sources.behatsdaa import BehatsdaaAdapter
         from lessley_deals.scraping.sources.hot import HotAdapter
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
         from lessley_deals.scraping.sources.rami_levy import RamiLevyAdapter
@@ -64,6 +65,7 @@ class SourceRegistry:
             (RamiLevyAdapter, "https://www.rami-levy.co.il"),
             (HotAdapter, "https://www.hot.co.il"),
             (MastercardAdapter, "https://www.mastercard.co.il"),
+            (BehatsdaaAdapter, "https://back.behatsdaa.org.il"),
         ]
         for cls, url in defaults:
             try:
