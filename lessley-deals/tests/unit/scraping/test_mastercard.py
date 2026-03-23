@@ -49,7 +49,7 @@ class TestMastercardAdapter:
     def test_extract_redeem_channels_default(self) -> None:
         adapter = MastercardAdapter(SourceConfig(base_url="https://www.mastercard.co.il"))
         channels = adapter._extract_redeem_channels("מבצע מיוחד")
-        assert channels == ["online"]
+        assert channels == []  # no channels detected when no keywords match
 
     def test_extract_coupon_found(self) -> None:
         adapter = MastercardAdapter(SourceConfig(base_url="https://www.mastercard.co.il"))
@@ -66,7 +66,7 @@ class TestMastercardAdapter:
         logic = adapter._parse_discount_logic("20% הנחה על כל המוצרים", "20% הנחה")
         assert logic is not None
         assert logic["reward"]["type"] == "percentage_off"
-        assert logic["reward"]["value"] == 20
+        assert logic["reward"]["value"] == 0.2  # normalized to 0-1 range
 
     def test_parse_discount_logic_spend_save(self) -> None:
         adapter = MastercardAdapter(SourceConfig(base_url="https://www.mastercard.co.il"))

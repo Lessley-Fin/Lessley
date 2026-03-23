@@ -74,6 +74,29 @@ class TestHotAdapter:
 
         assert store is None
 
+    def test_to_raw_store_none_for_generic_hot_brand(self) -> None:
+        adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
+        record = _make_api_record(brand="מועדון הוט")
+        now = datetime.now(timezone.utc)
+        store = adapter._to_raw_store(record, now)
+
+        assert store is None
+
+    def test_clean_brand_strips_suffix(self) -> None:
+        assert HotAdapter._clean_brand("ShareSpa - שר ספא הרצליה_2") == "ShareSpa - שר ספא הרצליה"
+
+    def test_benefit_types_default(self) -> None:
+        from lessley_deals.scraping.sources.hot import BENEFIT_TYPES
+        adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
+        assert adapter._benefit_types == BENEFIT_TYPES
+
+    def test_benefit_types_custom(self) -> None:
+        adapter = HotAdapter(
+            SourceConfig(base_url="https://www.hot.co.il"),
+            benefit_types=("100", "300"),
+        )
+        assert adapter._benefit_types == ("100", "300")
+
     def test_to_raw_deal_price_fallback_to_small_text(self) -> None:
         adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
         record = _make_api_record(value="", small_text="1+1")

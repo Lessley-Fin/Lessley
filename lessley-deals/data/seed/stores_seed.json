@@ -109,11 +109,7 @@
       ]
     },
     "created_at": "2024-01-01T00:00:00+00:00",
-    "updated_at": "2024-01-01T00:00:00+00:00",
-    "metadata": {
-      "category": "benefits",
-      "source": "mastercard"
-    }
+    "updated_at": "2024-01-01T00:00:00+00:00"
   },
   {
     "id": "seed_store_008",
@@ -122523,6 +122519,545 @@
       "category": "צילום ופיתוח",
       "source": "hot",
       "domain": "faragfoto.co.il"
+    }
+  },
+  {
+    "id": "seed_store_008",
+    "name": "בהצדעה",
+    "name_forms": {
+      "normalized": "בהצדעה",
+      "compact": "בהצדעה",
+      "tokens": [
+        "בהצדעה"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "benefits",
+      "source": "behatsdaa"
+    }
+  },
+  {
+    "id": "seed_store_001",
+    "name": "lee-cooper",
+    "name_forms": {
+      "normalized": "lee-cooper",
+      "compact": "leecooper",
+      "tokens": [
+        "lee-cooper"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "leecooper.co.i"
+    }
+  },
+  {
+    "id": "seed_store_002",
+    "name": "aeroflex",
+    "name_forms": {
+      "normalized": "aeroflex",
+      "compact": "aeroflex",
+      "tokens": [
+        "aeroflex"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "aeroflex.co.il"
+    }
+  },
+  {
+    "id": "seed_store_003",
+    "name": "nintendo",
+    "name_forms": {
+      "normalized": "nintendo",
+      "compact": "nintendo",
+      "tokens": [
+        "nintendo"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "nintendo.co.il"
+    }
+  },
+  {
+    "id": "seed_store_004",
+    "name": "booking",
+    "name_forms": {
+      "normalized": "booking",
+      "compact": "booking",
+      "tokens": [
+        "booking"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "booking.com"
+    }
+  },
+  {
+    "id": "seed_store_005",
+    "name": "guess",
+    "name_forms": {
+      "normalized": "guess",
+      "compact": "guess",
+      "tokens": [
+        "guess"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "globalonline.co.il"
+    }
+  },
+  {
+    "id": "seed_store_006",
+    "name": "ksp",
+    "name_forms": {
+      "normalized": "ksp",
+      "compact": "ksp",
+      "tokens": [
+        "ksp"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_007",
+    "name": "emanuel",
+    "name_forms": {
+      "normalized": "emanuel",
+      "compact": "emanuel",
+      "tokens": [
+        "emanuel"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "emanuel-online.com"
+    }
+  },
+  {
+    "id": "seed_store_008",
+    "name": "careline",
+    "name_forms": {
+      "normalized": "careline",
+      "compact": "careline",
+      "tokens": [
+        "careline"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "careline.co.il"
+    }
+  },
+  {
+    "id": "seed_store_009",
+    "name": "emporium",
+    "name_forms": {
+      "normalized": "emporium",
+      "compact": "emporium",
+      "tokens": [
+        "emporium"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "emporium.co.il"
+    }
+  },
+  {
+    "id": "seed_store_010",
+    "name": "minene",
+    "name_forms": {
+      "normalized": "minene",
+      "compact": "minene",
+      "tokens": [
+        "minene"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_011",
+    "name": "aldo",
+    "name_forms": {
+      "normalized": "aldo",
+      "compact": "aldo",
+      "tokens": [
+        "aldo"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_012",
+    "name": "adidas",
+    "name_forms": {
+      "normalized": "adidas",
+      "compact": "adidas",
+      "tokens": [
+        "adidas"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_013",
+    "name": "b-unique",
+    "name_forms": {
+      "normalized": "b-unique",
+      "compact": "bunique",
+      "tokens": [
+        "b-unique"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "b-unique.co.il"
+    }
+  },
+  {
+    "id": "seed_store_014",
+    "name": "gali",
+    "name_forms": {
+      "normalized": "gali",
+      "compact": "gali",
+      "tokens": [
+        "gali"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_015",
+    "name": "nine-west",
+    "name_forms": {
+      "normalized": "nine-west",
+      "compact": "ninewest",
+      "tokens": [
+        "nine-west"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_016",
+    "name": "nautica",
+    "name_forms": {
+      "normalized": "nautica",
+      "compact": "nautica",
+      "tokens": [
+        "nautica"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "nautica.co.il"
+    }
+  },
+  {
+    "id": "seed_store_017",
+    "name": "timberland",
+    "name_forms": {
+      "normalized": "timberland",
+      "compact": "timberland",
+      "tokens": [
+        "timberland"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "timberland.co.il"
+    }
+  },
+  {
+    "id": "seed_store_018",
+    "name": "mcdonalds",
+    "name_forms": {
+      "normalized": "mcdonalds",
+      "compact": "mcdonalds",
+      "tokens": [
+        "mcdonalds"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "api.whatsapp.com"
+    }
+  },
+  {
+    "id": "seed_store_019",
+    "name": "sweetweet",
+    "name_forms": {
+      "normalized": "sweetweet",
+      "compact": "sweetweet",
+      "tokens": [
+        "sweetweet"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "sweetweet.co.il"
+    }
+  },
+  {
+    "id": "seed_store_020",
+    "name": "soltam",
+    "name_forms": {
+      "normalized": "soltam",
+      "compact": "soltam",
+      "tokens": [
+        "soltam"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "soltam.co.il"
+    }
+  },
+  {
+    "id": "seed_store_021",
+    "name": "ivrit",
+    "name_forms": {
+      "normalized": "ivrit",
+      "compact": "ivrit",
+      "tokens": [
+        "ivrit"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "urldefense.com"
+    }
+  },
+  {
+    "id": "seed_store_022",
+    "name": "lego",
+    "name_forms": {
+      "normalized": "lego",
+      "compact": "lego",
+      "tokens": [
+        "lego"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_023",
+    "name": "soho",
+    "name_forms": {
+      "normalized": "soho",
+      "compact": "soho",
+      "tokens": [
+        "soho"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "urldefense.proofpoint.com"
+    }
+  },
+  {
+    "id": "seed_store_024",
+    "name": "lytrade",
+    "name_forms": {
+      "normalized": "lytrade",
+      "compact": "lytrade",
+      "tokens": [
+        "lytrade"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_025",
+    "name": "lastprice",
+    "name_forms": {
+      "normalized": "lastprice",
+      "compact": "lastprice",
+      "tokens": [
+        "lastprice"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_026",
+    "name": "wallashops",
+    "name_forms": {
+      "normalized": "wallashops",
+      "compact": "wallashops",
+      "tokens": [
+        "wallashops"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_027",
+    "name": "bug",
+    "name_forms": {
+      "normalized": "bug",
+      "compact": "bug",
+      "tokens": [
+        "bug"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
+    }
+  },
+  {
+    "id": "seed_store_028",
+    "name": "opticana",
+    "name_forms": {
+      "normalized": "opticana",
+      "compact": "opticana",
+      "tokens": [
+        "opticana"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "bit.ly"
+    }
+  },
+  {
+    "id": "seed_store_029",
+    "name": "airalo",
+    "name_forms": {
+      "normalized": "airalo",
+      "compact": "airalo",
+      "tokens": [
+        "airalo"
+      ]
+    },
+    "created_at": "2024-01-01T00:00:00+00:00",
+    "updated_at": "2024-01-01T00:00:00+00:00",
+    "metadata": {
+      "category": "TODO",
+      "source": "mastercard",
+      "domain": "mastercard.co.il"
     }
   }
 ]

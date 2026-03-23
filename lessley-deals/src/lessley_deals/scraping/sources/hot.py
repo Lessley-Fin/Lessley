@@ -1,3 +1,25 @@
+"""HOT Mobile benefits scraper adapter.
+
+Fetches deals from the HOT loyalty club public API.  Supports:
+
+- Paginated benefit list (``getAllBenefits``)
+- Per-benefit detail fetch (``getDetailedBenefitByIdForWeb``)
+- 7 benefit types: 100, 300, 700, 800, 1100, 1200, 1300
+- XSRF cookie handshake
+- Brand name cleaning (``_N`` suffix stripping)
+- Discount mechanics deduction (6-level priority cascade)
+
+The adapter produces thin ``RawStore`` / ``RawScrapedRecord`` instances.
+Heavy normalisation happens downstream in the normalization pipeline.
+
+Legacy lineage
+--------------
+- ``lessley-backend/Scraper/hot/hot_scraper.py`` — session, pagination, detail fetch
+- ``lessley-backend/Scraper/hot/hot_extract_format.py`` — discount mechanics
+- ``lessley-backend/Scraper/hot/export.py`` — benefit-type filtering, chunked detail fetch
+- ``lessley-backend/Scraper/import_businesses.py`` — brand cleaning, generic filtering
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,6 +33,19 @@ import httpx
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
+from lessley_deals.scraping.helpers.brand_utils import (
+    clean_brand,
+    is_generic_hot_brand,
+    normalize_website,
+)
+from lessley_deals.scraping.helpers.discount_parser import (
+    check_stackable,
+    classify_hot_benefit_type,
+    deduce_hot_discount_mechanics,
+    extract_coupon,
+    extract_redeem_channels,
+)
+from lessley_deals.scraping.helpers.html_utils import clean_html
 
 logger = logging.getLogger(__name__)
 
@@ -33,15 +68,20 @@ class HotAdapter(BaseSourceAdapter):
     """Scraper for the Hot Mobile benefits API.
 
     Fetches benefits (deals/promotions) from Hot Mobile's public API,
-    iterating over all supported benefit types and pages.  Produces
-    raw, un-normalised :class:`RawStore` and :class:`RawScrapedRecord`
-    instances.
+    iterating over all supported benefit types and pages.  Optionally
+    enriches each benefit with detail-level data (terms, locations,
+    discount mechanics).
+
+    Produces raw, un-normalised :class:`RawStore` and
+    :class:`RawScrapedRecord` instances.
     """
 
     def __init__(
         self,
         config: SourceConfig | None = None,
         benefit_types: tuple[str, ...] | None = None,
+        *,
+        fetch_details: bool = False,
     ) -> None:
         super().__init__(
             config
@@ -52,6 +92,7 @@ class HotAdapter(BaseSourceAdapter):
             ),
         )
         self._benefit_types: tuple[str, ...] = benefit_types if benefit_types else BENEFIT_TYPES
+        self._fetch_details = fetch_details
         self._api_url = _API_URL
         self._details_url = _DETAILS_URL
         self._client: httpx.AsyncClient | None = None
@@ -66,13 +107,18 @@ class HotAdapter(BaseSourceAdapter):
 
     async def scrape(self) -> tuple[list[RawStore], list[RawScrapedRecord]]:
         """Run the full scrape: session init, fetch, transform, return."""
-        logger.info("[%s] Starting scrape", self.source_id)
+        logger.info("[%s] Starting scrape (types=%s, details=%s)",
+                    self.source_id, self._benefit_types, self._fetch_details)
         try:
             await self._initialize_session()
             benefits = await self._fetch_all_benefits()
             logger.info(
                 "[%s] Fetched %d total benefit records", self.source_id, len(benefits)
             )
+
+            # Optionally enrich with detail data
+            if self._fetch_details:
+                benefits = await self._enrich_with_details(benefits)
 
             now = datetime.now(timezone.utc)
             seen_brands: dict[str, RawStore] = {}
@@ -135,27 +181,31 @@ class HotAdapter(BaseSourceAdapter):
         # Extract the XSRF-TOKEN value from the cookie jar.
         xsrf_token = self._extract_xsrf_token()
         self._client.headers["x-xsrf-token"] = xsrf_token
-        logger.debug("[%s] XSRF token set (%s...)", self.source_id, xsrf_token[:8] if len(xsrf_token) > 8 else xsrf_token)
+        logger.debug(
+            "[%s] XSRF token set (%s...)",
+            self.source_id,
+            xsrf_token[:8] if len(xsrf_token) > 8 else xsrf_token,
+        )
 
     def _extract_xsrf_token(self) -> str:
         """Pull the XSRF-TOKEN value from the client's cookie jar.
 
         Tries the cookie name directly first, then iterates the jar.
-        Falls back to ``"1"`` if no cookie is found (legacy behaviour).
+        Falls back to ``"1"`` if no cookie is found (legacy behaviour —
+        the API commonly accepts it).
         """
         if self._client is None:
             return "1"
 
-        # Direct lookup by name.
         jar = self._client.cookies
         token = jar.get("XSRF-TOKEN")
         if token:
             return token
 
-        # Iterate over the jar (some servers set the cookie on a
-        # different domain/path, so direct lookup may miss it).
+        # Iterate the jar (some servers set the cookie on a different
+        # domain/path, so direct lookup may miss it).
         for cookie in jar.jar:
-            if cookie.name == "XSRF-TOKEN":
+            if cookie.name.upper() in {"XSRF-TOKEN", "CSRF-TOKEN"}:
                 return cookie.value
 
         logger.warning(
@@ -173,8 +223,7 @@ class HotAdapter(BaseSourceAdapter):
     ) -> list[dict[str, Any]]:
         """Fetch a single page of benefits from the API.
 
-        Returns the list of records, or an empty list on error / end of
-        data.
+        Returns the list of records, or an empty list on error / end of data.
         """
         if self._client is None:
             return []
@@ -282,47 +331,157 @@ class HotAdapter(BaseSourceAdapter):
             return None
 
     # ------------------------------------------------------------------
-    # Mapping helpers
+    # Detail enrichment
     # ------------------------------------------------------------------
 
+    async def _enrich_with_details(
+        self, records: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Fetch detail endpoint for each benefit and merge into the record.
+
+        Enriches each record with:
+        - ``_detail``: full detail response
+        - ``_terms_text``: cleaned terms & conditions
+        - ``_details_text``: cleaned offer details
+        - ``_discount_mechanics``: condition / reward / constraints
+        - ``_stackable``, ``_redeem_channels``, ``_coupon``
+        - ``_locations``: branch addresses
+        """
+        enriched: list[dict[str, Any]] = []
+        total = len(records)
+
+        for i, record in enumerate(records, 1):
+            benefit_id = str(record.get("id") or "")
+            if not benefit_id:
+                enriched.append(record)
+                continue
+
+            detail = await self._fetch_benefit_details(benefit_id)
+            if detail is None:
+                enriched.append(record)
+                continue
+
+            logger.debug("[%s] Detail %d/%d id=%s OK", self.source_id, i, total, benefit_id)
+
+            # Merge the detail data into a copy of the record
+            merged = dict(record)
+            merged["_detail"] = detail
+
+            # Extract main + information sections
+            data = detail.get("data", {})
+            main = data.get("main", {}) if isinstance(data, dict) else {}
+            info = data.get("information", []) if isinstance(data, dict) else []
+            main_info = main.get("information", []) if isinstance(main, dict) else []
+            all_info = (info if isinstance(info, list) else []) + (
+                main_info if isinstance(main_info, list) else []
+            )
+
+            # Extract terms and details text
+            terms_html = ""
+            details_html = ""
+            for section in all_info:
+                if not isinstance(section, dict):
+                    continue
+                section_title = section.get("title", "")
+                content = section.get("content", "")
+                if "תנאי" in section_title or "מימוש" in section_title:
+                    terms_html += content + " \n"
+                elif "פרטי" in section_title:
+                    details_html += content + " \n"
+
+            terms_text = clean_html(terms_html)
+            details_text = clean_html(details_html)
+            combined_text = f"{details_text} {terms_text}"
+
+            merged["_terms_text"] = terms_text
+            merged["_details_text"] = details_text
+
+            # Discount mechanics (6-level priority cascade)
+            merged["_discount_mechanics"] = deduce_hot_discount_mechanics(
+                main, combined_text
+            )
+
+            # Stackability, channels, coupon
+            merged["_stackable"] = check_stackable(combined_text)
+            merged["_redeem_channels"] = extract_redeem_channels(combined_text)
+            merged["_coupon"] = extract_coupon(combined_text)
+
+            # Locations from supplierLocations
+            supplier_locs = data.get("supplierLocations", {})
+            merged["_locations"] = self._extract_locations(supplier_locs)
+
+            # Benefit type classification
+            merged["_benefit_type_classified"] = classify_hot_benefit_type(
+                main if main else record
+            )
+
+            enriched.append(merged)
+            await asyncio.sleep(self.config.rate_limit_rps)
+
+        return enriched
+
+    @staticmethod
+    def _extract_locations(
+        supplier_locations: Any,
+    ) -> list[dict[str, str]]:
+        """Extract branch addresses from the detail ``supplierLocations`` field.
+
+        The field can be either a ``dict[city, list[loc]]`` or a flat ``list[loc]``.
+        """
+        branches: list[dict[str, str]] = []
+        if isinstance(supplier_locations, dict):
+            for _city, locations in supplier_locations.items():
+                if not isinstance(locations, list):
+                    continue
+                for loc in locations:
+                    if isinstance(loc, dict) and loc.get("fullAddress"):
+                        branches.append({
+                            "address": loc["fullAddress"],
+                            "city": loc.get("cityName", ""),
+                            "lat": str(loc.get("lat", "")),
+                            "lng": str(loc.get("lon", loc.get("lng", ""))),
+                        })
+        elif isinstance(supplier_locations, list):
+            for loc in supplier_locations:
+                if isinstance(loc, dict) and loc.get("fullAddress"):
+                    branches.append({
+                        "address": loc["fullAddress"],
+                        "city": loc.get("cityName", ""),
+                    })
+        return branches
+
     # ------------------------------------------------------------------
-    # Brand cleaning
+    # Mapping helpers
     # ------------------------------------------------------------------
 
     @staticmethod
     def _clean_brand(brand: str) -> str:
         """Remove HOT-internal noise from a brand name.
 
-        HOT appends numeric suffixes (``_2``, ``_3``, …) to disambiguate
-        duplicate entries internally.  Strip them so downstream matching
-        sees a clean name.
-
-        Examples::
-
-            "ShareSpa - שר ספא הרצליה_2"  ->  "ShareSpa - שר ספא הרצליה"
-            "קפה עלית_1"                   ->  "קפה עלית"
+        Delegates to shared :func:`clean_brand` from ``brand_utils``.
         """
-        return re.sub(r"_\d+$", "", brand).strip()
-
-    # ------------------------------------------------------------------
-    # Mapping helpers
-    # ------------------------------------------------------------------
+        return clean_brand(brand)
 
     def _to_raw_store(
         self, record: dict[str, Any], now: datetime
     ) -> RawStore | None:
         """Create a :class:`RawStore` from a benefit record.
 
-        Returns ``None`` if the record has no ``item_brand``.
+        Returns ``None`` if the record has no ``item_brand`` or if the
+        brand is a generic HOT club name.
         """
         brand = record.get("item_brand")
         if not brand:
             return None
 
+        cleaned = self._clean_brand(brand)
+        if is_generic_hot_brand(cleaned):
+            return None
+
         return RawStore(
             id=generate_id(),
             source_id=self.source_id,
-            name=self._clean_brand(brand),
+            name=cleaned,
             scraped_at=now,
             raw_payload=record,
             url=record.get("supplierWebsite"),

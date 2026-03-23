@@ -203277,5 +203277,439 @@
     },
     "source": "seed",
     "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_014",
+    "store_id": "seed_store_008",
+    "alias": "בהצדעה",
+    "alias_forms": {
+      "normalized": "בהצדעה",
+      "compact": "בהצדעה",
+      "tokens": [
+        "בהצדעה"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_015",
+    "store_id": "seed_store_008",
+    "alias": "Behatsdaa",
+    "alias_forms": {
+      "normalized": "behatsdaa",
+      "compact": "behatsdaa",
+      "tokens": [
+        "behatsdaa"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_001",
+    "store_id": "seed_store_001",
+    "alias": "lee-cooper",
+    "alias_forms": {
+      "normalized": "lee-cooper",
+      "compact": "leecooper",
+      "tokens": [
+        "lee-cooper"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_002",
+    "store_id": "seed_store_002",
+    "alias": "aeroflex",
+    "alias_forms": {
+      "normalized": "aeroflex",
+      "compact": "aeroflex",
+      "tokens": [
+        "aeroflex"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_003",
+    "store_id": "seed_store_003",
+    "alias": "nintendo",
+    "alias_forms": {
+      "normalized": "nintendo",
+      "compact": "nintendo",
+      "tokens": [
+        "nintendo"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_004",
+    "store_id": "seed_store_004",
+    "alias": "booking",
+    "alias_forms": {
+      "normalized": "booking",
+      "compact": "booking",
+      "tokens": [
+        "booking"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_005",
+    "store_id": "seed_store_005",
+    "alias": "guess",
+    "alias_forms": {
+      "normalized": "guess",
+      "compact": "guess",
+      "tokens": [
+        "guess"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_006",
+    "store_id": "seed_store_006",
+    "alias": "ksp",
+    "alias_forms": {
+      "normalized": "ksp",
+      "compact": "ksp",
+      "tokens": [
+        "ksp"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_007",
+    "store_id": "seed_store_007",
+    "alias": "emanuel",
+    "alias_forms": {
+      "normalized": "emanuel",
+      "compact": "emanuel",
+      "tokens": [
+        "emanuel"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_008",
+    "store_id": "seed_store_008",
+    "alias": "careline",
+    "alias_forms": {
+      "normalized": "careline",
+      "compact": "careline",
+      "tokens": [
+        "careline"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_009",
+    "store_id": "seed_store_009",
+    "alias": "emporium",
+    "alias_forms": {
+      "normalized": "emporium",
+      "compact": "emporium",
+      "tokens": [
+        "emporium"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_010",
+    "store_id": "seed_store_010",
+    "alias": "minene",
+    "alias_forms": {
+      "normalized": "minene",
+      "compact": "minene",
+      "tokens": [
+        "minene"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_011",
+    "store_id": "seed_store_011",
+    "alias": "aldo",
+    "alias_forms": {
+      "normalized": "aldo",
+      "compact": "aldo",
+      "tokens": [
+        "aldo"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_012",
+    "store_id": "seed_store_012",
+    "alias": "adidas",
+    "alias_forms": {
+      "normalized": "adidas",
+      "compact": "adidas",
+      "tokens": [
+        "adidas"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_013",
+    "store_id": "seed_store_013",
+    "alias": "b-unique",
+    "alias_forms": {
+      "normalized": "b-unique",
+      "compact": "bunique",
+      "tokens": [
+        "b-unique"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_014",
+    "store_id": "seed_store_014",
+    "alias": "gali",
+    "alias_forms": {
+      "normalized": "gali",
+      "compact": "gali",
+      "tokens": [
+        "gali"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_015",
+    "store_id": "seed_store_015",
+    "alias": "nine-west",
+    "alias_forms": {
+      "normalized": "nine-west",
+      "compact": "ninewest",
+      "tokens": [
+        "nine-west"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_016",
+    "store_id": "seed_store_016",
+    "alias": "nautica",
+    "alias_forms": {
+      "normalized": "nautica",
+      "compact": "nautica",
+      "tokens": [
+        "nautica"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_017",
+    "store_id": "seed_store_017",
+    "alias": "timberland",
+    "alias_forms": {
+      "normalized": "timberland",
+      "compact": "timberland",
+      "tokens": [
+        "timberland"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_018",
+    "store_id": "seed_store_018",
+    "alias": "mcdonalds",
+    "alias_forms": {
+      "normalized": "mcdonalds",
+      "compact": "mcdonalds",
+      "tokens": [
+        "mcdonalds"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_019",
+    "store_id": "seed_store_019",
+    "alias": "sweetweet",
+    "alias_forms": {
+      "normalized": "sweetweet",
+      "compact": "sweetweet",
+      "tokens": [
+        "sweetweet"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_020",
+    "store_id": "seed_store_020",
+    "alias": "soltam",
+    "alias_forms": {
+      "normalized": "soltam",
+      "compact": "soltam",
+      "tokens": [
+        "soltam"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_021",
+    "store_id": "seed_store_021",
+    "alias": "ivrit",
+    "alias_forms": {
+      "normalized": "ivrit",
+      "compact": "ivrit",
+      "tokens": [
+        "ivrit"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_022",
+    "store_id": "seed_store_022",
+    "alias": "lego",
+    "alias_forms": {
+      "normalized": "lego",
+      "compact": "lego",
+      "tokens": [
+        "lego"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_023",
+    "store_id": "seed_store_023",
+    "alias": "soho",
+    "alias_forms": {
+      "normalized": "soho",
+      "compact": "soho",
+      "tokens": [
+        "soho"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_024",
+    "store_id": "seed_store_024",
+    "alias": "lytrade",
+    "alias_forms": {
+      "normalized": "lytrade",
+      "compact": "lytrade",
+      "tokens": [
+        "lytrade"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_025",
+    "store_id": "seed_store_025",
+    "alias": "lastprice",
+    "alias_forms": {
+      "normalized": "lastprice",
+      "compact": "lastprice",
+      "tokens": [
+        "lastprice"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_026",
+    "store_id": "seed_store_026",
+    "alias": "wallashops",
+    "alias_forms": {
+      "normalized": "wallashops",
+      "compact": "wallashops",
+      "tokens": [
+        "wallashops"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_027",
+    "store_id": "seed_store_027",
+    "alias": "bug",
+    "alias_forms": {
+      "normalized": "bug",
+      "compact": "bug",
+      "tokens": [
+        "bug"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_028",
+    "store_id": "seed_store_028",
+    "alias": "opticana",
+    "alias_forms": {
+      "normalized": "opticana",
+      "compact": "opticana",
+      "tokens": [
+        "opticana"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "seed_alias_029",
+    "store_id": "seed_store_029",
+    "alias": "airalo",
+    "alias_forms": {
+      "normalized": "airalo",
+      "compact": "airalo",
+      "tokens": [
+        "airalo"
+      ]
+    },
+    "source": "seed",
+    "created_at": "2024-01-01T00:00:00+00:00"
   }
 ]

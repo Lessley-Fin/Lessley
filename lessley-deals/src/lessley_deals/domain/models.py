@@ -52,7 +52,7 @@ class RawScrapedRecord:
 
     @property
     def fingerprint(self) -> str:
-        data = f"{self.source_id}|{self.store_name}|{self.deal_description}|{self.price_text}"
+        data = f"{self.source_id}|{self.deal_description}|{self.price_text}"
         return hashlib.sha256(data.encode()).hexdigest()
 
 

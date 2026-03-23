@@ -272,7 +272,7 @@ class MastercardAdapter(BaseSourceAdapter):
         return RawScrapedRecord(
             id=generate_id(),
             source_id=self.source_id,
-            store_name=title,
+            store_name=modal_id,
             deal_description=clean_text,
             price_text=price_text,
             scraped_at=now,
@@ -327,26 +327,30 @@ class MastercardAdapter(BaseSourceAdapter):
     def _extract_store_url(
         self, block: Tag, modal_id: str | None, soup: BeautifulSoup
     ) -> str | None:
-        """Extract the store URL from CTA script data or modal links."""
-        # Primary: ctaData JSON array in an embedded script.
+        """Extract the store URL from CTA script data or modal links.
+
+        Handles two DXP CTA data formats observed in production:
+
+        1. **Flat format** — ``ctaData = [{ctaText, ctaLink}]``
+        2. **Nested format** — ``dxpSelector.ctaData = [{ctaList: [{text, href}]}]``
+           (legacy Mastercard page variant)
+        """
         for script in block.find_all("script"):
             text = script.string or ""
+
+            # --- Format 1: flat ctaData [{ctaText, ctaLink}] ---
             cta_match = re.search(r"ctaData\s*[:=]\s*(\[.*?\])", text, re.DOTALL)
-            if not cta_match:
-                continue
-            try:
-                cta_list = json.loads(cta_match.group(1))
-                for cta in cta_list:
-                    if isinstance(cta, dict) and "לאתר" in cta.get("ctaText", ""):
-                        url = cta.get("ctaLink", "")
-                        if url:
-                            return url
-            except (json.JSONDecodeError, TypeError):
-                logger.debug(
-                    "[%s] Failed to parse ctaData JSON in block",
-                    self.source_id,
-                    exc_info=True,
-                )
+            if cta_match:
+                url = self._parse_flat_cta(cta_match.group(1))
+                if url:
+                    return url
+
+            # --- Format 2: dxpSelector.ctaData = [{ctaList: [{text, href}]}] ---
+            sel_match = re.search(r"dxpSelector\.ctaData\s*=\s*", text)
+            if sel_match:
+                url = self._parse_nested_cta(text, sel_match.end())
+                if url:
+                    return url
 
         # Fallback: links inside the modal.
         if modal_id:
@@ -364,6 +368,46 @@ class MastercardAdapter(BaseSourceAdapter):
                     if href.startswith("http"):
                         return href
 
+        return None
+
+    @staticmethod
+    def _parse_flat_cta(json_str: str) -> str | None:
+        """Parse flat ``[{ctaText, ctaLink}]`` format."""
+        try:
+            cta_list = json.loads(json_str)
+            for cta in cta_list:
+                if isinstance(cta, dict) and "לאתר" in cta.get("ctaText", ""):
+                    url = cta.get("ctaLink", "")
+                    if url:
+                        return url
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return None
+
+    @staticmethod
+    def _parse_nested_cta(script_text: str, start: int) -> str | None:
+        """Parse nested ``dxpSelector.ctaData = [{ctaList: [{text, href}]}]`` format.
+
+        Ported from legacy ``mastercard_scraper.py :: extract_store_url_from_script``.
+        """
+        try:
+            remainder = script_text[start:]
+            # Find the end of the array (before dxpSelector.actionList or ;)
+            end_idx = remainder.find("dxpSelector.actionList")
+            if end_idx != -1:
+                remainder = remainder[:end_idx]
+            remainder = remainder.rstrip("; \n,")
+            cta_data = json.loads(remainder)
+            for group in cta_data:
+                if not isinstance(group, dict):
+                    continue
+                for cta in group.get("ctaList", []):
+                    if isinstance(cta, dict) and "לאתר" in cta.get("text", ""):
+                        href = cta.get("href", "")
+                        if href:
+                            return href
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
         return None
 
     # ------------------------------------------------------------------
@@ -388,25 +432,45 @@ class MastercardAdapter(BaseSourceAdapter):
     def _parse_discount_logic(
         clean_text: str, title: str
     ) -> dict[str, Any] | None:
-        """Return a structured discount dict, or *None* if no pattern matches."""
-        # Spend & Save (e.g., "50 ₪ הנחה ברכישה מעל 250 ₪").
+        """Return a structured discount dict, or *None* if no pattern matches.
+
+        Returns a dict with ``type``, ``condition``, ``reward``, ``constraints``
+        keys (matching the unified discount schema), plus ``matched_text``
+        for traceability.
+
+        Priority:
+        1. Spend & Save (₪X הנחה ברכישת ₪Y)
+        2. Percentage (X%)
+        """
+        from lessley_deals.scraping.helpers.discount_parser import deduce_mastercard_discount
+
+        result = deduce_mastercard_discount(clean_text, title)
+        if result is not None:
+            return result
+
+        # Legacy compat: also try the simpler regexes directly
         ss = _SPEND_SAVE_RE.search(clean_text)
         if ss:
             reward_raw = ss.group(1).replace(",", "")
             condition_raw = ss.group(2).replace(",", "")
             return {
                 "type": "spend_and_save",
+                "condition": {"type": "min_spend", "value": int(condition_raw)},
+                "reward": {"type": "fixed_discount_amount", "value": int(reward_raw)},
+                "constraints": {},
                 "reward_amount": int(reward_raw),
                 "condition_amount": int(condition_raw),
                 "currency": "ILS",
                 "matched_text": ss.group(0),
             }
 
-        # Percentage discount (e.g., "20% הנחה").
         pct = _PERCENT_RE.search(title) or _PERCENT_RE.search(clean_text)
         if pct:
             return {
                 "type": "percentage",
+                "condition": {"type": "min_quantity", "value": 1},
+                "reward": {"type": "percentage_off", "value": int(pct.group(1)) / 100.0},
+                "constraints": {},
                 "percent": int(pct.group(1)),
                 "matched_text": pct.group(0),
             }
