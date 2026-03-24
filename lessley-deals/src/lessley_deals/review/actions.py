@@ -107,6 +107,54 @@ class ReviewActions:
         self._review_repo.update(item)
         return item
 
+    def approve_existing(
+        self,
+        item: ReviewItem,
+        store_id: str,
+        store_name: str,
+        reviewed_by: str,
+        note: str | None = None,
+    ) -> ReviewItem:
+        """Approve: link the input name to a manually selected existing store."""
+        now = datetime.now(timezone.utc)
+        logger.info(
+            "Linking item %s -> existing store %s (%s)",
+            item.id, store_id, store_name,
+        )
+
+        item.status = ReviewStatus.APPROVED
+        item.reviewed_at = now
+        item.decision = ReviewDecision(
+            action=ReviewAction.APPROVE,
+            reviewed_by=reviewed_by,
+            store_id=store_id,
+            note=note,
+        )
+
+        alias = StoreAlias(
+            id=generate_id(),
+            store_id=store_id,
+            alias=item.input_name,
+            alias_forms=build_name_forms(item.input_name),
+            source=AliasSource.REVIEW,
+            created_at=now,
+        )
+        self._alias_repo.save(alias)
+
+        deal = Deal(
+            id=generate_id(),
+            store_id=store_id,
+            raw_id=item.raw_id,
+            source_id=item.verdict.record_id,
+            description=item.verdict.input_name,
+            scraped_at=item.created_at,
+            resolved_at=now,
+        )
+        self._deal_repo.save(deal)
+
+        self._review_repo.update(item)
+        return item
+
     def create_new(
         self,
         item: ReviewItem,

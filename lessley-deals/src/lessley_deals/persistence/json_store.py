@@ -2,20 +2,44 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
 import threading
+import time
 from pathlib import Path
 from typing import Any
+
+
+def _atomic_replace(src: str, dst: str, *, retries: int = 5, delay: float = 0.1) -> None:
+    """Replace ``dst`` with ``src`` atomically.
+
+    On Windows, ``os.replace()`` can fail with ``PermissionError`` (WinError 5)
+    when the destination file is momentarily locked by another process (e.g. an
+    editor or antivirus).  We retry a few times with a short back-off before
+    giving up.
+    """
+    for attempt in range(retries):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if not sys.platform.startswith("win") or attempt == retries - 1:
+                raise
+            time.sleep(delay * (attempt + 1))
 
 
 class JsonStore:
     """Atomic JSON file read/write with thread-level locking.
 
     Uses tempfile + os.replace() for atomic writes (safe on NTFS and ext4/xfs).
+    Always resolves the path to absolute so that os.replace() works correctly
+    regardless of the process working directory.
     """
 
     def __init__(self, path: Path) -> None:
-        self._path = path
+        # Resolve to absolute path immediately so relative paths never cause
+        # os.replace() failures on Windows when CWD changes.
+        self._path = path.resolve()
         self._lock = threading.Lock()
 
     @property
@@ -46,7 +70,7 @@ class JsonStore:
                     json.dump(data, f, ensure_ascii=False, indent=2, default=str)
                     f.flush()
                     os.fsync(f.fileno())
-                os.replace(tmp_path, str(self._path))
+                _atomic_replace(tmp_path, str(self._path))
             except BaseException:
                 # Clean up temp file on failure
                 try:

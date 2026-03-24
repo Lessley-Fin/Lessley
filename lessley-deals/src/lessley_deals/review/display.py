@@ -62,14 +62,33 @@ class ReviewDisplay:
 
     def show_actions(self) -> None:
         """Display available review actions."""
-        self._console.print(
-            "\n[bold]Actions:[/bold] "
-            "[green][a][/green]pprove  "
-            "[yellow][c][/yellow]reate new  "
-            "[red][d][/red]iscard  "
-            "[blue][s][/blue]kip  "
-            "[dim][q][/dim]uit"
-        )
+        table = Table(show_header=True, show_lines=False, box=None, padding=(0, 2))
+        table.add_column("Key", style="bold", width=5)
+        table.add_column("Action", width=16)
+        table.add_column("Parameters")
+
+        table.add_row("[green]a[/green]", "approve",       "[dim]— approves the top candidate (no input)[/dim]")
+        table.add_row("[cyan]l[/cyan]",   "link existing", "[dim]search: <query>  →  select #[/dim]")
+        table.add_row("[yellow]c[/yellow]", "create new",  "[dim]name: <store name>  (Enter = use input name)[/dim]")
+        table.add_row("[red]d[/red]",     "discard",       "[dim]reason: <optional note>[/dim]")
+        table.add_row("[blue]s[/blue]",   "skip",          "[dim]— defers to next session (no input)[/dim]")
+        table.add_row("[dim]q[/dim]",     "quit",          "[dim]— ends the session[/dim]")
+
+        self._console.print("\n[bold]Actions:[/bold]")
+        self._console.print(table)
+
+    def show_store_search_results(self, stores: list) -> None:
+        """Display store search results for the link-existing flow."""
+        if not stores:
+            self._console.print("[dim]No stores found.[/dim]")
+            return
+        table = Table(title="Matching Stores", show_lines=True)
+        table.add_column("#", justify="right", style="dim", width=3)
+        table.add_column("Name", style="cyan")
+        table.add_column("Normalized", style="dim")
+        for i, store in enumerate(stores, 1):
+            table.add_row(str(i), store.name, store.name_forms.normalized)
+        self._console.print(table)
 
     def show_stats(self, stats: QueueStats) -> None:
         """Display queue statistics."""

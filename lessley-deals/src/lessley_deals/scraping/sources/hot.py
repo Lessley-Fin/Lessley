@@ -61,7 +61,7 @@ _USER_AGENT = (
     "Chrome/120.0.0.0 Safari/537.36"
 )
 
-_PAGE_SIZE = 50
+_PAGE_SIZE = 30
 
 
 class HotAdapter(BaseSourceAdapter):
@@ -220,13 +220,15 @@ class HotAdapter(BaseSourceAdapter):
 
     async def _fetch_benefits_page(
         self, page: int, benefit_type: str = ""
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], int]:
         """Fetch a single page of benefits from the API.
 
-        Returns the list of records, or an empty list on error / end of data.
+        Returns ``(records, total_count)`` where ``total_count`` is the
+        server-reported total for this benefit type (0 if not available).
+        Returns an empty list on error / end of data.
         """
         if self._client is None:
-            return []
+            return [], 0
 
         form_data: dict[str, Any] = {
             "radius": "0",
@@ -235,20 +237,21 @@ class HotAdapter(BaseSourceAdapter):
             "size": str(_PAGE_SIZE),
         }
 
-        params: dict[str, str] = {}
+        # benefitType must be in the POST body, not the URL query string.
+        # The API ignores query params on POST requests.
         if benefit_type:
-            params["benefitType"] = benefit_type
+            form_data["benefitType"] = benefit_type
 
         try:
             resp = await self._client.post(
-                self._api_url, data=form_data, params=params
+                self._api_url, data=form_data
             )
             resp.raise_for_status()
             body = resp.json()
-            records: list[dict[str, Any]] = (
-                body.get("data", {}).get("records") or []
-            )
-            return records
+            data_block = body.get("data", {}) or {}
+            records: list[dict[str, Any]] = data_block.get("records") or []
+            total: int = int(data_block.get("total") or data_block.get("count") or 0)
+            return records, total
         except httpx.HTTPStatusError as exc:
             logger.warning(
                 "[%s] HTTP %d fetching page %d (type=%s)",
@@ -257,7 +260,7 @@ class HotAdapter(BaseSourceAdapter):
                 page,
                 benefit_type,
             )
-            return []
+            return [], 0
         except Exception:
             logger.exception(
                 "[%s] Unexpected error fetching page %d (type=%s)",
@@ -265,35 +268,84 @@ class HotAdapter(BaseSourceAdapter):
                 page,
                 benefit_type,
             )
-            return []
+            return [], 0
+
+    async def _fetch_all_for_type(
+        self,
+        btype: str,
+        seen_ids: set[str],
+        semaphore: asyncio.Semaphore,
+    ) -> list[dict[str, Any]]:
+        """Paginate all pages for a single benefit type.
+
+        Uses ``semaphore`` to bound concurrent requests across types.
+        Stops as soon as a page returns fewer records than ``_PAGE_SIZE``
+        (early-termination — avoids an extra empty-page round-trip).
+        """
+        collected: list[dict[str, Any]] = []
+        page = 1
+
+        while True:
+            async with semaphore:
+                records, total = await self._fetch_benefits_page(page, benefit_type=btype)
+
+            if not records:
+                break
+
+            new_count = 0
+            for rec in records:
+                rid = str(rec.get("id", ""))
+                if rid and rid not in seen_ids:
+                    seen_ids.add(rid)
+                    collected.append(rec)
+                    new_count += 1
+
+            logger.info(
+                "[%s] type=%-4s  page=%d  got=%d  new=%d  total_so_far=%d%s",
+                self.source_id,
+                btype,
+                page,
+                len(records),
+                new_count,
+                len(collected),
+                f"  (server total: {total})" if total else "",
+            )
+
+            # Early stop: if the page wasn't full, there are no more pages.
+            if len(records) < _PAGE_SIZE:
+                break
+
+            page += 1
+            await asyncio.sleep(1.0 / max(self.config.rate_limit_rps, 0.1))
+
+        return collected
 
     async def _fetch_all_benefits(self) -> list[dict[str, Any]]:
-        """Paginate through every benefit type and collect all records.
+        """Fetch all benefit types concurrently and collect all records.
 
         De-duplicates by record ``id`` across types and pages.
+        Types are fetched in parallel, bounded by a semaphore so we never
+        fire more than ``_MAX_CONCURRENT_TYPES`` simultaneous requests.
         """
+        _MAX_CONCURRENT = 3
         seen_ids: set[str] = set()
-        all_records: list[dict[str, Any]] = []
+        semaphore = asyncio.Semaphore(_MAX_CONCURRENT)
 
-        for btype in self._benefit_types:
-            page = 1
-            logger.debug(
-                "[%s] Fetching benefit type %s", self.source_id, btype
-            )
-            while True:
-                records = await self._fetch_benefits_page(page, benefit_type=btype)
-                if not records:
-                    break
+        logger.info(
+            "[%s] Fetching %d benefit type(s) with up to %d concurrent requests: %s",
+            self.source_id,
+            len(self._benefit_types),
+            _MAX_CONCURRENT,
+            ", ".join(self._benefit_types),
+        )
 
-                for rec in records:
-                    rid = str(rec.get("id", ""))
-                    if rid and rid not in seen_ids:
-                        seen_ids.add(rid)
-                        all_records.append(rec)
+        tasks = [
+            self._fetch_all_for_type(btype, seen_ids, semaphore)
+            for btype in self._benefit_types
+        ]
+        results = await asyncio.gather(*tasks)
 
-                page += 1
-                await asyncio.sleep(self.config.rate_limit_rps)
-
+        all_records: list[dict[str, Any]] = [rec for chunk in results for rec in chunk]
         return all_records
 
     async def _fetch_benefit_details(
@@ -334,6 +386,69 @@ class HotAdapter(BaseSourceAdapter):
     # Detail enrichment
     # ------------------------------------------------------------------
 
+    def _merge_detail(self, record: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
+        """Merge a detail API response into a benefit record."""
+        merged = dict(record)
+        merged["_detail"] = detail
+
+        data = detail.get("data", {})
+        main = data.get("main", {}) if isinstance(data, dict) else {}
+        info = data.get("information", []) if isinstance(data, dict) else []
+        main_info = main.get("information", []) if isinstance(main, dict) else []
+        all_info = (info if isinstance(info, list) else []) + (
+            main_info if isinstance(main_info, list) else []
+        )
+
+        terms_html = ""
+        details_html = ""
+        for section in all_info:
+            if not isinstance(section, dict):
+                continue
+            section_title = section.get("title", "")
+            content = section.get("content", "")
+            if "תנאי" in section_title or "מימוש" in section_title:
+                terms_html += content + " \n"
+            elif "פרטי" in section_title:
+                details_html += content + " \n"
+
+        terms_text = clean_html(terms_html)
+        details_text = clean_html(details_html)
+        combined_text = f"{details_text} {terms_text}"
+
+        merged["_terms_text"] = terms_text
+        merged["_details_text"] = details_text
+        merged["_discount_mechanics"] = deduce_hot_discount_mechanics(main, combined_text)
+        merged["_stackable"] = check_stackable(combined_text)
+        merged["_redeem_channels"] = extract_redeem_channels(combined_text)
+        merged["_coupon"] = extract_coupon(combined_text)
+        merged["_locations"] = self._extract_locations(data.get("supplierLocations", {}))
+        merged["_benefit_type_classified"] = classify_hot_benefit_type(main if main else record)
+        return merged
+
+    async def _enrich_one(
+        self,
+        record: dict[str, Any],
+        index: int,
+        total: int,
+        semaphore: asyncio.Semaphore,
+    ) -> dict[str, Any]:
+        """Fetch and merge detail for a single benefit record."""
+        benefit_id = str(record.get("id") or "")
+        if not benefit_id:
+            return record
+
+        async with semaphore:
+            detail = await self._fetch_benefit_details(benefit_id)
+            await asyncio.sleep(1.0 / max(self.config.rate_limit_rps, 0.1))
+
+        if detail is None:
+            return record
+
+        logger.info(
+            "[%s] Detail %d/%d id=%s OK", self.source_id, index, total, benefit_id
+        )
+        return self._merge_detail(record, detail)
+
     async def _enrich_with_details(
         self, records: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
@@ -346,79 +461,22 @@ class HotAdapter(BaseSourceAdapter):
         - ``_discount_mechanics``: condition / reward / constraints
         - ``_stackable``, ``_redeem_channels``, ``_coupon``
         - ``_locations``: branch addresses
+
+        Details are fetched concurrently (up to 5 at a time).
         """
-        enriched: list[dict[str, Any]] = []
+        _MAX_CONCURRENT = 5
+        semaphore = asyncio.Semaphore(_MAX_CONCURRENT)
         total = len(records)
+        logger.info(
+            "[%s] Enriching %d records with detail data (concurrency=%d)",
+            self.source_id, total, _MAX_CONCURRENT,
+        )
 
-        for i, record in enumerate(records, 1):
-            benefit_id = str(record.get("id") or "")
-            if not benefit_id:
-                enriched.append(record)
-                continue
-
-            detail = await self._fetch_benefit_details(benefit_id)
-            if detail is None:
-                enriched.append(record)
-                continue
-
-            logger.debug("[%s] Detail %d/%d id=%s OK", self.source_id, i, total, benefit_id)
-
-            # Merge the detail data into a copy of the record
-            merged = dict(record)
-            merged["_detail"] = detail
-
-            # Extract main + information sections
-            data = detail.get("data", {})
-            main = data.get("main", {}) if isinstance(data, dict) else {}
-            info = data.get("information", []) if isinstance(data, dict) else []
-            main_info = main.get("information", []) if isinstance(main, dict) else []
-            all_info = (info if isinstance(info, list) else []) + (
-                main_info if isinstance(main_info, list) else []
-            )
-
-            # Extract terms and details text
-            terms_html = ""
-            details_html = ""
-            for section in all_info:
-                if not isinstance(section, dict):
-                    continue
-                section_title = section.get("title", "")
-                content = section.get("content", "")
-                if "תנאי" in section_title or "מימוש" in section_title:
-                    terms_html += content + " \n"
-                elif "פרטי" in section_title:
-                    details_html += content + " \n"
-
-            terms_text = clean_html(terms_html)
-            details_text = clean_html(details_html)
-            combined_text = f"{details_text} {terms_text}"
-
-            merged["_terms_text"] = terms_text
-            merged["_details_text"] = details_text
-
-            # Discount mechanics (6-level priority cascade)
-            merged["_discount_mechanics"] = deduce_hot_discount_mechanics(
-                main, combined_text
-            )
-
-            # Stackability, channels, coupon
-            merged["_stackable"] = check_stackable(combined_text)
-            merged["_redeem_channels"] = extract_redeem_channels(combined_text)
-            merged["_coupon"] = extract_coupon(combined_text)
-
-            # Locations from supplierLocations
-            supplier_locs = data.get("supplierLocations", {})
-            merged["_locations"] = self._extract_locations(supplier_locs)
-
-            # Benefit type classification
-            merged["_benefit_type_classified"] = classify_hot_benefit_type(
-                main if main else record
-            )
-
-            enriched.append(merged)
-            await asyncio.sleep(self.config.rate_limit_rps)
-
-        return enriched
+        tasks = [
+            self._enrich_one(rec, i, total, semaphore)
+            for i, rec in enumerate(records, 1)
+        ]
+        return list(await asyncio.gather(*tasks))
 
     @staticmethod
     def _extract_locations(

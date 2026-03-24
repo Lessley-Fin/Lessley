@@ -67,6 +67,15 @@ def scrape(
             "discount mechanics). Significantly slower but produces richer data."
         ),
     ),
+    review_no_match: bool = typer.Option(
+        False,
+        "--review-no-match",
+        help=(
+            "Send NO_MATCH records (confidence < 0.50) to the review queue "
+            "instead of discarding them. Useful when scraping a new source "
+            "where no canonical stores exist yet."
+        ),
+    ),
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
@@ -112,7 +121,7 @@ def scrape(
     normalize_stage = NormalizeStage(create_default_pipeline())
     match_pipeline = MatchPipeline(MatchConfig())
     match_stage = MatchStage(match_pipeline)
-    persist_stage = PersistStage(deal_repo, review_repo)
+    persist_stage = PersistStage(deal_repo, review_repo, review_no_match=review_no_match)
 
     pipeline = PipelineOrchestrator(
         scrape_stage=scrape_stage,
@@ -133,6 +142,11 @@ def review(
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
     batch: int = typer.Option(0, "--batch", "-b", help="Process N items then stop (0=unlimited)"),
     source: Optional[str] = typer.Option(None, "--source", "-s", help="Filter by source"),
+    continuous: bool = typer.Option(
+        False,
+        "--continuous",
+        help="After the queue empties, wait 30 s and reload. Loop until Ctrl+C.",
+    ),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
     """Start an interactive review session for uncertain matches."""
@@ -153,6 +167,7 @@ def review(
         raw_deal_repo=raw_deal_repo,
         batch_size=batch,
         source_filter=source,
+        continuous=continuous,
     )
 
 
@@ -166,6 +181,61 @@ def review_stats(
     stats_calc = ReviewStats(review_repo)
     display = ReviewDisplay(console)
     display.show_stats(stats_calc.compute())
+
+
+@app.command(name="list-matches")
+def list_matches(
+    source: Optional[str] = typer.Option(None, "--source", "-s", help="Filter by source (hot, mastercard, …)"),
+    store: Optional[str] = typer.Option(None, "--store", help="Filter by store name (substring)"),
+    limit: int = typer.Option(50, "--limit", "-n", help="Max rows to show (0=all)"),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+) -> None:
+    """Show deals that were auto-matched by the pipeline."""
+    from rich.table import Table
+
+    config = _get_config(data_dir)
+    deal_repo = DealJsonRepository(config.deals_path)
+    store_repo = CanonicalStoreJsonRepository(config.stores_path)
+
+    deals = deal_repo.get_all()
+    stores_by_id = {s.id: s for s in store_repo.get_all()}
+
+    if source:
+        deals = [d for d in deals if d.source_id == source]
+    if store:
+        q = store.lower()
+        deals = [
+            d for d in deals
+            if q in (stores_by_id.get(d.store_id, None) and stores_by_id[d.store_id].name.lower() or "")
+        ]
+
+    total = len(deals)
+    if limit > 0:
+        deals = deals[-limit:]  # show most recent
+
+    table = Table(
+        title=f"Auto-matched deals ({total} total{f', showing last {limit}' if limit and total > limit else ''})",
+        show_lines=False,
+    )
+    table.add_column("Store", style="cyan", min_width=16)
+    table.add_column("Source", style="dim", width=12)
+    table.add_column("Description", max_width=48)
+    table.add_column("Price", style="magenta", width=14)
+    table.add_column("Scraped", style="dim", width=12)
+
+    for deal in deals:
+        store_obj = stores_by_id.get(deal.store_id)
+        store_name = store_obj.name if store_obj else f"[dim]{deal.store_id[:12]}…[/dim]"
+        price_str = deal.price.expression if deal.price else "—"
+        scraped = deal.scraped_at.strftime("%Y-%m-%d") if deal.scraped_at else "—"
+        desc = deal.description[:80] if deal.description else "—"
+        table.add_row(store_name, deal.source_id, desc, price_str, scraped)
+
+    if not deals:
+        console.print("[yellow]No auto-matched deals found.[/yellow]")
+        return
+
+    console.print(table)
 
 
 @app.command(name="list-stores")

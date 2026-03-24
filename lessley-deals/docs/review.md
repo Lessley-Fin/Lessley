@@ -278,7 +278,7 @@ Candidates:
 
 Explanation:
   Stage 2 fuzzy match: "רמי לוי" substring found in input.
-  Token overlap score: 0.82
+  Token overlap score: 0.82 
 
 Actions:
   [a] Approve best match (רמי לוי)

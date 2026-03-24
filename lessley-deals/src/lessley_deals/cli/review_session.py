@@ -18,71 +18,153 @@ def run_review_session(
     raw_deal_repo: RawDealJsonRepository | None = None,
     batch_size: int = 0,
     source_filter: str | None = None,
+    continuous: bool = False,
 ) -> None:
     """Run an interactive review session."""
+    import time
+
     queue = ReviewQueue(review_repo)
     actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
     display = ReviewDisplay()
 
-    queue_filter = QueueFilter(source_id=source_filter) if source_filter else None
-    pending = queue.get_pending(queue_filter)
+    def _process_pending() -> bool:
+        """Process all pending items in the current batch.
 
-    if not pending:
-        display.warning("No pending review items.")
+        Returns True if the user pressed [q] to quit, False otherwise.
+        """
+        queue_filter = QueueFilter(source_id=source_filter) if source_filter else None
+        pending = queue.get_pending(queue_filter)
+
+        if not pending:
+            return False
+
+        total = len(pending)
+        if batch_size > 0:
+            pending = pending[:batch_size]
+
+        display._console.print(
+            f"\n[bold]Review session: {len(pending)} items to review "
+            f"(of {total} pending)[/bold]\n"
+        )
+
+        processed = 0
+        for i, item in enumerate(pending):
+            display.show_item(item, i + 1, len(pending))
+            display.show_actions()
+
+            while True:
+                choice = input("\nAction: ").strip().lower()
+
+                if choice == "a":
+                    if not item.verdict.best:
+                        display.error("No candidate to approve.")
+                        continue
+                    actions.approve(item, reviewed_by="cli_user")
+                    display.success(
+                        f"Approved: '{item.input_name}' -> "
+                        f"store '{item.verdict.best.store_name}'"
+                    )
+                    processed += 1
+                    break
+
+                elif choice == "l":
+                    query = input("Search store name: ").strip()
+                    if not query:
+                        display.warning("Cancelled.")
+                        continue
+                    results = store_repo.search(query)
+                    display.show_store_search_results(results)
+                    if not results:
+                        continue
+                    pick = input(
+                        f"Select number (1-{len(results)}) or Enter to cancel: "
+                    ).strip()
+                    if not pick:
+                        display.warning("Cancelled.")
+                        continue
+                    try:
+                        idx = int(pick) - 1
+                        if not (0 <= idx < len(results)):
+                            raise ValueError
+                    except ValueError:
+                        display.error("Invalid selection.")
+                        continue
+                    chosen = results[idx]
+                    actions.approve_existing(
+                        item,
+                        store_id=chosen.id,
+                        store_name=chosen.name,
+                        reviewed_by="cli_user",
+                        note="manually linked",
+                    )
+                    display.success(
+                        f"Linked: '{item.input_name}' -> store '{chosen.name}'"
+                    )
+                    processed += 1
+                    break
+
+                elif choice == "c":
+                    name = input("New store name (Enter for input name): ").strip()
+                    if not name:
+                        name = item.input_name
+                    actions.create_new(item, store_name=name, reviewed_by="cli_user")
+                    display.success(f"Created new store: '{name}'")
+                    processed += 1
+                    break
+
+                elif choice == "d":
+                    note = input("Reason (optional): ").strip() or None
+                    actions.discard(item, reviewed_by="cli_user", note=note)
+                    display.warning("Discarded.")
+                    processed += 1
+                    break
+
+                elif choice == "s":
+                    actions.skip(item)
+                    display.warning("Skipped.")
+                    processed += 1
+                    break
+
+                elif choice == "q":
+                    display._console.print(
+                        f"\n[bold]Session ended. "
+                        f"Processed {processed}/{len(pending)} items.[/bold]"
+                    )
+                    return True
+
+                else:
+                    display.error(
+                        "Invalid choice. Use: "
+                        "[a]pprove, [l]ink existing, [c]reate, [d]iscard, [s]kip, [q]uit"
+                    )
+
+        display._console.print(
+            f"\n[bold]Session complete. "
+            f"Processed {processed}/{len(pending)} items.[/bold]"
+        )
+        return False
+
+    if not continuous:
+        queue_filter = QueueFilter(source_id=source_filter) if source_filter else None
+        if not queue.get_pending(queue_filter):
+            display.warning("No pending review items.")
+            return
+        _process_pending()
         return
 
-    total = len(pending)
-    if batch_size > 0:
-        pending = pending[:batch_size]
-
-    display._console.print(f"\n[bold]Review session: {len(pending)} items to review (of {total} pending)[/bold]\n")
-
-    processed = 0
-    for i, item in enumerate(pending):
-        display.show_item(item, i + 1, len(pending))
-        display.show_actions()
-
+    # Continuous mode
+    try:
         while True:
-            choice = input("\nAction: ").strip().lower()
-
-            if choice == "a":
-                if not item.verdict.best:
-                    display.error("No candidate to approve.")
-                    continue
-                updated = actions.approve(item, reviewed_by="cli_user")
-                display.success(
-                    f"Approved: '{item.input_name}' -> store '{item.verdict.best.store_name}'"
-                )
-                processed += 1
-                break
-
-            elif choice == "c":
-                name = input("New store name (Enter for input name): ").strip()
-                if not name:
-                    name = item.input_name
-                updated = actions.create_new(item, store_name=name, reviewed_by="cli_user")
-                display.success(f"Created new store: '{name}'")
-                processed += 1
-                break
-
-            elif choice == "d":
-                note = input("Reason (optional): ").strip() or None
-                updated = actions.discard(item, reviewed_by="cli_user", note=note)
-                display.warning("Discarded.")
-                processed += 1
-                break
-
-            elif choice == "s":
-                updated = actions.skip(item)
-                display.warning("Skipped.")
-                processed += 1
-                break
-
-            elif choice == "q":
-                display._console.print(f"\n[bold]Session ended. Processed {processed}/{len(pending)} items.[/bold]")
-                return
-
+            queue_filter = QueueFilter(source_id=source_filter) if source_filter else None
+            pending = queue.get_pending(queue_filter)
+            if pending:
+                quit_requested = _process_pending()
+                if quit_requested:
+                    return
             else:
-                display.error("Invalid choice. Use: [a]pprove, [c]reate, [d]iscard, [s]kip, [q]uit")
-
-    display._console.print(f"\n[bold]Session complete. Processed {processed}/{len(pending)} items.[/bold]")
+                display.warning(
+                    "Queue empty. Waiting for new items... (Ctrl+C to stop)"
+                )
+                time.sleep(30)
+    except KeyboardInterrupt:
+        display._console.print("\n[bold]Continuous mode stopped.[/bold]")

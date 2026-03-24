@@ -26,9 +26,11 @@ class PersistStage:
         self,
         deal_repo: DealJsonRepository,
         review_repo: ReviewJsonRepository,
+        review_no_match: bool = False,
     ) -> None:
         self._deal_repo = deal_repo
         self._review_repo = review_repo
+        self._review_no_match = review_no_match
 
     def run(
         self,
@@ -70,6 +72,19 @@ class PersistStage:
                     prec.fate = RecordFate.DUPLICATE
 
             elif verdict.decision == MatchDecision.REVIEW:
+                review_item = ReviewItem(
+                    id=generate_id(),
+                    raw_id=raw_id,
+                    input_name=verdict.input_name,
+                    input_name_forms=build_name_forms(verdict.input_name),
+                    verdict=verdict,
+                    created_at=now,
+                    status=ReviewStatus.PENDING,
+                )
+                self._review_repo.save(review_item)
+                prec.fate = RecordFate.SENT_TO_REVIEW
+
+            elif self._review_no_match:
                 review_item = ReviewItem(
                     id=generate_id(),
                     raw_id=raw_id,

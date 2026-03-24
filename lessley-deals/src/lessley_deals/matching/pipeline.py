@@ -11,6 +11,7 @@ from lessley_deals.matching.config import MatchConfig
 from lessley_deals.matching.index import AliasIndex
 from lessley_deals.matching.stages.base import MatchStage
 from lessley_deals.matching.stages.compact import CompactForm
+from lessley_deals.matching.stages.containment import ContainmentMatch
 from lessley_deals.matching.stages.domain import DomainMatch
 from lessley_deals.matching.stages.exact_alias import ExactAlias
 from lessley_deals.matching.stages.normalized import NormalizedFuzzy
@@ -20,7 +21,14 @@ _TOKEN_ONLY_STAGES = frozenset({"token_overlap"})
 
 
 def _default_stages() -> list[MatchStage]:
-    return [ExactAlias(), CompactForm(), NormalizedFuzzy(), DomainMatch(), TokenOverlap()]
+    return [
+        ExactAlias(),        # Stage 1: O(1) exact compact-form lookup            → conf 1.0
+        DomainMatch(),       # Stage 2: domain → store_id, fixed confidence       → conf 0.95
+        CompactForm(),       # Stage 3: Jaro-Winkler on compact forms             → conf ≤0.95
+        ContainmentMatch(),  # Stage 4: all canonical tokens ⊆ input tokens       → conf ≥0.92
+        NormalizedFuzzy(),   # Stage 5: JW + Jaccard + containment blend          → conf ≤1.0
+        TokenOverlap(),      # Stage 6: token Jaccard only, capped (never auto)   → conf ≤0.70
+    ]
 
 
 class MatchPipeline:
