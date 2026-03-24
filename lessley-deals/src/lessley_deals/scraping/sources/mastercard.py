@@ -335,80 +335,136 @@ class MastercardAdapter(BaseSourceAdapter):
         2. **Nested format** — ``dxpSelector.ctaData = [{ctaList: [{text, href}]}]``
            (legacy Mastercard page variant)
         """
-        for script in block.find_all("script"):
-            text = script.string or ""
+        store_url = None
+        script_tag = block.find('script')
+        if script_tag and script_tag.string:
+            modal_match = re.search(r'"modal-target"\s*:\s*"([^"]+)"', script_tag.string)
+            if modal_match:
+                modal_id = modal_match.group(1)
+            store_url = self.extract_store_url_from_script(script_tag.string)
 
-            # --- Format 1: flat ctaData [{ctaText, ctaLink}] ---
-            cta_match = re.search(r"ctaData\s*[:=]\s*(\[.*?\])", text, re.DOTALL)
-            if cta_match:
-                url = self._parse_flat_cta(cta_match.group(1))
-                if url:
-                    return url
+            if not store_url and modal_id:
+                modal = soup.find('dxp-modal', {'modal-id': modal_id})
+                store_url = self.extract_store_url_from_modal(modal)
+            
+        return store_url
 
-            # --- Format 2: dxpSelector.ctaData = [{ctaList: [{text, href}]}] ---
-            sel_match = re.search(r"dxpSelector\.ctaData\s*=\s*", text)
-            if sel_match:
-                url = self._parse_nested_cta(text, sel_match.end())
-                if url:
-                    return url
+        # for script in block.find_all("script"):
+        #     text = script.string or ""
 
-        # Fallback: links inside the modal.
-        if modal_id:
-            modal = soup.find("dxp-modal", attrs={"modal-id": modal_id})
-            if modal and isinstance(modal, Tag):
-                for a_tag in modal.find_all("a", href=True):
-                    href = a_tag["href"]
-                    if not isinstance(href, str):
-                        continue
-                    if any(
-                        skip in href.lower()
-                        for skip in ("javascript:", ".pdf", "mastercard")
-                    ):
-                        continue
-                    if href.startswith("http"):
-                        return href
+        #     # --- Format 2: dxpSelector.ctaData = [{ctaList: [{text, href}]}] ---
+        #     # Do this first as it is more specific and common.
+        #     sel_match = re.search(r"dxpSelector\.ctaData\s*=\s*", text)
+        #     if sel_match:
+        #         url = self._parse_nested_cta(text, sel_match.end())
+        #         if url:
+        #             return url
 
-        return None
+        #     # --- Format 1: flat ctaData [{ctaText, ctaLink}] ---
+        #     # Try flat ctaData using a safer extraction (finding where it ends instead of just .*?)
+        #     cta_match = re.search(r"\bctaData\s*[:=]\s*(\[.*?\])\s*(?:;|,|\n|$)", text, re.DOTALL)
+        #     if cta_match:
+        #         url = self._parse_flat_cta(cta_match.group(1))
+        #         if url:
+        #             return url
+            
+        #     # Additional fallback: manually extract from string without regex just in case
+        #     idx = text.find('dxpSelector.ctaData=')
+        #     if idx != -1:
+        #         url = self._parse_nested_cta(text, idx + len('dxpSelector.ctaData='))
+        #         if url:
+        #             return url
+
+        # # Fallback: links inside the modal.
+        # if modal_id:
+        #     modal = soup.find("dxp-modal", attrs={"modal-id": modal_id})
+        #     if modal and isinstance(modal, Tag):
+        #         for a_tag in modal.find_all("a", href=True):
+        #             href = a_tag["href"]
+        #             if not isinstance(href, str):
+        #                 continue
+        #             if any(
+        #                 skip in href.lower()
+        #                 for skip in ("javascript:", ".pdf", "mastercard")
+        #             ):
+        #                 continue
+        #             if href.startswith("http"):
+        #                 return href
+
+        # return None
 
     @staticmethod
-    def _parse_flat_cta(json_str: str) -> str | None:
-        """Parse flat ``[{ctaText, ctaLink}]`` format."""
+    def extract_store_url_from_script(script_text):
+        if not script_text:
+            return None
         try:
-            cta_list = json.loads(json_str)
-            for cta in cta_list:
-                if isinstance(cta, dict) and "לאתר" in cta.get("ctaText", ""):
-                    url = cta.get("ctaLink", "")
-                    if url:
-                        return url
-        except (json.JSONDecodeError, TypeError):
+            start_idx = script_text.find('dxpSelector.ctaData=')
+            if start_idx != -1:
+                array_str = script_text[start_idx:].split('dxpSelector.ctaData=')[1]
+                end_idx = array_str.find('dxpSelector.actionList')
+                if end_idx != -1:
+                    array_str = array_str[:end_idx].strip()
+                
+                array_str = array_str.rstrip(';, \n')
+                cta_data = json.loads(array_str)
+                
+                for group in cta_data:
+                    for cta in group.get('ctaList', []):
+                        if 'לאתר' in cta.get('text', ''):
+                            return cta.get('href')
+        except Exception:
             pass
         return None
 
     @staticmethod
-    def _parse_nested_cta(script_text: str, start: int) -> str | None:
-        """Parse nested ``dxpSelector.ctaData = [{ctaList: [{text, href}]}]`` format.
-
-        Ported from legacy ``mastercard_scraper.py :: extract_store_url_from_script``.
-        """
-        try:
-            remainder = script_text[start:]
-            # Find the end of the array (before dxpSelector.actionList or ;)
-            end_idx = remainder.find("dxpSelector.actionList")
-            if end_idx != -1:
-                remainder = remainder[:end_idx]
-            remainder = remainder.rstrip("; \n,")
-            cta_data = json.loads(remainder)
-            for group in cta_data:
-                if not isinstance(group, dict):
-                    continue
-                for cta in group.get("ctaList", []):
-                    if isinstance(cta, dict) and "לאתר" in cta.get("text", ""):
-                        href = cta.get("href", "")
-                        if href:
-                            return href
-        except (json.JSONDecodeError, TypeError, ValueError):
-            pass
+    def extract_store_url_from_modal(modal):
+        if modal:
+            for a_tag in modal.find_all('a', href=True):
+                href = a_tag['href']
+                if "javascript" not in href.lower() and ".pdf" not in href.lower() and "mastercard" not in href.lower():
+                    return href
         return None
+
+
+    # @staticmethod
+    # def _parse_flat_cta(json_str: str) -> str | None:
+    #     """Parse flat ``[{ctaText, ctaLink}]`` format."""
+    #     try:
+    #         cta_list = json.loads(json_str)
+    #         for cta in cta_list:
+    #             if isinstance(cta, dict) and "לאתר" in cta.get("ctaText", ""):
+    #                 url = cta.get("ctaLink", "")
+    #                 if url:
+    #                     return url
+    #     except (json.JSONDecodeError, TypeError):
+    #         pass
+    #     return None
+
+    # @staticmethod
+    # def _parse_nested_cta(script_text: str, start: int) -> str | None:
+    #     """Parse nested ``dxpSelector.ctaData = [{ctaList: [{text, href}]}]`` format.
+
+    #     Ported from legacy ``mastercard_scraper.py :: extract_store_url_from_script``.
+    #     """
+    #     try:
+    #         remainder = script_text[start:]
+    #         # Find the end of the array (before dxpSelector.actionList or ;)
+    #         end_idx = remainder.find("dxpSelector.actionList")
+    #         if end_idx != -1:
+    #             remainder = remainder[:end_idx]
+    #         remainder = remainder.rstrip("; \n,")
+    #         cta_data = json.loads(remainder)
+    #         for group in cta_data:
+    #             if not isinstance(group, dict):
+    #                 continue
+    #             for cta in group.get("ctaList", []):
+    #                 if isinstance(cta, dict) and "לאתר" in cta.get("text", ""):
+    #                     href = cta.get("href", "")
+    #                     if href:
+    #                         return href
+    #     except (json.JSONDecodeError, TypeError, ValueError):
+    #         pass
+    #     return None
 
     # ------------------------------------------------------------------
     # Title extraction
@@ -481,11 +537,12 @@ class MastercardAdapter(BaseSourceAdapter):
     def _extract_price_text(logic: dict[str, Any]) -> str:
         """Build a human-readable price/discount summary."""
         if logic["type"] == "spend_and_save":
-            reward = logic["reward_amount"]
-            cond = logic["condition_amount"]
+            reward = logic.get("reward_amount") or logic.get("reward", {}).get("value", "")
+            cond = logic.get("condition_amount") or logic.get("condition", {}).get("value", "")
             return f"{reward} ₪ הנחה ברכישה מעל {cond} ₪"
         if logic["type"] == "percentage":
-            return f"{logic['percent']}% הנחה"
+            percent = logic.get("percent") or int(logic.get("reward", {}).get("value", 0.0) * 100)
+            return f"{percent}% הנחה"
         return ""
 
     # ------------------------------------------------------------------
