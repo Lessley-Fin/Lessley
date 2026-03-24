@@ -417,10 +417,11 @@ class HotAdapter(BaseSourceAdapter):
 
         merged["_terms_text"] = terms_text
         merged["_details_text"] = details_text
-        merged["_discount_mechanics"] = deduce_hot_discount_mechanics(main, combined_text)
-        merged["_stackable"] = check_stackable(combined_text)
-        merged["_redeem_channels"] = extract_redeem_channels(combined_text)
-        merged["_coupon"] = extract_coupon(combined_text)
+        merged["discount_logic"] = deduce_hot_discount_mechanics(main, combined_text)
+        merged["stackable"] = check_stackable(combined_text)
+        merged["redeem_channels"] = extract_redeem_channels(combined_text)
+        merged["coupon_code"] = extract_coupon(combined_text)
+        merged["image_url"] = f"https://cdn.hot.co.il{main.get('imagePath', '')}" if main.get('imagePath') else ""
         merged["_locations"] = self._extract_locations(data.get("supplierLocations", {}))
         merged["_benefit_type_classified"] = classify_hot_benefit_type(main if main else record)
         return merged

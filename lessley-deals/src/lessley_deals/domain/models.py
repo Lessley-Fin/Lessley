@@ -152,12 +152,17 @@ class Deal:
     description: str
     scraped_at: datetime
     resolved_at: datetime
-    price: PriceInfo | None = None
+    currency: str | None = None
     url: str | None = None
+    image_url: str | None = None
+    discount_logic: dict[str, Any] | None = None
+    stackable: bool | None = None
+    redeem_channels: list[str] = field(default_factory=list)
+    coupon_code: str | None = None
 
     @property
     def fingerprint(self) -> str:
-        data = f"{self.store_id}|{self.source_id}|{self.description}|{self.price.expression if self.price else ''}"
+        data = f"{self.store_id}|{self.source_id}|{self.description}|{self.currency or ''}"
         return hashlib.sha256(data.encode()).hexdigest()
 
 

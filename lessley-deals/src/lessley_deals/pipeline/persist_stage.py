@@ -54,6 +54,7 @@ class PersistStage:
             prec.normalized = normalized
 
             if verdict.decision == MatchDecision.AUTO_MATCH and verdict.best:
+                raw_payload = prec.raw.raw_payload
                 deal = Deal(
                     id=generate_id(),
                     store_id=verdict.best.store_id,
@@ -62,8 +63,13 @@ class PersistStage:
                     description=normalized.deal_description,
                     scraped_at=prec.raw.scraped_at,
                     resolved_at=now,
-                    price=normalized.price,
+                    currency=normalized.price.currency if normalized.price else "ILS",
                     url=prec.raw.url,
+                    image_url=raw_payload.get("image_url"),
+                    discount_logic=raw_payload.get("discount_logic"),
+                    stackable=raw_payload.get("stackable"),
+                    redeem_channels=raw_payload.get("redeem_channels", []),
+                    coupon_code=raw_payload.get("coupon_code"),
                 )
                 if not self._deal_repo.exists_by_fingerprint(deal.fingerprint):
                     self._deal_repo.save(deal)

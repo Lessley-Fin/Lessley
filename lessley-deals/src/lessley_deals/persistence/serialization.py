@@ -202,8 +202,13 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         description=d["description"],
         scraped_at=_parse_datetime(d["scraped_at"]),  # type: ignore[arg-type]
         resolved_at=_parse_datetime(d["resolved_at"]),  # type: ignore[arg-type]
-        price=_parse_price_info(d.get("price")),
+        currency=d.get("currency"),
         url=d.get("url"),
+        image_url=d.get("image_url"),
+        discount_logic=d.get("discount_logic"),
+        stackable=d.get("stackable"),
+        redeem_channels=d.get("redeem_channels", []),
+        coupon_code=d.get("coupon_code"),
     )
 
 
