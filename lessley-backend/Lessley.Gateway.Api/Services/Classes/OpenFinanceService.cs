@@ -42,7 +42,9 @@ namespace Lessley.Gateway.Api.Services.Classes
 
             var payload = new
             {
-                includeFakeProviders = true
+                includeFakeProviders = true,
+                expiryDate = DateTime.UtcNow.AddYears(3).ToString("yyyy-MM-dd"),
+                allowBusiness = true
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, "v2/connections")
@@ -63,16 +65,6 @@ namespace Lessley.Gateway.Api.Services.Classes
 
         public async Task<OBTransactionsResponse> GetTransactions(string username)
         {
-            var clientId = _configuration["OpenFinanceConfig:ClientId"];
-            var clientSecret = _configuration["OpenFinanceConfig:ClientSecret"];
-
-            var payload = new
-            {
-                userId = username,
-                clientId,
-                clientSecret
-            };
-
             var accessToken = await CreateAccessToken(username);
 
             var request = new HttpRequestMessage(HttpMethod.Get, "v2/data/transactions");

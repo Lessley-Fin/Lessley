@@ -1,36 +1,52 @@
-﻿using System.Text.Json.Serialization;
-using Lessley.Gateway.Api.Contracts.Converters;
-
-namespace Lessley.Gateway.Api.Contracts
+﻿namespace Lessley.Gateway.Api.Contracts.RawResponses
 {
     public class OBTransactionsResponse
     {
-        [JsonPropertyName("nextPage")]
         public string? NextPage { get; set; }
 
-        [JsonPropertyName("items")]
-        public List<OBTransaction> Items { get; set; } = [];
+        public List<OBTransaction> Items { get; set; } = new List<OBTransaction>();
     }
 
     public class OBTransaction
     {
         public string? Id { get; set; }
+        public string? SK { get; set; }
         public string? UserId { get; set; }
-        public string? ProviderId { get; set; }
+        public string? OrgId { get; set; }
+        public string? ConnectionId { get; set; }
         public string? AccountId { get; set; }
+        public string? ProviderId { get; set; }
+        public string? TransactionProviderIdentifier { get; set; }
+        public string? RelatedPaymentId { get; set; }
         public string? AccountNumber { get; set; }
         public string? Status { get; set; }
+        public string? EntryReference { get; set; }
         public string? CategoryCode { get; set; }
+
+        public OBTransactionSecurityDetails? SecurityDetails { get; set; }
 
         public OBTransactionAmount? Amount { get; set; }
         public OBTransactionDescription? Description { get; set; }
         public OBTransactionCategory? Category { get; set; }
+        public OBTransactionCategory? ChangedCategory { get; set; }
+        public OBInstallments? Installments { get; set; }
 
         public string? Type { get; set; }
         public OBTransactionDates? Date { get; set; }
 
         public OBMerchantAddress? MerchantAddress { get; set; }
         public string? MerchantName { get; set; }
+        public string? Details { get; set; }
+
+        public bool? IsInvoiced { get; set; }
+        public string? Code { get; set; }
+        public bool? IsDuplicate { get; set; }
+        public double? BalancePerEndDay { get; set; }
+
+        public OBAccountInfo? CreditorAccount { get; set; }
+        public OBAccountInfo? DebtorAccount { get; set; }
+
+        public string? EndToEndId { get; set; }
     }
 
     public class OBTransactionAmount
@@ -41,7 +57,6 @@ namespace Lessley.Gateway.Api.Contracts
 
     public class OBAmountDetail
     {
-        [JsonConverter(typeof(NullableDoubleConverter))]
         public double? Amount { get; set; }
         public string? Currency { get; set; }
     }
@@ -93,8 +108,9 @@ namespace Lessley.Gateway.Api.Contracts
 
     public class OBTransactionSecurityDetails
     {
-        [JsonConverter(typeof(NullableDoubleConverter))]
         public double? UnitsNumber { get; set; }
         public OBAmountDetail? UnitsNominal { get; set; }
     }
+
+
 }
