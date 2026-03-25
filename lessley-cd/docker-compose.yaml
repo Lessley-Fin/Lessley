@@ -142,12 +142,11 @@ services:
       - PYTHONUNBUFFERED=1
       - ASPNETCORE_ENVIRONMENT=Development
       - RabbitMQ_Enabled=False
-      - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
-      - CONNECTIONSTRINGS_MONGODB=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - ConnectionStrings_Rabbit=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
-      - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - Loki_Url=http://loki:3100/loki/api/v1/push
     depends_on:
       - rabbitmq
       - mongodb
