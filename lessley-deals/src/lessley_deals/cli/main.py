@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from bidi.algorithm import get_display
 from rich.console import Console
 
 from lessley_deals.cli.review_session import run_review_session
@@ -220,16 +221,16 @@ def list_matches(
     table.add_column("Store", style="cyan", min_width=16)
     table.add_column("Source", style="dim", width=12)
     table.add_column("Description", max_width=48)
-    table.add_column("Price", style="magenta", width=14)
+    # table.add_column("Price", style="magenta", width=14)
     table.add_column("Scraped", style="dim", width=12)
 
     for deal in deals:
         store_obj = stores_by_id.get(deal.store_id)
-        store_name = store_obj.name if store_obj else f"[dim]{deal.store_id[:12]}…[/dim]"
-        price_str = deal.price.expression if deal.price else "—"
+        store_name = get_display(store_obj.name) if store_obj else f"[dim]{deal.store_id[:12]}…[/dim]"
+        # price_str = str(deal.discount_logic) if deal.discount_logic else "—"
         scraped = deal.scraped_at.strftime("%Y-%m-%d") if deal.scraped_at else "—"
-        desc = deal.description[:80] if deal.description else "—"
-        table.add_row(store_name, deal.source_id, desc, price_str, scraped)
+        desc = get_display(deal.description[:80]) if deal.description else "—"
+        table.add_row(store_name, deal.source_id, desc, scraped)
 
     if not deals:
         console.print("[yellow]No auto-matched deals found.[/yellow]")

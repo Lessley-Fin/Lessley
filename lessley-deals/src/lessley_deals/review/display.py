@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 
+from bidi.algorithm import get_display
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -22,8 +23,8 @@ class ReviewDisplay:
         """Display a review item with its candidates."""
         header = f"Review [{index}/{total}]"
         lines: list[str] = [
-            f"[bold]Input name:[/bold]      {item.input_name}",
-            f"[bold]Normalized:[/bold]       {item.input_name_forms.normalized}",
+            f"[bold]Input name:[/bold]      {get_display(item.input_name)}",
+            f"[bold]Normalized:[/bold]       {get_display(item.input_name_forms.normalized)}",
             f"[bold]Raw ID:[/bold]           {item.raw_id}",
             f"[bold]Status:[/bold]           {item.status.value}",
         ]
@@ -42,7 +43,7 @@ class ReviewDisplay:
             for i, c in enumerate(candidates, 1):
                 table.add_row(
                     str(i),
-                    c.store_name,
+                    get_display(c.store_name),
                     f"{c.confidence:.2f}",
                     c.stage,
                 )
@@ -77,7 +78,11 @@ class ReviewDisplay:
         self._console.print("\n[bold]Actions:[/bold]")
         self._console.print(table)
 
-    def show_store_search_results(self, stores: list) -> None:
+    def show_store_search_results(
+        self,
+        stores: list,
+        aliases_by_store: dict[str, list[str]] | None = None,
+    ) -> None:
         """Display store search results for the link-existing flow."""
         if not stores:
             self._console.print("[dim]No stores found.[/dim]")
@@ -85,9 +90,11 @@ class ReviewDisplay:
         table = Table(title="Matching Stores", show_lines=True)
         table.add_column("#", justify="right", style="dim", width=3)
         table.add_column("Name", style="cyan")
-        table.add_column("Normalized", style="dim")
+        table.add_column("Aliases", style="yellow")
         for i, store in enumerate(stores, 1):
-            table.add_row(str(i), store.name, store.name_forms.normalized)
+            aliases = aliases_by_store.get(store.id, []) if aliases_by_store else []
+            alias_str = ", ".join(get_display(a) for a in aliases) if aliases else "[dim]—[/dim]"
+            table.add_row(str(i), get_display(store.name), alias_str)
         self._console.print(table)
 
     def show_stats(self, stats: QueueStats) -> None:

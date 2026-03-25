@@ -1,6 +1,19 @@
 from __future__ import annotations
 
+from lessley_deals.domain.enums import AliasSource
 from lessley_deals.domain.models import CanonicalStore, StoreAlias
+
+
+def _synthetic_alias(store: CanonicalStore) -> StoreAlias:
+    """Create a synthetic alias entry from a canonical store's own name."""
+    return StoreAlias(
+        id=f"__store__{store.id}",
+        store_id=store.id,
+        alias=store.name,
+        alias_forms=store.name_forms,
+        source=AliasSource.SEED,
+        created_at=store.created_at,
+    )
 
 
 class AliasIndex:
@@ -13,16 +26,20 @@ class AliasIndex:
     ) -> None:
         self._store_by_id: dict[str, CanonicalStore] = {s.id: s for s in stores}
 
+        # Include each canonical store's own name as a synthetic alias so
+        # the primary name participates in matching even without an explicit alias.
+        all_aliases = list(aliases) + [_synthetic_alias(s) for s in stores]
+
         # exact_lookup: compact_form -> (store_id, alias_text)
         self._exact: dict[str, tuple[str, str]] = {}
-        for alias in aliases:
+        for alias in all_aliases:
             compact = alias.alias_forms.compact
             if compact not in self._exact:
                 self._exact[compact] = (alias.store_id, alias.alias)
 
         # all_entries: list of (alias, store) for linear scans
         self._all_entries: list[tuple[StoreAlias, CanonicalStore]] = []
-        for alias in aliases:
+        for alias in all_aliases:
             store = self._store_by_id.get(alias.store_id)
             if store is not None:
                 self._all_entries.append((alias, store))

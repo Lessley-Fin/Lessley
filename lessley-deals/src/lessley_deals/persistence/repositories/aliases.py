@@ -24,6 +24,14 @@ class AliasJsonRepository:
     def get_all(self) -> list[StoreAlias]:
         return [alias_from_dict(d) for d in self._store.read()]
 
+    def search(self, query: str) -> list[StoreAlias]:
+        q = query.lower().strip()
+        return [
+            alias_from_dict(d)
+            for d in self._store.read()
+            if q in d["alias"].lower() or q in d["alias_forms"]["normalized"]
+        ]
+
     def get_by_store(self, store_id: str) -> list[StoreAlias]:
         return [
             alias_from_dict(d)

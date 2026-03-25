@@ -33,23 +33,27 @@ def run_review_session(
         Returns True if the user pressed [q] to quit, False otherwise.
         """
         queue_filter = QueueFilter(source_id=source_filter) if source_filter else None
-        pending = queue.get_pending(queue_filter)
 
-        if not pending:
+        if not queue.get_pending(queue_filter):
             return False
 
-        total = len(pending)
-        if batch_size > 0:
-            pending = pending[:batch_size]
-
-        display._console.print(
-            f"\n[bold]Review session: {len(pending)} items to review "
-            f"(of {total} pending)[/bold]\n"
-        )
-
         processed = 0
-        for i, item in enumerate(pending):
-            display.show_item(item, i + 1, len(pending))
+        i = 0
+        while True:
+            # Reload from disk before each item so external edits are reflected.
+            pending = queue.get_pending(queue_filter)
+            if not pending:
+                break
+            if batch_size > 0 and processed >= batch_size:
+                break
+
+            i += 1
+            item = pending[0]
+            total = len(pending)
+            display._console.print(
+                f"\n[bold]Review session: {total} items remaining[/bold]\n"
+            )
+            display.show_item(item, i, i + total - 1)
             display.show_actions()
 
             while True:
@@ -73,7 +77,21 @@ def run_review_session(
                         display.warning("Cancelled.")
                         continue
                     results = store_repo.search(query)
-                    display.show_store_search_results(results)
+                    # also search by alias and merge (dedup by store id)
+                    alias_hits = alias_repo.search(query)
+                    seen_ids = {s.id for s in results}
+                    for a in alias_hits:
+                        if a.store_id not in seen_ids:
+                            store = store_repo.get_by_id(a.store_id)
+                            if store:
+                                results.append(store)
+                                seen_ids.add(store.id)
+                    # build aliases per store for display
+                    aliases_by_store = {
+                        s.id: [a.alias for a in alias_repo.get_by_store(s.id)]
+                        for s in results
+                    }
+                    display.show_store_search_results(results, aliases_by_store)
                     if not results:
                         continue
                     pick = input(
@@ -127,8 +145,7 @@ def run_review_session(
 
                 elif choice == "q":
                     display._console.print(
-                        f"\n[bold]Session ended. "
-                        f"Processed {processed}/{len(pending)} items.[/bold]"
+                        f"\n[bold]Session ended. Processed {processed} items.[/bold]"
                     )
                     return True
 
@@ -139,8 +156,7 @@ def run_review_session(
                     )
 
         display._console.print(
-            f"\n[bold]Session complete. "
-            f"Processed {processed}/{len(pending)} items.[/bold]"
+            f"\n[bold]Session complete. Processed {processed} items.[/bold]"
         )
         return False
 
