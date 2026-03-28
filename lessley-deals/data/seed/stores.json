@@ -5702,5 +5702,1137 @@
     "created_at": "2026-03-25T10:05:37.417528+00:00",
     "updated_at": "2026-03-25T10:05:37.417528+00:00",
     "metadata": {}
+  },
+  {
+    "id": "019d2594ce37_d6041a4a9f919f5f",
+    "name": "אדי מערכות לרכב",
+    "name_forms": {
+      "normalized": "אדי מערכות לרכב",
+      "compact": "אדימערכותלרכב",
+      "tokens": [
+        "אדי",
+        "לרכב",
+        "מערכות"
+      ]
+    },
+    "created_at": "2026-03-25T15:20:02.359832+00:00",
+    "updated_at": "2026-03-25T15:20:02.359832+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25950674_aaea33a350949f4a",
+    "name": "buycarpet.co.il",
+    "name_forms": {
+      "normalized": "buycarpet.co.il",
+      "compact": "buycarpetcoil",
+      "tokens": [
+        "buycarpet.co.il"
+      ]
+    },
+    "created_at": "2026-03-25T15:20:16.756473+00:00",
+    "updated_at": "2026-03-25T15:20:16.756473+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d2595a9c3_30ae90210c93f98c",
+    "name": "מלונות קנדה ישראל",
+    "name_forms": {
+      "normalized": "מלונות קנדה ישראל",
+      "compact": "מלונותקנדהישראל",
+      "tokens": [
+        "ישראל",
+        "מלונות",
+        "קנדה"
+      ]
+    },
+    "created_at": "2026-03-25T15:20:58.562984+00:00",
+    "updated_at": "2026-03-25T15:20:58.562984+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25965caf_0039dd5cc74e654c",
+    "name": "body shop the secrets of nature",
+    "name_forms": {
+      "normalized": "body shop the secrets of nature",
+      "compact": "bodyshopthesecretsofnature",
+      "tokens": [
+        "body",
+        "nature",
+        "of",
+        "secrets",
+        "shop",
+        "the"
+      ]
+    },
+    "created_at": "2026-03-25T15:21:44.367904+00:00",
+    "updated_at": "2026-03-25T15:21:44.367904+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d2596747b_718accc055175c61",
+    "name": "סושי מוטו",
+    "name_forms": {
+      "normalized": "סושי מוטו",
+      "compact": "סושימוטו",
+      "tokens": [
+        "מוטו",
+        "סושי"
+      ]
+    },
+    "created_at": "2026-03-25T15:21:50.459896+00:00",
+    "updated_at": "2026-03-25T15:21:50.459896+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d2597f279_8c4aa1a722982bdc",
+    "name": "סופר toys",
+    "name_forms": {
+      "normalized": "סופר toys",
+      "compact": "סופרtoys",
+      "tokens": [
+        "toys",
+        "סופר"
+      ]
+    },
+    "created_at": "2026-03-25T15:23:28.249605+00:00",
+    "updated_at": "2026-03-25T15:23:28.249605+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d2599ade2_f1c44de0f2c243a0",
+    "name": "cello coffee",
+    "name_forms": {
+      "normalized": "cello coffee",
+      "compact": "cellocoffee",
+      "tokens": [
+        "cello",
+        "coffee"
+      ]
+    },
+    "created_at": "2026-03-25T15:25:21.760947+00:00",
+    "updated_at": "2026-03-25T15:25:21.760947+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259afdd3_8a5aac59f5f6b56b",
+    "name": "Cello - גלריה ותכשיטים",
+    "name_forms": {
+      "normalized": "cello - גלריה ותכשיטימ",
+      "compact": "celloגלריהותכשיטימ",
+      "tokens": [
+        "cello",
+        "גלריה",
+        "ותכשיטימ"
+      ]
+    },
+    "created_at": "2026-03-25T15:26:47.763056+00:00",
+    "updated_at": "2026-03-25T15:26:47.763056+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259b440a_bc45897b4fdf05c7",
+    "name": "ארט הומ",
+    "name_forms": {
+      "normalized": "ארט הומ",
+      "compact": "ארטהומ",
+      "tokens": [
+        "ארט",
+        "הומ"
+      ]
+    },
+    "created_at": "2026-03-25T15:27:05.738669+00:00",
+    "updated_at": "2026-03-25T15:27:05.738669+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259b7ef6_07feba0eb995ebbc",
+    "name": "סטקיית אש דת",
+    "name_forms": {
+      "normalized": "סטקיית אש דת",
+      "compact": "סטקייתאשדת",
+      "tokens": [
+        "אש",
+        "דת",
+        "סטקיית"
+      ]
+    },
+    "created_at": "2026-03-25T15:27:20.822312+00:00",
+    "updated_at": "2026-03-25T15:27:20.822312+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259df3df_1fe956c56938948f",
+    "name": "comfort shoes",
+    "name_forms": {
+      "normalized": "comfort shoes",
+      "compact": "comfortshoes",
+      "tokens": [
+        "comfort",
+        "shoes"
+      ]
+    },
+    "created_at": "2026-03-25T15:30:01.823393+00:00",
+    "updated_at": "2026-03-25T15:30:01.823393+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259ed772_23c5d1f6a5879826",
+    "name": "מונה טורס",
+    "name_forms": {
+      "normalized": "מונה טורס",
+      "compact": "מונהטורס",
+      "tokens": [
+        "טורס",
+        "מונה"
+      ]
+    },
+    "created_at": "2026-03-25T15:31:00.082183+00:00",
+    "updated_at": "2026-03-25T15:31:00.082183+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259f88fc_65ade670d0414d8a",
+    "name": "family time",
+    "name_forms": {
+      "normalized": "family time",
+      "compact": "familytime",
+      "tokens": [
+        "family",
+        "time"
+      ]
+    },
+    "created_at": "2026-03-25T15:31:45.532077+00:00",
+    "updated_at": "2026-03-25T15:31:45.532077+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d259fa985_983d8f6a465a37ac",
+    "name": "קפה ארטורה",
+    "name_forms": {
+      "normalized": "קפה ארטורה",
+      "compact": "קפהארטורה",
+      "tokens": [
+        "ארטורה",
+        "קפה"
+      ]
+    },
+    "created_at": "2026-03-25T15:31:53.861784+00:00",
+    "updated_at": "2026-03-25T15:31:53.861784+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a0a33c_5f172bbee1728c98",
+    "name": "deniros",
+    "name_forms": {
+      "normalized": "deniros",
+      "compact": "deniros",
+      "tokens": [
+        "deniros"
+      ]
+    },
+    "created_at": "2026-03-25T15:32:57.788080+00:00",
+    "updated_at": "2026-03-25T15:32:57.788080+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a0d104_55bbbed1d7e02183",
+    "name": "מלכ הפלאפל",
+    "name_forms": {
+      "normalized": "מלכ הפלאפל",
+      "compact": "מלכהפלאפל",
+      "tokens": [
+        "הפלאפל",
+        "מלכ"
+      ]
+    },
+    "created_at": "2026-03-25T15:33:09.508472+00:00",
+    "updated_at": "2026-03-25T15:33:09.508472+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a14930_1e0f6c19e65f0943",
+    "name": "בורקס סוסו",
+    "name_forms": {
+      "normalized": "בורקס סוסו",
+      "compact": "בורקססוסו",
+      "tokens": [
+        "בורקס",
+        "סוסו"
+      ]
+    },
+    "created_at": "2026-03-25T15:33:40.272159+00:00",
+    "updated_at": "2026-03-25T15:33:40.272159+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a18c85_ede013e0440b6974",
+    "name": "פיצה ישתבח",
+    "name_forms": {
+      "normalized": "פיצה ישתבח",
+      "compact": "פיצהישתבח",
+      "tokens": [
+        "ישתבח",
+        "פיצה"
+      ]
+    },
+    "created_at": "2026-03-25T15:33:57.509317+00:00",
+    "updated_at": "2026-03-25T15:33:57.509317+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a1c316_fe386c2baa663210",
+    "name": "ארומנטיקה",
+    "name_forms": {
+      "normalized": "ארומנטיקה",
+      "compact": "ארומנטיקה",
+      "tokens": [
+        "ארומנטיקה"
+      ]
+    },
+    "created_at": "2026-03-25T15:34:11.478390+00:00",
+    "updated_at": "2026-03-25T15:34:11.478390+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a1f222_95418f9729175fcf",
+    "name": "la barca",
+    "name_forms": {
+      "normalized": "la barca",
+      "compact": "labarca",
+      "tokens": [
+        "barca",
+        "la"
+      ]
+    },
+    "created_at": "2026-03-25T15:34:23.522262+00:00",
+    "updated_at": "2026-03-25T15:34:23.522262+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a2b558_2ee95f6283de79a6",
+    "name": "שיפודי דאבח",
+    "name_forms": {
+      "normalized": "שיפודי דאבח",
+      "compact": "שיפודידאבח",
+      "tokens": [
+        "דאבח",
+        "שיפודי"
+      ]
+    },
+    "created_at": "2026-03-25T15:35:13.496082+00:00",
+    "updated_at": "2026-03-25T15:35:13.496082+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a33693_d9d2f6fe8903847d",
+    "name": "מסעדת מנאל",
+    "name_forms": {
+      "normalized": "מסעדת מנאל",
+      "compact": "מסעדתמנאל",
+      "tokens": [
+        "מנאל",
+        "מסעדת"
+      ]
+    },
+    "created_at": "2026-03-25T15:35:46.579006+00:00",
+    "updated_at": "2026-03-25T15:35:46.579006+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a3f4bd_d1525d62140cc77d",
+    "name": "תיאטרונ אורנה פורת לילדימ ונוער",
+    "name_forms": {
+      "normalized": "תיאטרונ אורנה פורת לילדימ ונוער",
+      "compact": "תיאטרונאורנהפורתלילדימונוער",
+      "tokens": [
+        "אורנה",
+        "ונוער",
+        "לילדימ",
+        "פורת",
+        "תיאטרונ"
+      ]
+    },
+    "created_at": "2026-03-25T15:36:35.261862+00:00",
+    "updated_at": "2026-03-25T15:36:35.261862+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a4ec4e_5ef35b6cbb11486b",
+    "name": "שוקולטי",
+    "name_forms": {
+      "normalized": "שוקולטי",
+      "compact": "שוקולטי",
+      "tokens": [
+        "שוקולטי"
+      ]
+    },
+    "created_at": "2026-03-25T15:37:38.638284+00:00",
+    "updated_at": "2026-03-25T15:37:38.638284+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a575ce_b205f560755323f9",
+    "name": "דפוס אאוטלט",
+    "name_forms": {
+      "normalized": "דפוס אאוטלט",
+      "compact": "דפוסאאוטלט",
+      "tokens": [
+        "אאוטלט",
+        "דפוס"
+      ]
+    },
+    "created_at": "2026-03-25T15:38:13.838529+00:00",
+    "updated_at": "2026-03-25T15:38:13.838529+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a5b5ef_eb0f124b178d9753",
+    "name": "מרכז האלקטרוניקה",
+    "name_forms": {
+      "normalized": "מרכז האלקטרוניקה",
+      "compact": "מרכזהאלקטרוניקה",
+      "tokens": [
+        "האלקטרוניקה",
+        "מרכז"
+      ]
+    },
+    "created_at": "2026-03-25T15:38:30.255491+00:00",
+    "updated_at": "2026-03-25T15:38:30.255491+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25a654db_62070f4277e767a6",
+    "name": "ענבר ביוטי",
+    "name_forms": {
+      "normalized": "ענבר ביוטי",
+      "compact": "ענברביוטי",
+      "tokens": [
+        "ביוטי",
+        "ענבר"
+      ]
+    },
+    "created_at": "2026-03-25T15:39:10.939428+00:00",
+    "updated_at": "2026-03-25T15:39:10.939428+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d25ba832d_30a40a07f1b076e6",
+    "name": "הלחמע",
+    "name_forms": {
+      "normalized": "הלחמע",
+      "compact": "הלחמע",
+      "tokens": [
+        "הלחמע"
+      ]
+    },
+    "created_at": "2026-03-25T16:01:13.517298+00:00",
+    "updated_at": "2026-03-25T16:01:13.517298+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d352fdfe8_8dbf682adc87ff56",
+    "name": "ברנט",
+    "name_forms": {
+      "normalized": "ברנט",
+      "compact": "ברנט",
+      "tokens": [
+        "ברנט"
+      ]
+    },
+    "created_at": "2026-03-28T16:03:43.208827+00:00",
+    "updated_at": "2026-03-28T16:03:43.208827+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35300491_50167ae0175fa808",
+    "name": "אוכלימ בשוק",
+    "name_forms": {
+      "normalized": "אוכלימ בשוק",
+      "compact": "אוכלימבשוק",
+      "tokens": [
+        "אוכלימ",
+        "בשוק"
+      ]
+    },
+    "created_at": "2026-03-28T16:03:52.593040+00:00",
+    "updated_at": "2026-03-28T16:03:52.593040+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3530210e_02c3f6e2440904ab",
+    "name": "פירות וירקות מורד אבו רקיע",
+    "name_forms": {
+      "normalized": "פירות וירקות מורד אבו רקיע",
+      "compact": "פירותוירקותמורדאבורקיע",
+      "tokens": [
+        "אבו",
+        "וירקות",
+        "מורד",
+        "פירות",
+        "רקיע"
+      ]
+    },
+    "created_at": "2026-03-28T16:03:59.886735+00:00",
+    "updated_at": "2026-03-28T16:03:59.886735+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3530cee0_a2dfc6d14c0fd6d7",
+    "name": "bonauf",
+    "name_forms": {
+      "normalized": "bonauf",
+      "compact": "bonauf",
+      "tokens": [
+        "bonauf"
+      ]
+    },
+    "created_at": "2026-03-28T16:04:44.384223+00:00",
+    "updated_at": "2026-03-28T16:04:44.384223+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353149b3_936e635cb71c656e",
+    "name": "midrasim shop",
+    "name_forms": {
+      "normalized": "midrasim shop",
+      "compact": "midrasimshop",
+      "tokens": [
+        "midrasim",
+        "shop"
+      ]
+    },
+    "created_at": "2026-03-28T16:05:15.827073+00:00",
+    "updated_at": "2026-03-28T16:05:15.827073+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3532389a_1542476312a98e97",
+    "name": "פיפינו",
+    "name_forms": {
+      "normalized": "פיפינו",
+      "compact": "פיפינו",
+      "tokens": [
+        "פיפינו"
+      ]
+    },
+    "created_at": "2026-03-28T16:06:16.986356+00:00",
+    "updated_at": "2026-03-28T16:06:16.986356+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353263f6_20c898d51cd8a7dd",
+    "name": "hofit קוסמטיקה",
+    "name_forms": {
+      "normalized": "hofit קוסמטיקה",
+      "compact": "hofitקוסמטיקה",
+      "tokens": [
+        "hofit",
+        "קוסמטיקה"
+      ]
+    },
+    "created_at": "2026-03-28T16:06:28.086713+00:00",
+    "updated_at": "2026-03-28T16:06:28.086713+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35328ef1_cb4dc82491982ca4",
+    "name": "חומוס בר בכפר",
+    "name_forms": {
+      "normalized": "חומוס בר בכפר",
+      "compact": "חומוסברבכפר",
+      "tokens": [
+        "בכפר",
+        "בר",
+        "חומוס"
+      ]
+    },
+    "created_at": "2026-03-28T16:06:39.089031+00:00",
+    "updated_at": "2026-03-28T16:06:39.089031+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35330f46_241df2c15d29dc42",
+    "name": "icon סלולר",
+    "name_forms": {
+      "normalized": "icon סלולר",
+      "compact": "iconסלולר",
+      "tokens": [
+        "icon",
+        "סלולר"
+      ]
+    },
+    "created_at": "2026-03-28T16:07:11.942525+00:00",
+    "updated_at": "2026-03-28T16:07:11.942525+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35333c95_04b011edd3a7d522",
+    "name": "מסעדת טומסיס",
+    "name_forms": {
+      "normalized": "מסעדת טומסיס",
+      "compact": "מסעדתטומסיס",
+      "tokens": [
+        "טומסיס",
+        "מסעדת"
+      ]
+    },
+    "created_at": "2026-03-28T16:07:23.541324+00:00",
+    "updated_at": "2026-03-28T16:07:23.541324+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35338bce_99e12e670c1f5b7b",
+    "name": "אופטינייס",
+    "name_forms": {
+      "normalized": "אופטינייס",
+      "compact": "אופטינייס",
+      "tokens": [
+        "אופטינייס"
+      ]
+    },
+    "created_at": "2026-03-28T16:07:43.822583+00:00",
+    "updated_at": "2026-03-28T16:07:43.822583+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3533a953_35b5986ddf16bab8",
+    "name": "tweaky",
+    "name_forms": {
+      "normalized": "tweaky",
+      "compact": "tweaky",
+      "tokens": [
+        "tweaky"
+      ]
+    },
+    "created_at": "2026-03-28T16:07:51.379378+00:00",
+    "updated_at": "2026-03-28T16:07:51.379378+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35341b5c_0078b3bc646f68a8",
+    "name": "מרינ חומרי בנינ",
+    "name_forms": {
+      "normalized": "מרינ חומרי בנינ",
+      "compact": "מרינחומריבנינ",
+      "tokens": [
+        "בנינ",
+        "חומרי",
+        "מרינ"
+      ]
+    },
+    "created_at": "2026-03-28T16:08:20.572788+00:00",
+    "updated_at": "2026-03-28T16:08:20.572788+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35349692_dc4d7f052be5ac31",
+    "name": "צמיגי רשפ",
+    "name_forms": {
+      "normalized": "צמיגי רשפ",
+      "compact": "צמיגירשפ",
+      "tokens": [
+        "צמיגי",
+        "רשפ"
+      ]
+    },
+    "created_at": "2026-03-28T16:08:52.114894+00:00",
+    "updated_at": "2026-03-28T16:08:52.114894+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35357ad1_b4b7c3db4ff9d748",
+    "name": "x-fitness",
+    "name_forms": {
+      "normalized": "x-fitness",
+      "compact": "xfitness",
+      "tokens": [
+        "x-fitness"
+      ]
+    },
+    "created_at": "2026-03-28T16:09:50.545891+00:00",
+    "updated_at": "2026-03-28T16:09:50.545891+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3535e337_82b240cc559f50c2",
+    "name": "בורקס על הואדי",
+    "name_forms": {
+      "normalized": "בורקס על הואדי",
+      "compact": "בורקסעלהואדי",
+      "tokens": [
+        "בורקס",
+        "הואדי",
+        "על"
+      ]
+    },
+    "created_at": "2026-03-28T16:10:17.271896+00:00",
+    "updated_at": "2026-03-28T16:10:17.271896+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3536487f_94bb603f82200b7b",
+    "name": "מינימרקט בני עיסאמ",
+    "name_forms": {
+      "normalized": "מינימרקט בני עיסאמ",
+      "compact": "מינימרקטבניעיסאמ",
+      "tokens": [
+        "בני",
+        "מינימרקט",
+        "עיסאמ"
+      ]
+    },
+    "created_at": "2026-03-28T16:10:43.199082+00:00",
+    "updated_at": "2026-03-28T16:10:43.199082+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3536ccbc_4b7cf744ca13d04a",
+    "name": "פיצה באלנו",
+    "name_forms": {
+      "normalized": "פיצה באלנו",
+      "compact": "פיצהבאלנו",
+      "tokens": [
+        "באלנו",
+        "פיצה"
+      ]
+    },
+    "created_at": "2026-03-28T16:11:17.052437+00:00",
+    "updated_at": "2026-03-28T16:11:17.052437+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3536f26c_587cef0a60c2158b",
+    "name": "מעצב שיער avichay elkayam",
+    "name_forms": {
+      "normalized": "מעצב שיער avichay elkayam",
+      "compact": "מעצבשיערavichayelkayam",
+      "tokens": [
+        "avichay",
+        "elkayam",
+        "מעצב",
+        "שיער"
+      ]
+    },
+    "created_at": "2026-03-28T16:11:26.700904+00:00",
+    "updated_at": "2026-03-28T16:11:26.700904+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3537359b_d8d87dec9226e9d4",
+    "name": "רק בפיתה",
+    "name_forms": {
+      "normalized": "רק בפיתה",
+      "compact": "רקבפיתה",
+      "tokens": [
+        "בפיתה",
+        "רק"
+      ]
+    },
+    "created_at": "2026-03-28T16:11:43.899888+00:00",
+    "updated_at": "2026-03-28T16:11:43.899888+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3538629b_c56afab5f29c117a",
+    "name": "doctor burger",
+    "name_forms": {
+      "normalized": "doctor burger",
+      "compact": "doctorburger",
+      "tokens": [
+        "burger",
+        "doctor"
+      ]
+    },
+    "created_at": "2026-03-28T16:13:00.955151+00:00",
+    "updated_at": "2026-03-28T16:13:00.955151+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35392588_03ce20ab205c36fb",
+    "name": "begins coffee",
+    "name_forms": {
+      "normalized": "begins coffee",
+      "compact": "beginscoffee",
+      "tokens": [
+        "begins",
+        "coffee"
+      ]
+    },
+    "created_at": "2026-03-28T16:13:50.856661+00:00",
+    "updated_at": "2026-03-28T16:13:50.856661+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353a71eb_bd70481a2734402c",
+    "name": "easy tech",
+    "name_forms": {
+      "normalized": "easy tech",
+      "compact": "easytech",
+      "tokens": [
+        "easy",
+        "tech"
+      ]
+    },
+    "created_at": "2026-03-28T16:15:15.947257+00:00",
+    "updated_at": "2026-03-28T16:15:15.947257+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353a91a1_ced6d15ecece51c9",
+    "name": "carnebar",
+    "name_forms": {
+      "normalized": "carnebar",
+      "compact": "carnebar",
+      "tokens": [
+        "carnebar"
+      ]
+    },
+    "created_at": "2026-03-28T16:15:24.065062+00:00",
+    "updated_at": "2026-03-28T16:15:24.065062+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353ab356_eb2f9c3c8af8f963",
+    "name": "הפרחימ של אורי",
+    "name_forms": {
+      "normalized": "הפרחימ של אורי",
+      "compact": "הפרחימשלאורי",
+      "tokens": [
+        "אורי",
+        "הפרחימ",
+        "של"
+      ]
+    },
+    "created_at": "2026-03-28T16:15:32.694487+00:00",
+    "updated_at": "2026-03-28T16:15:32.694487+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353acb1b_49e408727ca41750",
+    "name": "משתלת ירוק בכפר",
+    "name_forms": {
+      "normalized": "משתלת ירוק בכפר",
+      "compact": "משתלתירוקבכפר",
+      "tokens": [
+        "בכפר",
+        "ירוק",
+        "משתלת"
+      ]
+    },
+    "created_at": "2026-03-28T16:15:38.779143+00:00",
+    "updated_at": "2026-03-28T16:15:38.779143+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353adb02_7056af6e6df238fd",
+    "name": "המטבח של גרוני",
+    "name_forms": {
+      "normalized": "המטבח של גרוני",
+      "compact": "המטבחשלגרוני",
+      "tokens": [
+        "גרוני",
+        "המטבח",
+        "של"
+      ]
+    },
+    "created_at": "2026-03-28T16:15:42.850733+00:00",
+    "updated_at": "2026-03-28T16:15:42.850733+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353ba3cc_6ed2c4e66c2b9adc",
+    "name": "עולמ הנרגילות",
+    "name_forms": {
+      "normalized": "עולמ הנרגילות",
+      "compact": "עולמהנרגילות",
+      "tokens": [
+        "הנרגילות",
+        "עולמ"
+      ]
+    },
+    "created_at": "2026-03-28T16:16:34.252855+00:00",
+    "updated_at": "2026-03-28T16:16:34.252855+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353bc8cf_676c90089a30599c",
+    "name": "ברונזי",
+    "name_forms": {
+      "normalized": "ברונזי",
+      "compact": "ברונזי",
+      "tokens": [
+        "ברונזי"
+      ]
+    },
+    "created_at": "2026-03-28T16:16:43.727010+00:00",
+    "updated_at": "2026-03-28T16:16:43.727010+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353cdf09_edc87ae91e6f58ad",
+    "name": "פינת הירק",
+    "name_forms": {
+      "normalized": "פינת הירק",
+      "compact": "פינתהירק",
+      "tokens": [
+        "הירק",
+        "פינת"
+      ]
+    },
+    "created_at": "2026-03-28T16:17:54.952105+00:00",
+    "updated_at": "2026-03-28T16:17:54.952105+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353cf450_a9c643802ada5763",
+    "name": "לונה טורס",
+    "name_forms": {
+      "normalized": "לונה טורס",
+      "compact": "לונהטורס",
+      "tokens": [
+        "טורס",
+        "לונה"
+      ]
+    },
+    "created_at": "2026-03-28T16:18:00.399916+00:00",
+    "updated_at": "2026-03-28T16:18:00.399916+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353d8d28_58c06bfebc823bd5",
+    "name": "מכללת ג'אסט מיוזיק",
+    "name_forms": {
+      "normalized": "מכללת ג'אסט מיוזיק",
+      "compact": "מכללתגאסטמיוזיק",
+      "tokens": [
+        "ג'אסט",
+        "מיוזיק",
+        "מכללת"
+      ]
+    },
+    "created_at": "2026-03-28T16:18:39.528449+00:00",
+    "updated_at": "2026-03-28T16:18:39.528449+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353e1859_456c0aff469360eb",
+    "name": "סיטידלי",
+    "name_forms": {
+      "normalized": "סיטידלי",
+      "compact": "סיטידלי",
+      "tokens": [
+        "סיטידלי"
+      ]
+    },
+    "created_at": "2026-03-28T16:19:15.161084+00:00",
+    "updated_at": "2026-03-28T16:19:15.161084+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353e5c35_a644c264a9ea5488",
+    "name": "דגנימ",
+    "name_forms": {
+      "normalized": "דגנימ",
+      "compact": "דגנימ",
+      "tokens": [
+        "דגנימ"
+      ]
+    },
+    "created_at": "2026-03-28T16:19:32.532595+00:00",
+    "updated_at": "2026-03-28T16:19:32.532595+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353ece87_b7ce543d9eae0f6d",
+    "name": "מוסכ אייל",
+    "name_forms": {
+      "normalized": "מוסכ אייל",
+      "compact": "מוסכאייל",
+      "tokens": [
+        "אייל",
+        "מוסכ"
+      ]
+    },
+    "created_at": "2026-03-28T16:20:01.799465+00:00",
+    "updated_at": "2026-03-28T16:20:01.799465+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353f14da_131d0884509a0e68",
+    "name": "פיצה השפ",
+    "name_forms": {
+      "normalized": "פיצה השפ",
+      "compact": "פיצההשפ",
+      "tokens": [
+        "השפ",
+        "פיצה"
+      ]
+    },
+    "created_at": "2026-03-28T16:20:19.802953+00:00",
+    "updated_at": "2026-03-28T16:20:19.802953+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353f5723_607e87527eecdaff",
+    "name": "אופטיקה שרמנ",
+    "name_forms": {
+      "normalized": "אופטיקה שרמנ",
+      "compact": "אופטיקהשרמנ",
+      "tokens": [
+        "אופטיקה",
+        "שרמנ"
+      ]
+    },
+    "created_at": "2026-03-28T16:20:36.771409+00:00",
+    "updated_at": "2026-03-28T16:20:36.771409+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353f9b94_70e3db58cb2299cb",
+    "name": "walty",
+    "name_forms": {
+      "normalized": "walty",
+      "compact": "walty",
+      "tokens": [
+        "walty"
+      ]
+    },
+    "created_at": "2026-03-28T16:20:54.292804+00:00",
+    "updated_at": "2026-03-28T16:20:54.292804+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d353ff06d_ef19408566aadfd9",
+    "name": "מאפיית אלסנאבל",
+    "name_forms": {
+      "normalized": "מאפיית אלסנאבל",
+      "compact": "מאפייתאלסנאבל",
+      "tokens": [
+        "אלסנאבל",
+        "מאפיית"
+      ]
+    },
+    "created_at": "2026-03-28T16:21:16.013220+00:00",
+    "updated_at": "2026-03-28T16:21:16.013220+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d354058b7_23ea6716a1386f16",
+    "name": "פלאפל אבאל'ה",
+    "name_forms": {
+      "normalized": "פלאפל אבאל'ה",
+      "compact": "פלאפלאבאלה",
+      "tokens": [
+        "אבאל'ה",
+        "פלאפל"
+      ]
+    },
+    "created_at": "2026-03-28T16:21:42.711395+00:00",
+    "updated_at": "2026-03-28T16:21:42.711395+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35411e0d_3ba0582b69f21826",
+    "name": "מרכז הבשר",
+    "name_forms": {
+      "normalized": "מרכז הבשר",
+      "compact": "מרכזהבשר",
+      "tokens": [
+        "הבשר",
+        "מרכז"
+      ]
+    },
+    "created_at": "2026-03-28T16:22:33.229140+00:00",
+    "updated_at": "2026-03-28T16:22:33.229140+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35412e59_3c5a15a4796a38e8",
+    "name": "קליית חממה",
+    "name_forms": {
+      "normalized": "קליית חממה",
+      "compact": "קלייתחממה",
+      "tokens": [
+        "חממה",
+        "קליית"
+      ]
+    },
+    "created_at": "2026-03-28T16:22:37.401293+00:00",
+    "updated_at": "2026-03-28T16:22:37.401293+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d3541514e_860b637391a6ff73",
+    "name": "american toys",
+    "name_forms": {
+      "normalized": "american toys",
+      "compact": "americantoys",
+      "tokens": [
+        "american",
+        "toys"
+      ]
+    },
+    "created_at": "2026-03-28T16:22:46.350409+00:00",
+    "updated_at": "2026-03-28T16:22:46.350409+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35424a76_f35f8c3ce3b5d0ad",
+    "name": "קפה פוינט",
+    "name_forms": {
+      "normalized": "קפה פוינט",
+      "compact": "קפהפוינט",
+      "tokens": [
+        "פוינט",
+        "קפה"
+      ]
+    },
+    "created_at": "2026-03-28T16:23:50.133138+00:00",
+    "updated_at": "2026-03-28T16:23:50.133138+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35426df3_7f758698775b037f",
+    "name": "אספרסו פלוס",
+    "name_forms": {
+      "normalized": "אספרסו פלוס",
+      "compact": "אספרסופלוס",
+      "tokens": [
+        "אספרסו",
+        "פלוס"
+      ]
+    },
+    "created_at": "2026-03-28T16:23:59.219459+00:00",
+    "updated_at": "2026-03-28T16:23:59.219459+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d354368e9_f83a1b1e175822e2",
+    "name": "buby bloom",
+    "name_forms": {
+      "normalized": "buby bloom",
+      "compact": "bubybloom",
+      "tokens": [
+        "bloom",
+        "buby"
+      ]
+    },
+    "created_at": "2026-03-28T16:25:03.465876+00:00",
+    "updated_at": "2026-03-28T16:25:03.465876+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d35437ba9_711e66e33be09e25",
+    "name": "פשתנ",
+    "name_forms": {
+      "normalized": "פשתנ",
+      "compact": "פשתנ",
+      "tokens": [
+        "פשתנ"
+      ]
+    },
+    "created_at": "2026-03-28T16:25:08.265051+00:00",
+    "updated_at": "2026-03-28T16:25:08.265051+00:00",
+    "metadata": {}
   }
 ]
