@@ -669,5 +669,127 @@ def seed_from_raw(
     )
 
 
+@app.command(name="rematch-reviews")
+def rematch_reviews(
+    include_skipped: bool = typer.Option(
+        True,
+        "--include-skipped/--no-skipped",
+        help="Also re-run matching on skipped items (default: yes).",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be approved without writing anything.",
+    ),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Re-run the matching pipeline on pending review items.
+
+    After adding new stores or aliases (to seed files or directly to the data
+    files), use this command to re-process all pending and skipped review items
+    without hitting any external server.  Items that now reach AUTO_MATCH
+    confidence are automatically approved — alias and deal records are written
+    just as if a human had approved them in the review session.
+    """
+    from lessley_deals.domain.enums import MatchDecision, ReviewStatus
+    from lessley_deals.domain.models import NormalizedRecord
+    from lessley_deals.matching.config import MatchConfig
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.matching.pipeline import MatchPipeline
+    from lessley_deals.review.actions import ReviewActions
+    from rich.table import Table
+
+    _setup_logging(log_level)
+    config = _get_config(data_dir)
+
+    review_repo = ReviewJsonRepository(config.reviews_path)
+    store_repo = CanonicalStoreJsonRepository(config.stores_path)
+    alias_repo = AliasJsonRepository(config.aliases_path)
+    deal_repo = DealJsonRepository(config.deals_path)
+
+    # Collect items to re-process
+    target_statuses = {ReviewStatus.PENDING}
+    if include_skipped:
+        target_statuses.add(ReviewStatus.SKIPPED)
+
+    items = [i for i in review_repo.get_all() if i.status in target_statuses]
+    if not items:
+        console.print("[green]No pending review items to re-process.[/green]")
+        return
+
+    console.print(f"Re-running match on [bold]{len(items)}[/bold] items…")
+
+    # Rebuild index from the current (possibly updated) data files
+    index = AliasIndex(aliases=alias_repo.get_all(), stores=store_repo.get_all())
+    match_pipeline = MatchPipeline(MatchConfig())
+
+    to_approve: list[tuple] = []   # (ReviewItem, new MatchVerdict)
+    still_review: list = []
+    no_match: list = []
+
+    for item in items:
+        normalized = NormalizedRecord(
+            raw_id=item.raw_id,
+            source_id="",
+            store_name_forms=item.input_name_forms,
+            deal_description="",
+            normalized_at=item.created_at,
+            domain=None,
+        )
+        new_verdict = match_pipeline.match(normalized, index)
+
+        if new_verdict.decision == MatchDecision.AUTO_MATCH:
+            to_approve.append((item, new_verdict))
+        elif new_verdict.decision == MatchDecision.REVIEW:
+            still_review.append(item)
+        else:
+            no_match.append(item)
+
+    # Summary table for items that will be approved
+    if to_approve:
+        table = Table(title=f"Newly auto-matched ({len(to_approve)})")
+        table.add_column("Input Name")
+        table.add_column("Matched Store")
+        table.add_column("Conf.", justify="right")
+        table.add_column("Stage")
+        for it, v in to_approve:
+            best = v.best
+            table.add_row(
+                it.input_name,
+                best.store_name if best else "—",
+                f"{best.confidence:.3f}" if best else "—",
+                best.stage if best else "—",
+            )
+        console.print(table)
+
+    console.print(
+        f"\n[green]Auto-match:[/green] {len(to_approve)}  "
+        f"[yellow]Still review:[/yellow] {len(still_review)}  "
+        f"[red]No match:[/red] {len(no_match)}\n"
+    )
+
+    if dry_run:
+        console.print("[dim]--dry-run: no changes written.[/dim]")
+        return
+
+    if not to_approve:
+        console.print("[green]Nothing new to approve.[/green]")
+        return
+
+    actions = ReviewActions(
+        review_repo=review_repo,
+        store_repo=store_repo,
+        alias_repo=alias_repo,
+        deal_repo=deal_repo,
+    )
+
+    for item, new_verdict in to_approve:
+        item.verdict = new_verdict
+        actions.approve(item, reviewed_by="system:rematch")
+
+    console.print(f"[green]Approved {len(to_approve)} items.[/green]")
+
+
 if __name__ == "__main__":
     app()
