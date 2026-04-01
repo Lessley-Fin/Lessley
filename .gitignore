@@ -4,6 +4,7 @@
 .env.*.local
 # Explicit project env file
 /lessley-cd/.env
+/lessley-backend/Scraper/.venv
 
 # IDE
 .vscode/
