@@ -6834,5 +6834,217 @@
     "created_at": "2026-03-28T16:25:08.265051+00:00",
     "updated_at": "2026-03-28T16:25:08.265051+00:00",
     "metadata": {}
+  },
+  {
+    "id": "019d442f8aec_2d3eab9d5e735e97",
+    "name": "fitness boxing",
+    "name_forms": {
+      "normalized": "fitness boxing",
+      "compact": "fitnessboxing",
+      "tokens": [
+        "boxing",
+        "fitness"
+      ]
+    },
+    "created_at": "2026-03-31T13:57:39.692642+00:00",
+    "updated_at": "2026-03-31T13:57:39.692642+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d442fd311_5513cdb1411a8745",
+    "name": "פנדה קארטה",
+    "name_forms": {
+      "normalized": "פנדה קארטה",
+      "compact": "פנדהקארטה",
+      "tokens": [
+        "פנדה",
+        "קארטה"
+      ]
+    },
+    "created_at": "2026-03-31T13:57:58.160874+00:00",
+    "updated_at": "2026-03-31T13:57:58.160874+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d442ffb7b_103d4c93d83c8e98",
+    "name": "כנאפה נצרת",
+    "name_forms": {
+      "normalized": "כנאפה נצרת",
+      "compact": "כנאפהנצרת",
+      "tokens": [
+        "כנאפה",
+        "נצרת"
+      ]
+    },
+    "created_at": "2026-03-31T13:58:08.506645+00:00",
+    "updated_at": "2026-03-31T13:58:08.506645+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4433268e_30fb0b83f0525087",
+    "name": "יערה אורנ סדנאות ויצירה",
+    "name_forms": {
+      "normalized": "יערה אורנ סדנאות ויצירה",
+      "compact": "יערהאורנסדנאותויצירה",
+      "tokens": [
+        "אורנ",
+        "ויצירה",
+        "יערה",
+        "סדנאות"
+      ]
+    },
+    "created_at": "2026-03-31T14:01:36.142360+00:00",
+    "updated_at": "2026-03-31T14:01:36.142360+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d44350d87_aa6664d465676246",
+    "name": "מכונ הצפונ",
+    "name_forms": {
+      "normalized": "מכונ הצפונ",
+      "compact": "מכונהצפונ",
+      "tokens": [
+        "הצפונ",
+        "מכונ"
+      ]
+    },
+    "created_at": "2026-03-31T14:03:40.807977+00:00",
+    "updated_at": "2026-03-31T14:03:40.807977+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4435778a_3ef83533483d2469",
+    "name": "חומוס אדל",
+    "name_forms": {
+      "normalized": "חומוס אדל",
+      "compact": "חומוסאדל",
+      "tokens": [
+        "אדל",
+        "חומוס"
+      ]
+    },
+    "created_at": "2026-03-31T14:04:07.946508+00:00",
+    "updated_at": "2026-03-31T14:04:07.946508+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d44358ecd_d5711b079a94411e",
+    "name": "א.מ. נגררימ",
+    "name_forms": {
+      "normalized": "א.מ. נגררימ",
+      "compact": "אמנגררימ",
+      "tokens": [
+        "א.מ.",
+        "נגררימ"
+      ]
+    },
+    "created_at": "2026-03-31T14:04:13.892638+00:00",
+    "updated_at": "2026-03-31T14:04:13.892638+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4436df47_0b2e7745ddc83e8a",
+    "name": "kliik גלידריה",
+    "name_forms": {
+      "normalized": "kliik גלידריה",
+      "compact": "kliikגלידריה",
+      "tokens": [
+        "kliik",
+        "גלידריה"
+      ]
+    },
+    "created_at": "2026-03-31T14:05:40.039907+00:00",
+    "updated_at": "2026-03-31T14:05:40.039907+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d44370647_662a99b27945c6d8",
+    "name": "גירמאנ מוטורס",
+    "name_forms": {
+      "normalized": "גירמאנ מוטורס",
+      "compact": "גירמאנמוטורס",
+      "tokens": [
+        "גירמאנ",
+        "מוטורס"
+      ]
+    },
+    "created_at": "2026-03-31T14:05:50.023664+00:00",
+    "updated_at": "2026-03-31T14:05:50.023664+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d44372b3f_816e76d32414ddd9",
+    "name": "שניצליתו",
+    "name_forms": {
+      "normalized": "שניצליתו",
+      "compact": "שניצליתו",
+      "tokens": [
+        "שניצליתו"
+      ]
+    },
+    "created_at": "2026-03-31T14:05:59.487967+00:00",
+    "updated_at": "2026-03-31T14:05:59.487967+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d44374563_f4a2fd2a3b6c45f5",
+    "name": "הגנ הנודד",
+    "name_forms": {
+      "normalized": "הגנ הנודד",
+      "compact": "הגנהנודד",
+      "tokens": [
+        "הגנ",
+        "הנודד"
+      ]
+    },
+    "created_at": "2026-03-31T14:06:06.179770+00:00",
+    "updated_at": "2026-03-31T14:06:06.179770+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d443864f3_d6e1ee7929b52f78",
+    "name": "boujee",
+    "name_forms": {
+      "normalized": "boujee",
+      "compact": "boujee",
+      "tokens": [
+        "boujee"
+      ]
+    },
+    "created_at": "2026-03-31T14:07:19.795256+00:00",
+    "updated_at": "2026-03-31T14:07:19.795256+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4438a68b_bdcd4126c6ece1a8",
+    "name": "area 51 coffee shop",
+    "name_forms": {
+      "normalized": "area 51 coffee shop",
+      "compact": "area51coffeeshop",
+      "tokens": [
+        "51",
+        "area",
+        "coffee",
+        "shop"
+      ]
+    },
+    "created_at": "2026-03-31T14:07:36.585867+00:00",
+    "updated_at": "2026-03-31T14:07:36.585867+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d44390478_36877aab11e82c03",
+    "name": "מוסכ בראנסי",
+    "name_forms": {
+      "normalized": "מוסכ בראנסי",
+      "compact": "מוסכבראנסי",
+      "tokens": [
+        "בראנסי",
+        "מוסכ"
+      ]
+    },
+    "created_at": "2026-03-31T14:08:00.632868+00:00",
+    "updated_at": "2026-03-31T14:08:00.632868+00:00",
+    "metadata": {}
   }
 ]

@@ -14,6 +14,11 @@ from curl_cffi import requests as curl_requests
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
+from lessley_deals.scraping.helpers.discount_parser import (
+    check_stackable,
+    extract_coupon,
+    extract_redeem_channels,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,18 +42,6 @@ _SPEND_SAVE_RE = re.compile(
     r"(?:₪\s*)?(\d[,0-9]*)(?:\s*₪)?"
 )
 _PERCENT_RE = re.compile(r"(\d+)%")
-
-# Coupon code pattern.
-_COUPON_RE = re.compile(r"קוד קופון[א-ת\s]*:?\s*([a-zA-Z0-9]{4,})")
-
-# Stackable indicators.
-_NOT_STACKABLE_RE = re.compile(r"לא כולל כפל מבצעים")
-_STACKABLE_RE = re.compile(r"כולל כפל")
-
-# Redeem channel indicators.
-_ONLINE_RE = re.compile(r"באתר|אונליין")
-_APP_RE = re.compile(r"באפליקציית")
-_PHYSICAL_RE = re.compile(r"בחנויות|בסניפי")
 
 # Block-level elements that should have a trailing newline when extracting text.
 _BLOCK_TAGS = {"p", "div", "li", "h1", "h2", "h3"}
@@ -242,9 +235,9 @@ class MastercardAdapter(BaseSourceAdapter):
 
         # --- Additional fields ---
         full_text = combined_text
-        stackable = self._check_stackable(full_text)
-        channels = self._extract_redeem_channels(full_text)
-        coupon = self._extract_coupon(full_text)
+        stackable = check_stackable(full_text)
+        channels = extract_redeem_channels(full_text)
+        coupon = extract_coupon(full_text)
 
         # --- Determine which category this block belongs to ---
         block_category: str | None = None
@@ -545,34 +538,3 @@ class MastercardAdapter(BaseSourceAdapter):
             return f"{percent}% הנחה"
         return ""
 
-    # ------------------------------------------------------------------
-    # Ancillary field extraction
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _check_stackable(text: str) -> bool:
-        """Determine whether the deal is stackable with other promotions."""
-        if _NOT_STACKABLE_RE.search(text):
-            return False
-        if _STACKABLE_RE.search(text):
-            return True
-        # Default: unknown / assume not stackable.
-        return False
-
-    @staticmethod
-    def _extract_redeem_channels(text: str) -> list[str]:
-        """Identify where the deal can be redeemed."""
-        channels: list[str] = []
-        if _ONLINE_RE.search(text):
-            channels.append("online")
-        if _APP_RE.search(text):
-            channels.append("mobile_app")
-        if _PHYSICAL_RE.search(text):
-            channels.append("physical_store")
-        return channels
-
-    @staticmethod
-    def _extract_coupon(text: str) -> str | None:
-        """Extract a coupon code if present."""
-        m = _COUPON_RE.search(text)
-        return m.group(1) if m else None

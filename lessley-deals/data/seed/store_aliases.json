@@ -7100,5 +7100,217 @@
     },
     "source": "review",
     "created_at": "2026-03-28T16:25:08.265051+00:00"
+  },
+  {
+    "id": "019d442f8b01_96394c8cbcb46f45",
+    "store_id": "019d442f8aec_2d3eab9d5e735e97",
+    "alias": "פיטנס בוקסינג",
+    "alias_forms": {
+      "normalized": "פיטנס בוקסינג",
+      "compact": "פיטנסבוקסינג",
+      "tokens": [
+        "בוקסינג",
+        "פיטנס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T13:57:39.692642+00:00"
+  },
+  {
+    "id": "019d442fd31f_2786f1867fc182b3",
+    "store_id": "019d442fd311_5513cdb1411a8745",
+    "alias": "פנדה קארטה",
+    "alias_forms": {
+      "normalized": "פנדה קארטה",
+      "compact": "פנדהקארטה",
+      "tokens": [
+        "פנדה",
+        "קארטה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T13:57:58.160874+00:00"
+  },
+  {
+    "id": "019d442ffb8c_532c9d6a9b94b379",
+    "store_id": "019d442ffb7b_103d4c93d83c8e98",
+    "alias": "כנאפה נצרת",
+    "alias_forms": {
+      "normalized": "כנאפה נצרת",
+      "compact": "כנאפהנצרת",
+      "tokens": [
+        "כנאפה",
+        "נצרת"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T13:58:08.506645+00:00"
+  },
+  {
+    "id": "019d443326a1_aff4293a1e081793",
+    "store_id": "019d4433268e_30fb0b83f0525087",
+    "alias": "יערה אורנ סדנאות ויצירה",
+    "alias_forms": {
+      "normalized": "יערה אורנ סדנאות ויצירה",
+      "compact": "יערהאורנסדנאותויצירה",
+      "tokens": [
+        "אורנ",
+        "ויצירה",
+        "יערה",
+        "סדנאות"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:01:36.142360+00:00"
+  },
+  {
+    "id": "019d44350d99_65bbe69ecb336840",
+    "store_id": "019d44350d87_aa6664d465676246",
+    "alias": "מכונ הצפונ",
+    "alias_forms": {
+      "normalized": "מכונ הצפונ",
+      "compact": "מכונהצפונ",
+      "tokens": [
+        "הצפונ",
+        "מכונ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:03:40.807977+00:00"
+  },
+  {
+    "id": "019d4435779d_46bc4c13557b9600",
+    "store_id": "019d4435778a_3ef83533483d2469",
+    "alias": "חומוס אדל",
+    "alias_forms": {
+      "normalized": "חומוס אדל",
+      "compact": "חומוסאדל",
+      "tokens": [
+        "אדל",
+        "חומוס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:04:07.946508+00:00"
+  },
+  {
+    "id": "019d44358edd_5a548681b68b02ca",
+    "store_id": "019d44358ecd_d5711b079a94411e",
+    "alias": "א.מ. נגררימ",
+    "alias_forms": {
+      "normalized": "א.מ. נגררימ",
+      "compact": "אמנגררימ",
+      "tokens": [
+        "א.מ.",
+        "נגררימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:04:13.892638+00:00"
+  },
+  {
+    "id": "019d4436df55_7b310ee60e90f526",
+    "store_id": "019d4436df47_0b2e7745ddc83e8a",
+    "alias": "kliik גלידריה",
+    "alias_forms": {
+      "normalized": "kliik גלידריה",
+      "compact": "kliikגלידריה",
+      "tokens": [
+        "kliik",
+        "גלידריה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:05:40.039907+00:00"
+  },
+  {
+    "id": "019d44370658_710461fc2030ceed",
+    "store_id": "019d44370647_662a99b27945c6d8",
+    "alias": "גירמאנ מוטורס",
+    "alias_forms": {
+      "normalized": "גירמאנ מוטורס",
+      "compact": "גירמאנמוטורס",
+      "tokens": [
+        "גירמאנ",
+        "מוטורס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:05:50.023664+00:00"
+  },
+  {
+    "id": "019d44372b63_1259f137e4549563",
+    "store_id": "019d44372b3f_816e76d32414ddd9",
+    "alias": "שניצליתו",
+    "alias_forms": {
+      "normalized": "שניצליתו",
+      "compact": "שניצליתו",
+      "tokens": [
+        "שניצליתו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:05:59.487967+00:00"
+  },
+  {
+    "id": "019d44374573_db5299aa321e0ebe",
+    "store_id": "019d44374563_f4a2fd2a3b6c45f5",
+    "alias": "הגנ הנודד",
+    "alias_forms": {
+      "normalized": "הגנ הנודד",
+      "compact": "הגנהנודד",
+      "tokens": [
+        "הגנ",
+        "הנודד"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:06:06.179770+00:00"
+  },
+  {
+    "id": "019d44386506_770366b83c7be78d",
+    "store_id": "019d443864f3_d6e1ee7929b52f78",
+    "alias": "boujee",
+    "alias_forms": {
+      "normalized": "boujee",
+      "compact": "boujee",
+      "tokens": [
+        "boujee"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:07:19.795256+00:00"
+  },
+  {
+    "id": "019d4438a69b_f9c246bddcd1baf4",
+    "store_id": "019d4438a68b_bdcd4126c6ece1a8",
+    "alias": "area 51 coffee shop",
+    "alias_forms": {
+      "normalized": "area 51 coffee shop",
+      "compact": "area51coffeeshop",
+      "tokens": [
+        "51",
+        "area",
+        "coffee",
+        "shop"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:07:36.585867+00:00"
+  },
+  {
+    "id": "019d44390489_4219a012e27d24af",
+    "store_id": "019d44390478_36877aab11e82c03",
+    "alias": "מוסכ בראנסי",
+    "alias_forms": {
+      "normalized": "מוסכ בראנסי",
+      "compact": "מוסכבראנסי",
+      "tokens": [
+        "בראנסי",
+        "מוסכ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-03-31T14:08:00.632868+00:00"
   }
 ]
