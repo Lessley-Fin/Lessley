@@ -151,6 +151,59 @@ def scrape(
 
 
 @app.command()
+def process(
+    source: Optional[str] = typer.Option(None, "--source", "-s", help="Filter to one source (hot, mastercard, …)"),
+    review_no_match: bool = typer.Option(
+        False,
+        "--review-no-match",
+        help="Send NO_MATCH records to the review queue instead of discarding them.",
+    ),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Run normalize -> match -> persist on existing raw data (no scraping)."""
+    _setup_logging(log_level)
+    config = _get_config(data_dir)
+
+    from lessley_deals.domain.models import NormalizedRecord
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.pipeline.context import PipelineContext
+    from lessley_deals.pipeline.report import PipelineReport
+
+    raw_deal_repo = RawDealJsonRepository(config.raw_deals_path)
+    store_repo = CanonicalStoreJsonRepository(config.stores_path)
+    alias_repo = AliasJsonRepository(config.aliases_path)
+    deal_repo = DealJsonRepository(config.deals_path)
+    review_repo = ReviewJsonRepository(config.reviews_path)
+
+    raw_deals = raw_deal_repo.get_by_source(source) if source else raw_deal_repo.get_all()
+    if not raw_deals:
+        console.print("[yellow]No raw deals found. Run 'deals scrape' first.[/yellow]")
+        raise typer.Exit()
+
+    console.print(f"Loaded [bold]{len(raw_deals)}[/bold] raw deals. Running normalize → match → persist…")
+
+    ctx = PipelineContext()
+    pipeline_records = [ctx.add_raw(deal) for deal in raw_deals]
+
+    normalize_stage = NormalizeStage(create_default_pipeline())
+    normalized = normalize_stage.run(raw_deals)
+    normalized_map: dict[str, NormalizedRecord] = {n.raw_id: n for n in normalized}
+
+    index = AliasIndex(aliases=alias_repo.get_all(), stores=store_repo.get_all())
+    match_pipeline = MatchPipeline(MatchConfig())
+    match_stage = MatchStage(match_pipeline)
+    verdicts = match_stage.run(normalized, index)
+    verdict_map = {v.record_id: v for v in verdicts}
+
+    persist_stage = PersistStage(deal_repo, review_repo, review_no_match=review_no_match)
+    persist_stage.run(pipeline_records, normalized_map, verdict_map)
+
+    ctx.finish()
+    console.print(PipelineReport.from_context(ctx).summary())
+
+
+@app.command()
 def review(
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
     batch: int = typer.Option(0, "--batch", "-b", help="Process N items then stop (0=unlimited)"),
