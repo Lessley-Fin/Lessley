@@ -68,6 +68,16 @@ def scrape(
             "discount mechanics). Significantly slower but produces richer data."
         ),
     ),
+    hot_details_delay: float = typer.Option(
+        2.0,
+        "--hot-details-delay",
+        help="Seconds to wait between each detail fetch request (default: 2.0).",
+    ),
+    hot_request_delay: float = typer.Option(
+        1.5,
+        "--hot-request-delay",
+        help="Seconds to wait between page requests when listing benefits (default: 1.5).",
+    ),
     review_no_match: bool = typer.Option(
         False,
         "--review-no-match",
@@ -110,11 +120,13 @@ def scrape(
     registry.register_defaults()
 
     # Override the HOT adapter if custom benefit types or detail mode requested.
-    if hot_benefit_type or hot_fetch_details:
+    if hot_benefit_type or hot_fetch_details or hot_details_delay != 2.0 or hot_request_delay != 1.5:
         registry._adapters["hot"] = HotAdapter(
             _SC(base_url="https://www.hot.co.il", rate_limit_rps=0.7, timeout_seconds=30.0),
             benefit_types=tuple(hot_benefit_type) if hot_benefit_type else None,
             fetch_details=hot_fetch_details,
+            details_delay_seconds=hot_details_delay,
+            request_delay_seconds=hot_request_delay,
         )
 
     orchestrator = ScraperOrchestrator.from_registry(registry)

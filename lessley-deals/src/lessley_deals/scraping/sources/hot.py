@@ -82,6 +82,8 @@ class HotAdapter(BaseSourceAdapter):
         benefit_types: tuple[str, ...] | None = None,
         *,
         fetch_details: bool = False,
+        details_delay_seconds: float = 2.0,
+        request_delay_seconds: float = 1.5,
     ) -> None:
         super().__init__(
             config
@@ -93,6 +95,8 @@ class HotAdapter(BaseSourceAdapter):
         )
         self._benefit_types: tuple[str, ...] = benefit_types if benefit_types else BENEFIT_TYPES
         self._fetch_details = fetch_details
+        self._details_delay = details_delay_seconds
+        self._request_delay = request_delay_seconds
         self._api_url = _API_URL
         self._details_url = _DETAILS_URL
         self._client: httpx.AsyncClient | None = None
@@ -316,7 +320,7 @@ class HotAdapter(BaseSourceAdapter):
                 break
 
             page += 1
-            await asyncio.sleep(1.0 / max(self.config.rate_limit_rps, 0.1))
+            await asyncio.sleep(self._request_delay)
 
         return collected
 
@@ -354,7 +358,8 @@ class HotAdapter(BaseSourceAdapter):
         """Fetch detailed info for a single benefit.
 
         Uses the multipart/form-data trick required by the API (files
-        dict with ``(None, value)`` tuples).
+        dict with ``(None, value)`` tuples).  Retries up to 3 times on
+        429 Too Many Requests with exponential backoff.
         """
         if self._client is None:
             return None
@@ -365,22 +370,45 @@ class HotAdapter(BaseSourceAdapter):
         }
         files = {k: (None, v) for k, v in payload.items()}
 
-        try:
-            resp = await self._client.post(
-                self._details_url,
-                files=files,
-                headers={"Accept": "application/json"},
-            )
-            resp.raise_for_status()
-            return resp.json()
-        except Exception:
-            logger.debug(
-                "[%s] Failed to fetch details for benefit %s",
-                self.source_id,
-                benefit_id,
-                exc_info=True,
-            )
-            return None
+        _MAX_RETRIES = 3
+        backoff = self._details_delay * 2
+
+        for attempt in range(1, _MAX_RETRIES + 1):
+            try:
+                resp = await self._client.post(
+                    self._details_url,
+                    files=files,
+                    headers={"Accept": "application/json"},
+                )
+                if resp.status_code == 429:
+                    retry_after = float(resp.headers.get("Retry-After", backoff))
+                    logger.warning(
+                        "[%s] 429 for benefit %s — waiting %.1fs (attempt %d/%d)",
+                        self.source_id, benefit_id, retry_after, attempt, _MAX_RETRIES,
+                    )
+                    await asyncio.sleep(retry_after)
+                    backoff *= 2
+                    continue
+                resp.raise_for_status()
+                return resp.json()
+            except httpx.HTTPStatusError:
+                logger.debug(
+                    "[%s] HTTP error fetching details for benefit %s",
+                    self.source_id, benefit_id, exc_info=True,
+                )
+                return None
+            except Exception:
+                logger.debug(
+                    "[%s] Failed to fetch details for benefit %s",
+                    self.source_id, benefit_id, exc_info=True,
+                )
+                return None
+
+        logger.warning(
+            "[%s] Giving up on benefit %s after %d retries (429)",
+            self.source_id, benefit_id, _MAX_RETRIES,
+        )
+        return None
 
     # ------------------------------------------------------------------
     # Detail enrichment
@@ -440,7 +468,7 @@ class HotAdapter(BaseSourceAdapter):
 
         async with semaphore:
             detail = await self._fetch_benefit_details(benefit_id)
-            await asyncio.sleep(1.0 / max(self.config.rate_limit_rps, 0.1))
+            await asyncio.sleep(self._details_delay)
 
         if detail is None:
             return record
