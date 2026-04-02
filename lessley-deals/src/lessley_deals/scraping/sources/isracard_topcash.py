@@ -42,7 +42,7 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
 
     @property
     def source_id(self) -> str:
-        return "src_topcash"
+        return "topcash"
 
     async def scrape(self) -> tuple[list[RawStore], list[RawScrapedRecord]]:
         logger.info("[%s] Starting scrape", self.source_id)

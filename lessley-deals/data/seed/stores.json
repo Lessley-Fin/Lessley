@@ -7123,5 +7123,3724 @@
     "created_at": "2026-04-01T09:12:05.588663+00:00",
     "updated_at": "2026-04-01T09:12:05.588663+00:00",
     "metadata": {}
+  },
+  {
+    "id": "019d4922b7e3_d93b9db301708b37",
+    "name": "afrodita",
+    "name_forms": {
+      "normalized": "afrodita",
+      "compact": "afrodita",
+      "tokens": [
+        "afrodita"
+      ]
+    },
+    "created_at": "2026-04-01T13:01:45.314835+00:00",
+    "updated_at": "2026-04-01T13:01:45.314835+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d493f7b9c_8b11ae6cd303dc3b",
+    "name": "סופר פארמ",
+    "name_forms": {
+      "normalized": "סופר פארמ",
+      "compact": "סופרפארמ",
+      "tokens": [
+        "סופר",
+        "פארמ"
+      ]
+    },
+    "created_at": "2026-04-01T13:33:10.427458+00:00",
+    "updated_at": "2026-04-01T13:33:10.427458+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d493fa0ac_3562c2d47920475c",
+    "name": "temu",
+    "name_forms": {
+      "normalized": "temu",
+      "compact": "temu",
+      "tokens": [
+        "temu"
+      ]
+    },
+    "created_at": "2026-04-01T13:33:19.916266+00:00",
+    "updated_at": "2026-04-01T13:33:19.916266+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d493fc88b_009316ef4220b400",
+    "name": "asos",
+    "name_forms": {
+      "normalized": "asos",
+      "compact": "asos",
+      "tokens": [
+        "asos"
+      ]
+    },
+    "created_at": "2026-04-01T13:33:30.123798+00:00",
+    "updated_at": "2026-04-01T13:33:30.123798+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d493ffe65_18213cbf87b16b97",
+    "name": "ivory",
+    "name_forms": {
+      "normalized": "ivory",
+      "compact": "ivory",
+      "tokens": [
+        "ivory"
+      ]
+    },
+    "created_at": "2026-04-01T13:33:43.909750+00:00",
+    "updated_at": "2026-04-01T13:33:43.909750+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d49401df5_a1ac5637ae0b9695",
+    "name": "hotels",
+    "name_forms": {
+      "normalized": "hotels",
+      "compact": "hotels",
+      "tokens": [
+        "hotels"
+      ]
+    },
+    "created_at": "2026-04-01T13:33:51.989746+00:00",
+    "updated_at": "2026-04-01T13:33:51.989746+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d494035f5_b21693c69ebd25d9",
+    "name": "shein",
+    "name_forms": {
+      "normalized": "shein",
+      "compact": "shein",
+      "tokens": [
+        "shein"
+      ]
+    },
+    "created_at": "2026-04-01T13:33:58.133288+00:00",
+    "updated_at": "2026-04-01T13:33:58.133288+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4941a44a_f3a64ea5924cff62",
+    "name": "agoda",
+    "name_forms": {
+      "normalized": "agoda",
+      "compact": "agoda",
+      "tokens": [
+        "agoda"
+      ]
+    },
+    "created_at": "2026-04-01T13:35:31.914568+00:00",
+    "updated_at": "2026-04-01T13:35:31.914568+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d494251aa_2f72e40e2db2072d",
+    "name": "ebay",
+    "name_forms": {
+      "normalized": "ebay",
+      "compact": "ebay",
+      "tokens": [
+        "ebay"
+      ]
+    },
+    "created_at": "2026-04-01T13:36:16.298481+00:00",
+    "updated_at": "2026-04-01T13:36:16.298481+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d49426cf5_0c9964dc1b8f02ee",
+    "name": "delta",
+    "name_forms": {
+      "normalized": "delta",
+      "compact": "delta",
+      "tokens": [
+        "delta"
+      ]
+    },
+    "created_at": "2026-04-01T13:36:23.285590+00:00",
+    "updated_at": "2026-04-01T13:36:23.285590+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d49428758_65806fff92160cc5",
+    "name": "nike",
+    "name_forms": {
+      "normalized": "nike",
+      "compact": "nike",
+      "tokens": [
+        "nike"
+      ]
+    },
+    "created_at": "2026-04-01T13:36:30.040338+00:00",
+    "updated_at": "2026-04-01T13:36:30.040338+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4942b3ac_48009a8274f694e5",
+    "name": "365mashbir",
+    "name_forms": {
+      "normalized": "365mashbir",
+      "compact": "365mashbir",
+      "tokens": [
+        "365mashbir"
+      ]
+    },
+    "created_at": "2026-04-01T13:36:41.387492+00:00",
+    "updated_at": "2026-04-01T13:36:41.387492+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4942d5d6_78d28d53d3e9ab92",
+    "name": "bit2hul",
+    "name_forms": {
+      "normalized": "bit2hul",
+      "compact": "bit2hul",
+      "tokens": [
+        "bit2hul"
+      ]
+    },
+    "created_at": "2026-04-01T13:36:50.134332+00:00",
+    "updated_at": "2026-04-01T13:36:50.134332+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4942f1f8_86ef40aaf20f85b0",
+    "name": "weshoes",
+    "name_forms": {
+      "normalized": "weshoes",
+      "compact": "weshoes",
+      "tokens": [
+        "weshoes"
+      ]
+    },
+    "created_at": "2026-04-01T13:36:57.336509+00:00",
+    "updated_at": "2026-04-01T13:36:57.336509+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d49430f38_368f6a3102880857",
+    "name": "pandazzz",
+    "name_forms": {
+      "normalized": "pandazzz",
+      "compact": "pandazzz",
+      "tokens": [
+        "pandazzz"
+      ]
+    },
+    "created_at": "2026-04-01T13:37:04.824415+00:00",
+    "updated_at": "2026-04-01T13:37:04.824415+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4943a0ce_414a9ede75897576",
+    "name": "renuar",
+    "name_forms": {
+      "normalized": "renuar",
+      "compact": "renuar",
+      "tokens": [
+        "renuar"
+      ]
+    },
+    "created_at": "2026-04-01T13:37:42.094154+00:00",
+    "updated_at": "2026-04-01T13:37:42.094154+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4943b64f_21d0c4788b9b5668",
+    "name": "etsy",
+    "name_forms": {
+      "normalized": "etsy",
+      "compact": "etsy",
+      "tokens": [
+        "etsy"
+      ]
+    },
+    "created_at": "2026-04-01T13:37:47.599450+00:00",
+    "updated_at": "2026-04-01T13:37:47.599450+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4943cc15_7076f73a0ceac4eb",
+    "name": "kiwi",
+    "name_forms": {
+      "normalized": "kiwi",
+      "compact": "kiwi",
+      "tokens": [
+        "kiwi"
+      ]
+    },
+    "created_at": "2026-04-01T13:37:53.173654+00:00",
+    "updated_at": "2026-04-01T13:37:53.173654+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4943ef91_65499b808cf9769b",
+    "name": "myprotein",
+    "name_forms": {
+      "normalized": "myprotein",
+      "compact": "myprotein",
+      "tokens": [
+        "myprotein"
+      ]
+    },
+    "created_at": "2026-04-01T13:38:02.257918+00:00",
+    "updated_at": "2026-04-01T13:38:02.257918+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dc5f336_5d94810c7b81c080",
+    "name": "golf&co | גולפ אנד קו",
+    "name_forms": {
+      "normalized": "golf&co | גולפ אנד קו",
+      "compact": "golfcoגולפאנדקו",
+      "tokens": [
+        "golf&co",
+        "אנד",
+        "גולפ",
+        "קו"
+      ]
+    },
+    "created_at": "2026-04-02T10:38:31.734175+00:00",
+    "updated_at": "2026-04-02T10:38:31.734175+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dc62490_e083cc73a1575a74",
+    "name": "trip",
+    "name_forms": {
+      "normalized": "trip",
+      "compact": "trip",
+      "tokens": [
+        "trip"
+      ]
+    },
+    "created_at": "2026-04-02T10:38:44.368051+00:00",
+    "updated_at": "2026-04-02T10:38:44.368051+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dc6e358_3f5d4e0774171369",
+    "name": "אלמ",
+    "name_forms": {
+      "normalized": "אלמ",
+      "compact": "אלמ",
+      "tokens": [
+        "אלמ"
+      ]
+    },
+    "created_at": "2026-04-02T10:39:33.208135+00:00",
+    "updated_at": "2026-04-02T10:39:33.208135+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dc70f1c_f75da232d4e077ca",
+    "name": "lastminute",
+    "name_forms": {
+      "normalized": "lastminute",
+      "compact": "lastminute",
+      "tokens": [
+        "lastminute"
+      ]
+    },
+    "created_at": "2026-04-02T10:39:44.411457+00:00",
+    "updated_at": "2026-04-02T10:39:44.411457+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dc72cee_7688db0359d43627",
+    "name": "alibaba",
+    "name_forms": {
+      "normalized": "alibaba",
+      "compact": "alibaba",
+      "tokens": [
+        "alibaba"
+      ]
+    },
+    "created_at": "2026-04-02T10:39:52.046423+00:00",
+    "updated_at": "2026-04-02T10:39:52.046423+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dc7773e_c7be4cefed023c0e",
+    "name": "guliver",
+    "name_forms": {
+      "normalized": "guliver",
+      "compact": "guliver",
+      "tokens": [
+        "guliver"
+      ]
+    },
+    "created_at": "2026-04-02T10:40:11.070473+00:00",
+    "updated_at": "2026-04-02T10:40:11.070473+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dca46ff_4b7d6acf05cf604c",
+    "name": "economybookings",
+    "name_forms": {
+      "normalized": "economybookings",
+      "compact": "economybookings",
+      "tokens": [
+        "economybookings"
+      ]
+    },
+    "created_at": "2026-04-02T10:43:15.327698+00:00",
+    "updated_at": "2026-04-02T10:43:15.327698+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcb7ccc_5994c9109a057a6e",
+    "name": "naaman",
+    "name_forms": {
+      "normalized": "naaman",
+      "compact": "naaman",
+      "tokens": [
+        "naaman"
+      ]
+    },
+    "created_at": "2026-04-02T10:44:34.636273+00:00",
+    "updated_at": "2026-04-02T10:44:34.636273+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcba3a2_1ec163bba25fb43b",
+    "name": "xiaomi",
+    "name_forms": {
+      "normalized": "xiaomi",
+      "compact": "xiaomi",
+      "tokens": [
+        "xiaomi"
+      ]
+    },
+    "created_at": "2026-04-02T10:44:44.577379+00:00",
+    "updated_at": "2026-04-02T10:44:44.577379+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcbc8ef_cf5bc3c452d0d6e1",
+    "name": "golf kids",
+    "name_forms": {
+      "normalized": "golf kids",
+      "compact": "golfkids",
+      "tokens": [
+        "golf",
+        "kids"
+      ]
+    },
+    "created_at": "2026-04-02T10:44:54.126845+00:00",
+    "updated_at": "2026-04-02T10:44:54.126845+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcbe982_daa52db061cec6f6",
+    "name": "isracard",
+    "name_forms": {
+      "normalized": "isracard",
+      "compact": "isracard",
+      "tokens": [
+        "isracard"
+      ]
+    },
+    "created_at": "2026-04-02T10:45:02.466093+00:00",
+    "updated_at": "2026-04-02T10:45:02.466093+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcc8ecc_fe6832074ebd90d6",
+    "name": "strawberrynet",
+    "name_forms": {
+      "normalized": "strawberrynet",
+      "compact": "strawberrynet",
+      "tokens": [
+        "strawberrynet"
+      ]
+    },
+    "created_at": "2026-04-02T10:45:44.780527+00:00",
+    "updated_at": "2026-04-02T10:45:44.780527+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dccb3f4_65547887bb58a623",
+    "name": "udemy",
+    "name_forms": {
+      "normalized": "udemy",
+      "compact": "udemy",
+      "tokens": [
+        "udemy"
+      ]
+    },
+    "created_at": "2026-04-02T10:45:54.292111+00:00",
+    "updated_at": "2026-04-02T10:45:54.292111+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcce13a_e7add6b47cd0374b",
+    "name": "cult beauty",
+    "name_forms": {
+      "normalized": "cult beauty",
+      "compact": "cultbeauty",
+      "tokens": [
+        "beauty",
+        "cult"
+      ]
+    },
+    "created_at": "2026-04-02T10:46:05.882106+00:00",
+    "updated_at": "2026-04-02T10:46:05.882106+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcd08a4_aa2e52c4da8efaeb",
+    "name": "wifly",
+    "name_forms": {
+      "normalized": "wifly",
+      "compact": "wifly",
+      "tokens": [
+        "wifly"
+      ]
+    },
+    "created_at": "2026-04-02T10:46:15.972283+00:00",
+    "updated_at": "2026-04-02T10:46:15.972283+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcd37c8_f85c95a9815a84f9",
+    "name": "dr gav",
+    "name_forms": {
+      "normalized": "dr gav",
+      "compact": "drgav",
+      "tokens": [
+        "dr",
+        "gav"
+      ]
+    },
+    "created_at": "2026-04-02T10:46:28.040427+00:00",
+    "updated_at": "2026-04-02T10:46:28.040427+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcd4af2_c97bc71f1b4e2979",
+    "name": "libra",
+    "name_forms": {
+      "normalized": "libra",
+      "compact": "libra",
+      "tokens": [
+        "libra"
+      ]
+    },
+    "created_at": "2026-04-02T10:46:32.945640+00:00",
+    "updated_at": "2026-04-02T10:46:32.945640+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcd7df8_5beb1f1b45199a97",
+    "name": "discover cars",
+    "name_forms": {
+      "normalized": "discover cars",
+      "compact": "discovercars",
+      "tokens": [
+        "cars",
+        "discover"
+      ]
+    },
+    "created_at": "2026-04-02T10:46:46.007398+00:00",
+    "updated_at": "2026-04-02T10:46:46.007398+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcd9282_fd348ab129c2554c",
+    "name": "g2a",
+    "name_forms": {
+      "normalized": "g2a",
+      "compact": "g2a",
+      "tokens": [
+        "g2a"
+      ]
+    },
+    "created_at": "2026-04-02T10:46:51.266089+00:00",
+    "updated_at": "2026-04-02T10:46:51.266089+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcdd304_3006a6980e5e7291",
+    "name": "4chef",
+    "name_forms": {
+      "normalized": "4chef",
+      "compact": "4chef",
+      "tokens": [
+        "4chef"
+      ]
+    },
+    "created_at": "2026-04-02T10:47:07.780011+00:00",
+    "updated_at": "2026-04-02T10:47:07.780011+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcdec4a_eab841fa09de0a97",
+    "name": "expedia",
+    "name_forms": {
+      "normalized": "expedia",
+      "compact": "expedia",
+      "tokens": [
+        "expedia"
+      ]
+    },
+    "created_at": "2026-04-02T10:47:14.250500+00:00",
+    "updated_at": "2026-04-02T10:47:14.250500+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dce3d29_93d49ed3b18dd438",
+    "name": "banggood",
+    "name_forms": {
+      "normalized": "banggood",
+      "compact": "banggood",
+      "tokens": [
+        "banggood"
+      ]
+    },
+    "created_at": "2026-04-02T10:47:34.952863+00:00",
+    "updated_at": "2026-04-02T10:47:34.952863+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcece72_cf7ef04d1c2ce77b",
+    "name": "get your guide",
+    "name_forms": {
+      "normalized": "get your guide",
+      "compact": "getyourguide",
+      "tokens": [
+        "get",
+        "guide",
+        "your"
+      ]
+    },
+    "created_at": "2026-04-02T10:48:12.145403+00:00",
+    "updated_at": "2026-04-02T10:48:12.145403+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcef894_45686a6aa4b2eb38",
+    "name": "shopbop",
+    "name_forms": {
+      "normalized": "shopbop",
+      "compact": "shopbop",
+      "tokens": [
+        "shopbop"
+      ]
+    },
+    "created_at": "2026-04-02T10:48:22.932148+00:00",
+    "updated_at": "2026-04-02T10:48:22.932148+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dcf6282_cccea963dc47074d",
+    "name": "kitan",
+    "name_forms": {
+      "normalized": "kitan",
+      "compact": "kitan",
+      "tokens": [
+        "kitan"
+      ]
+    },
+    "created_at": "2026-04-02T10:48:50.050528+00:00",
+    "updated_at": "2026-04-02T10:48:50.050528+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd0646f_19357363af5cb898",
+    "name": "twentyfourseven",
+    "name_forms": {
+      "normalized": "twentyfourseven",
+      "compact": "twentyfourseven",
+      "tokens": [
+        "twentyfourseven"
+      ]
+    },
+    "created_at": "2026-04-02T10:49:56.079944+00:00",
+    "updated_at": "2026-04-02T10:49:56.079944+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd26dde_0ab19b948e0fa4c9",
+    "name": "isrotel",
+    "name_forms": {
+      "normalized": "isrotel",
+      "compact": "isrotel",
+      "tokens": [
+        "isrotel"
+      ]
+    },
+    "created_at": "2026-04-02T10:52:09.565459+00:00",
+    "updated_at": "2026-04-02T10:52:09.565459+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd2ace4_d9733e6a8e3fabb9",
+    "name": "shilav",
+    "name_forms": {
+      "normalized": "shilav",
+      "compact": "shilav",
+      "tokens": [
+        "shilav"
+      ]
+    },
+    "created_at": "2026-04-02T10:52:25.700058+00:00",
+    "updated_at": "2026-04-02T10:52:25.700058+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd2d354_0dda14d2ec9b8663",
+    "name": "walla tours",
+    "name_forms": {
+      "normalized": "walla tours",
+      "compact": "wallatours",
+      "tokens": [
+        "tours",
+        "walla"
+      ]
+    },
+    "created_at": "2026-04-02T10:52:35.540567+00:00",
+    "updated_at": "2026-04-02T10:52:35.540567+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd30814_382895550b837951",
+    "name": "fox",
+    "name_forms": {
+      "normalized": "fox",
+      "compact": "fox",
+      "tokens": [
+        "fox"
+      ]
+    },
+    "created_at": "2026-04-02T10:52:49.044256+00:00",
+    "updated_at": "2026-04-02T10:52:49.044256+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd33322_0fb990346deb6c54",
+    "name": "viator",
+    "name_forms": {
+      "normalized": "viator",
+      "compact": "viator",
+      "tokens": [
+        "viator"
+      ]
+    },
+    "created_at": "2026-04-02T10:53:00.066922+00:00",
+    "updated_at": "2026-04-02T10:53:00.066922+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd42468_2ae89ad5845524db",
+    "name": "lookfantastic",
+    "name_forms": {
+      "normalized": "lookfantastic",
+      "compact": "lookfantastic",
+      "tokens": [
+        "lookfantastic"
+      ]
+    },
+    "created_at": "2026-04-02T10:54:01.832250+00:00",
+    "updated_at": "2026-04-02T10:54:01.832250+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd4ba28_a640b34e4a9b2df7",
+    "name": "cdkeys",
+    "name_forms": {
+      "normalized": "cdkeys",
+      "compact": "cdkeys",
+      "tokens": [
+        "cdkeys"
+      ]
+    },
+    "created_at": "2026-04-02T10:54:40.168164+00:00",
+    "updated_at": "2026-04-02T10:54:40.168164+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd53f3f_e315cd0b31d7794d",
+    "name": "hashmal neto",
+    "name_forms": {
+      "normalized": "hashmal neto",
+      "compact": "hashmalneto",
+      "tokens": [
+        "hashmal",
+        "neto"
+      ]
+    },
+    "created_at": "2026-04-02T10:55:14.239681+00:00",
+    "updated_at": "2026-04-02T10:55:14.239681+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd59660_f062d0e035302393",
+    "name": "jacobi",
+    "name_forms": {
+      "normalized": "jacobi",
+      "compact": "jacobi",
+      "tokens": [
+        "jacobi"
+      ]
+    },
+    "created_at": "2026-04-02T10:55:36.543608+00:00",
+    "updated_at": "2026-04-02T10:55:36.543608+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd61584_fbcf7380d5bab7da",
+    "name": "shomrat hazorea",
+    "name_forms": {
+      "normalized": "shomrat hazorea",
+      "compact": "shomrathazorea",
+      "tokens": [
+        "hazorea",
+        "shomrat"
+      ]
+    },
+    "created_at": "2026-04-02T10:56:09.092641+00:00",
+    "updated_at": "2026-04-02T10:56:09.092641+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd69c38_8ce935bbe9545056",
+    "name": "godaddy",
+    "name_forms": {
+      "normalized": "godaddy",
+      "compact": "godaddy",
+      "tokens": [
+        "godaddy"
+      ]
+    },
+    "created_at": "2026-04-02T10:56:43.575716+00:00",
+    "updated_at": "2026-04-02T10:56:43.575716+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd6ae5c_7266852efc167c67",
+    "name": "gade",
+    "name_forms": {
+      "normalized": "gade",
+      "compact": "gade",
+      "tokens": [
+        "gade"
+      ]
+    },
+    "created_at": "2026-04-02T10:56:48.220797+00:00",
+    "updated_at": "2026-04-02T10:56:48.220797+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd6f6a2_c2e1beaded27821a",
+    "name": "cook & bake",
+    "name_forms": {
+      "normalized": "cook & bake",
+      "compact": "cookbake",
+      "tokens": [
+        "bake",
+        "cook"
+      ]
+    },
+    "created_at": "2026-04-02T10:57:06.722886+00:00",
+    "updated_at": "2026-04-02T10:57:06.722886+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd71844_8f7af608e612a737",
+    "name": "vitacost",
+    "name_forms": {
+      "normalized": "vitacost",
+      "compact": "vitacost",
+      "tokens": [
+        "vitacost"
+      ]
+    },
+    "created_at": "2026-04-02T10:57:15.331446+00:00",
+    "updated_at": "2026-04-02T10:57:15.331446+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd73f48_e8375e35ff9b0b3b",
+    "name": "partner",
+    "name_forms": {
+      "normalized": "partner",
+      "compact": "partner",
+      "tokens": [
+        "partner"
+      ]
+    },
+    "created_at": "2026-04-02T10:57:25.319648+00:00",
+    "updated_at": "2026-04-02T10:57:25.319648+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd7de64_f3fbfd73b5f92ad9",
+    "name": "vardinon",
+    "name_forms": {
+      "normalized": "vardinon",
+      "compact": "vardinon",
+      "tokens": [
+        "vardinon"
+      ]
+    },
+    "created_at": "2026-04-02T10:58:06.052408+00:00",
+    "updated_at": "2026-04-02T10:58:06.052408+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd894da_54abfc55cc47b5a0",
+    "name": "geekbuying",
+    "name_forms": {
+      "normalized": "geekbuying",
+      "compact": "geekbuying",
+      "tokens": [
+        "geekbuying"
+      ]
+    },
+    "created_at": "2026-04-02T10:58:52.762148+00:00",
+    "updated_at": "2026-04-02T10:58:52.762148+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd8e035_1694e3a9b39f2f50",
+    "name": "betili",
+    "name_forms": {
+      "normalized": "betili",
+      "compact": "betili",
+      "tokens": [
+        "betili"
+      ]
+    },
+    "created_at": "2026-04-02T10:59:12.053617+00:00",
+    "updated_at": "2026-04-02T10:59:12.053617+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd9074e_4bded40c83add786",
+    "name": "reservations",
+    "name_forms": {
+      "normalized": "reservations",
+      "compact": "reservations",
+      "tokens": [
+        "reservations"
+      ]
+    },
+    "created_at": "2026-04-02T10:59:22.061411+00:00",
+    "updated_at": "2026-04-02T10:59:22.061411+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd930d8_6658b5abe82a861b",
+    "name": "klook",
+    "name_forms": {
+      "normalized": "klook",
+      "compact": "klook",
+      "tokens": [
+        "klook"
+      ]
+    },
+    "created_at": "2026-04-02T10:59:32.695274+00:00",
+    "updated_at": "2026-04-02T10:59:32.695274+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd9b838_f594d680eaa04bc7",
+    "name": "tiqets",
+    "name_forms": {
+      "normalized": "tiqets",
+      "compact": "tiqets",
+      "tokens": [
+        "tiqets"
+      ]
+    },
+    "created_at": "2026-04-02T11:00:07.352035+00:00",
+    "updated_at": "2026-04-02T11:00:07.352035+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dd9d4b6_f78a3794da181fe7",
+    "name": "intima",
+    "name_forms": {
+      "normalized": "intima",
+      "compact": "intima",
+      "tokens": [
+        "intima"
+      ]
+    },
+    "created_at": "2026-04-02T11:00:14.645508+00:00",
+    "updated_at": "2026-04-02T11:00:14.645508+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dda07e3_3cabfe5c41179b40",
+    "name": "tomtop",
+    "name_forms": {
+      "normalized": "tomtop",
+      "compact": "tomtop",
+      "tokens": [
+        "tomtop"
+      ]
+    },
+    "created_at": "2026-04-02T11:00:27.747849+00:00",
+    "updated_at": "2026-04-02T11:00:27.747849+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dda58a8_6fbed188a6da5d1f",
+    "name": "urban",
+    "name_forms": {
+      "normalized": "urban",
+      "compact": "urban",
+      "tokens": [
+        "urban"
+      ]
+    },
+    "created_at": "2026-04-02T11:00:48.424130+00:00",
+    "updated_at": "2026-04-02T11:00:48.424130+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dda7e7b_91f83866d5db29dc",
+    "name": "edreams",
+    "name_forms": {
+      "normalized": "edreams",
+      "compact": "edreams",
+      "tokens": [
+        "edreams"
+      ]
+    },
+    "created_at": "2026-04-02T11:00:58.106736+00:00",
+    "updated_at": "2026-04-02T11:00:58.106736+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddab68d_3df863afa2f3cb2b",
+    "name": "europcar",
+    "name_forms": {
+      "normalized": "europcar",
+      "compact": "europcar",
+      "tokens": [
+        "europcar"
+      ]
+    },
+    "created_at": "2026-04-02T11:01:12.461929+00:00",
+    "updated_at": "2026-04-02T11:01:12.461929+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddafc8f_fc97ec6f96fc0d44",
+    "name": "fragrancex",
+    "name_forms": {
+      "normalized": "fragrancex",
+      "compact": "fragrancex",
+      "tokens": [
+        "fragrancex"
+      ]
+    },
+    "created_at": "2026-04-02T11:01:30.382111+00:00",
+    "updated_at": "2026-04-02T11:01:30.382111+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddb1fbc_157345d7166d1769",
+    "name": "autodepot",
+    "name_forms": {
+      "normalized": "autodepot",
+      "compact": "autodepot",
+      "tokens": [
+        "autodepot"
+      ]
+    },
+    "created_at": "2026-04-02T11:01:39.388015+00:00",
+    "updated_at": "2026-04-02T11:01:39.388015+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddb4c04_d3ab3013d283085a",
+    "name": "avg",
+    "name_forms": {
+      "normalized": "avg",
+      "compact": "avg",
+      "tokens": [
+        "avg"
+      ]
+    },
+    "created_at": "2026-04-02T11:01:50.723275+00:00",
+    "updated_at": "2026-04-02T11:01:50.723275+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddcd744_148595aa87dd6909",
+    "name": "nordvpn",
+    "name_forms": {
+      "normalized": "nordvpn",
+      "compact": "nordvpn",
+      "tokens": [
+        "nordvpn"
+      ]
+    },
+    "created_at": "2026-04-02T11:03:31.907777+00:00",
+    "updated_at": "2026-04-02T11:03:31.907777+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddde87c_1bb59ac0bdfe39ab",
+    "name": "napo",
+    "name_forms": {
+      "normalized": "napo",
+      "compact": "napo",
+      "tokens": [
+        "napo"
+      ]
+    },
+    "created_at": "2026-04-02T11:04:41.851503+00:00",
+    "updated_at": "2026-04-02T11:04:41.851503+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dde1473_865c250ae861b926",
+    "name": "namecheap",
+    "name_forms": {
+      "normalized": "namecheap",
+      "compact": "namecheap",
+      "tokens": [
+        "namecheap"
+      ]
+    },
+    "created_at": "2026-04-02T11:04:53.107946+00:00",
+    "updated_at": "2026-04-02T11:04:53.107946+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dde4b86_52ca234cf90e2a18",
+    "name": "mania jeans",
+    "name_forms": {
+      "normalized": "mania jeans",
+      "compact": "maniajeans",
+      "tokens": [
+        "jeans",
+        "mania"
+      ]
+    },
+    "created_at": "2026-04-02T11:05:07.206815+00:00",
+    "updated_at": "2026-04-02T11:05:07.206815+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4dde655d_e3b80055176f031e",
+    "name": "kinguin",
+    "name_forms": {
+      "normalized": "kinguin",
+      "compact": "kinguin",
+      "tokens": [
+        "kinguin"
+      ]
+    },
+    "created_at": "2026-04-02T11:05:13.820011+00:00",
+    "updated_at": "2026-04-02T11:05:13.820011+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddee614_a1702f7fac7318c4",
+    "name": "dyn store",
+    "name_forms": {
+      "normalized": "dyn store",
+      "compact": "dynstore",
+      "tokens": [
+        "dyn",
+        "store"
+      ]
+    },
+    "created_at": "2026-04-02T11:05:46.771977+00:00",
+    "updated_at": "2026-04-02T11:05:46.771977+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddf13d4_f97047b27b366114",
+    "name": "ticketmaster",
+    "name_forms": {
+      "normalized": "ticketmaster",
+      "compact": "ticketmaster",
+      "tokens": [
+        "ticketmaster"
+      ]
+    },
+    "created_at": "2026-04-02T11:05:58.483568+00:00",
+    "updated_at": "2026-04-02T11:05:58.483568+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddf9959_550cb5e4778b61d9",
+    "name": "halloween costumes",
+    "name_forms": {
+      "normalized": "halloween costumes",
+      "compact": "halloweencostumes",
+      "tokens": [
+        "costumes",
+        "halloween"
+      ]
+    },
+    "created_at": "2026-04-02T11:06:32.665945+00:00",
+    "updated_at": "2026-04-02T11:06:32.665945+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddfbf20_a638b95926bb20e5",
+    "name": "ador",
+    "name_forms": {
+      "normalized": "ador",
+      "compact": "ador",
+      "tokens": [
+        "ador"
+      ]
+    },
+    "created_at": "2026-04-02T11:06:42.336644+00:00",
+    "updated_at": "2026-04-02T11:06:42.336644+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4ddff303_b722ed9eeaa12d84",
+    "name": "qeeq",
+    "name_forms": {
+      "normalized": "qeeq",
+      "compact": "qeeq",
+      "tokens": [
+        "qeeq"
+      ]
+    },
+    "created_at": "2026-04-02T11:06:55.619959+00:00",
+    "updated_at": "2026-04-02T11:06:55.619959+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de034c0_a103334777f30f16",
+    "name": "abebooks",
+    "name_forms": {
+      "normalized": "abebooks",
+      "compact": "abebooks",
+      "tokens": [
+        "abebooks"
+      ]
+    },
+    "created_at": "2026-04-02T11:07:12.448452+00:00",
+    "updated_at": "2026-04-02T11:07:12.448452+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de057e0_8f047267c9a6cf52",
+    "name": "just geek",
+    "name_forms": {
+      "normalized": "just geek",
+      "compact": "justgeek",
+      "tokens": [
+        "geek",
+        "just"
+      ]
+    },
+    "created_at": "2026-04-02T11:07:21.440481+00:00",
+    "updated_at": "2026-04-02T11:07:21.440481+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de06ee2_4ae208c8a7d6c2e1",
+    "name": "norton",
+    "name_forms": {
+      "normalized": "norton",
+      "compact": "norton",
+      "tokens": [
+        "norton"
+      ]
+    },
+    "created_at": "2026-04-02T11:07:27.330431+00:00",
+    "updated_at": "2026-04-02T11:07:27.330431+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de08a94_cd8718500db86b2b",
+    "name": "noizz",
+    "name_forms": {
+      "normalized": "noizz",
+      "compact": "noizz",
+      "tokens": [
+        "noizz"
+      ]
+    },
+    "created_at": "2026-04-02T11:07:34.420646+00:00",
+    "updated_at": "2026-04-02T11:07:34.420646+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de0d7b8_8ec8fe05571ab087",
+    "name": "rozenfeld",
+    "name_forms": {
+      "normalized": "rozenfeld",
+      "compact": "rozenfeld",
+      "tokens": [
+        "rozenfeld"
+      ]
+    },
+    "created_at": "2026-04-02T11:07:54.168233+00:00",
+    "updated_at": "2026-04-02T11:07:54.168233+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de10f69_7cb30bb2feee8a01",
+    "name": "michael kors",
+    "name_forms": {
+      "normalized": "michael kors",
+      "compact": "michaelkors",
+      "tokens": [
+        "kors",
+        "michael"
+      ]
+    },
+    "created_at": "2026-04-02T11:08:08.425142+00:00",
+    "updated_at": "2026-04-02T11:08:08.425142+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de13eb5_f782b89f43054170",
+    "name": "hqhair",
+    "name_forms": {
+      "normalized": "hqhair",
+      "compact": "hqhair",
+      "tokens": [
+        "hqhair"
+      ]
+    },
+    "created_at": "2026-04-02T11:08:20.533443+00:00",
+    "updated_at": "2026-04-02T11:08:20.533443+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de1b2c0_72984dd4c4e67408",
+    "name": "fanatical",
+    "name_forms": {
+      "normalized": "fanatical",
+      "compact": "fanatical",
+      "tokens": [
+        "fanatical"
+      ]
+    },
+    "created_at": "2026-04-02T11:08:50.240069+00:00",
+    "updated_at": "2026-04-02T11:08:50.240069+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de1c884_89d04d0dc5a5fe59",
+    "name": "keter",
+    "name_forms": {
+      "normalized": "keter",
+      "compact": "keter",
+      "tokens": [
+        "keter"
+      ]
+    },
+    "created_at": "2026-04-02T11:08:55.812158+00:00",
+    "updated_at": "2026-04-02T11:08:55.812158+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de2125d_7ccc08a7bae08c53",
+    "name": "modibodi",
+    "name_forms": {
+      "normalized": "modibodi",
+      "compact": "modibodi",
+      "tokens": [
+        "modibodi"
+      ]
+    },
+    "created_at": "2026-04-02T11:09:14.716381+00:00",
+    "updated_at": "2026-04-02T11:09:14.716381+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de23506_3c650a6dee05db59",
+    "name": "esimo",
+    "name_forms": {
+      "normalized": "esimo",
+      "compact": "esimo",
+      "tokens": [
+        "esimo"
+      ]
+    },
+    "created_at": "2026-04-02T11:09:23.590055+00:00",
+    "updated_at": "2026-04-02T11:09:23.590055+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de30c56_cee5a7990330f92c",
+    "name": "viagogo",
+    "name_forms": {
+      "normalized": "viagogo",
+      "compact": "viagogo",
+      "tokens": [
+        "viagogo"
+      ]
+    },
+    "created_at": "2026-04-02T11:10:18.709677+00:00",
+    "updated_at": "2026-04-02T11:10:18.709677+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de32512_3c049c9c2ac5e55b",
+    "name": "zaful",
+    "name_forms": {
+      "normalized": "zaful",
+      "compact": "zaful",
+      "tokens": [
+        "zaful"
+      ]
+    },
+    "created_at": "2026-04-02T11:10:25.042708+00:00",
+    "updated_at": "2026-04-02T11:10:25.042708+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de36536_16b4c98df93014a1",
+    "name": "sabon",
+    "name_forms": {
+      "normalized": "sabon",
+      "compact": "sabon",
+      "tokens": [
+        "sabon"
+      ]
+    },
+    "created_at": "2026-04-02T11:10:41.462082+00:00",
+    "updated_at": "2026-04-02T11:10:41.462082+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de3d0b1_ef153e90c81ff392",
+    "name": "novakid",
+    "name_forms": {
+      "normalized": "novakid",
+      "compact": "novakid",
+      "tokens": [
+        "novakid"
+      ]
+    },
+    "created_at": "2026-04-02T11:11:08.977037+00:00",
+    "updated_at": "2026-04-02T11:11:08.977037+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de42a11_977cddf0b4fdf004",
+    "name": "newchic",
+    "name_forms": {
+      "normalized": "newchic",
+      "compact": "newchic",
+      "tokens": [
+        "newchic"
+      ]
+    },
+    "created_at": "2026-04-02T11:11:31.856623+00:00",
+    "updated_at": "2026-04-02T11:11:31.856623+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de44e2c_1dd8933a4a653267",
+    "name": "chicme",
+    "name_forms": {
+      "normalized": "chicme",
+      "compact": "chicme",
+      "tokens": [
+        "chicme"
+      ]
+    },
+    "created_at": "2026-04-02T11:11:41.100617+00:00",
+    "updated_at": "2026-04-02T11:11:41.100617+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de49112_a2f956698df968ed",
+    "name": "amiclubwear",
+    "name_forms": {
+      "normalized": "amiclubwear",
+      "compact": "amiclubwear",
+      "tokens": [
+        "amiclubwear"
+      ]
+    },
+    "created_at": "2026-04-02T11:11:58.225811+00:00",
+    "updated_at": "2026-04-02T11:11:58.225811+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de4c483_044e335fddf35574",
+    "name": "rotita",
+    "name_forms": {
+      "normalized": "rotita",
+      "compact": "rotita",
+      "tokens": [
+        "rotita"
+      ]
+    },
+    "created_at": "2026-04-02T11:12:11.395039+00:00",
+    "updated_at": "2026-04-02T11:12:11.395039+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de51693_bbe6d34962804ea6",
+    "name": "casetify",
+    "name_forms": {
+      "normalized": "casetify",
+      "compact": "casetify",
+      "tokens": [
+        "casetify"
+      ]
+    },
+    "created_at": "2026-04-02T11:12:32.402420+00:00",
+    "updated_at": "2026-04-02T11:12:32.402420+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de543b6_dc227bdd7a96d9b8",
+    "name": "orbitz",
+    "name_forms": {
+      "normalized": "orbitz",
+      "compact": "orbitz",
+      "tokens": [
+        "orbitz"
+      ]
+    },
+    "created_at": "2026-04-02T11:12:43.958201+00:00",
+    "updated_at": "2026-04-02T11:12:43.958201+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de58b68_b71a720b429b3321",
+    "name": "space nk",
+    "name_forms": {
+      "normalized": "space nk",
+      "compact": "spacenk",
+      "tokens": [
+        "nk",
+        "space"
+      ]
+    },
+    "created_at": "2026-04-02T11:13:02.312517+00:00",
+    "updated_at": "2026-04-02T11:13:02.312517+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de5eb36_507d3ba70694f04e",
+    "name": "best western",
+    "name_forms": {
+      "normalized": "best western",
+      "compact": "bestwestern",
+      "tokens": [
+        "best",
+        "western"
+      ]
+    },
+    "created_at": "2026-04-02T11:13:26.838700+00:00",
+    "updated_at": "2026-04-02T11:13:26.838700+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de60cbe_ac460b0760a8ea29",
+    "name": "fiverr",
+    "name_forms": {
+      "normalized": "fiverr",
+      "compact": "fiverr",
+      "tokens": [
+        "fiverr"
+      ]
+    },
+    "created_at": "2026-04-02T11:13:35.422824+00:00",
+    "updated_at": "2026-04-02T11:13:35.422824+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de64c0f_26720776511d0974",
+    "name": "holiday autos",
+    "name_forms": {
+      "normalized": "holiday autos",
+      "compact": "holidayautos",
+      "tokens": [
+        "autos",
+        "holiday"
+      ]
+    },
+    "created_at": "2026-04-02T11:13:51.630446+00:00",
+    "updated_at": "2026-04-02T11:13:51.630446+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de683b8_0f3f947d544dace7",
+    "name": "patpat",
+    "name_forms": {
+      "normalized": "patpat",
+      "compact": "patpat",
+      "tokens": [
+        "patpat"
+      ]
+    },
+    "created_at": "2026-04-02T11:14:05.880850+00:00",
+    "updated_at": "2026-04-02T11:14:05.880850+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de6b6a6_106de52189051d35",
+    "name": "spiral direct",
+    "name_forms": {
+      "normalized": "spiral direct",
+      "compact": "spiraldirect",
+      "tokens": [
+        "direct",
+        "spiral"
+      ]
+    },
+    "created_at": "2026-04-02T11:14:18.917876+00:00",
+    "updated_at": "2026-04-02T11:14:18.917876+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de6edb2_84396e644a43a7d2",
+    "name": "tbdress",
+    "name_forms": {
+      "normalized": "tbdress",
+      "compact": "tbdress",
+      "tokens": [
+        "tbdress"
+      ]
+    },
+    "created_at": "2026-04-02T11:14:33.010276+00:00",
+    "updated_at": "2026-04-02T11:14:33.010276+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de70f49_489a3369d4615714",
+    "name": "i-optic",
+    "name_forms": {
+      "normalized": "i-optic",
+      "compact": "ioptic",
+      "tokens": [
+        "i-optic"
+      ]
+    },
+    "created_at": "2026-04-02T11:14:41.609457+00:00",
+    "updated_at": "2026-04-02T11:14:41.609457+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de77ea4_a8d2169e17c71c3d",
+    "name": "exante",
+    "name_forms": {
+      "normalized": "exante",
+      "compact": "exante",
+      "tokens": [
+        "exante"
+      ]
+    },
+    "created_at": "2026-04-02T11:15:10.115948+00:00",
+    "updated_at": "2026-04-02T11:15:10.115948+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de79f24_fed92b11000016ba",
+    "name": "mybag",
+    "name_forms": {
+      "normalized": "mybag",
+      "compact": "mybag",
+      "tokens": [
+        "mybag"
+      ]
+    },
+    "created_at": "2026-04-02T11:15:18.436946+00:00",
+    "updated_at": "2026-04-02T11:15:18.436946+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de803e6_2250d3768499c5e8",
+    "name": "makeup eraser",
+    "name_forms": {
+      "normalized": "makeup eraser",
+      "compact": "makeuperaser",
+      "tokens": [
+        "eraser",
+        "makeup"
+      ]
+    },
+    "created_at": "2026-04-02T11:15:44.230201+00:00",
+    "updated_at": "2026-04-02T11:15:44.230201+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de812fa_4339dda1cb5554f8",
+    "name": "fun",
+    "name_forms": {
+      "normalized": "fun",
+      "compact": "fun",
+      "tokens": [
+        "fun"
+      ]
+    },
+    "created_at": "2026-04-02T11:15:48.090833+00:00",
+    "updated_at": "2026-04-02T11:15:48.090833+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de8492c_9ceaf1d757cc3e73",
+    "name": "ericdress",
+    "name_forms": {
+      "normalized": "ericdress",
+      "compact": "ericdress",
+      "tokens": [
+        "ericdress"
+      ]
+    },
+    "created_at": "2026-04-02T11:16:01.964889+00:00",
+    "updated_at": "2026-04-02T11:16:01.964889+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de8e264_d2ea03db1f794ca1",
+    "name": "chemistdirect",
+    "name_forms": {
+      "normalized": "chemistdirect",
+      "compact": "chemistdirect",
+      "tokens": [
+        "chemistdirect"
+      ]
+    },
+    "created_at": "2026-04-02T11:16:41.188444+00:00",
+    "updated_at": "2026-04-02T11:16:41.188444+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de94e2f_22bf35318684fa48",
+    "name": "dresslily",
+    "name_forms": {
+      "normalized": "dresslily",
+      "compact": "dresslily",
+      "tokens": [
+        "dresslily"
+      ]
+    },
+    "created_at": "2026-04-02T11:17:08.782146+00:00",
+    "updated_at": "2026-04-02T11:17:08.782146+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de985b6_9fdfd1c00c95cf0a",
+    "name": "vivomed limited",
+    "name_forms": {
+      "normalized": "vivomed limited",
+      "compact": "vivomedlimited",
+      "tokens": [
+        "limited",
+        "vivomed"
+      ]
+    },
+    "created_at": "2026-04-02T11:17:22.998954+00:00",
+    "updated_at": "2026-04-02T11:17:22.998954+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de9bdb0_588a2af49bebfeb5",
+    "name": "peggybuy",
+    "name_forms": {
+      "normalized": "peggybuy",
+      "compact": "peggybuy",
+      "tokens": [
+        "peggybuy"
+      ]
+    },
+    "created_at": "2026-04-02T11:17:37.328352+00:00",
+    "updated_at": "2026-04-02T11:17:37.328352+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4de9d7f1_10c4639db659f2f6",
+    "name": "green man gaming",
+    "name_forms": {
+      "normalized": "green man gaming",
+      "compact": "greenmangaming",
+      "tokens": [
+        "gaming",
+        "green",
+        "man"
+      ]
+    },
+    "created_at": "2026-04-02T11:17:44.049979+00:00",
+    "updated_at": "2026-04-02T11:17:44.049979+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e49b768_86bb112697abba97",
+    "name": "alamy",
+    "name_forms": {
+      "normalized": "alamy",
+      "compact": "alamy",
+      "tokens": [
+        "alamy"
+      ]
+    },
+    "created_at": "2026-04-02T13:02:27.176140+00:00",
+    "updated_at": "2026-04-02T13:02:27.176140+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e49d262_b650e5ca2c4e510e",
+    "name": "surfshark",
+    "name_forms": {
+      "normalized": "surfshark",
+      "compact": "surfshark",
+      "tokens": [
+        "surfshark"
+      ]
+    },
+    "created_at": "2026-04-02T13:02:34.082042+00:00",
+    "updated_at": "2026-04-02T13:02:34.082042+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e49e962_e01b5d2028ef4956",
+    "name": "omio",
+    "name_forms": {
+      "normalized": "omio",
+      "compact": "omio",
+      "tokens": [
+        "omio"
+      ]
+    },
+    "created_at": "2026-04-02T13:02:39.970171+00:00",
+    "updated_at": "2026-04-02T13:02:39.970171+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e4a3db2_4cafe7355f12c86c",
+    "name": "myvitamins",
+    "name_forms": {
+      "normalized": "myvitamins",
+      "compact": "myvitamins",
+      "tokens": [
+        "myvitamins"
+      ]
+    },
+    "created_at": "2026-04-02T13:03:01.554582+00:00",
+    "updated_at": "2026-04-02T13:03:01.554582+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e4bcd9e_ca3e346795dde4ca",
+    "name": "smartbuyglasses",
+    "name_forms": {
+      "normalized": "smartbuyglasses",
+      "compact": "smartbuyglasses",
+      "tokens": [
+        "smartbuyglasses"
+      ]
+    },
+    "created_at": "2026-04-02T13:04:43.934226+00:00",
+    "updated_at": "2026-04-02T13:04:43.934226+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e4be12c_0aaf9a776ff6a835",
+    "name": "joom",
+    "name_forms": {
+      "normalized": "joom",
+      "compact": "joom",
+      "tokens": [
+        "joom"
+      ]
+    },
+    "created_at": "2026-04-02T13:04:48.940395+00:00",
+    "updated_at": "2026-04-02T13:04:48.940395+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e4fd15a_b6c25aae8e6f3857",
+    "name": "tvc mall",
+    "name_forms": {
+      "normalized": "tvc mall",
+      "compact": "tvcmall",
+      "tokens": [
+        "mall",
+        "tvc"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:07.034716+00:00",
+    "updated_at": "2026-04-02T13:09:07.034716+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e4fede8_4d451e9549959707",
+    "name": "lovimals",
+    "name_forms": {
+      "normalized": "lovimals",
+      "compact": "lovimals",
+      "tokens": [
+        "lovimals"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:14.344945+00:00",
+    "updated_at": "2026-04-02T13:09:14.344945+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e500521_70bdb6c7e070f8f2",
+    "name": "iwoot",
+    "name_forms": {
+      "normalized": "iwoot",
+      "compact": "iwoot",
+      "tokens": [
+        "iwoot"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:20.289936+00:00",
+    "updated_at": "2026-04-02T13:09:20.289936+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e50294c_4ee432d19312e26c",
+    "name": "vision direct",
+    "name_forms": {
+      "normalized": "vision direct",
+      "compact": "visiondirect",
+      "tokens": [
+        "direct",
+        "vision"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:29.548575+00:00",
+    "updated_at": "2026-04-02T13:09:29.548575+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e504ce4_a4d5044f70992106",
+    "name": "ghgate",
+    "name_forms": {
+      "normalized": "ghgate",
+      "compact": "ghgate",
+      "tokens": [
+        "ghgate"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:38.659631+00:00",
+    "updated_at": "2026-04-02T13:09:38.659631+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e508e36_38bca6cb7b309b2f",
+    "name": "fairy season",
+    "name_forms": {
+      "normalized": "fairy season",
+      "compact": "fairyseason",
+      "tokens": [
+        "fairy",
+        "season"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:55.382340+00:00",
+    "updated_at": "2026-04-02T13:09:55.382340+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e509e72_1a53b4a7ea87556d",
+    "name": "dio express",
+    "name_forms": {
+      "normalized": "dio express",
+      "compact": "dioexpress",
+      "tokens": [
+        "dio",
+        "express"
+      ]
+    },
+    "created_at": "2026-04-02T13:09:59.537977+00:00",
+    "updated_at": "2026-04-02T13:09:59.537977+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e50c5dc_ba0db11bbcb226c2",
+    "name": "coggles",
+    "name_forms": {
+      "normalized": "coggles",
+      "compact": "coggles",
+      "tokens": [
+        "coggles"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:09.627978+00:00",
+    "updated_at": "2026-04-02T13:10:09.627978+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e50fdba_6f1f197607f862ce",
+    "name": "apartments4you",
+    "name_forms": {
+      "normalized": "apartments4you",
+      "compact": "apartments4you",
+      "tokens": [
+        "apartments4you"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:23.930562+00:00",
+    "updated_at": "2026-04-02T13:10:23.930562+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5119fe_88099557251f38de",
+    "name": "sunsky",
+    "name_forms": {
+      "normalized": "sunsky",
+      "compact": "sunsky",
+      "tokens": [
+        "sunsky"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:31.166185+00:00",
+    "updated_at": "2026-04-02T13:10:31.166185+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e512c99_d523992d7de94493",
+    "name": "giztop",
+    "name_forms": {
+      "normalized": "giztop",
+      "compact": "giztop",
+      "tokens": [
+        "giztop"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:35.929623+00:00",
+    "updated_at": "2026-04-02T13:10:35.929623+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5145f4_fbf3d02a9b6ef99e",
+    "name": "life and looks",
+    "name_forms": {
+      "normalized": "life and looks",
+      "compact": "lifeandlooks",
+      "tokens": [
+        "and",
+        "life",
+        "looks"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:42.420535+00:00",
+    "updated_at": "2026-04-02T13:10:42.420535+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e51579c_823da99230453a14",
+    "name": "argento",
+    "name_forms": {
+      "normalized": "argento",
+      "compact": "argento",
+      "tokens": [
+        "argento"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:46.940002+00:00",
+    "updated_at": "2026-04-02T13:10:46.940002+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5169bd_6cc566ea396b4ed1",
+    "name": "airhelp",
+    "name_forms": {
+      "normalized": "airhelp",
+      "compact": "airhelp",
+      "tokens": [
+        "airhelp"
+      ]
+    },
+    "created_at": "2026-04-02T13:10:51.581869+00:00",
+    "updated_at": "2026-04-02T13:10:51.581869+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e51a958_05b8f7e1877d9a88",
+    "name": "beautiful style",
+    "name_forms": {
+      "normalized": "beautiful style",
+      "compact": "beautifulstyle",
+      "tokens": [
+        "beautiful",
+        "style"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:07.863741+00:00",
+    "updated_at": "2026-04-02T13:11:07.863741+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e51c328_fc691929ac75f000",
+    "name": "voye",
+    "name_forms": {
+      "normalized": "voye",
+      "compact": "voye",
+      "tokens": [
+        "voye"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:14.472769+00:00",
+    "updated_at": "2026-04-02T13:11:14.472769+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e51db62_766d53d802094e83",
+    "name": "cafago",
+    "name_forms": {
+      "normalized": "cafago",
+      "compact": "cafago",
+      "tokens": [
+        "cafago"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:20.674228+00:00",
+    "updated_at": "2026-04-02T13:11:20.674228+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e51f714_4f1453aef4fe63ae",
+    "name": "stylewe",
+    "name_forms": {
+      "normalized": "stylewe",
+      "compact": "stylewe",
+      "tokens": [
+        "stylewe"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:27.764770+00:00",
+    "updated_at": "2026-04-02T13:11:27.764770+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5219d4_a60891ff9324f94b",
+    "name": "karen millen",
+    "name_forms": {
+      "normalized": "karen millen",
+      "compact": "karenmillen",
+      "tokens": [
+        "karen",
+        "millen"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:36.659656+00:00",
+    "updated_at": "2026-04-02T13:11:36.659656+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e523992_5dc49245b1224455",
+    "name": "whatwears",
+    "name_forms": {
+      "normalized": "whatwears",
+      "compact": "whatwears",
+      "tokens": [
+        "whatwears"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:44.785512+00:00",
+    "updated_at": "2026-04-02T13:11:44.785512+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e525f01_43ebe5f9530380cb",
+    "name": "idealfit",
+    "name_forms": {
+      "normalized": "idealfit",
+      "compact": "idealfit",
+      "tokens": [
+        "idealfit"
+      ]
+    },
+    "created_at": "2026-04-02T13:11:54.368399+00:00",
+    "updated_at": "2026-04-02T13:11:54.368399+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e527854_3a36b618cbc47031",
+    "name": "milanoo",
+    "name_forms": {
+      "normalized": "milanoo",
+      "compact": "milanoo",
+      "tokens": [
+        "milanoo"
+      ]
+    },
+    "created_at": "2026-04-02T13:12:00.852303+00:00",
+    "updated_at": "2026-04-02T13:12:00.852303+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e52a97c_a0978c40852b5b0b",
+    "name": "glasseslit",
+    "name_forms": {
+      "normalized": "glasseslit",
+      "compact": "glasseslit",
+      "tokens": [
+        "glasseslit"
+      ]
+    },
+    "created_at": "2026-04-02T13:12:13.435500+00:00",
+    "updated_at": "2026-04-02T13:12:13.435500+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e52ea5a_617cd5ebba5f9e52",
+    "name": "wordery",
+    "name_forms": {
+      "normalized": "wordery",
+      "compact": "wordery",
+      "tokens": [
+        "wordery"
+      ]
+    },
+    "created_at": "2026-04-02T13:12:30.042613+00:00",
+    "updated_at": "2026-04-02T13:12:30.042613+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e531072_38d7ce4a0d3e54ea",
+    "name": "better world books",
+    "name_forms": {
+      "normalized": "better world books",
+      "compact": "betterworldbooks",
+      "tokens": [
+        "better",
+        "books",
+        "world"
+      ]
+    },
+    "created_at": "2026-04-02T13:12:39.794832+00:00",
+    "updated_at": "2026-04-02T13:12:39.794832+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e53230b_e3575c17806d3edd",
+    "name": "tech21",
+    "name_forms": {
+      "normalized": "tech21",
+      "compact": "tech21",
+      "tokens": [
+        "tech21"
+      ]
+    },
+    "created_at": "2026-04-02T13:12:44.554122+00:00",
+    "updated_at": "2026-04-02T13:12:44.554122+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e534654_73ef667618892e0f",
+    "name": "chinavasion",
+    "name_forms": {
+      "normalized": "chinavasion",
+      "compact": "chinavasion",
+      "tokens": [
+        "chinavasion"
+      ]
+    },
+    "created_at": "2026-04-02T13:12:53.588115+00:00",
+    "updated_at": "2026-04-02T13:12:53.588115+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e536160_3e156544f45515c7",
+    "name": "eyeko uk",
+    "name_forms": {
+      "normalized": "eyeko uk",
+      "compact": "eyekouk",
+      "tokens": [
+        "eyeko",
+        "uk"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:00.511907+00:00",
+    "updated_at": "2026-04-02T13:13:00.511907+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5372c8_a3d33b50504349f5",
+    "name": "unineed",
+    "name_forms": {
+      "normalized": "unineed",
+      "compact": "unineed",
+      "tokens": [
+        "unineed"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:04.968176+00:00",
+    "updated_at": "2026-04-02T13:13:04.968176+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5389ac_423703fb9eb5f366",
+    "name": "modlily",
+    "name_forms": {
+      "normalized": "modlily",
+      "compact": "modlily",
+      "tokens": [
+        "modlily"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:10.827722+00:00",
+    "updated_at": "2026-04-02T13:13:10.827722+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e53a5c1_29a9d99a0a05b817",
+    "name": "rosewe",
+    "name_forms": {
+      "normalized": "rosewe",
+      "compact": "rosewe",
+      "tokens": [
+        "rosewe"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:18.017881+00:00",
+    "updated_at": "2026-04-02T13:13:18.017881+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e53c6ba_28a243225483995d",
+    "name": "tfnc london",
+    "name_forms": {
+      "normalized": "tfnc london",
+      "compact": "tfnclondon",
+      "tokens": [
+        "london",
+        "tfnc"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:26.458413+00:00",
+    "updated_at": "2026-04-02T13:13:26.458413+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e53ec41_28a845a64c740a56",
+    "name": "razili",
+    "name_forms": {
+      "normalized": "razili",
+      "compact": "razili",
+      "tokens": [
+        "razili"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:36.065286+00:00",
+    "updated_at": "2026-04-02T13:13:36.065286+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5406a6_65f7f9506d02ba3e",
+    "name": "public desire",
+    "name_forms": {
+      "normalized": "public desire",
+      "compact": "publicdesire",
+      "tokens": [
+        "desire",
+        "public"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:42.822388+00:00",
+    "updated_at": "2026-04-02T13:13:42.822388+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e544422_46eca240fb68756f",
+    "name": "wonder share",
+    "name_forms": {
+      "normalized": "wonder share",
+      "compact": "wondershare",
+      "tokens": [
+        "share",
+        "wonder"
+      ]
+    },
+    "created_at": "2026-04-02T13:13:58.562747+00:00",
+    "updated_at": "2026-04-02T13:13:58.562747+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e546d75_d7fc8320f1cef959",
+    "name": "the luxury closet",
+    "name_forms": {
+      "normalized": "the luxury closet",
+      "compact": "theluxurycloset",
+      "tokens": [
+        "closet",
+        "luxury",
+        "the"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:09.140317+00:00",
+    "updated_at": "2026-04-02T13:14:09.140317+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e547eab_3d15719cd52df05a",
+    "name": "base",
+    "name_forms": {
+      "normalized": "base",
+      "compact": "base",
+      "tokens": [
+        "base"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:13.547200+00:00",
+    "updated_at": "2026-04-02T13:14:13.547200+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e54a264_6d537789f16f15d9",
+    "name": "lilicloth",
+    "name_forms": {
+      "normalized": "lilicloth",
+      "compact": "lilicloth",
+      "tokens": [
+        "lilicloth"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:22.691944+00:00",
+    "updated_at": "2026-04-02T13:14:22.691944+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e54c40c_4f22287a96f316c9",
+    "name": "siksilk",
+    "name_forms": {
+      "normalized": "siksilk",
+      "compact": "siksilk",
+      "tokens": [
+        "siksilk"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:31.308747+00:00",
+    "updated_at": "2026-04-02T13:14:31.308747+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e54e6f2_f65c4e25f35343d3",
+    "name": "the perfume spot",
+    "name_forms": {
+      "normalized": "the perfume spot",
+      "compact": "theperfumespot",
+      "tokens": [
+        "perfume",
+        "spot",
+        "the"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:40.242251+00:00",
+    "updated_at": "2026-04-02T13:14:40.242251+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e54fe5a_df5b197b09896d52",
+    "name": "onlys",
+    "name_forms": {
+      "normalized": "onlys",
+      "compact": "onlys",
+      "tokens": [
+        "onlys"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:46.234650+00:00",
+    "updated_at": "2026-04-02T13:14:46.234650+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e551957_40be1b77a9acd108",
+    "name": "play smart",
+    "name_forms": {
+      "normalized": "play smart",
+      "compact": "playsmart",
+      "tokens": [
+        "play",
+        "smart"
+      ]
+    },
+    "created_at": "2026-04-02T13:14:53.142513+00:00",
+    "updated_at": "2026-04-02T13:14:53.142513+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e556612_0e4269309825aafb",
+    "name": "my 1st years",
+    "name_forms": {
+      "normalized": "my 1st years",
+      "compact": "my1styears",
+      "tokens": [
+        "1st",
+        "my",
+        "years"
+      ]
+    },
+    "created_at": "2026-04-02T13:15:12.786068+00:00",
+    "updated_at": "2026-04-02T13:15:12.786068+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e55ac18_3b10b97359f3bc38",
+    "name": "myrentacar",
+    "name_forms": {
+      "normalized": "myrentacar",
+      "compact": "myrentacar",
+      "tokens": [
+        "myrentacar"
+      ]
+    },
+    "created_at": "2026-04-02T13:15:30.712624+00:00",
+    "updated_at": "2026-04-02T13:15:30.712624+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e55c484_f371ac83cade907a",
+    "name": "leonisa",
+    "name_forms": {
+      "normalized": "leonisa",
+      "compact": "leonisa",
+      "tokens": [
+        "leonisa"
+      ]
+    },
+    "created_at": "2026-04-02T13:15:36.963910+00:00",
+    "updated_at": "2026-04-02T13:15:36.963910+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e55e96e_7d3e8658634850b0",
+    "name": "italo jewerly",
+    "name_forms": {
+      "normalized": "italo jewerly",
+      "compact": "italojewerly",
+      "tokens": [
+        "italo",
+        "jewerly"
+      ]
+    },
+    "created_at": "2026-04-02T13:15:46.414047+00:00",
+    "updated_at": "2026-04-02T13:15:46.414047+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e55f75a_43d04db03a77cedd",
+    "name": "hoppa",
+    "name_forms": {
+      "normalized": "hoppa",
+      "compact": "hoppa",
+      "tokens": [
+        "hoppa"
+      ]
+    },
+    "created_at": "2026-04-02T13:15:49.977914+00:00",
+    "updated_at": "2026-04-02T13:15:49.977914+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e56a544_0bd8d0a0ae2c19e2",
+    "name": "wigsbuy",
+    "name_forms": {
+      "normalized": "wigsbuy",
+      "compact": "wigsbuy",
+      "tokens": [
+        "wigsbuy"
+      ]
+    },
+    "created_at": "2026-04-02T13:16:34.500635+00:00",
+    "updated_at": "2026-04-02T13:16:34.500635+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e56c0ef_c2044fc71066c709",
+    "name": "techwear club",
+    "name_forms": {
+      "normalized": "techwear club",
+      "compact": "techwearclub",
+      "tokens": [
+        "club",
+        "techwear"
+      ]
+    },
+    "created_at": "2026-04-02T13:16:41.582256+00:00",
+    "updated_at": "2026-04-02T13:16:41.582256+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e57425c_7883f4a09b27fad4",
+    "name": "qustodio",
+    "name_forms": {
+      "normalized": "qustodio",
+      "compact": "qustodio",
+      "tokens": [
+        "qustodio"
+      ]
+    },
+    "created_at": "2026-04-02T13:17:14.716271+00:00",
+    "updated_at": "2026-04-02T13:17:14.716271+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e577182_249b7bfcea0c438e",
+    "name": "gamersgate",
+    "name_forms": {
+      "normalized": "gamersgate",
+      "compact": "gamersgate",
+      "tokens": [
+        "gamersgate"
+      ]
+    },
+    "created_at": "2026-04-02T13:17:26.786163+00:00",
+    "updated_at": "2026-04-02T13:17:26.786163+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5790a8_97d002b4330efd55",
+    "name": "just fashion now",
+    "name_forms": {
+      "normalized": "just fashion now",
+      "compact": "justfashionnow",
+      "tokens": [
+        "fashion",
+        "just",
+        "now"
+      ]
+    },
+    "created_at": "2026-04-02T13:17:34.759827+00:00",
+    "updated_at": "2026-04-02T13:17:34.759827+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e57acb4_627596d8c7473f2b",
+    "name": "the jewel hut",
+    "name_forms": {
+      "normalized": "the jewel hut",
+      "compact": "thejewelhut",
+      "tokens": [
+        "hut",
+        "jewel",
+        "the"
+      ]
+    },
+    "created_at": "2026-04-02T13:17:41.940675+00:00",
+    "updated_at": "2026-04-02T13:17:41.940675+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e57c5a0_d25fdf644f91380b",
+    "name": "esimple",
+    "name_forms": {
+      "normalized": "esimple",
+      "compact": "esimple",
+      "tokens": [
+        "esimple"
+      ]
+    },
+    "created_at": "2026-04-02T13:17:48.320228+00:00",
+    "updated_at": "2026-04-02T13:17:48.320228+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e580a6f_7ed778fc67a11c86",
+    "name": "revolution beauty",
+    "name_forms": {
+      "normalized": "revolution beauty",
+      "compact": "revolutionbeauty",
+      "tokens": [
+        "beauty",
+        "revolution"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:05.935212+00:00",
+    "updated_at": "2026-04-02T13:18:05.935212+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5838c0_216deae5ae6440a5",
+    "name": "bellewhoesale",
+    "name_forms": {
+      "normalized": "bellewhoesale",
+      "compact": "bellewhoesale",
+      "tokens": [
+        "bellewhoesale"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:17.791676+00:00",
+    "updated_at": "2026-04-02T13:18:17.791676+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5861bc_83151dfea040657d",
+    "name": "uniplaces",
+    "name_forms": {
+      "normalized": "uniplaces",
+      "compact": "uniplaces",
+      "tokens": [
+        "uniplaces"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:28.284306+00:00",
+    "updated_at": "2026-04-02T13:18:28.284306+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e587b5e_40fcedaf34576e1b",
+    "name": "cupshe",
+    "name_forms": {
+      "normalized": "cupshe",
+      "compact": "cupshe",
+      "tokens": [
+        "cupshe"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:34.846454+00:00",
+    "updated_at": "2026-04-02T13:18:34.846454+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5892da_2f49b58aa38bc1d5",
+    "name": "go city",
+    "name_forms": {
+      "normalized": "go city",
+      "compact": "gocity",
+      "tokens": [
+        "city",
+        "go"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:40.858238+00:00",
+    "updated_at": "2026-04-02T13:18:40.858238+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e58b97e_d98a047f0536bfb7",
+    "name": "illamasqua",
+    "name_forms": {
+      "normalized": "illamasqua",
+      "compact": "illamasqua",
+      "tokens": [
+        "illamasqua"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:50.750748+00:00",
+    "updated_at": "2026-04-02T13:18:50.750748+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e58daad_075841947ea77ead",
+    "name": "polgat",
+    "name_forms": {
+      "normalized": "polgat",
+      "compact": "polgat",
+      "tokens": [
+        "polgat"
+      ]
+    },
+    "created_at": "2026-04-02T13:18:59.245190+00:00",
+    "updated_at": "2026-04-02T13:18:59.245190+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e58f484_fe9e62c647df47e3",
+    "name": "cotosen",
+    "name_forms": {
+      "normalized": "cotosen",
+      "compact": "cotosen",
+      "tokens": [
+        "cotosen"
+      ]
+    },
+    "created_at": "2026-04-02T13:19:05.860453+00:00",
+    "updated_at": "2026-04-02T13:19:05.860453+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e59094c_bb08da40e34e53bb",
+    "name": "opensky",
+    "name_forms": {
+      "normalized": "opensky",
+      "compact": "opensky",
+      "tokens": [
+        "opensky"
+      ]
+    },
+    "created_at": "2026-04-02T13:19:11.180518+00:00",
+    "updated_at": "2026-04-02T13:19:11.180518+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e593e9c_56e945a2bf51d166",
+    "name": "boomerang",
+    "name_forms": {
+      "normalized": "boomerang",
+      "compact": "boomerang",
+      "tokens": [
+        "boomerang"
+      ]
+    },
+    "created_at": "2026-04-02T13:19:24.828825+00:00",
+    "updated_at": "2026-04-02T13:19:24.828825+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e59c759_5a598838e17cbc02",
+    "name": "grow gorgeous",
+    "name_forms": {
+      "normalized": "grow gorgeous",
+      "compact": "growgorgeous",
+      "tokens": [
+        "gorgeous",
+        "grow"
+      ]
+    },
+    "created_at": "2026-04-02T13:19:59.832162+00:00",
+    "updated_at": "2026-04-02T13:19:59.832162+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e59e094_fab8f237b2431bb3",
+    "name": "zest beauty",
+    "name_forms": {
+      "normalized": "zest beauty",
+      "compact": "zestbeauty",
+      "tokens": [
+        "beauty",
+        "zest"
+      ]
+    },
+    "created_at": "2026-04-02T13:20:06.292607+00:00",
+    "updated_at": "2026-04-02T13:20:06.292607+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e59fd7b_c77ac4b7dbc6728c",
+    "name": "futurelearn",
+    "name_forms": {
+      "normalized": "futurelearn",
+      "compact": "futurelearn",
+      "tokens": [
+        "futurelearn"
+      ]
+    },
+    "created_at": "2026-04-02T13:20:13.691904+00:00",
+    "updated_at": "2026-04-02T13:20:13.691904+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5b4dd0_b9cbeea64bbbabeb",
+    "name": "ahava ktana",
+    "name_forms": {
+      "normalized": "ahava ktana",
+      "compact": "ahavaktana",
+      "tokens": [
+        "ahava",
+        "ktana"
+      ]
+    },
+    "created_at": "2026-04-02T13:21:39.792825+00:00",
+    "updated_at": "2026-04-02T13:21:39.792825+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5b734c_0e8ac75aa74c53be",
+    "name": "j.ing",
+    "name_forms": {
+      "normalized": "j.ing",
+      "compact": "jing",
+      "tokens": [
+        "j.ing"
+      ]
+    },
+    "created_at": "2026-04-02T13:21:49.387695+00:00",
+    "updated_at": "2026-04-02T13:21:49.387695+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5b916c_415fb82b681bdedf",
+    "name": "cheaptickets",
+    "name_forms": {
+      "normalized": "cheaptickets",
+      "compact": "cheaptickets",
+      "tokens": [
+        "cheaptickets"
+      ]
+    },
+    "created_at": "2026-04-02T13:21:57.100597+00:00",
+    "updated_at": "2026-04-02T13:21:57.100597+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ba0ac_7933d5786093e0b4",
+    "name": "esky",
+    "name_forms": {
+      "normalized": "esky",
+      "compact": "esky",
+      "tokens": [
+        "esky"
+      ]
+    },
+    "created_at": "2026-04-02T13:22:01.004821+00:00",
+    "updated_at": "2026-04-02T13:22:01.004821+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5bce6d_5ef687b5c76da05f",
+    "name": "house design",
+    "name_forms": {
+      "normalized": "house design",
+      "compact": "housedesign",
+      "tokens": [
+        "design",
+        "house"
+      ]
+    },
+    "created_at": "2026-04-02T13:22:12.717849+00:00",
+    "updated_at": "2026-04-02T13:22:12.717849+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5be50b_a90f2d734816adf1",
+    "name": "vrbo",
+    "name_forms": {
+      "normalized": "vrbo",
+      "compact": "vrbo",
+      "tokens": [
+        "vrbo"
+      ]
+    },
+    "created_at": "2026-04-02T13:22:18.506106+00:00",
+    "updated_at": "2026-04-02T13:22:18.506106+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5c0700_255f4a018e5b7619",
+    "name": "ticket network",
+    "name_forms": {
+      "normalized": "ticket network",
+      "compact": "ticketnetwork",
+      "tokens": [
+        "network",
+        "ticket"
+      ]
+    },
+    "created_at": "2026-04-02T13:22:27.200047+00:00",
+    "updated_at": "2026-04-02T13:22:27.200047+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5c86a1_cb11ce03dcffab38",
+    "name": "ticket liquidator",
+    "name_forms": {
+      "normalized": "ticket liquidator",
+      "compact": "ticketliquidator",
+      "tokens": [
+        "liquidator",
+        "ticket"
+      ]
+    },
+    "created_at": "2026-04-02T13:22:59.873539+00:00",
+    "updated_at": "2026-04-02T13:22:59.873539+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ca34c_a46f9421e6751d06",
+    "name": "vivaia",
+    "name_forms": {
+      "normalized": "vivaia",
+      "compact": "vivaia",
+      "tokens": [
+        "vivaia"
+      ]
+    },
+    "created_at": "2026-04-02T13:23:07.212450+00:00",
+    "updated_at": "2026-04-02T13:23:07.212450+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5cbb74_de96a8e77290ec88",
+    "name": "spa plus",
+    "name_forms": {
+      "normalized": "spa plus",
+      "compact": "spaplus",
+      "tokens": [
+        "plus",
+        "spa"
+      ]
+    },
+    "created_at": "2026-04-02T13:23:13.396309+00:00",
+    "updated_at": "2026-04-02T13:23:13.396309+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5cd3e6_4a3ce616d9a62687",
+    "name": "תלתנ ספרימ",
+    "name_forms": {
+      "normalized": "תלתנ ספרימ",
+      "compact": "תלתנספרימ",
+      "tokens": [
+        "ספרימ",
+        "תלתנ"
+      ]
+    },
+    "created_at": "2026-04-02T13:23:19.654529+00:00",
+    "updated_at": "2026-04-02T13:23:19.654529+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ce9ca_0b2116558915f231",
+    "name": "milega",
+    "name_forms": {
+      "normalized": "milega",
+      "compact": "milega",
+      "tokens": [
+        "milega"
+      ]
+    },
+    "created_at": "2026-04-02T13:23:25.258711+00:00",
+    "updated_at": "2026-04-02T13:23:25.258711+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5e83ee_b5d5d7600ea27035",
+    "name": "tutorials point",
+    "name_forms": {
+      "normalized": "tutorials point",
+      "compact": "tutorialspoint",
+      "tokens": [
+        "point",
+        "tutorials"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:10.254916+00:00",
+    "updated_at": "2026-04-02T13:25:10.254916+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ea914_df431be09645551f",
+    "name": "intimen",
+    "name_forms": {
+      "normalized": "intimen",
+      "compact": "intimen",
+      "tokens": [
+        "intimen"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:19.764560+00:00",
+    "updated_at": "2026-04-02T13:25:19.764560+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ebb64_632fcdc9d823752d",
+    "name": "tracknow",
+    "name_forms": {
+      "normalized": "tracknow",
+      "compact": "tracknow",
+      "tokens": [
+        "tracknow"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:24.452458+00:00",
+    "updated_at": "2026-04-02T13:25:24.452458+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ec4b6_1e61a22079082954",
+    "name": "דיזנהאוז",
+    "name_forms": {
+      "normalized": "דיזנהאוז",
+      "compact": "דיזנהאוז",
+      "tokens": [
+        "דיזנהאוז"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:26.838991+00:00",
+    "updated_at": "2026-04-02T13:25:26.838991+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5ef61a_5291c5cfcc9f01f4",
+    "name": "digital gadget",
+    "name_forms": {
+      "normalized": "digital gadget",
+      "compact": "digitalgadget",
+      "tokens": [
+        "digital",
+        "gadget"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:39.482862+00:00",
+    "updated_at": "2026-04-02T13:25:39.482862+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5f0e95_bbcce6d58ded2ddf",
+    "name": "bissell",
+    "name_forms": {
+      "normalized": "bissell",
+      "compact": "bissell",
+      "tokens": [
+        "bissell"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:45.748262+00:00",
+    "updated_at": "2026-04-02T13:25:45.748262+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5f4413_1164f8a32ebbcbaa",
+    "name": "lady makeup",
+    "name_forms": {
+      "normalized": "lady makeup",
+      "compact": "ladymakeup",
+      "tokens": [
+        "lady",
+        "makeup"
+      ]
+    },
+    "created_at": "2026-04-02T13:25:59.442311+00:00",
+    "updated_at": "2026-04-02T13:25:59.442311+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5f6ae2_117e97e139e673ce",
+    "name": "lee jeans",
+    "name_forms": {
+      "normalized": "lee jeans",
+      "compact": "leejeans",
+      "tokens": [
+        "jeans",
+        "lee"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:09.377834+00:00",
+    "updated_at": "2026-04-02T13:26:09.377834+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5f829e_7ed11dfa558c65ab",
+    "name": "eurosport",
+    "name_forms": {
+      "normalized": "eurosport",
+      "compact": "eurosport",
+      "tokens": [
+        "eurosport"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:15.454146+00:00",
+    "updated_at": "2026-04-02T13:26:15.454146+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5fa242_30af3a29e28d6a19",
+    "name": "hacontainer",
+    "name_forms": {
+      "normalized": "hacontainer",
+      "compact": "hacontainer",
+      "tokens": [
+        "hacontainer"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:23.553837+00:00",
+    "updated_at": "2026-04-02T13:26:23.553837+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5fb932_c007cbb11dec1101",
+    "name": "amika",
+    "name_forms": {
+      "normalized": "amika",
+      "compact": "amika",
+      "tokens": [
+        "amika"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:29.426209+00:00",
+    "updated_at": "2026-04-02T13:26:29.426209+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5fcf30_888f5c61be95d057",
+    "name": "wrangler",
+    "name_forms": {
+      "normalized": "wrangler",
+      "compact": "wrangler",
+      "tokens": [
+        "wrangler"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:35.055543+00:00",
+    "updated_at": "2026-04-02T13:26:35.055543+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e5fe78a_149281e4763f33d3",
+    "name": "multistore",
+    "name_forms": {
+      "normalized": "multistore",
+      "compact": "multistore",
+      "tokens": [
+        "multistore"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:41.289817+00:00",
+    "updated_at": "2026-04-02T13:26:41.289817+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4e600a99_2d276e166edd86f6",
+    "name": "homeat",
+    "name_forms": {
+      "normalized": "homeat",
+      "compact": "homeat",
+      "tokens": [
+        "homeat"
+      ]
+    },
+    "created_at": "2026-04-02T13:26:50.265902+00:00",
+    "updated_at": "2026-04-02T13:26:50.265902+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f48e9aa_2ae3321383732c60",
+    "name": "owl market",
+    "name_forms": {
+      "normalized": "owl market",
+      "compact": "owlmarket",
+      "tokens": [
+        "market",
+        "owl"
+      ]
+    },
+    "created_at": "2026-04-02T17:41:11.722026+00:00",
+    "updated_at": "2026-04-02T17:41:11.722026+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4915e0_879c6cfd6997ac3d",
+    "name": "new era",
+    "name_forms": {
+      "normalized": "new era",
+      "compact": "newera",
+      "tokens": [
+        "era",
+        "new"
+      ]
+    },
+    "created_at": "2026-04-02T17:41:23.040970+00:00",
+    "updated_at": "2026-04-02T17:41:23.040970+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f494d56_383058dd4d4d43ab",
+    "name": "kkday",
+    "name_forms": {
+      "normalized": "kkday",
+      "compact": "kkday",
+      "tokens": [
+        "kkday"
+      ]
+    },
+    "created_at": "2026-04-02T17:41:37.238519+00:00",
+    "updated_at": "2026-04-02T17:41:37.238519+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f496f12_a29e175b71dd4eb8",
+    "name": "eurowings",
+    "name_forms": {
+      "normalized": "eurowings",
+      "compact": "eurowings",
+      "tokens": [
+        "eurowings"
+      ]
+    },
+    "created_at": "2026-04-02T17:41:45.874621+00:00",
+    "updated_at": "2026-04-02T17:41:45.874621+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f499499_5226374ca690bd9a",
+    "name": "kahol lavan",
+    "name_forms": {
+      "normalized": "kahol lavan",
+      "compact": "kahollavan",
+      "tokens": [
+        "kahol",
+        "lavan"
+      ]
+    },
+    "created_at": "2026-04-02T17:41:55.481227+00:00",
+    "updated_at": "2026-04-02T17:41:55.481227+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f49b43c_7ff0bab9213b5f5d",
+    "name": "strongful",
+    "name_forms": {
+      "normalized": "strongful",
+      "compact": "strongful",
+      "tokens": [
+        "strongful"
+      ]
+    },
+    "created_at": "2026-04-02T17:42:03.580259+00:00",
+    "updated_at": "2026-04-02T17:42:03.580259+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f49e300_a715d97788dd3b87",
+    "name": "reserved",
+    "name_forms": {
+      "normalized": "reserved",
+      "compact": "reserved",
+      "tokens": [
+        "reserved"
+      ]
+    },
+    "created_at": "2026-04-02T17:42:15.552455+00:00",
+    "updated_at": "2026-04-02T17:42:15.552455+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4a0842_be099d821b81a2ef",
+    "name": "tollman's",
+    "name_forms": {
+      "normalized": "tollman's",
+      "compact": "tollmans",
+      "tokens": [
+        "tollman's"
+      ]
+    },
+    "created_at": "2026-04-02T17:42:25.090895+00:00",
+    "updated_at": "2026-04-02T17:42:25.090895+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4a571c_30d2bb7220bcd65b",
+    "name": "hotel4u",
+    "name_forms": {
+      "normalized": "hotel4u",
+      "compact": "hotel4u",
+      "tokens": [
+        "hotel4u"
+      ]
+    },
+    "created_at": "2026-04-02T17:42:45.276712+00:00",
+    "updated_at": "2026-04-02T17:42:45.276712+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4ae5a0_3f1c879f5503ce67",
+    "name": "allin",
+    "name_forms": {
+      "normalized": "allin",
+      "compact": "allin",
+      "tokens": [
+        "allin"
+      ]
+    },
+    "created_at": "2026-04-02T17:43:21.760094+00:00",
+    "updated_at": "2026-04-02T17:43:21.760094+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4b2274_89a6f0eb6c53f5f7",
+    "name": "adah lazorgan",
+    "name_forms": {
+      "normalized": "adah lazorgan",
+      "compact": "adahlazorgan",
+      "tokens": [
+        "adah",
+        "lazorgan"
+      ]
+    },
+    "created_at": "2026-04-02T17:43:37.332762+00:00",
+    "updated_at": "2026-04-02T17:43:37.332762+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4b4b54_0b83787d32586eab",
+    "name": "esim fly",
+    "name_forms": {
+      "normalized": "esim fly",
+      "compact": "esimfly",
+      "tokens": [
+        "esim",
+        "fly"
+      ]
+    },
+    "created_at": "2026-04-02T17:43:47.796840+00:00",
+    "updated_at": "2026-04-02T17:43:47.796840+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4b8004_a3ad1c23d3951fac",
+    "name": "shoes online",
+    "name_forms": {
+      "normalized": "shoes online",
+      "compact": "shoesonline",
+      "tokens": [
+        "online",
+        "shoes"
+      ]
+    },
+    "created_at": "2026-04-02T17:44:01.284673+00:00",
+    "updated_at": "2026-04-02T17:44:01.284673+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4bbdb8_a49e1a503cf9952e",
+    "name": "carter's",
+    "name_forms": {
+      "normalized": "carter's",
+      "compact": "carters",
+      "tokens": [
+        "carter's"
+      ]
+    },
+    "created_at": "2026-04-02T17:44:17.080213+00:00",
+    "updated_at": "2026-04-02T17:44:17.080213+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4c0369_e77ebf0d4de2ba7e",
+    "name": "plant it",
+    "name_forms": {
+      "normalized": "plant it",
+      "compact": "plantit",
+      "tokens": [
+        "it",
+        "plant"
+      ]
+    },
+    "created_at": "2026-04-02T17:44:34.921535+00:00",
+    "updated_at": "2026-04-02T17:44:34.921535+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4c2452_3872a5c0dbca961b",
+    "name": "flowernet",
+    "name_forms": {
+      "normalized": "flowernet",
+      "compact": "flowernet",
+      "tokens": [
+        "flowernet"
+      ]
+    },
+    "created_at": "2026-04-02T17:44:43.346523+00:00",
+    "updated_at": "2026-04-02T17:44:43.346523+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4c47d4_fec1c3608b84271b",
+    "name": "noa kirel",
+    "name_forms": {
+      "normalized": "noa kirel",
+      "compact": "noakirel",
+      "tokens": [
+        "kirel",
+        "noa"
+      ]
+    },
+    "created_at": "2026-04-02T17:44:52.435891+00:00",
+    "updated_at": "2026-04-02T17:44:52.435891+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4c6a65_38ffa6fd62524ade",
+    "name": "kamedis",
+    "name_forms": {
+      "normalized": "kamedis",
+      "compact": "kamedis",
+      "tokens": [
+        "kamedis"
+      ]
+    },
+    "created_at": "2026-04-02T17:45:01.284659+00:00",
+    "updated_at": "2026-04-02T17:45:01.284659+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4c921d_cf5fac5d93cacb04",
+    "name": "ihg",
+    "name_forms": {
+      "normalized": "ihg",
+      "compact": "ihg",
+      "tokens": [
+        "ihg"
+      ]
+    },
+    "created_at": "2026-04-02T17:45:11.452227+00:00",
+    "updated_at": "2026-04-02T17:45:11.452227+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4cd280_98faac3bf4793653",
+    "name": "redefine hair",
+    "name_forms": {
+      "normalized": "redefine hair",
+      "compact": "redefinehair",
+      "tokens": [
+        "hair",
+        "redefine"
+      ]
+    },
+    "created_at": "2026-04-02T17:45:27.935389+00:00",
+    "updated_at": "2026-04-02T17:45:27.935389+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4d016e_5949a0887820a1e3",
+    "name": "oliere paris",
+    "name_forms": {
+      "normalized": "oliere paris",
+      "compact": "oliereparis",
+      "tokens": [
+        "oliere",
+        "paris"
+      ]
+    },
+    "created_at": "2026-04-02T17:45:39.950452+00:00",
+    "updated_at": "2026-04-02T17:45:39.950452+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4d60ca_0653be139213ab33",
+    "name": "mds pharm",
+    "name_forms": {
+      "normalized": "mds pharm",
+      "compact": "mdspharm",
+      "tokens": [
+        "mds",
+        "pharm"
+      ]
+    },
+    "created_at": "2026-04-02T17:46:04.362401+00:00",
+    "updated_at": "2026-04-02T17:46:04.362401+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4e104c_bfdd84e9ea77b7ef",
+    "name": "vicrotia's secret",
+    "name_forms": {
+      "normalized": "vicrotia's secret",
+      "compact": "vicrotiassecret",
+      "tokens": [
+        "secret",
+        "vicrotia's"
+      ]
+    },
+    "created_at": "2026-04-02T17:46:49.292605+00:00",
+    "updated_at": "2026-04-02T17:46:49.292605+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4e21b5_994513b4cd9cdb86",
+    "name": "fix",
+    "name_forms": {
+      "normalized": "fix",
+      "compact": "fix",
+      "tokens": [
+        "fix"
+      ]
+    },
+    "created_at": "2026-04-02T17:46:53.748132+00:00",
+    "updated_at": "2026-04-02T17:46:53.748132+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4e678c_14aba69d0167933f",
+    "name": "preply",
+    "name_forms": {
+      "normalized": "preply",
+      "compact": "preply",
+      "tokens": [
+        "preply"
+      ]
+    },
+    "created_at": "2026-04-02T17:47:11.628941+00:00",
+    "updated_at": "2026-04-02T17:47:11.628941+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4e8474_79d819b18331e001",
+    "name": "panta rei",
+    "name_forms": {
+      "normalized": "panta rei",
+      "compact": "pantarei",
+      "tokens": [
+        "panta",
+        "rei"
+      ]
+    },
+    "created_at": "2026-04-02T17:47:19.027602+00:00",
+    "updated_at": "2026-04-02T17:47:19.027602+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4ea284_78595ee6b43a3134",
+    "name": "annzi beauty",
+    "name_forms": {
+      "normalized": "annzi beauty",
+      "compact": "annzibeauty",
+      "tokens": [
+        "annzi",
+        "beauty"
+      ]
+    },
+    "created_at": "2026-04-02T17:47:26.724476+00:00",
+    "updated_at": "2026-04-02T17:47:26.724476+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4ec555_df350a8f761a2db6",
+    "name": "street smart",
+    "name_forms": {
+      "normalized": "street smart",
+      "compact": "streetsmart",
+      "tokens": [
+        "smart",
+        "street"
+      ]
+    },
+    "created_at": "2026-04-02T17:47:35.637130+00:00",
+    "updated_at": "2026-04-02T17:47:35.637130+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4f5aff_727f5f19e849ce48",
+    "name": "אלופ הספורט",
+    "name_forms": {
+      "normalized": "אלופ הספורט",
+      "compact": "אלופהספורט",
+      "tokens": [
+        "אלופ",
+        "הספורט"
+      ]
+    },
+    "created_at": "2026-04-02T17:48:13.951259+00:00",
+    "updated_at": "2026-04-02T17:48:13.951259+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4fa0e1_cfca1b537678e790",
+    "name": "kaitz activewear",
+    "name_forms": {
+      "normalized": "kaitz activewear",
+      "compact": "kaitzactivewear",
+      "tokens": [
+        "activewear",
+        "kaitz"
+      ]
+    },
+    "created_at": "2026-04-02T17:48:31.841107+00:00",
+    "updated_at": "2026-04-02T17:48:31.841107+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f4fd3de_3cc4da325387d923",
+    "name": "miri lev",
+    "name_forms": {
+      "normalized": "miri lev",
+      "compact": "mirilev",
+      "tokens": [
+        "lev",
+        "miri"
+      ]
+    },
+    "created_at": "2026-04-02T17:48:44.894495+00:00",
+    "updated_at": "2026-04-02T17:48:44.894495+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f500cc3_6609a977fc07c5d4",
+    "name": "nava",
+    "name_forms": {
+      "normalized": "nava",
+      "compact": "nava",
+      "tokens": [
+        "nava"
+      ]
+    },
+    "created_at": "2026-04-02T17:48:59.459090+00:00",
+    "updated_at": "2026-04-02T17:48:59.459090+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f5048e2_053fe5885ca17978",
+    "name": "עינב בובליל קוסמטיקס",
+    "name_forms": {
+      "normalized": "עינב בובליל קוסמטיקס",
+      "compact": "עינבבובלילקוסמטיקס",
+      "tokens": [
+        "בובליל",
+        "עינב",
+        "קוסמטיקס"
+      ]
+    },
+    "created_at": "2026-04-02T17:49:14.849190+00:00",
+    "updated_at": "2026-04-02T17:49:14.849190+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f506b22_0d47d0ea4a214029",
+    "name": "bath & body works",
+    "name_forms": {
+      "normalized": "bath & body works",
+      "compact": "bathbodyworks",
+      "tokens": [
+        "bath",
+        "body",
+        "works"
+      ]
+    },
+    "created_at": "2026-04-02T17:49:23.618881+00:00",
+    "updated_at": "2026-04-02T17:49:23.618881+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f508266_f8f2a06792dde2c6",
+    "name": "my winery",
+    "name_forms": {
+      "normalized": "my winery",
+      "compact": "mywinery",
+      "tokens": [
+        "my",
+        "winery"
+      ]
+    },
+    "created_at": "2026-04-02T17:49:29.574401+00:00",
+    "updated_at": "2026-04-02T17:49:29.574401+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f50da83_a915d9d02e0fdad3",
+    "name": "מלונות אפריקה ישראל",
+    "name_forms": {
+      "normalized": "מלונות אפריקה ישראל",
+      "compact": "מלונותאפריקהישראל",
+      "tokens": [
+        "אפריקה",
+        "ישראל",
+        "מלונות"
+      ]
+    },
+    "created_at": "2026-04-02T17:49:52.130423+00:00",
+    "updated_at": "2026-04-02T17:49:52.130423+00:00",
+    "metadata": {}
+  },
+  {
+    "id": "019d4f50edf2_c16a41a2ea1c629e",
+    "name": "anker",
+    "name_forms": {
+      "normalized": "anker",
+      "compact": "anker",
+      "tokens": [
+        "anker"
+      ]
+    },
+    "created_at": "2026-04-02T17:49:57.106692+00:00",
+    "updated_at": "2026-04-02T17:49:57.106692+00:00",
+    "metadata": {}
   }
 ]
