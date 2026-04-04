@@ -134,7 +134,7 @@ def scrape(
     normalize_stage = NormalizeStage(create_default_pipeline())
     match_pipeline = MatchPipeline(MatchConfig())
     match_stage = MatchStage(match_pipeline)
-    persist_stage = PersistStage(deal_repo, review_repo, review_no_match=review_no_match)
+    persist_stage = PersistStage(deal_repo, review_repo, store_repo, review_no_match=review_no_match)
 
     pipeline = PipelineOrchestrator(
         scrape_stage=scrape_stage,
@@ -196,7 +196,7 @@ def process(
     verdicts = match_stage.run(normalized, index)
     verdict_map = {v.record_id: v for v in verdicts}
 
-    persist_stage = PersistStage(deal_repo, review_repo, review_no_match=review_no_match)
+    persist_stage = PersistStage(deal_repo, review_repo, store_repo, review_no_match=review_no_match)
     persist_stage.run(pipeline_records, normalized_map, verdict_map)
 
     ctx.finish()

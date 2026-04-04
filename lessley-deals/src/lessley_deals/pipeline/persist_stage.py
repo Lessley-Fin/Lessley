@@ -14,6 +14,7 @@ from lessley_deals.domain.models import (
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.persistence.repositories.deals import DealJsonRepository
 from lessley_deals.persistence.repositories.reviews import ReviewJsonRepository
+from lessley_deals.persistence.repositories.stores import CanonicalStoreJsonRepository
 from lessley_deals.review.actions import build_name_forms
 
 logger = logging.getLogger(__name__)
@@ -26,10 +27,12 @@ class PersistStage:
         self,
         deal_repo: DealJsonRepository,
         review_repo: ReviewJsonRepository,
+        store_repo: CanonicalStoreJsonRepository,
         review_no_match: bool = False,
     ) -> None:
         self._deal_repo = deal_repo
         self._review_repo = review_repo
+        self._store_repo = store_repo
         self._review_no_match = review_no_match
 
     def run(
@@ -55,6 +58,17 @@ class PersistStage:
 
             if verdict.decision == MatchDecision.AUTO_MATCH and verdict.best:
                 raw_payload = prec.raw.raw_payload
+                
+                # Move image_url to the store's metadata
+                image_url = raw_payload.get("image_url")
+                if image_url:
+                    store = self._store_repo.get_by_id(verdict.best.store_id)
+                    if store:
+                        image_urls = store.metadata.setdefault("image_urls", [])
+                        if image_url not in image_urls:
+                            image_urls.append(image_url)
+                            self._store_repo.save(store)
+
                 deal = Deal(
                     id=generate_id(),
                     store_id=verdict.best.store_id,
@@ -65,7 +79,6 @@ class PersistStage:
                     resolved_at=now,
                     currency=normalized.price.currency if normalized.price else "ILS",
                     url=prec.raw.url,
-                    image_url=raw_payload.get("image_url"),
                     discount_logic=raw_payload.get("discount_logic"),
                     stackable=raw_payload.get("stackable"),
                     redeem_channels=raw_payload.get("redeem_channels", []),

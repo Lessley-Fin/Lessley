@@ -154,7 +154,6 @@ class Deal:
     resolved_at: datetime
     currency: str | None = None
     url: str | None = None
-    image_url: str | None = None
     discount_logic: dict[str, Any] | None = None
     stackable: bool | None = None
     redeem_channels: list[str] = field(default_factory=list)

@@ -184,7 +184,7 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
             "description": f"{reward_text} באתר {title}. ההטבה מותנית במעבר דרך לינק הקאשבק.",
             "store_url": store_url,
             "benefit_url": details_url,
-            "image_url": str(image_url),
+            "image_url": str(image_url).replace(" ", "%20"),
             "trigger_type": "auto",
             "discount_logic": discount_logic,
             "is_stackable": True,

@@ -204,7 +204,6 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         resolved_at=_parse_datetime(d["resolved_at"]),  # type: ignore[arg-type]
         currency=d.get("currency"),
         url=d.get("url"),
-        image_url=d.get("image_url"),
         discount_logic=d.get("discount_logic"),
         stackable=d.get("stackable"),
         redeem_channels=d.get("redeem_channels", []),
