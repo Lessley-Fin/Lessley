@@ -36,7 +36,9 @@ from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
 from lessley_deals.scraping.helpers.brand_utils import (
     clean_brand,
     is_generic_hot_brand,
+    load_hot_store_groups,
     normalize_website,
+    resolve_group_store,
 )
 from lessley_deals.scraping.helpers.discount_parser import (
     check_stackable,
@@ -100,6 +102,7 @@ class HotAdapter(BaseSourceAdapter):
         self._api_url = _API_URL
         self._details_url = _DETAILS_URL
         self._client: httpx.AsyncClient | None = None
+        self._store_groups = load_hot_store_groups()
 
     # ------------------------------------------------------------------
     # BaseSourceAdapter interface
@@ -556,6 +559,10 @@ class HotAdapter(BaseSourceAdapter):
 
         Returns ``None`` if the record has no ``item_brand`` or if the
         brand is a generic HOT club name.
+
+        When the brand belongs to a known store-group (e.g. "קבוצת פוקס"),
+        the real sub-store name is resolved from the deal title and used
+        instead of the group name.
         """
         brand = record.get("item_brand")
         if not brand:
@@ -565,10 +572,13 @@ class HotAdapter(BaseSourceAdapter):
         if is_generic_hot_brand(cleaned):
             return None
 
+        title = record.get("title", "")
+        store_name = resolve_group_store(cleaned, title, self._store_groups)
+
         return RawStore(
             id=generate_id(),
             source_id=self.source_id,
-            name=cleaned,
+            name=store_name,
             scraped_at=now,
             raw_payload=record,
             url=record.get("supplierWebsite"),
@@ -577,11 +587,18 @@ class HotAdapter(BaseSourceAdapter):
     def _to_raw_deal(
         self, record: dict[str, Any], now: datetime
     ) -> RawScrapedRecord:
-        """Map a benefit record to a :class:`RawScrapedRecord`."""
-        store_name = record.get("item_brand") or record.get("title", "")
-        if store_name:
-            store_name = self._clean_brand(store_name)
+        """Map a benefit record to a :class:`RawScrapedRecord`.
+
+        When the brand belongs to a known store-group, the real sub-store
+        name is resolved from the deal title.
+        """
+        raw_brand = record.get("item_brand") or record.get("title", "")
         title = record.get("title", "")
+        if raw_brand:
+            cleaned_brand = self._clean_brand(raw_brand)
+            store_name = resolve_group_store(cleaned_brand, title, self._store_groups)
+        else:
+            store_name = ""
         description = record.get("description", "")
         deal_description = f"{title} - {description}" if description else title
         price_text = record.get("value") or record.get("small_text") or ""

@@ -7,8 +7,17 @@ the normalization pipeline touches the data.
 
 from __future__ import annotations
 
+import json
+import logging
 import re
+from pathlib import Path
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
+
+_DEFAULT_GROUPS_PATH = (
+    Path(__file__).parent.parent / "config" / "hot_store_groups.json"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -116,3 +125,109 @@ def to_slug(value: str) -> str:
     text = re.sub(r"[_\s]+", "-", text)
     text = re.sub(r"-{2,}", "-", text).strip("-")
     return text
+
+
+# ---------------------------------------------------------------------------
+# Store-group resolution (HOT)
+# ---------------------------------------------------------------------------
+
+_groups_cache: dict[str, dict[str, dict]] = {}
+
+
+def load_hot_store_groups(
+    path: Path | None = None,
+) -> dict[str, dict]:
+    """Load the HOT store-groups config from JSON, cached after first load.
+
+    The config maps a *group brand name* (as returned by ``clean_brand``)
+    to a dict with:
+    - ``title_prefix`` – the string to strip from the deal title to obtain
+      the real sub-store name (e.g. ``"תו קניה"`` → strips leading
+      ``"תו קניה "`` from the title).
+    - ``stores`` – optional list of known sub-store names (for docs/debug).
+
+    Falls back to an empty dict and logs a warning on any error.
+    """
+    target = path or _DEFAULT_GROUPS_PATH
+    cache_key = str(target)
+    if cache_key in _groups_cache:
+        return _groups_cache[cache_key]
+    try:
+        with target.open(encoding="utf-8") as f:
+            data = json.load(f)
+        # Strip comment keys (keys starting with "_")
+        result: dict[str, dict] = {k: v for k, v in data.items() if not k.startswith("_")}
+    except FileNotFoundError:
+        logger.warning("hot_store_groups config not found at %s", target)
+        result = {}
+    except Exception:
+        logger.exception("Failed to load hot_store_groups from %s", target)
+        result = {}
+    _groups_cache[cache_key] = result
+    return result
+
+
+def resolve_group_store(
+    brand: str,
+    title: str,
+    groups: dict[str, dict] | None = None,
+) -> str:
+    """Resolve a HOT group brand name to the specific sub-store name.
+
+    If ``brand`` matches a known group in *groups* (case-insensitive), the
+    function strips the configured ``title_prefix`` from *title* (also
+    case-insensitive) and returns the remainder as the real store name.
+
+    Returns the original *brand* unchanged when:
+    - *brand* is not a known group, or
+    - the ``title_prefix`` is not found in *title*, or
+    - the resulting store name would be empty.
+
+    Args:
+        brand: Cleaned brand name from the HOT API (``item_brand`` field).
+        title: Deal title string from the HOT API.
+        groups: Override the groups dict (mainly for testing). When ``None``
+            the bundled config is loaded via :func:`load_hot_store_groups`.
+
+    Examples::
+
+        resolve_group_store("קבוצת פוקס", "תו קניה FOOT LOCKER")
+        # -> "FOOT LOCKER"
+
+        resolve_group_store("AHAVA", "הנחה בAHAVA")  # unknown group
+        # -> "AHAVA"
+    """
+    if groups is None:
+        groups = load_hot_store_groups()
+
+    # Case-insensitive group lookup
+    brand_lower = brand.strip().lower()
+    group_cfg: dict | None = None
+    for key, cfg in groups.items():
+        if key.strip().lower() == brand_lower:
+            group_cfg = cfg
+            break
+
+    if group_cfg is None:
+        return brand
+
+    prefix: str = group_cfg.get("title_prefix", "").strip()
+    if not prefix:
+        return brand
+
+    # Strip the prefix (case-insensitive) from the title
+    pattern = re.compile(r"^\s*" + re.escape(prefix) + r"\s*", re.IGNORECASE)
+    store_name = pattern.sub("", title.strip()).strip()
+
+    if not store_name:
+        logger.debug(
+            "resolve_group_store: prefix '%s' not found in title '%s'",
+            prefix, title,
+        )
+        return brand
+
+    logger.debug(
+        "resolve_group_store: '%s' -> '%s' (from title: '%s')",
+        brand, store_name, title,
+    )
+    return store_name

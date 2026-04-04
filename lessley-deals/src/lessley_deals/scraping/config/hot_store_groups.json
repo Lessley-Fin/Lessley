@@ -1,0 +1,25 @@
+{
+  "_comment": "HOT store-group configuration. When item_brand matches a key here, the resolver extracts the real store name from the deal title using the given title_prefix to strip.",
+  "קבוצת פוקס": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      "AMERICAN EAGLE",
+      "THE CHILDREN'S PLACE",
+      "FLYING TIGER",
+      "FOOT LOCKER",
+      "שילב"
+    ]
+  },
+  "קבוצת בריל": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      "Emporium",
+      "NAUTICA",
+      "Lee Cooper",
+      "ALDO",
+      "Timberland",
+      "נעלי GALI",
+      "GALI"
+    ]
+  }
+}
