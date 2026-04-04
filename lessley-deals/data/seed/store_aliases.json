@@ -11841,5 +11841,1694 @@
     },
     "source": "review",
     "created_at": "2026-04-02T17:49:57.106692+00:00"
+  },
+    {
+    "id": "019d486a3b1a_ce5417c84238b1df",
+    "store_id": "019d442f8aec_2d3eab9d5e735e97",
+    "alias": "פיטנס בוקסינג",
+    "alias_forms": {
+      "normalized": "פיטנס בוקסינג",
+      "compact": "פיטנסבוקסינג",
+      "tokens": [
+        "בוקסינג",
+        "פיטנס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:14.746203+00:00"
+  },
+  {
+    "id": "019d486a3cd9_84f9bf7894d91b4f",
+    "store_id": "019d442fd311_5513cdb1411a8745",
+    "alias": "פנדה קארטה",
+    "alias_forms": {
+      "normalized": "פנדה קארטה",
+      "compact": "פנדהקארטה",
+      "tokens": [
+        "פנדה",
+        "קארטה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:15.192969+00:00"
+  },
+  {
+    "id": "019d486a3e8d_250ee63cb5aa56b4",
+    "store_id": "019d44350d87_aa6664d465676246",
+    "alias": "מכונ הצפונ",
+    "alias_forms": {
+      "normalized": "מכונ הצפונ",
+      "compact": "מכונהצפונ",
+      "tokens": [
+        "הצפונ",
+        "מכונ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:15.628433+00:00"
+  },
+  {
+    "id": "019d486a404b_3ef2cc2e89154222",
+    "store_id": "019d4435778a_3ef83533483d2469",
+    "alias": "חומוס אדל",
+    "alias_forms": {
+      "normalized": "חומוס אדל",
+      "compact": "חומוסאדל",
+      "tokens": [
+        "אדל",
+        "חומוס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:16.075215+00:00"
+  },
+  {
+    "id": "019d486a4214_c5a53a6d6c544e8f",
+    "store_id": "019d44358ecd_d5711b079a94411e",
+    "alias": "א.מ. נגררימ",
+    "alias_forms": {
+      "normalized": "א.מ. נגררימ",
+      "compact": "אמנגררימ",
+      "tokens": [
+        "א.מ.",
+        "נגררימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:16.529799+00:00"
+  },
+  {
+    "id": "019d486a43e0_93fc1f5aba627ec3",
+    "store_id": "019d4436df47_0b2e7745ddc83e8a",
+    "alias": "kliik גלידריה",
+    "alias_forms": {
+      "normalized": "kliik גלידריה",
+      "compact": "kliikגלידריה",
+      "tokens": [
+        "kliik",
+        "גלידריה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:16.992351+00:00"
+  },
+  {
+    "id": "019d486a45b8_8ca1cbd20ff4874d",
+    "store_id": "019d44374563_f4a2fd2a3b6c45f5",
+    "alias": "הגנ הנודד",
+    "alias_forms": {
+      "normalized": "הגנ הנודד",
+      "compact": "הגנהנודד",
+      "tokens": [
+        "הגנ",
+        "הנודד"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:17.463820+00:00"
+  },
+  {
+    "id": "019d486a47e0_eff482c8248f1b4f",
+    "store_id": "019d443864f3_d6e1ee7929b52f78",
+    "alias": "boujee",
+    "alias_forms": {
+      "normalized": "boujee",
+      "compact": "boujee",
+      "tokens": [
+        "boujee"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:18.013966+00:00"
+  },
+  {
+    "id": "019d486a49ae_24c613ec01c07271",
+    "store_id": "019d4438a68b_bdcd4126c6ece1a8",
+    "alias": "area 51 coffee shop",
+    "alias_forms": {
+      "normalized": "area 51 coffee shop",
+      "compact": "area51coffeeshop",
+      "tokens": [
+        "51",
+        "area",
+        "coffee",
+        "shop"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:18.478404+00:00"
+  },
+  {
+    "id": "019d486a4bb3_48aa8e9a0e8fb34f",
+    "store_id": "019d44390478_36877aab11e82c03",
+    "alias": "מוסכ בראנסי",
+    "alias_forms": {
+      "normalized": "מוסכ בראנסי",
+      "compact": "מוסכבראנסי",
+      "tokens": [
+        "בראנסי",
+        "מוסכ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:18.995962+00:00"
+  },
+  {
+    "id": "019d486a4d6e_5627312856c0f816",
+    "store_id": "019d44350d87_aa6664d465676246",
+    "alias": "ת.ל.ג מכונ הצפונ",
+    "alias_forms": {
+      "normalized": "ת.ל.ג מכונ הצפונ",
+      "compact": "תלגמכונהצפונ",
+      "tokens": [
+        "הצפונ",
+        "מכונ",
+        "ת.ל.ג"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T09:40:19.438877+00:00"
+  },
+  {
+    "id": "019d48f33b8e_522a1ccc6713c3ab",
+    "store_id": "019d48f33b7c_1abe71076d29bdd7",
+    "alias": "הפינוקימ של עדנ",
+    "alias_forms": {
+      "normalized": "הפינוקימ של עדנ",
+      "compact": "הפינוקימשלעדנ",
+      "tokens": [
+        "הפינוקימ",
+        "עדנ",
+        "של"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T12:09:53.275585+00:00"
+  },
+  {
+    "id": "019d48f36411_6a99a741f74d4bbe",
+    "store_id": "019d48f363f7_2110fc5354b689c4",
+    "alias": "liron olga hedi",
+    "alias_forms": {
+      "normalized": "liron olga hedi",
+      "compact": "lironolgahedi",
+      "tokens": [
+        "hedi",
+        "liron",
+        "olga"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-01T12:10:03.639723+00:00"
+  },
+  {
+    "id": "019d5a7b2c3a_1488639f112a272a",
+    "store_id": "019d2595a9c3_30ae90210c93f98c",
+    "alias": "מלונות קנדה",
+    "alias_forms": {
+      "normalized": "מלונות קנדה",
+      "compact": "מלונותקנדה",
+      "tokens": [
+        "מלונות",
+        "קנדה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:51:54.938827+00:00"
+  },
+  {
+    "id": "019d5a7c740f_cc8658bf6132fdf6",
+    "store_id": "019d5a7c7405_33ed2e3efe9d5ccf",
+    "alias": "musk oud perfumes מתנות",
+    "alias_forms": {
+      "normalized": "musk oud perfumes מתנות",
+      "compact": "muskoudperfumesמתנות",
+      "tokens": [
+        "musk",
+        "oud",
+        "perfumes",
+        "מתנות"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:53:18.852709+00:00"
+  },
+  {
+    "id": "019d5a7cbe4a_c45ce6f93ca718b0",
+    "store_id": "019d5a7cbe2c_ed8cc49274b3b905",
+    "alias": "wine g bar",
+    "alias_forms": {
+      "normalized": "wine g bar",
+      "compact": "winegbar",
+      "tokens": [
+        "bar",
+        "wine"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:53:37.835008+00:00"
+  },
+  {
+    "id": "019d5a7d2474_0ed684b8f00196cf",
+    "store_id": "019d5a7d243a_5db66fee98bf3d60",
+    "alias": "שגיב חומרי גלמ לאפייה",
+    "alias_forms": {
+      "normalized": "שגיב חומרי גלמ לאפייה",
+      "compact": "שגיבחומריגלמלאפייה",
+      "tokens": [
+        "גלמ",
+        "חומרי",
+        "לאפייה",
+        "שגיב"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:54:03.961888+00:00"
+  },
+  {
+    "id": "019d5a7dc32b_7442b7d633e9ed61",
+    "store_id": "019d5a7dc31b_489ad7b8f7673272",
+    "alias": "olympia אולימפיה אמנות השינה",
+    "alias_forms": {
+      "normalized": "olympia אולימפיה אמנות השינה",
+      "compact": "olympiaאולימפיהאמנותהשינה",
+      "tokens": [
+        "olympia",
+        "אולימפיה",
+        "אמנות",
+        "השינה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:54:44.633959+00:00"
+  },
+  {
+    "id": "019d5a7e2d59_bd19d283b484dded",
+    "store_id": "019d5a7e2d39_5444c8464a1af7a3",
+    "alias": "spa mai touch ספא",
+    "alias_forms": {
+      "normalized": "spa mai touch ספא",
+      "compact": "spamaitouchספא",
+      "tokens": [
+        "mai",
+        "spa",
+        "touch",
+        "ספא"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:55:11.800364+00:00"
+  },
+  {
+    "id": "019d5a7e88e1_f7edc3437fd7c21d",
+    "store_id": "019d5a7e88bb_2dc6eb00e52a5d12",
+    "alias": "יינ וחברימ wine & friends",
+    "alias_forms": {
+      "normalized": "יינ וחברימ wine & friends",
+      "compact": "יינוחברימwinefriends",
+      "tokens": [
+        "friends",
+        "wine",
+        "וחברימ",
+        "יינ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:55:35.227326+00:00"
+  },
+  {
+    "id": "019d5a7ed94a_c0a52ef1a02f1dfc",
+    "store_id": "019d5a7ed91f_d14c8d9499017d54",
+    "alias": "פוגו",
+    "alias_forms": {
+      "normalized": "פוגו",
+      "compact": "פוגו",
+      "tokens": [
+        "פוגו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:55:55.807785+00:00"
+  },
+  {
+    "id": "019d5a7ef9c2_02dcfedc95a54547",
+    "store_id": "019d5a7ef99d_f11afd46d2cc120d",
+    "alias": "infinity wash",
+    "alias_forms": {
+      "normalized": "infinity wash",
+      "compact": "infinitywash",
+      "tokens": [
+        "infinity",
+        "wash"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:56:04.125528+00:00"
+  },
+  {
+    "id": "019d5a7f09ec_d26e49dced8c6c49",
+    "store_id": "019d5a7f09cc_09acf95d45efc6d8",
+    "alias": "א.א חשמל ומיזוג לרכב",
+    "alias_forms": {
+      "normalized": "א.א חשמל ומיזוג לרכב",
+      "compact": "אאחשמלומיזוגלרכב",
+      "tokens": [
+        "א.א",
+        "ומיזוג",
+        "חשמל",
+        "לרכב"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:56:08.268069+00:00"
+  },
+  {
+    "id": "019d5a7f981b_5a647c31b944b3cc",
+    "store_id": "019d5a7f97f7_9b8b82b55032f5f0",
+    "alias": "מרפאת שיניימ ד\"ר יניב זיסמנ",
+    "alias_forms": {
+      "normalized": "מרפאת שיניימ ד\"ר יניב זיסמנ",
+      "compact": "מרפאתשיניימדריניבזיסמנ",
+      "tokens": [
+        "ד\"ר",
+        "זיסמנ",
+        "יניב",
+        "מרפאת",
+        "שיניימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:56:44.661275+00:00"
+  },
+  {
+    "id": "019d5a801b0e_20f008e8220a5504",
+    "store_id": "019d5a801aef_14b8d34df6fb8e80",
+    "alias": "לוקה בלנקה",
+    "alias_forms": {
+      "normalized": "לוקה בלנקה",
+      "compact": "לוקהבלנקה",
+      "tokens": [
+        "בלנקה",
+        "לוקה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:57:18.190894+00:00"
+  },
+  {
+    "id": "019d5a8071c7_706d7b09e1b55665",
+    "store_id": "019d5a807178_1a05e8d809faf1d8",
+    "alias": "מג'יק וואש 2",
+    "alias_forms": {
+      "normalized": "מג'יק וואש 2",
+      "compact": "מגיקוואש2",
+      "tokens": [
+        "וואש",
+        "מג'יק"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:57:40.344439+00:00"
+  },
+  {
+    "id": "019d5a80e1e2_db19fee85dcc48ff",
+    "store_id": "019d5a80e0d8_f82f565b81aca2fa",
+    "alias": "יקותיאל תכשיטימ",
+    "alias_forms": {
+      "normalized": "יקותיאל תכשיטימ",
+      "compact": "יקותיאלתכשיטימ",
+      "tokens": [
+        "יקותיאל",
+        "תכשיטימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:58:08.856402+00:00"
+  },
+  {
+    "id": "019d5a81296e_e7d64cb0626fcc52",
+    "store_id": "019d5a812946_4bfed77ae874af6c",
+    "alias": "דילוקס כל מה שטוב לבית",
+    "alias_forms": {
+      "normalized": "דילוקס כל מה שטוב לבית",
+      "compact": "דילוקסכלמהשטובלבית",
+      "tokens": [
+        "דילוקס",
+        "כל",
+        "לבית",
+        "מה",
+        "שטוב"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:58:27.398286+00:00"
+  },
+  {
+    "id": "019d5a8151f5_017fe34fab0c5fb0",
+    "store_id": "019d5a8151d6_1150456bfa2d3b00",
+    "alias": "מוסכ אשר",
+    "alias_forms": {
+      "normalized": "מוסכ אשר",
+      "compact": "מוסכאשר",
+      "tokens": [
+        "אשר",
+        "מוסכ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:58:37.781990+00:00"
+  },
+  {
+    "id": "019d5a81c40d_82821a40a6edb840",
+    "store_id": "019d5a81c3e1_68559c1b58c5b7c3",
+    "alias": "שואו שופ",
+    "alias_forms": {
+      "normalized": "שואו שופ",
+      "compact": "שואושופ",
+      "tokens": [
+        "שואו",
+        "שופ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:06.977859+00:00"
+  },
+  {
+    "id": "019d5a81f4fb_d6c4082c231a1e4c",
+    "store_id": "019d5a81f4da_bcc60f35a0895362",
+    "alias": "יסמינ אופטיק",
+    "alias_forms": {
+      "normalized": "יסמינ אופטיק",
+      "compact": "יסמינאופטיק",
+      "tokens": [
+        "אופטיק",
+        "יסמינ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:19.513389+00:00"
+  },
+  {
+    "id": "019d5a820a55_bd427f6d9d8f2bb1",
+    "store_id": "019d5a820a2c_2bd05300c864c665",
+    "alias": "קרייזי טוניסאי",
+    "alias_forms": {
+      "normalized": "קרייזי טוניסאי",
+      "compact": "קרייזיטוניסאי",
+      "tokens": [
+        "טוניסאי",
+        "קרייזי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:24.972954+00:00"
+  },
+  {
+    "id": "019d5a8221ef_f9477ae9e3ec81e7",
+    "store_id": "019d5a8221c2_2573470f60601fd2",
+    "alias": "alexa",
+    "alias_forms": {
+      "normalized": "alexa",
+      "compact": "alexa",
+      "tokens": [
+        "alexa"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:31.010909+00:00"
+  },
+  {
+    "id": "019d5a8234ba_3c958cad71d4e4ec",
+    "store_id": "019d5a823498_cf6d9b607fde3c4a",
+    "alias": "בנקוק ווק",
+    "alias_forms": {
+      "normalized": "בנקוק ווק",
+      "compact": "בנקוקווק",
+      "tokens": [
+        "בנקוק",
+        "ווק"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:35.832587+00:00"
+  },
+  {
+    "id": "019d5a826d0c_50690f9e7511ce9d",
+    "store_id": "019d5a826ce2_4918af456b1e467a",
+    "alias": "מתחמ קליסטניקס calima",
+    "alias_forms": {
+      "normalized": "מתחמ קליסטניקס calima",
+      "compact": "מתחמקליסטניקסcalima",
+      "tokens": [
+        "calima",
+        "מתחמ",
+        "קליסטניקס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:50.242636+00:00"
+  },
+  {
+    "id": "019d5a828540_02e90cc4f8706334",
+    "store_id": "019d5a828514_bb087c65b554b63d",
+    "alias": "פארק מיט",
+    "alias_forms": {
+      "normalized": "פארק מיט",
+      "compact": "פארקמיט",
+      "tokens": [
+        "מיט",
+        "פארק"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T21:59:56.436397+00:00"
+  },
+  {
+    "id": "019d5a829ebd_2a9d75bdccd0d60a",
+    "store_id": "019d5a829e96_9ef0d2f683fa7fe0",
+    "alias": "כנאפה רק פה קונדטוריה",
+    "alias_forms": {
+      "normalized": "כנאפה רק פה קונדטוריה",
+      "compact": "כנאפהרקפהקונדטוריה",
+      "tokens": [
+        "כנאפה",
+        "פה",
+        "קונדטוריה",
+        "רק"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:00:02.966989+00:00"
+  },
+  {
+    "id": "019d5a82ad9f_31a7b4cd870f0079",
+    "store_id": "019d5a82ad77_ec720566bcd129b3",
+    "alias": "ג'וחא קפה ומשתלה",
+    "alias_forms": {
+      "normalized": "ג'וחא קפה ומשתלה",
+      "compact": "גוחאקפהומשתלה",
+      "tokens": [
+        "ג'וחא",
+        "ומשתלה",
+        "קפה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:00:06.775540+00:00"
+  },
+  {
+    "id": "019d5a834c17_a028cc55ac86f104",
+    "store_id": "019d5a834bd2_4dbb46725f1b3ccb",
+    "alias": "בגדי bolongo",
+    "alias_forms": {
+      "normalized": "בגדי bolongo",
+      "compact": "בגדיbolongo",
+      "tokens": [
+        "bolongo",
+        "בגדי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:00:47.314781+00:00"
+  },
+  {
+    "id": "019d5a835ed3_85e4993fc79ebd90",
+    "store_id": "019d5a835e9c_3eb2f69bd48b61a7",
+    "alias": "בית קפה קונדטוריה מתוקה",
+    "alias_forms": {
+      "normalized": "בית קפה קונדטוריה מתוקה",
+      "compact": "ביתקפהקונדטוריהמתוקה",
+      "tokens": [
+        "בית",
+        "מתוקה",
+        "קונדטוריה",
+        "קפה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:00:52.124248+00:00"
+  },
+  {
+    "id": "019d5a83ca53_c344dcc271274d6c",
+    "store_id": "019d5a83ca36_889f05d659ca2b02",
+    "alias": "מרפאת שיניימ ד\"ר הולדר",
+    "alias_forms": {
+      "normalized": "מרפאת שיניימ ד\"ר הולדר",
+      "compact": "מרפאתשיניימדרהולדר",
+      "tokens": [
+        "ד\"ר",
+        "הולדר",
+        "מרפאת",
+        "שיניימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:01:19.669740+00:00"
+  },
+  {
+    "id": "019d5a841a36_edb095f2b366d600",
+    "store_id": "019d5a8419e2_aeb406db829617ff",
+    "alias": "אלגנט פאשנ elegant fashion",
+    "alias_forms": {
+      "normalized": "אלגנט פאשנ elegant fashion",
+      "compact": "אלגנטפאשנelegantfashion",
+      "tokens": [
+        "elegant",
+        "fashion",
+        "אלגנט",
+        "פאשנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:01:40.066409+00:00"
+  },
+  {
+    "id": "019d5a84aa42_4cf354741444582e",
+    "store_id": "019d5a84aa2b_b723d5c7a01a3bc0",
+    "alias": "אליסיומ עולמ בריא לתינוקות",
+    "alias_forms": {
+      "normalized": "אליסיומ עולמ בריא לתינוקות",
+      "compact": "אליסיומעולמבריאלתינוקות",
+      "tokens": [
+        "אליסיומ",
+        "בריא",
+        "לתינוקות",
+        "עולמ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:17.003959+00:00"
+  },
+  {
+    "id": "019d5a84bed8_5e69d837dd27d297",
+    "store_id": "019d5a84be9c_78167e77f7e61890",
+    "alias": "אוטוס סאונד מערכות לרכב",
+    "alias_forms": {
+      "normalized": "אוטוס סאונד מערכות לרכב",
+      "compact": "אוטוססאונדמערכותלרכב",
+      "tokens": [
+        "אוטוס",
+        "לרכב",
+        "מערכות",
+        "סאונד"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:22.236407+00:00"
+  },
+  {
+    "id": "019d5a84c9fa_1d2d79caa927bad2",
+    "store_id": "019d5a84c9df_b3fd59833677ed4a",
+    "alias": "פלאפל טומסיס",
+    "alias_forms": {
+      "normalized": "פלאפל טומסיס",
+      "compact": "פלאפלטומסיס",
+      "tokens": [
+        "טומסיס",
+        "פלאפל"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:25.119564+00:00"
+  },
+  {
+    "id": "019d5a84dba2_1edcd4b10c6d9886",
+    "store_id": "019d5a84db80_bfa0346a5b61f5a2",
+    "alias": "סיריוס אלקטרוניקה",
+    "alias_forms": {
+      "normalized": "סיריוס אלקטרוניקה",
+      "compact": "סיריוסאלקטרוניקה",
+      "tokens": [
+        "אלקטרוניקה",
+        "סיריוס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:29.632484+00:00"
+  },
+  {
+    "id": "019d5a84f00a_e38236328c915700",
+    "store_id": "019d5a84efd3_0e6de3d63e3c5a59",
+    "alias": "dr מזבר ח'ליל",
+    "alias_forms": {
+      "normalized": "dr מזבר ח'ליל",
+      "compact": "drמזברחליל",
+      "tokens": [
+        "dr",
+        "ח'ליל",
+        "מזבר"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:34.835376+00:00"
+  },
+  {
+    "id": "019d5a84fb1d_8f2cf75b1fe12093",
+    "store_id": "019d5a84fafc_b6d4d54d5f9ca7b5",
+    "alias": "אבו ג'אבר תיקימ ומזוודות",
+    "alias_forms": {
+      "normalized": "אבו ג'אבר תיקימ ומזוודות",
+      "compact": "אבוגאברתיקימומזוודות",
+      "tokens": [
+        "אבו",
+        "ג'אבר",
+        "ומזוודות",
+        "תיקימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:37.692611+00:00"
+  },
+  {
+    "id": "019d5a8506e0_6acf6e4b6ad43ee5",
+    "store_id": "019d5a8506bd_c460958c5414187f",
+    "alias": "הבריסטה",
+    "alias_forms": {
+      "normalized": "הבריסטה",
+      "compact": "הבריסטה",
+      "tokens": [
+        "הבריסטה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:02:40.701544+00:00"
+  },
+  {
+    "id": "019d5a8556e2_569b80aaa3416699",
+    "store_id": "019d5a8556b4_cd23161cd46bad1a",
+    "alias": "פרוטאינ יוניקורנ",
+    "alias_forms": {
+      "normalized": "פרוטאינ יוניקורנ",
+      "compact": "פרוטאיניוניקורנ",
+      "tokens": [
+        "יוניקורנ",
+        "פרוטאינ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:03:01.171285+00:00"
+  },
+  {
+    "id": "019d5a85a323_901d7d275e3e1202",
+    "store_id": "019d5a85a313_a903c84d57fb7f56",
+    "alias": "kidi watch",
+    "alias_forms": {
+      "normalized": "kidi watch",
+      "compact": "kidiwatch",
+      "tokens": [
+        "kidi",
+        "watch"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:03:20.723343+00:00"
+  },
+  {
+    "id": "019d5a8617c1_0cb5d5aefe6ac0f6",
+    "store_id": "019d5a8617a7_df11b53dddf5fe8b",
+    "alias": "מרכז החלפימ",
+    "alias_forms": {
+      "normalized": "מרכז החלפימ",
+      "compact": "מרכזהחלפימ",
+      "tokens": [
+        "החלפימ",
+        "מרכז"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:03:50.567652+00:00"
+  },
+  {
+    "id": "019d5a866ab3_2be55e9762a8899b",
+    "store_id": "019d5a866a81_34028ca6fdd746af",
+    "alias": "צבע טרי",
+    "alias_forms": {
+      "normalized": "צבע טרי",
+      "compact": "צבעטרי",
+      "tokens": [
+        "טרי",
+        "צבע"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:04:11.777681+00:00"
+  },
+  {
+    "id": "019d5a86c0a8_458874d1dbbf09c9",
+    "store_id": "019d5a86c08a_b15708188cc43330",
+    "alias": "קוו טבעי",
+    "alias_forms": {
+      "normalized": "קוו טבעי",
+      "compact": "קווטבעי",
+      "tokens": [
+        "טבעי",
+        "קוו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:04:33.802005+00:00"
+  },
+  {
+    "id": "019d5a86d58e_6bcf30b8f2eef595",
+    "store_id": "019d5a86d56e_f3b2393866a2a035",
+    "alias": "r d מערכות אבטחה ותקשורת",
+    "alias_forms": {
+      "normalized": "r d מערכות אבטחה ותקשורת",
+      "compact": "rdמערכותאבטחהותקשורת",
+      "tokens": [
+        "אבטחה",
+        "ותקשורת",
+        "מערכות"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:04:39.150942+00:00"
+  },
+  {
+    "id": "019d5a87150f_e83d37bf1090644a",
+    "store_id": "019d5a8714fa_3ac13cabf6c33907",
+    "alias": "משק השרונ 26",
+    "alias_forms": {
+      "normalized": "משק השרונ 26",
+      "compact": "משקהשרונ26",
+      "tokens": [
+        "26",
+        "השרונ",
+        "משק"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:04:55.418173+00:00"
+  },
+  {
+    "id": "019d5a875feb_a78dd927bac383ac",
+    "store_id": "019d5a875fb1_4a89fbb55f61faae",
+    "alias": "ביג זול ללא גלוטנ",
+    "alias_forms": {
+      "normalized": "ביג זול ללא גלוטנ",
+      "compact": "ביגזולללאגלוטנ",
+      "tokens": [
+        "ביג",
+        "גלוטנ",
+        "זול",
+        "ללא"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:05:14.545928+00:00"
+  },
+  {
+    "id": "019d5a8770b9_5278c3ae7e9e6c48",
+    "store_id": "019d5a877061_878365be63f93fa6",
+    "alias": "chilli cheese burger",
+    "alias_forms": {
+      "normalized": "chilli cheese burger",
+      "compact": "chillicheeseburger",
+      "tokens": [
+        "burger",
+        "cheese",
+        "chilli"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:05:18.817008+00:00"
+  },
+  {
+    "id": "019d5a877a33_556477867d2b6135",
+    "store_id": "019d5a877a0e_d4e879c96fb034f3",
+    "alias": "bijou jewelry",
+    "alias_forms": {
+      "normalized": "bijou jewelry",
+      "compact": "bijoujewelry",
+      "tokens": [
+        "bijou",
+        "jewelry"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:05:21.294053+00:00"
+  },
+  {
+    "id": "019d5a88737e_0d5da98d98be3847",
+    "store_id": "019d5a88735e_4e9ae2880365e26d",
+    "alias": "אביזרי רכב נואפ",
+    "alias_forms": {
+      "normalized": "אביזרי רכב נואפ",
+      "compact": "אביזרירכבנואפ",
+      "tokens": [
+        "אביזרי",
+        "נואפ",
+        "רכב"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:06:25.117073+00:00"
+  },
+  {
+    "id": "019d5a88846b_339b80805d3318d4",
+    "store_id": "019d5a88844d_80f5d8baf0100f00",
+    "alias": "מצלמות 8200",
+    "alias_forms": {
+      "normalized": "מצלמות 8200",
+      "compact": "מצלמות8200",
+      "tokens": [
+        "8200",
+        "מצלמות"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:06:29.453713+00:00"
+  },
+  {
+    "id": "019d5a8a0a57_31a89067cced0f51",
+    "store_id": "019d5a8a0a33_6408cd2f76dafbf9",
+    "alias": "מלונ ברדיצ'בסקי 14",
+    "alias_forms": {
+      "normalized": "מלונ ברדיצ'בסקי 14",
+      "compact": "מלונברדיצבסקי14",
+      "tokens": [
+        "14",
+        "ברדיצ'בסקי",
+        "מלונ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:08:09.266559+00:00"
+  },
+  {
+    "id": "019d5a8a5957_06599ae6a1c681f4",
+    "store_id": "019d5a8a592d_04dd43d0c1e5f7d8",
+    "alias": "מאי טוי",
+    "alias_forms": {
+      "normalized": "מאי טוי",
+      "compact": "מאיטוי",
+      "tokens": [
+        "טוי",
+        "מאי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:08:29.485894+00:00"
+  },
+  {
+    "id": "019d5a8b4210_b32a6241291d8475",
+    "store_id": "019d5a8b41e1_1ce6ec9c0bc8dab3",
+    "alias": "לירנ אושרי",
+    "alias_forms": {
+      "normalized": "לירנ אושרי",
+      "compact": "לירנאושרי",
+      "tokens": [
+        "אושרי",
+        "לירנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:09:29.056189+00:00"
+  },
+  {
+    "id": "019d5a8bfd7b_92e7c4fbeee87942",
+    "store_id": "019d5a8bfd5d_77b7aec8a3e7d1b0",
+    "alias": "smart wallaby",
+    "alias_forms": {
+      "normalized": "smart wallaby",
+      "compact": "smartwallaby",
+      "tokens": [
+        "smart",
+        "wallaby"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:10:17.052062+00:00"
+  },
+  {
+    "id": "019d5a8c4fb5_e7a5ed4a4bb4181b",
+    "store_id": "019d5a8c4f92_29f54da81413e988",
+    "alias": "דאלי עוגה ולחמ",
+    "alias_forms": {
+      "normalized": "דאלי עוגה ולחמ",
+      "compact": "דאליעוגהולחמ",
+      "tokens": [
+        "דאלי",
+        "ולחמ",
+        "עוגה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:10:38.097129+00:00"
+  },
+  {
+    "id": "019d5a8c64af_513170f45e6a9793",
+    "store_id": "019d5a8c6483_b2637669c0e7237b",
+    "alias": "בוטיק מילה",
+    "alias_forms": {
+      "normalized": "בוטיק מילה",
+      "compact": "בוטיקמילה",
+      "tokens": [
+        "בוטיק",
+        "מילה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:10:43.459386+00:00"
+  },
+  {
+    "id": "019d5a8ca690_ecc20fc2e2e32b68",
+    "store_id": "019d5a8ca658_d2a6b02a7eceabbe",
+    "alias": "סנדביצ בר",
+    "alias_forms": {
+      "normalized": "סנדביצ בר",
+      "compact": "סנדביצבר",
+      "tokens": [
+        "בר",
+        "סנדביצ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:00.312728+00:00"
+  },
+  {
+    "id": "019d5a8cb947_3e70d0acc9e944fd",
+    "store_id": "019d5a8cb916_7b65cad9b581b25e",
+    "alias": "4k drinks",
+    "alias_forms": {
+      "normalized": "4k drinks",
+      "compact": "4kdrinks",
+      "tokens": [
+        "4k",
+        "drinks"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:05.110228+00:00"
+  },
+  {
+    "id": "019d5a8cc621_cc44499b9b031522",
+    "store_id": "019d5a8cc5ea_31fd3d4994f59e10",
+    "alias": "rambo sandwich bar",
+    "alias_forms": {
+      "normalized": "rambo sandwich bar",
+      "compact": "rambosandwichbar",
+      "tokens": [
+        "bar",
+        "rambo",
+        "sandwich"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:08.394959+00:00"
+  },
+  {
+    "id": "019d5a8cf25c_cbcf343b8684d6b3",
+    "store_id": "019d5a8cf23d_eefe0164147006f3",
+    "alias": "אטליז אבו חילווה",
+    "alias_forms": {
+      "normalized": "אטליז אבו חילווה",
+      "compact": "אטליזאבוחילווה",
+      "tokens": [
+        "אבו",
+        "אטליז",
+        "חילווה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:19.740810+00:00"
+  },
+  {
+    "id": "019d5a8d1606_d3550a8b8e0f9041",
+    "store_id": "019d5a8d15e9_269d39f7a24c9a9e",
+    "alias": "vap's cheli",
+    "alias_forms": {
+      "normalized": "vap's cheli",
+      "compact": "vapscheli",
+      "tokens": [
+        "cheli",
+        "vap's"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:28.873829+00:00"
+  },
+  {
+    "id": "019d5a8d4288_cb7abd6b21b0dce5",
+    "store_id": "019d5a8d4264_d1183f981a0c08ec",
+    "alias": "ספא דניאלה",
+    "alias_forms": {
+      "normalized": "ספא דניאלה",
+      "compact": "ספאדניאלה",
+      "tokens": [
+        "דניאלה",
+        "ספא"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:40.260757+00:00"
+  },
+  {
+    "id": "019d5a8d5483_f589c852f6f0508d",
+    "store_id": "019d5a8d5466_1f291772b5a33cc2",
+    "alias": "candy shop",
+    "alias_forms": {
+      "normalized": "candy shop",
+      "compact": "candyshop",
+      "tokens": [
+        "candy",
+        "shop"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:44.870275+00:00"
+  },
+  {
+    "id": "019d5a8d5e9e_470b1c581a84f33c",
+    "store_id": "019d5a8d5e73_1629f7feb0e3238f",
+    "alias": "הנקניקיה",
+    "alias_forms": {
+      "normalized": "הנקניקיה",
+      "compact": "הנקניקיה",
+      "tokens": [
+        "הנקניקיה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:47.443649+00:00"
+  },
+  {
+    "id": "019d5a8d8edd_29d7a5afb90824fa",
+    "store_id": "019d5a8d8eb0_62540bbc7547b4c5",
+    "alias": "כלי בית bilsan desing",
+    "alias_forms": {
+      "normalized": "כלי בית bilsan desing",
+      "compact": "כליביתbilsandesing",
+      "tokens": [
+        "bilsan",
+        "desing",
+        "בית",
+        "כלי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:11:59.792444+00:00"
+  },
+  {
+    "id": "019d5a8dab4b_c31524f3d3e9dd7b",
+    "store_id": "019d5a8dab2a_593d334a053ed041",
+    "alias": "sea of spa 770",
+    "alias_forms": {
+      "normalized": "sea of spa 770",
+      "compact": "seaofspa770",
+      "tokens": [
+        "770",
+        "of",
+        "sea",
+        "spa"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:12:07.081109+00:00"
+  },
+  {
+    "id": "019d5a8dc26f_99a203cefa0ddc66",
+    "store_id": "019d5a8dc22e_3c9c84d91f91179c",
+    "alias": "חד פעמי אליהו",
+    "alias_forms": {
+      "normalized": "חד פעמי אליהו",
+      "compact": "חדפעמיאליהו",
+      "tokens": [
+        "אליהו",
+        "חד",
+        "פעמי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:12:12.974108+00:00"
+  },
+  {
+    "id": "019d5a8dcf74_834935a7443a4bca",
+    "store_id": "019d5a8dcf57_e8f629ef9df6b0dc",
+    "alias": "קקטוס",
+    "alias_forms": {
+      "normalized": "קקטוס",
+      "compact": "קקטוס",
+      "tokens": [
+        "קקטוס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:12:16.343179+00:00"
+  },
+  {
+    "id": "019d5a8ddaca_ad62b133ec522cb2",
+    "store_id": "019d5a8dda98_832e93e103994dc2",
+    "alias": "la mirage cosmetics",
+    "alias_forms": {
+      "normalized": "la mirage cosmetics",
+      "compact": "lamiragecosmetics",
+      "tokens": [
+        "cosmetics",
+        "la",
+        "mirage"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:12:19.224855+00:00"
+  },
+  {
+    "id": "019d5a8e0229_4a69579a0500db0d",
+    "store_id": "019d5a8e020c_a467001502e033cd",
+    "alias": "pizza burger shareef",
+    "alias_forms": {
+      "normalized": "pizza burger shareef",
+      "compact": "pizzaburgershareef",
+      "tokens": [
+        "burger",
+        "pizza",
+        "shareef"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:12:29.324500+00:00"
+  },
+  {
+    "id": "019d5a8e3921_525469b527e691b8",
+    "store_id": "019d5a8e38fb_6d601911d19a03b8",
+    "alias": "nasoprofumo",
+    "alias_forms": {
+      "normalized": "nasoprofumo",
+      "compact": "nasoprofumo",
+      "tokens": [
+        "nasoprofumo"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:12:43.386836+00:00"
+  },
+  {
+    "id": "019d5a8ed1e8_e04153ec0918c6d0",
+    "store_id": "019d5a8ed1ba_6176f263fea33e87",
+    "alias": "fresh",
+    "alias_forms": {
+      "normalized": "fresh",
+      "compact": "fresh",
+      "tokens": [
+        "fresh"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:22.489639+00:00"
+  },
+  {
+    "id": "019d5a8ee15b_34ce1daed607a7ef",
+    "store_id": "019d5a8ee13c_fb009e4981278601",
+    "alias": "ופרצת",
+    "alias_forms": {
+      "normalized": "ופרצת",
+      "compact": "ופרצת",
+      "tokens": [
+        "ופרצת"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:26.460348+00:00"
+  },
+  {
+    "id": "019d5a8f0e28_3d8245fe17241af4",
+    "store_id": "019d5a8f0e0a_c111a67e77474aa1",
+    "alias": "הר הצעצועימ",
+    "alias_forms": {
+      "normalized": "הר הצעצועימ",
+      "compact": "הרהצעצועימ",
+      "tokens": [
+        "הצעצועימ",
+        "הר"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:37.929215+00:00"
+  },
+  {
+    "id": "019d5a8f2013_a3c98839bd687cbc",
+    "store_id": "019d5a8f1fe7_1ffb03085d69e41e",
+    "alias": "הפנצ'ריה",
+    "alias_forms": {
+      "normalized": "הפנצ'ריה",
+      "compact": "הפנצריה",
+      "tokens": [
+        "הפנצ'ריה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:42.503025+00:00"
+  },
+  {
+    "id": "019d5a8f37dd_f0ea1f69c37f4fc4",
+    "store_id": "019d5a8f37b8_12e11cfd48bb9270",
+    "alias": "home design by aya",
+    "alias_forms": {
+      "normalized": "home design by aya",
+      "compact": "homedesignbyaya",
+      "tokens": [
+        "aya",
+        "by",
+        "design",
+        "home"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:48.599407+00:00"
+  },
+  {
+    "id": "019d5a8f4398_b2fd63af0c48ba30",
+    "store_id": "019d5a8f4374_7a85f1aef93c6a3f",
+    "alias": "נעלי נויה",
+    "alias_forms": {
+      "normalized": "נעלי נויה",
+      "compact": "נעלינויה",
+      "tokens": [
+        "נויה",
+        "נעלי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:51.604726+00:00"
+  },
+  {
+    "id": "019d5a8f4e4a_07daaf650d6322b1",
+    "store_id": "019d5a8f4e2a_ca3ccbf5d72f4178",
+    "alias": "קליית בשארה",
+    "alias_forms": {
+      "normalized": "קליית בשארה",
+      "compact": "קלייתבשארה",
+      "tokens": [
+        "בשארה",
+        "קליית"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:54.345400+00:00"
+  },
+  {
+    "id": "019d5a8f5ce0_e8cd0fc1af9f0c38",
+    "store_id": "019d5a8f5ca4_870cfa759e5bd9ba",
+    "alias": "לינו מוטורס",
+    "alias_forms": {
+      "normalized": "לינו מוטורס",
+      "compact": "לינומוטורס",
+      "tokens": [
+        "לינו",
+        "מוטורס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:13:58.052869+00:00"
+  },
+  {
+    "id": "019d5a8f6677_5f7d572787f459e0",
+    "store_id": "019d5a8f665a_72d4fed27654fec6",
+    "alias": "משוויה",
+    "alias_forms": {
+      "normalized": "משוויה",
+      "compact": "משוויה",
+      "tokens": [
+        "משוויה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:00.538822+00:00"
+  },
+  {
+    "id": "019d5a8fbc1a_de01d0d2364d385a",
+    "store_id": "019d5a8fbbef_af49a40bd176bf25",
+    "alias": "מוש מוש moosh moosh",
+    "alias_forms": {
+      "normalized": "מוש מוש moosh moosh",
+      "compact": "מושמושmooshmoosh",
+      "tokens": [
+        "moosh",
+        "מוש"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:22.446114+00:00"
+  },
+  {
+    "id": "019d5a8fd8dd_ba7dbdd5c18feaf6",
+    "store_id": "019d5a8fd8ab_6a9aa17653b0a257",
+    "alias": "ירוק אצל מישאל",
+    "alias_forms": {
+      "normalized": "ירוק אצל מישאל",
+      "compact": "ירוקאצלמישאל",
+      "tokens": [
+        "אצל",
+        "ירוק",
+        "מישאל"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:29.803750+00:00"
+  },
+  {
+    "id": "019d5a900269_79b1405f0c7c2f63",
+    "store_id": "019d5a900248_2852c513da18a4b7",
+    "alias": "אקוה טרקס",
+    "alias_forms": {
+      "normalized": "אקוה טרקס",
+      "compact": "אקוהטרקס",
+      "tokens": [
+        "אקוה",
+        "טרקס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:40.455066+00:00"
+  },
+  {
+    "id": "019d5a900dab_ca2d605cd2916823",
+    "store_id": "019d5a900d8b_3c41c131cefe72a7",
+    "alias": "רהיטי דוד",
+    "alias_forms": {
+      "normalized": "רהיטי דוד",
+      "compact": "רהיטידוד",
+      "tokens": [
+        "דוד",
+        "רהיטי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:43.339233+00:00"
+  },
+  {
+    "id": "019d5a902c01_57aaad56fde4e4b1",
+    "store_id": "019d5a902be0_d178e519b96f42e8",
+    "alias": "yulia beauty line",
+    "alias_forms": {
+      "normalized": "yulia beauty line",
+      "compact": "yuliabeautyline",
+      "tokens": [
+        "beauty",
+        "line",
+        "yulia"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:51.103580+00:00"
+  },
+  {
+    "id": "019d5a903959_b4726338f0fdc6fa",
+    "store_id": "019d5a9038d5_36330dc647d5374e",
+    "alias": "פוקוס אופטיק",
+    "alias_forms": {
+      "normalized": "פוקוס אופטיק",
+      "compact": "פוקוסאופטיק",
+      "tokens": [
+        "אופטיק",
+        "פוקוס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:54.421897+00:00"
+  },
+  {
+    "id": "019d5a904539_68078bd2120160d5",
+    "store_id": "019d5a90450f_c51d3db16dee72b4",
+    "alias": "אופנת פרינס",
+    "alias_forms": {
+      "normalized": "אופנת פרינס",
+      "compact": "אופנתפרינס",
+      "tokens": [
+        "אופנת",
+        "פרינס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:14:57.551144+00:00"
+  },
+  {
+    "id": "019d5a908792_1640b09cf953c3bb",
+    "store_id": "019d5a908741_4b9a705e4d899ea8",
+    "alias": "משתלת הגנ הקסומ",
+    "alias_forms": {
+      "normalized": "משתלת הגנ הקסומ",
+      "compact": "משתלתהגנהקסומ",
+      "tokens": [
+        "הגנ",
+        "הקסומ",
+        "משתלת"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:15:14.497844+00:00"
+  },
+  {
+    "id": "019d5a90a717_653740f66d287489",
+    "store_id": "019d5a90a6f3_1264e22927128957",
+    "alias": "ספורט מדיקס",
+    "alias_forms": {
+      "normalized": "ספורט מדיקס",
+      "compact": "ספורטמדיקס",
+      "tokens": [
+        "מדיקס",
+        "ספורט"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:15:22.611464+00:00"
+  },
+  {
+    "id": "019d5a90d19a_58ecb2536f364fa7",
+    "store_id": "019d5a90d16b_e18df15f48ae9071",
+    "alias": "מיטות medex",
+    "alias_forms": {
+      "normalized": "מיטות medex",
+      "compact": "מיטותmedex",
+      "tokens": [
+        "medex",
+        "מיטות"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:15:33.483415+00:00"
+  },
+  {
+    "id": "019d5a90db7c_0619b6eba18a6c79",
+    "store_id": "019d5a90db34_c32ac553bc0d3026",
+    "alias": "אטליז אל ערב",
+    "alias_forms": {
+      "normalized": "אטליז אל ערב",
+      "compact": "אטליזאלערב",
+      "tokens": [
+        "אטליז",
+        "אל",
+        "ערב"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:15:35.988941+00:00"
+  },
+  {
+    "id": "019d5a90e5b0_9a2f78bf424d7783",
+    "store_id": "019d5a90e57d_a0f7a592a753ca67",
+    "alias": "dalal cosmetics",
+    "alias_forms": {
+      "normalized": "dalal cosmetics",
+      "compact": "dalalcosmetics",
+      "tokens": [
+        "cosmetics",
+        "dalal"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:15:38.621243+00:00"
+  },
+  {
+    "id": "019d5a912070_aaf3d1733a1ac692",
+    "store_id": "019d5a91204f_5ab6bdd65e30eecb",
+    "alias": "ענק המזונ",
+    "alias_forms": {
+      "normalized": "ענק המזונ",
+      "compact": "ענקהמזונ",
+      "tokens": [
+        "המזונ",
+        "ענק"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:15:53.678774+00:00"
+  },
+  {
+    "id": "019d5a913a9e_7678a51f9b1e73c3",
+    "store_id": "019d5a913a69_e1097f7bcb694994",
+    "alias": "לייזר סטריט",
+    "alias_forms": {
+      "normalized": "לייזר סטריט",
+      "compact": "לייזרסטריט",
+      "tokens": [
+        "לייזר",
+        "סטריט"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:16:00.360797+00:00"
+  },
+  {
+    "id": "019d5a914570_3154dc619ca11e0b",
+    "store_id": "019d5a914541_eb46aa66305b4fc2",
+    "alias": "רדיו סגל",
+    "alias_forms": {
+      "normalized": "רדיו סגל",
+      "compact": "רדיוסגל",
+      "tokens": [
+        "סגל",
+        "רדיו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:16:03.137941+00:00"
+  },
+  {
+    "id": "019d5a914fcc_81dc36983040999f",
+    "store_id": "019d5a914fa0_bcf184d4b04a4f6b",
+    "alias": "פירות וירקות רסקו",
+    "alias_forms": {
+      "normalized": "פירות וירקות רסקו",
+      "compact": "פירותוירקותרסקו",
+      "tokens": [
+        "וירקות",
+        "פירות",
+        "רסקו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:16:05.792236+00:00"
+  },
+  {
+    "id": "019d5a915b05_18c2e88024819671",
+    "store_id": "019d5a915ac7_e420a0c927f7d588",
+    "alias": "מבשלימ חוויה",
+    "alias_forms": {
+      "normalized": "מבשלימ חוויה",
+      "compact": "מבשלימחוויה",
+      "tokens": [
+        "חוויה",
+        "מבשלימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:16:08.646693+00:00"
+  },
+  {
+    "id": "019d5a9167ca_d4e2a5291e27284f",
+    "store_id": "019d5a91679a_403e01dd6f8e664b",
+    "alias": "נינג'ה וואש ישראל",
+    "alias_forms": {
+      "normalized": "נינג'ה וואש ישראל",
+      "compact": "נינגהוואשישראל",
+      "tokens": [
+        "וואש",
+        "ישראל",
+        "נינג'ה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-04T22:16:11.930144+00:00"
   }
 ]
