@@ -14,6 +14,7 @@ import queue
 import logging_loki
 from services.di_container import DIContainer
 from middleware.request_id import RequestIDMiddleware
+import time
 from config.settings import settings
 from config.structured_logging import StructuredLogger, StructuredFormatter, ContextInjectingFilter
 from routers import open_finance_controller  # Import your new controller
@@ -69,12 +70,61 @@ root_logger.handlers.clear()
 root_logger.addHandler(queue_handler)
 
 # Route Uvicorn loggers to the queue handler so they are pushed to Loki
-for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+for logger_name in ("uvicorn", "uvicorn.error"):
     log = logging.getLogger(logger_name)
     log.handlers = [queue_handler]
     log.propagate = False
 
+# Silence uvicorn.access entirely since we will log requests manually inside FastAPI with context
+logging.getLogger("uvicorn.access").disabled = True
+
 logger = logging.getLogger(__name__)
+
+class ASGIRequestLoggingMiddleware:
+    """
+    Pure ASGI middleware for logging HTTP request summaries.
+    We use pure ASGI instead of BaseHTTPMiddleware to ensure ContextVars 
+    (like request_id and username) are preserved when bubbling back up the stack.
+    """
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        start_time = time.time()
+        status_code = [500]  # Default fallback
+
+        async def custom_send(message):
+            if message["type"] == "http.response.start":
+                status_code[0] = message["status"]
+            await send(message)
+
+        try:
+            await self.app(scope, receive, custom_send)
+        finally:
+            process_time_ms = (time.time() - start_time) * 1000
+            method = scope.get("method", "")
+            path = scope.get("path", "")
+            query = scope.get("query_string", b"").decode()
+            
+            full_path = f"{path}?{query}" if query else path
+
+            req_logger = logging.getLogger("api.request")
+            req_logger.info(
+                f"HTTP {method} {full_path} responded {status_code[0]} in {process_time_ms:.2f} ms",
+                extra={
+                    "reason": "HTTP Request Summary",
+                    "extra_data": {
+                        "method": method,
+                        "path": path,
+                        "query": query,
+                        "status_code": status_code[0],
+                        "process_time_ms": round(process_time_ms, 2)
+                    }
+                }
+            )
 
 
 async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMessage):
@@ -250,6 +300,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
+app.add_middleware(ASGIRequestLoggingMiddleware) # Log summary with full context
 app.add_middleware(RequestIDMiddleware)  # Add first so request_id is available to other middleware
 app.add_middleware(LogContextMiddleware) # Inject logging context
 app.include_router(mcc_controller.router)

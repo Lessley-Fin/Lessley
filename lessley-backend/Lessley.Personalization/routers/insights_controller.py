@@ -3,7 +3,7 @@ from services.di_container import DIContainer
 from .schemas import InsightsCalcRequests
 from .responses import PaginatedResponse
 import logging
-from config.structured_logging import StructuredLogger, log_api_request, log_api_response
+from config.structured_logging import StructuredLogger, log_request_received, log_response_sent
 import time
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
     start_time = time.time()
 
     # Log API request
-    log_api_request(
+    log_request_received(
         logger,
         endpoint="/insights/categories",
         method="GET",
@@ -35,7 +35,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
         response_time_ms = (time.time() - start_time) * 1000
 
         # Log successful response
-        log_api_response(
+        log_response_sent(
             logger,
             endpoint="/insights/categories",
             status_code=200,
@@ -63,7 +63,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
     """
     start_time = time.time()
 
-    log_api_request(
+    log_request_received(
         logger,
         endpoint="/insights/top-accounts",
         method="GET",
@@ -78,7 +78,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
 
         response_time_ms = (time.time() - start_time) * 1000
 
-        log_api_response(
+        log_response_sent(
             logger,
             endpoint="/insights/top-accounts",
             status_code=200,
@@ -106,7 +106,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
     """
     start_time = time.time()
 
-    log_api_request(
+    log_request_received(
         logger,
         endpoint="/insights/top-stores",
         method="GET",
@@ -121,7 +121,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
 
         response_time_ms = (time.time() - start_time) * 1000
 
-        log_api_response(
+        log_response_sent(
             logger,
             endpoint="/insights/top-stores",
             status_code=200,

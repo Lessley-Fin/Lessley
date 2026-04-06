@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from .clients.open_finance_client import OpenFinanceClient
 from config.constants import LIMITS
 from models.transaction import Transaction
-from config.structured_logging import StructuredLogger, log_service_call, log_service_error
+from config.structured_logging import StructuredLogger, log_service_start, log_service_failure
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class OpenFinanceService:
         """
         Retrieves an access token for the given user ID.
         """
-        log_service_call(
+        log_service_start(
             logger, service_name="OpenFinanceService", method_name="get_access_token_async", params={"user_id": user_id}
         )
 
@@ -34,7 +34,7 @@ class OpenFinanceService:
 
             return token
         except Exception as e:
-            log_service_error(
+            log_service_failure(
                 logger,
                 service_name="OpenFinanceService",
                 method_name="get_access_token_async",
@@ -47,7 +47,7 @@ class OpenFinanceService:
         """
         Retrieves user accounts for the given user ID.
         """
-        log_service_call(
+        log_service_start(
             logger,
             service_name="OpenFinanceService",
             method_name="get_user_accounts_async",
@@ -68,7 +68,7 @@ class OpenFinanceService:
 
             return accounts
         except Exception as e:
-            log_service_error(
+            log_service_failure(
                 logger,
                 service_name="OpenFinanceService",
                 method_name="get_user_accounts_async",
@@ -83,7 +83,7 @@ class OpenFinanceService:
         """
         Retrieves banking data for the past {days} days.
         """
-        log_service_call(
+        log_service_start(
             logger,
             service_name="OpenFinanceService",
             method_name="get_user_transactions_by_account_async",
@@ -118,7 +118,7 @@ class OpenFinanceService:
 
             return transactions
         except Exception as e:
-            log_service_error(
+            log_service_failure(
                 logger,
                 service_name="OpenFinanceService",
                 method_name="get_user_transactions_by_account_async",
@@ -137,7 +137,7 @@ class OpenFinanceService:
 
         start_time = time.time()
 
-        log_service_call(
+        log_service_start(
             logger,
             service_name="OpenFinanceService",
             method_name="get_user_transactions_async",
@@ -190,7 +190,7 @@ class OpenFinanceService:
 
             return all_transactions
         except Exception as e:
-            log_service_error(
+            log_service_failure(
                 logger,
                 service_name="OpenFinanceService",
                 method_name="get_user_transactions_async",

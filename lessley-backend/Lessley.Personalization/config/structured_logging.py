@@ -130,10 +130,10 @@ class StructuredLogger:
 # --- Common logging helper functions using standard logging best practices ---
 
 
-def log_service_call(
+def log_service_start(
     logger: logging.Logger, service_name: str, method_name: str, params: Optional[Dict] = None
 ) -> None:
-    """Log when a service method is called."""
+    """Log the start of a service method."""
     data = {"service": service_name, "method": method_name}
     if params:
         data.update(params)
@@ -147,10 +147,10 @@ def log_service_call(
     )
 
 
-def log_service_error(
+def log_service_failure(
     logger: logging.Logger, service_name: str, method_name: str, error: Exception, context: Optional[Dict] = None
 ) -> None:
-    """Log service errors with full context."""
+    """Log when a service method fails."""
     data = {"service": service_name, "method": method_name}
     if context:
         data.update(context)
@@ -165,10 +165,10 @@ def log_service_error(
     )
 
 
-def log_api_request(
+def log_request_received(
     logger: logging.Logger, endpoint: str, method: str, user_id: Optional[str] = None, params: Optional[Dict] = None
 ) -> None:
-    """Log API request start."""
+    """Log when an incoming API request is received."""
     data = {"endpoint": endpoint, "method": method}
     if user_id:
         data["user_id"] = user_id
@@ -184,10 +184,10 @@ def log_api_request(
     )
 
 
-def log_api_response(
+def log_response_sent(
     logger: logging.Logger, endpoint: str, status_code: int, response_time_ms: float, record_count: Optional[int] = None
 ) -> None:
-    """Log API response."""
+    """Log when an API response is sent back to the client."""
     data = {
         "endpoint": endpoint,
         "status_code": status_code,

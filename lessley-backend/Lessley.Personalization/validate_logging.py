@@ -19,10 +19,10 @@ def test_imports():
         from config.structured_logging import (
             StructuredFormatter,
             StructuredLogger,
-            log_service_call,
-            log_service_error,
-            log_api_request,
-            log_api_response,
+                log_service_start,
+                log_service_failure,
+                log_request_received,
+                log_response_sent,
         )
 
         print("✓ config.structured_logging imported successfully")
