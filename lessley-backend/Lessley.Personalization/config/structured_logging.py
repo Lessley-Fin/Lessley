@@ -5,57 +5,88 @@ from datetime import datetime
 from middleware.log_context_middleware import request_id_var, username_var
 
 
+# Standard LogRecord attributes to ignore when extracting custom 'extra' fields
+_STANDARD_LOG_ATTRS = {
+    "args", "asctime", "created", "exc_info", "exc_text", "filename",
+    "funcName", "levelname", "levelno", "lineno", "module", "msecs",
+    "message", "msg", "name", "pathname", "process", "processName",
+    "relativeCreated", "stack_info", "thread", "threadName", "taskName",
+    "color_message",
+    "request_id", "username"  # Added to prevent duplication in extra
+}
+
+
+class ContextInjectingFilter(logging.Filter):
+    """
+    Injects ContextVars into the LogRecord in the calling thread.
+    This is essential when using QueueHandler so that thread-local context isn't lost.
+    """
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = request_id_var.get("N/A")
+        record.username = username_var.get("anonymous")
+        return True
 
 class StructuredFormatter(logging.Formatter):
     """
     Custom formatter that outputs structured JSON logs with production-ready fields.
-
-    Includes:
-    - timestamp: ISO format datetime
-    - app_name: Application name (personalization)
-    - service_name: The class where logging occurred
-    - message: Main log message
-    - request_id: Trace ID for request correlation
-    - username: User identifier
-    - exception: Exception details if logging an error
+    
+    It automatically captures any custom context passed via the standard Python
+    logging 'extra' parameter, promoting clean, native logging practices.
+    
+    Example:
+        logger.info("User logged in", extra={"reason": "Auth API", "user_id": 123})
     """
 
     def format(self, record: logging.LogRecord) -> str:
+        # Base structured log payload
         log_obj = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
             "app_name": "personalization",
             "service_name": record.name,
-            "username": username_var.get(),
-            "request_id": request_id_var.get(),
+            "username": getattr(record, "username", username_var.get("anonymous")),
+            "request_id": getattr(record, "request_id", request_id_var.get("N/A")),
             "message": record.getMessage(),
-            "exception": self.formatException(record.exc_info) if record.exc_info else None,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
+
+        # Inject exception trace if an error occurred
+        if record.exc_info:
+            exc_type, exc_val, _ = record.exc_info
+            
+            # Format exception into a readable structured dictionary with an array for the traceback
+            log_obj["exception"] = {
+                "type": getattr(exc_type, "__name__", str(exc_type)),
+                "message": str(exc_val),
+                "traceback": self.formatException(record.exc_info).split("\n")
+            }
+
+        # Dynamically attach any custom fields provided via `logger.info(..., extra={...})`
+        for key, value in record.__dict__.items():
+            if key not in _STANDARD_LOG_ATTRS:
+                log_obj[key] = value
 
         return json.dumps(log_obj, default=str)
 
 
 class StructuredLogger:
     """
-    Wrapper around Python logger to provide structured logging with context propagation.
-
-    Usage:
-        logger = StructuredLogger.get_logger(__name__)
-        logger.info("User login successful", username="john.doe", reason="API request")
+    Provides utilities for request context tracking and backwards-compatible logging methods.
+    
+    BEST PRACTICE:
+        Instead of calling `StructuredLogger.log_with_context(...)`, simply use the standard 
+        Python logging module:
+        
+        logger.info("Message", extra={"reason": "...", "extra_data": {...}})
     """
 
     @staticmethod
     def get_logger(name: str) -> logging.Logger:
-        """Get a logger instance with structured formatting."""
-        logger = logging.getLogger(name)
-        return logger
+        """Get a standard logger instance."""
+        return logging.getLogger(name)
 
     @staticmethod
     def set_request_context(request_id: str, username: Optional[str] = None) -> None:
-        """
-        Set request context variables for all subsequent logs in this context.
-
-        Should be called from middleware for each request.
-        """
+        """Set request context variables for all subsequent logs in this scope."""
         request_id_var.set(request_id)
         if username:
             username_var.set(username)
@@ -77,48 +108,42 @@ class StructuredLogger:
         **kwargs,
     ) -> None:
         """
-        Log with additional structured context.
-
-        Args:
-            logger: Logger instance
-            level: Log level (info, error, warning, debug)
-            message: Main log message
-            reason: Context about why this occurred
-            extra_data: Additional structured data as dictionary
-            exc_info: Exception details for error logging
-            **kwargs: Additional fields to include
+        Backwards-compatible wrapper for legacy structured logging calls.
+        
+        RECOMMENDED: Use pure python standard logging:
+        `logger.<level>(message, extra={'reason': ..., 'extra_data': ...})`
         """
         log_level = getattr(logging, level.upper(), logging.INFO)
 
-        extra = {}
+        # Consolidate additional kwargs into extra_data for cleaner grouping
+        combined_extra_data = {**(extra_data or {}), **kwargs}
+        
+        extra: Dict[str, Any] = {}
         if reason:
             extra["reason"] = reason
-        if extra_data:
-            extra["extra_data"] = extra_data
-
-        # Add any other kwargs
-        for key, value in kwargs.items():
-            if key not in ["reason", "extra_data"]:
-                if "extra_data" not in extra:
-                    extra["extra_data"] = {}
-                extra["extra_data"][key] = value
+        if combined_extra_data:
+            extra["extra_data"] = combined_extra_data
 
         logger.log(log_level, message, extra=extra, exc_info=exc_info)
 
 
-# Helper functions for common logging scenarios
+# --- Common logging helper functions using standard logging best practices ---
 
 
 def log_service_call(
     logger: logging.Logger, service_name: str, method_name: str, params: Optional[Dict] = None
 ) -> None:
     """Log when a service method is called."""
-    StructuredLogger.log_with_context(
-        logger,
-        "info",
+    data = {"service": service_name, "method": method_name}
+    if params:
+        data.update(params)
+
+    logger.info(
         f"Service method called: {method_name}",
-        reason=f"Method invocation in {service_name}",
-        extra_data={"service": service_name, "method": method_name, **(params or {})},
+        extra={
+            "reason": f"Method invocation in {service_name}",
+            "extra_data": data
+        }
     )
 
 
@@ -126,13 +151,17 @@ def log_service_error(
     logger: logging.Logger, service_name: str, method_name: str, error: Exception, context: Optional[Dict] = None
 ) -> None:
     """Log service errors with full context."""
-    StructuredLogger.log_with_context(
-        logger,
-        "error",
+    data = {"service": service_name, "method": method_name}
+    if context:
+        data.update(context)
+
+    logger.error(
         f"Error in {service_name}.{method_name}: {str(error)}",
-        reason=f"Service execution failure",
-        extra_data={"service": service_name, "method": method_name, **(context or {})},
         exc_info=error,
+        extra={
+            "reason": "Service execution failure",
+            "extra_data": data
+        }
     )
 
 
@@ -146,8 +175,12 @@ def log_api_request(
     if params:
         data.update(params)
 
-    StructuredLogger.log_with_context(
-        logger, "info", f"API request: {method} {endpoint}", reason="Request received", extra_data=data
+    logger.info(
+        f"API request: {method} {endpoint}",
+        extra={
+            "reason": "Request received",
+            "extra_data": data
+        }
     )
 
 
@@ -155,10 +188,18 @@ def log_api_response(
     logger: logging.Logger, endpoint: str, status_code: int, response_time_ms: float, record_count: Optional[int] = None
 ) -> None:
     """Log API response."""
-    data = {"endpoint": endpoint, "status_code": status_code, "response_time_ms": response_time_ms}
+    data = {
+        "endpoint": endpoint,
+        "status_code": status_code,
+        "response_time_ms": response_time_ms
+    }
     if record_count is not None:
         data["record_count"] = record_count
 
-    StructuredLogger.log_with_context(
-        logger, "info", f"API response: {status_code}", reason="Request completed", extra_data=data
+    logger.info(
+        f"API response: {status_code}",
+        extra={
+            "reason": "Request completed",
+            "extra_data": data
+        }
     )

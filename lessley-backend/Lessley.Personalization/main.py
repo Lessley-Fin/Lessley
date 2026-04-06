@@ -15,7 +15,7 @@ import logging_loki
 from services.di_container import DIContainer
 from middleware.request_id import RequestIDMiddleware
 from config.settings import settings
-from config.structured_logging import StructuredLogger, StructuredFormatter
+from config.structured_logging import StructuredLogger, StructuredFormatter, ContextInjectingFilter
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
@@ -38,9 +38,22 @@ loki_handler = logging_loki.LokiHandler(
 )
 loki_handler.setFormatter(structured_formatter)
 
+
+class LocalQueueHandler(QueueHandler):
+    """
+    Custom QueueHandler that preserves exc_info.
+    The default QueueHandler flattens the exception into the message and strips exc_info
+    to make records picklable for multiprocessing. Since we use threads, we bypass this.
+    """
+    def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
+        return record
+
 # Use QueueHandler to prevent Loki HTTP requests from blocking the async event loop
 log_queue = queue.Queue(-1)
-queue_handler = QueueHandler(log_queue)
+queue_handler = LocalQueueHandler(log_queue)
+
+# Attach ContextInjectingFilter to capture request_id before handing off to the background thread
+queue_handler.addFilter(ContextInjectingFilter())
 
 # Stream handler for console output
 stream_handler = logging.StreamHandler()

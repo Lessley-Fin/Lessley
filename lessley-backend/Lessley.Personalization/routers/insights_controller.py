@@ -54,7 +54,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
             extra_data={"user_id": req.user_id, "endpoint": "/insights/categories"},
         )
         raise
-
+# logger("info", "Received request for top accounts calculation", extra={"user_id": req.user_id, "time_filter": req.time_filter, "days": req.days})
 
 @router.get("/top-accounts")
 async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Query()):
