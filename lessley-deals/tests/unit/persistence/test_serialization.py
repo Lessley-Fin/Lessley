@@ -122,8 +122,29 @@ class TestReviewItemRoundTrip:
         assert restored.input_name == original.input_name
         assert restored.status == original.status
         assert restored.input_name_forms.compact == original.input_name_forms.compact
+        assert restored.raw_input_name == original.raw_input_name
         assert restored.verdict.decision == original.verdict.decision
         assert restored.verdict.record_id == original.verdict.record_id
+
+    def test_round_trip_with_raw_input_name(self) -> None:
+        original = make_review_item(
+            raw_id="r1",
+            input_name="חנ",
+            raw_input_name="חן",
+        )
+        d = to_dict(original)
+        restored = review_item_from_dict(d)
+
+        assert restored.raw_input_name == "חן"
+
+    def test_backwards_compatible_without_raw_input_name(self) -> None:
+        original = make_review_item(raw_id="r1", input_name="test store")
+        d = to_dict(original)
+        d.pop("raw_input_name", None)
+
+        restored = review_item_from_dict(d)
+
+        assert restored.raw_input_name is None
 
 
 class TestToDict:

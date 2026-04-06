@@ -227,6 +227,7 @@ def review_item_from_dict(d: dict[str, Any]) -> ReviewItem:
         raw_id=d["raw_id"],
         input_name=d["input_name"],
         input_name_forms=_parse_name_forms(d["input_name_forms"]),
+        raw_input_name=d.get("raw_input_name"),
         verdict=_parse_match_verdict(d["verdict"]),
         created_at=_parse_datetime(d["created_at"]),  # type: ignore[arg-type]
         status=ReviewStatus(d["status"]),

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from lessley_deals.domain.enums import AliasSource
 from lessley_deals.domain.models import CanonicalStore, StoreAlias
+from lessley_deals.matching.low_information import is_low_information_alias
 
 
 def _synthetic_alias(store: CanonicalStore) -> StoreAlias:
@@ -33,6 +34,8 @@ class AliasIndex:
         # exact_lookup: compact_form -> (store_id, alias_text)
         self._exact: dict[str, tuple[str, str]] = {}
         for alias in all_aliases:
+            if is_low_information_alias(alias.alias_forms):
+                continue
             compact = alias.alias_forms.compact
             if compact not in self._exact:
                 self._exact[compact] = (alias.store_id, alias.alias)
@@ -40,6 +43,8 @@ class AliasIndex:
         # all_entries: list of (alias, store) for linear scans
         self._all_entries: list[tuple[StoreAlias, CanonicalStore]] = []
         for alias in all_aliases:
+            if is_low_information_alias(alias.alias_forms):
+                continue
             store = self._store_by_id.get(alias.store_id)
             if store is not None:
                 self._all_entries.append((alias, store))

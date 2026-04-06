@@ -116,6 +116,44 @@ class TestApprove:
         with pytest.raises(ValueError, match="no candidates"):
             actions.approve(item, reviewed_by="tester")
 
+    def test_approve_prefers_raw_input_name_for_alias(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+
+        store = make_store(name='מרפאת שיניים ד"ר עלימי')
+        store_repo.save(store)
+
+        best = MatchCandidate(
+            store_id=store.id,
+            store_name=store.name,
+            confidence=0.85,
+            stage="exact_alias",
+        )
+        verdict = MatchVerdict(
+            record_id="raw_001",
+            input_name="מרפאת שיניים",
+            decision=MatchDecision.REVIEW,
+            candidates=(best,),
+            explanation=Explanation(
+                stages_run=("exact_alias",),
+                reason="review needed",
+            ),
+            best=best,
+        )
+        item = make_review_item(
+            raw_id="raw_001",
+            input_name="מרפאת שיניים",
+            raw_input_name='מרפאת שיניים ד"ר עלימי',
+            verdict=verdict,
+        )
+        review_repo.save(item)
+
+        actions.approve(item, reviewed_by="tester")
+
+        aliases = alias_repo.get_all()
+        assert len(aliases) == 1
+        assert aliases[0].alias == 'מרפאת שיניים ד"ר עלימי'
+
 
 class TestCreateNew:
     def test_create_new_creates_store_alias_and_deal(self, tmp_path: Path) -> None:
@@ -143,6 +181,23 @@ class TestCreateNew:
         deals = deal_repo.get_all()
         assert len(deals) == 1
         assert deals[0].store_id == stores[0].id
+
+    def test_create_new_prefers_raw_input_name_for_alias(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+
+        item = make_review_item(
+            raw_id="raw_002",
+            input_name="מרפאת שיניים",
+            raw_input_name='מרפאת שיניים ד"ר עלימי',
+        )
+        review_repo.save(item)
+
+        actions.create_new(item, store_name='מרפאת שיניים ד"ר עלימי', reviewed_by="tester")
+
+        aliases = alias_repo.get_all()
+        assert len(aliases) == 1
+        assert aliases[0].alias == 'מרפאת שיניים ד"ר עלימי'
 
 
 class TestDiscard:

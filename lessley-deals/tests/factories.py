@@ -123,6 +123,7 @@ def make_review_item(raw_id: str | None = None, **overrides: Any) -> ReviewItem:
         raw_id=rid,
         input_name=input_name,
         input_name_forms=make_name_forms(input_name),
+        raw_input_name=None,
         verdict=verdict,
         created_at=_now(),
         status=ReviewStatus.PENDING,

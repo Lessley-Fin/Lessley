@@ -22,8 +22,9 @@ class ReviewDisplay:
     def show_item(self, item: ReviewItem, index: int, total: int) -> None:
         """Display a review item with its candidates."""
         header = f"Review [{index}/{total}]"
+        preferred_name = item.raw_input_name or item.input_name
         lines: list[str] = [
-            f"[bold]Input name:[/bold]      {get_display(item.input_name)}",
+            f"[bold]Input name:[/bold]      {get_display(preferred_name)}",
             f"[bold]Normalized:[/bold]       {get_display(item.input_name_forms.normalized)}",
             f"[bold]Raw ID:[/bold]           {item.raw_id}",
             f"[bold]Status:[/bold]           {item.status.value}",

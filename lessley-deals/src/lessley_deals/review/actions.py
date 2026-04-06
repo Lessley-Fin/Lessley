@@ -81,12 +81,14 @@ class ReviewActions:
             note=note,
         )
 
+        alias_text = item.raw_input_name or item.input_name
+
         # Create alias for the input name -> matched store
         alias = StoreAlias(
             id=generate_id(),
             store_id=store_id,
-            alias=item.input_name,
-            alias_forms=build_name_forms(item.input_name),
+            alias=alias_text,
+            alias_forms=build_name_forms(alias_text),
             source=AliasSource.REVIEW,
             created_at=now,
         )
@@ -131,11 +133,13 @@ class ReviewActions:
             note=note,
         )
 
+        alias_text = item.raw_input_name or item.input_name
+
         alias = StoreAlias(
             id=generate_id(),
             store_id=store_id,
-            alias=item.input_name,
-            alias_forms=build_name_forms(item.input_name),
+            alias=alias_text,
+            alias_forms=build_name_forms(alias_text),
             source=AliasSource.REVIEW,
             created_at=now,
         )
@@ -178,12 +182,14 @@ class ReviewActions:
         )
         self._store_repo.save(store)
 
+        alias_text = item.raw_input_name or item.input_name
+
         # Create alias for the input name -> new store
         alias = StoreAlias(
             id=generate_id(),
             store_id=store.id,
-            alias=item.input_name,
-            alias_forms=build_name_forms(item.input_name),
+            alias=alias_text,
+            alias_forms=build_name_forms(alias_text),
             source=AliasSource.REVIEW,
             created_at=now,
         )

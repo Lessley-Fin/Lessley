@@ -27,6 +27,14 @@ def run_review_session(
     actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
     display = ReviewDisplay()
 
+    def _hydrate_raw_input_name(item):
+        if item.raw_input_name or raw_deal_repo is None:
+            return item
+        raw_record = raw_deal_repo.get_by_id(item.raw_id)
+        if raw_record is not None:
+            item.raw_input_name = raw_record.store_name
+        return item
+
     def _process_pending() -> bool:
         """Process all pending items in the current batch.
 
@@ -49,6 +57,7 @@ def run_review_session(
 
             i += 1
             item = pending[0]
+            item = _hydrate_raw_input_name(item)
             total = len(pending)
             display._console.print(
                 f"\n[bold]Review session: {total} items remaining[/bold]\n"
@@ -122,9 +131,10 @@ def run_review_session(
                     break
 
                 elif choice == "c":
+                    default_name = item.raw_input_name or item.input_name
                     name = input("New store name (Enter for input name): ").strip()
                     if not name:
-                        name = item.input_name
+                        name = default_name
                     actions.create_new(item, store_name=name, reviewed_by="cli_user")
                     display.success(f"Created new store: '{name}'")
                     processed += 1

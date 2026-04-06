@@ -195,6 +195,7 @@ class ReviewItem:
     input_name_forms: NameForms
     verdict: MatchVerdict
     created_at: datetime
+    raw_input_name: str | None = None
     status: ReviewStatus = ReviewStatus.PENDING
     decision: ReviewDecision | None = None
     reviewed_at: datetime | None = None
