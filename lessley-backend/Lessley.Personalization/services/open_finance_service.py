@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from .clients.open_finance_client import OpenFinanceClient
 from config.constants import LIMITS
 from models.transaction import Transaction
-from config.structured_logging import StructuredLogger, log_service_start, log_service_failure
 
 logger = logging.getLogger(__name__)
 
@@ -17,29 +16,31 @@ class OpenFinanceService:
         """
         Retrieves an access token for the given user ID.
         """
-        log_service_start(
-            logger, service_name="OpenFinanceService", method_name="get_access_token_async", params={"user_id": user_id}
+        logger.info(
+            "Service method called",
+            extra={"reason": "Method invocation", "extra_data": {"user_id": user_id}},
         )
 
         try:
             token = await self.client.get_access_token(user_id)
 
-            StructuredLogger.log_with_context(
-                logger,
-                "debug",
+            logger.debug(
                 "Access token retrieved successfully",
-                reason="User authentication with OpenFinance",
-                extra_data={"user_id": user_id},
+                extra={
+                    "reason": "User authentication with OpenFinance",
+                    "extra_data": {"user_id": user_id},
+                },
             )
 
             return token
         except Exception as e:
-            log_service_failure(
-                logger,
-                service_name="OpenFinanceService",
-                method_name="get_access_token_async",
-                error=e,
-                context={"user_id": user_id},
+            logger.error(
+                f"Error in get_access_token_async: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {"user_id": user_id},
+                },
             )
             raise
 
@@ -47,33 +48,32 @@ class OpenFinanceService:
         """
         Retrieves user accounts for the given user ID.
         """
-        log_service_start(
-            logger,
-            service_name="OpenFinanceService",
-            method_name="get_user_accounts_async",
-            params={"user_id": user_id},
+        logger.info(
+            "Service method called",
+            extra={"reason": "Method invocation", "extra_data": {"user_id": user_id}},
         )
 
         try:
             token = await self.client.get_access_token(user_id)
             accounts = await self.client.get_accounts(token)
 
-            StructuredLogger.log_with_context(
-                logger,
-                "info",
+            logger.info(
                 "User accounts retrieved successfully",
-                reason="Data fetching from OpenFinance API",
-                extra_data={"user_id": user_id, "account_count": len(accounts)},
+                extra={
+                    "reason": "Data fetching from OpenFinance API",
+                    "extra_data": {"user_id": user_id, "account_count": len(accounts)},
+                },
             )
 
             return accounts
         except Exception as e:
-            log_service_failure(
-                logger,
-                service_name="OpenFinanceService",
-                method_name="get_user_accounts_async",
-                error=e,
-                context={"user_id": user_id},
+            logger.error(
+                f"Error in get_user_accounts_async: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {"user_id": user_id},
+                },
             )
             raise
 
@@ -83,11 +83,17 @@ class OpenFinanceService:
         """
         Retrieves banking data for the past {days} days.
         """
-        log_service_start(
-            logger,
-            service_name="OpenFinanceService",
-            method_name="get_user_transactions_by_account_async",
-            params={"user_id": user_id, "account_id": account_id, "days": days},
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {
+                    "user_id": user_id,
+                    "account_id": account_id,
+                    "days": days,
+                    "is_time_filter": is_time_filter,
+                },
+            },
         )
 
         try:
@@ -103,27 +109,28 @@ class OpenFinanceService:
 
             transactions = await self.client.get_transactions(token, params)
 
-            StructuredLogger.log_with_context(
-                logger,
-                "info",
+            logger.info(
                 "Transactions retrieved for account",
-                reason="API data fetching",
-                extra_data={
-                    "user_id": user_id,
-                    "account_id": account_id,
-                    "transaction_count": len(transactions),
-                    "time_filter_days": days if is_time_filter else None,
+                extra={
+                    "reason": "API data fetching",
+                    "extra_data": {
+                        "user_id": user_id,
+                        "account_id": account_id,
+                        "transaction_count": len(transactions),
+                        "time_filter_days": days if is_time_filter else None,
+                    },
                 },
             )
 
             return transactions
         except Exception as e:
-            log_service_failure(
-                logger,
-                service_name="OpenFinanceService",
-                method_name="get_user_transactions_by_account_async",
-                error=e,
-                context={"user_id": user_id, "account_id": account_id},
+            logger.error(
+                f"Error in get_user_transactions_by_account_async: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {"user_id": user_id, "account_id": account_id},
+                },
             )
             raise
 
@@ -136,12 +143,12 @@ class OpenFinanceService:
         import time
 
         start_time = time.time()
-
-        log_service_start(
-            logger,
-            service_name="OpenFinanceService",
-            method_name="get_user_transactions_async",
-            params={"user_id": user_id, "days": days},
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "days": days, "is_time_filter": is_time_filter},
+            },
         )
 
         try:
@@ -151,12 +158,12 @@ class OpenFinanceService:
             # 2. Get Accounts
             accounts = await self.client.get_accounts(token)
 
-            StructuredLogger.log_with_context(
-                logger,
-                "debug",
+            logger.info(
                 "User accounts fetched",
-                reason="Preparation for transaction retrieval",
-                extra_data={"user_id": user_id, "account_count": len(accounts)},
+                extra={
+                    "reason": "Preparation for transaction retrieval",
+                    "extra_data": {"user_id": user_id, "account_count": len(accounts)},
+                },
             )
 
             # 3. Get Transactions for each account in parallel
@@ -174,27 +181,31 @@ class OpenFinanceService:
 
             elapsed_time_ms = (time.time() - start_time) * 1000
 
-            StructuredLogger.log_with_context(
-                logger,
-                "info",
+            logger.info(
                 "All user transactions retrieved successfully",
-                reason="Data aggregation from all accounts complete",
-                extra_data={
-                    "user_id": user_id,
-                    "account_count": len(accounts),
-                    "total_transaction_count": len(all_transactions),
-                    "elapsed_time_ms": elapsed_time_ms,
-                    "time_filter_days": days if is_time_filter else None,
+                extra={
+                    "reason": "Data aggregation from all accounts complete",
+                    "extra_data": {
+                        "user_id": user_id,
+                        "account_count": len(accounts),
+                        "total_transaction_count": len(all_transactions),
+                        "elapsed_time_ms": elapsed_time_ms,
+                        "time_filter_days": days if is_time_filter else None,
+                    },
                 },
             )
 
             return all_transactions
         except Exception as e:
-            log_service_failure(
-                logger,
-                service_name="OpenFinanceService",
-                method_name="get_user_transactions_async",
-                error=e,
-                context={"user_id": user_id, "account_count": len(accounts) if "accounts" in locals() else None},
+            logger.error(
+                f"Error in get_user_transactions_async: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {
+                        "user_id": user_id,
+                        "account_count": len(accounts) if "accounts" in locals() else None,
+                    },
+                },
             )
             raise

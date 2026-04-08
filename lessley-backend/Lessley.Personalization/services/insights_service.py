@@ -3,7 +3,6 @@ from services.transaction_stash_service import TransactionStashService
 from services.open_finance_service import OpenFinanceService
 from services.processing_core_service import ProcessingCoreService
 from config.constants import LIMITS
-from config.structured_logging import log_service_start, log_service_failure
 
 
 logger = logging.getLogger(__name__)
@@ -26,11 +25,12 @@ class InsightsService:
         """
         Calculates user categories based on transactions.
         """
-        log_service_start(
-            logger,
-            service_name="InsightsService",
-            method_name="calculate_user_categories_async",
-            params={"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
         )
 
         try:
@@ -40,18 +40,20 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
             categories = self.processing_core_service.get_top_spending_categories(transactions)
-            
+
             logger.info(
                 "User categories calculated successfully",
                 extra={
                     "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "category_count": len(categories)}
-                }
+                    "extra_data": {"user_id": user_id, "category_count": len(categories)},
+                },
             )
             return categories
         except Exception as e:
-            log_service_failure(
-                logger, service_name="InsightsService", method_name="calculate_user_categories_async", error=e, context={"user_id": user_id}
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
             )
             raise
 
@@ -61,11 +63,12 @@ class InsightsService:
         """
         Calculates top accounts based on transactions.
         """
-        log_service_start(
-            logger,
-            service_name="InsightsService",
-            method_name="calculate_top_accounts_async",
-            params={"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
         )
 
         try:
@@ -92,13 +95,15 @@ class InsightsService:
                 "Top accounts calculated successfully",
                 extra={
                     "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "account_count": len(accounts)}
-                }
+                    "extra_data": {"user_id": user_id, "account_count": len(accounts)},
+                },
             )
             return accounts
         except Exception as e:
-            log_service_failure(
-                logger, service_name="InsightsService", method_name="calculate_top_accounts_async", error=e, context={"user_id": user_id}
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
             )
             raise
 
@@ -108,11 +113,12 @@ class InsightsService:
         """
         Calculates top stores based on transactions.
         """
-        log_service_start(
-            logger,
-            service_name="InsightsService",
-            method_name="calculate_top_stores_async",
-            params={"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
         )
 
         try:
@@ -122,17 +128,19 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
             stores = self.processing_core_service.get_top_spending_stores(transactions)
-            
+
             logger.info(
                 "Top stores calculated successfully",
                 extra={
                     "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "store_count": len(stores)}
-                }
+                    "extra_data": {"user_id": user_id, "store_count": len(stores)},
+                },
             )
             return stores
         except Exception as e:
-            log_service_failure(
-                logger, service_name="InsightsService", method_name="calculate_top_stores_async", error=e, context={"user_id": user_id}
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
             )
             raise

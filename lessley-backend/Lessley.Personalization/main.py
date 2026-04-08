@@ -16,7 +16,7 @@ from services.di_container import DIContainer
 from middleware.request_id import RequestIDMiddleware
 import time
 from config.settings import settings
-from config.structured_logging import StructuredLogger, StructuredFormatter, ContextInjectingFilter
+from config.structured_logging import StructuredFormatter, ContextInjectingFilter
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
@@ -140,12 +140,12 @@ async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMes
         request_id_var.set(str(uuid.uuid4()))
         username_var.set(user_id or "anonymous")
 
-        StructuredLogger.log_with_context(
-            logger,
-            "info",
-            f"Calculation request received",
-            reason="RabbitMQ message processed",
-            extra_data={"user_id": user_id, "message_type": "calc_history"},
+        logger.info(
+            "Calculation request received",
+            extra={
+                "reason": "RabbitMQ message processed",
+                "extra_data": {"user_id": user_id, "message_type": "calc_history"},
+            },
         )
         # TODO: 1. Fetch Open Finance Data for this user
         # TODO: 2. Run Gap Analysis & Logic Check via Optimizer
@@ -209,13 +209,13 @@ app = FastAPI(
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     endpoint_logger = logging.getLogger(__name__)
-    StructuredLogger.log_with_context(
-        endpoint_logger,
-        "warning",
+    endpoint_logger.warning(
         "Rate limit exceeded",
-        reason="Too many requests from client",
-        extra_data={"detail": exc.detail},
         exc_info=exc,
+        extra={
+            "reason": "Too many requests from client",
+            "extra_data": {"detail": exc.detail},
+        },
     )
     return JSONResponse(
         status_code=429,
@@ -226,13 +226,15 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     endpoint_logger = logging.getLogger(__name__)
-    StructuredLogger.log_with_context(
-        endpoint_logger,
-        "warning" if exc.status_code < 500 else "error",
+    level = "warning" if exc.status_code < 500 else "error"
+    log_level_method = getattr(endpoint_logger, level)
+    log_level_method(
         f"HTTP Exception {exc.status_code}: {exc.detail}",
-        reason="HTTP Error",
-        extra_data={"error_type": "HTTPException", "status_code": exc.status_code},
         exc_info=exc,
+        extra={
+            "reason": "HTTP Error",
+            "extra_data": {"error_type": "HTTPException", "status_code": exc.status_code},
+        },
     )
     return JSONResponse(
         status_code=exc.status_code,
@@ -243,13 +245,13 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
     endpoint_logger = logging.getLogger(__name__)
-    StructuredLogger.log_with_context(
-        endpoint_logger,
-        "warning",
+    endpoint_logger.warning(
         f"Validation error: {str(exc)}",
-        reason="Invalid request payload or parameters",
-        extra_data={"error_type": "ValueError"},
         exc_info=exc,
+        extra={
+            "reason": "Invalid request payload or parameters",
+            "extra_data": {"error_type": "ValueError"},
+        },
     )
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -261,13 +263,13 @@ async def value_error_handler(request: Request, exc: ValueError):
 @app.exception_handler(ConnectionError)
 async def connection_error_handler(request: Request, exc: ConnectionError):
     endpoint_logger = logging.getLogger(__name__)
-    StructuredLogger.log_with_context(
-        endpoint_logger,
-        "error",
+    endpoint_logger.error(
         f"Connection error: {str(exc)}",
-        reason="Failed to connect to external service",
-        extra_data={"error_type": "ConnectionError"},
         exc_info=exc,
+        extra={
+            "reason": "Failed to connect to external service",
+            "extra_data": {"error_type": "ConnectionError"},
+        },
     )
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -282,13 +284,13 @@ async def connection_error_handler(request: Request, exc: ConnectionError):
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     endpoint_logger = logging.getLogger(__name__)
-    StructuredLogger.log_with_context(
-        endpoint_logger,
-        "error",
+    endpoint_logger.error(
         f"Unexpected error: {str(exc)}",
-        reason="Unhandled exception during request processing",
-        extra_data={"error_type": type(exc).__name__},
         exc_info=exc,
+        extra={
+            "reason": "Unhandled exception during request processing",
+            "extra_data": {"error_type": type(exc).__name__},
+        },
     )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

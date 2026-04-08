@@ -1,4 +1,3 @@
-from logging.config import dictConfig
 from config.structured_logging import StructuredFormatter
 import logging
 import sys

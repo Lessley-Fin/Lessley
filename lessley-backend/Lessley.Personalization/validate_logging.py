@@ -19,10 +19,7 @@ def test_imports():
         from config.structured_logging import (
             StructuredFormatter,
             StructuredLogger,
-                log_service_start,
-                log_service_failure,
-                log_request_received,
-                log_response_sent,
+            ContextInjectingFilter,
         )
 
         print("✓ config.structured_logging imported successfully")
@@ -65,9 +62,10 @@ def test_logging():
         # Test basic log
         logger.info("Test log message")
 
-        # Test with context
-        StructuredLogger.log_with_context(
-            logger, "info", "Test with context", reason="Testing logging system", extra_data={"test": True}
+        # Test with context using standard logging
+        logger.info(
+            "Test with context",
+            extra={"reason": "Testing logging system", "extra_data": {"test": True}},
         )
 
         print("✓ Logging functionality works correctly")
