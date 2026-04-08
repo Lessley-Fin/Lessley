@@ -66,7 +66,11 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
             exc_info=e,
             extra={
                 "reason": "Service call failed",
-                "extra_data": {"user_id": req.user_id, "endpoint": "/insights/categories"},
+                "extra_data": {
+                    "user_id": req.user_id,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
             },
         )
         raise
@@ -129,7 +133,11 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
             exc_info=e,
             extra={
                 "reason": "Service call failed",
-                "extra_data": {"user_id": req.user_id, "endpoint": "/insights/top-accounts"},
+                "extra_data": {
+                    "user_id": req.user_id,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
             },
         )
         raise
@@ -189,7 +197,11 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
             exc_info=e,
             extra={
                 "reason": "Service call failed",
-                "extra_data": {"user_id": req.user_id, "endpoint": "/insights/top-stores"},
+                "extra_data": {
+                    "user_id": req.user_id,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
             },
         )
         raise
