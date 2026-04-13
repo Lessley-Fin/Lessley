@@ -93,26 +93,3 @@ class StructuredFormatter(logging.Formatter):
                 log_obj[key] = value
 
         return json.dumps(log_obj, default=str)
-
-
-class StructuredLogger:
-    """
-    Provides utilities for request context tracking.
-
-    Use the standard Python logging module with the `extra` parameter:
-
-        logger.info("Message", extra={"reason": "...", "extra_data": {...}})
-    """
-
-    @staticmethod
-    def set_request_context(request_id: str, username: Optional[str] = None) -> None:
-        """Set request context variables for all subsequent logs in this scope."""
-        request_id_var.set(request_id)
-        if username:
-            username_var.set(username)
-
-    @staticmethod
-    def clear_request_context() -> None:
-        """Clear request context variables."""
-        request_id_var.set("N/A")
-        username_var.set("anonymous")
