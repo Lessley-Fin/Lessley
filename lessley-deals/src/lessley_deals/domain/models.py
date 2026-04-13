@@ -159,6 +159,7 @@ class Deal:
     redeem_channels: list[str] = field(default_factory=list)
     coupon_code: str | None = None
     club_id: str | None = None
+    group_member_stores: list[str] | None = None
 
     @property
     def fingerprint(self) -> str:

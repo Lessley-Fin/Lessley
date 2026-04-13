@@ -11,6 +11,7 @@ import json
 import logging
 import re
 from pathlib import Path
+from typing import Any, cast
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -24,10 +25,41 @@ _DEFAULT_GROUPS_PATH = (
 # Brand name cleaning
 # ---------------------------------------------------------------------------
 
+def clean_store_name(name: str) -> str:
+    """Remove HOT gift-card noise from a resolved store name.
+
+    Strips the gift-card suffix that HOT appends to group brand names and
+    removes any leading ``תו קניה`` prefix that may have survived
+    prefix-stripping.  Applied **after** :func:`classify_group_deal` so the
+    group config lookup still works on the original brand name.
+
+    The deal title is intentionally left unchanged — these words stay in the
+    title / deal description.
+
+    Examples::
+
+        "קבוצת גולף - תווים"  ->  "קבוצת גולף"
+        "קבוצת בריל - תווים"  ->  "קבוצת בריל"
+        "תווים - פוד אפיל"    ->  "פוד אפיל"
+        "sabon"               ->  "sabon"
+        "תו קניה sabon"       ->  "sabon"
+    """
+    name = str(name or "").strip()
+    if not name:
+        return ""
+    # Strip "- תווים" suffix  (e.g. "קבוצת גולף - תווים" → "קבוצת גולף")
+    name = re.sub(r"\s*-\s*תווים\s*$", "", name).strip(" -_")
+    # Strip "תווים -" prefix  (e.g. "תווים - פוד אפיל" → "פוד אפיל")
+    name = re.sub(r"^תווים\s*-\s*", "", name).strip()
+    # Strip leading "תו קניה" prefix (safety net — normally already stripped)
+    name = re.sub(r"^תו\s*קניה\s*", "", name).strip()
+    return name
+
+
 def clean_brand(raw_brand: str) -> str:
     """Strip HOT-internal noise from a brand name.
 
-    HOT appends numeric suffixes (``_2``, ``_3``, …) to disambiguate
+    HOT appends numeric suffixes (``_2``, ``_3``, ...) to disambiguate
     duplicate entries internally.  Remove them so downstream matching
     sees a clean name.
 
@@ -167,35 +199,48 @@ def load_hot_store_groups(
     return result
 
 
-def resolve_group_store(
+def classify_group_deal(
     brand: str,
     title: str,
     groups: dict[str, dict] | None = None,
-) -> str:
-    """Resolve a HOT group brand name to the specific sub-store name.
+) -> tuple[str, bool, list[str]]:
+    """Classify a HOT group brand deal as store-specific or group-wide.
 
-    If ``brand`` matches a known group in *groups* (case-insensitive), the
-    function strips the configured ``title_prefix`` from *title* (also
-    case-insensitive) and returns the remainder as the real store name.
+    When ``brand`` matches a known store-group (case-insensitive), the
+    function strips each configured prefix from *title* (trying each in
+    order) to derive the candidate sub-store name.  It then checks whether
+    that candidate appears in the group's ``stores`` whitelist:
 
-    Returns the original *brand* unchanged when:
-    - *brand* is not a known group, or
-    - the ``title_prefix`` is not found in *title*, or
-    - the resulting store name would be empty.
+    - **Store-specific deal** — the resolved name matches a known sub-store.
+      The real sub-store name is returned and ``is_group_wide`` is ``False``.
+    - **Group-wide gift card** — the resolved name does *not* match any
+      sub-store (e.g. the gift card covers the whole group).
+      The original group brand is returned, ``is_group_wide`` is ``True``,
+      and ``group_member_stores`` lists every member store.
+
+    When ``brand`` is *not* a known group the deal is returned unchanged
+    as a non-group deal.
 
     Args:
         brand: Cleaned brand name from the HOT API (``item_brand`` field).
         title: Deal title string from the HOT API.
-        groups: Override the groups dict (mainly for testing). When ``None``
-            the bundled config is loaded via :func:`load_hot_store_groups`.
+        groups: Override the groups dict (mainly for testing).  When
+            ``None`` the bundled config is loaded via
+            :func:`load_hot_store_groups`.
+
+    Returns:
+        ``(resolved_store_name, is_group_wide, group_member_stores)``
 
     Examples::
 
-        resolve_group_store("קבוצת פוקס", "תו קניה FOOT LOCKER")
-        # -> "FOOT LOCKER"
+        classify_group_deal("קבוצת גולף - תווים", "תו קניה sabon")
+        # -> ("sabon", False, [])
 
-        resolve_group_store("AHAVA", "הנחה בAHAVA")  # unknown group
-        # -> "AHAVA"
+        classify_group_deal("קבוצת גולף - תווים", "תו קניה קבוצת גולף - תווים")
+        # -> ("קבוצת גולף - תווים", True, ["kitan", "sabon", ...])
+
+        classify_group_deal("AHAVA", "הנחה בAHAVA")  # not a group
+        # -> ("AHAVA", False, [])
     """
     if groups is None:
         groups = load_hot_store_groups()
@@ -203,31 +248,147 @@ def resolve_group_store(
     # Case-insensitive group lookup
     brand_lower = brand.strip().lower()
     group_cfg: dict | None = None
+    matched_key: str = brand
     for key, cfg in groups.items():
         if key.strip().lower() == brand_lower:
             group_cfg = cfg
+            matched_key = key
             break
 
     if group_cfg is None:
-        return brand
+        # Not a group brand — return as-is
+        return brand, False, []
 
-    prefix: str = group_cfg.get("title_prefix", "").strip()
-    if not prefix:
-        return brand
+    cfg_found: dict[str, Any] = cast("dict[str, Any]", group_cfg)
 
-    # Strip the prefix (case-insensitive) from the title
-    pattern = re.compile(r"^\s*" + re.escape(prefix) + r"\s*", re.IGNORECASE)
-    store_name = pattern.sub("", title.strip()).strip()
+    # Support both legacy title_prefix (str) and title_prefixes (list[str]).
+    raw_prefixes = cfg_found.get("title_prefixes") or cfg_found.get("title_prefix")
+    prefixes: list[str]
+    if isinstance(raw_prefixes, list):
+        prefixes = [str(p).strip() for p in raw_prefixes if p]
+    elif raw_prefixes:
+        prefixes = [str(raw_prefixes).strip()]
+    else:
+        prefixes = []
 
-    if not store_name:
+    raw_stores = cfg_found.get("stores")
+    member_stores: list[str] = list(raw_stores) if isinstance(raw_stores, list) else []
+
+    if not prefixes:
+        # Group with no prefix config — treat as group-wide
+        return brand, True, member_stores
+
+    # Try each prefix in order; use the first one that matches the start of the title.
+    title_stripped = title.strip()
+    candidate: str = ""
+    matched_prefix: bool = False
+
+    for prefix in prefixes:
+        if not prefix:
+            continue
+        pattern = re.compile(r"^\s*" + re.escape(prefix) + r"\s*", re.IGNORECASE)
+        result, n_subs = pattern.subn("", title_stripped)
+        if n_subs > 0:
+            candidate = result.strip()
+            matched_prefix = True
+            logger.debug(
+                "classify_group_deal: prefix %r matched title %r -> candidate %r",
+                prefix, title, candidate,
+            )
+            break
+
+    if not matched_prefix:
+        # No prefix matched the start of the title — check if any known
+        # member store name appears in the title before falling back to group-wide.
+        title_lower = title.strip().lower()
+        for store in member_stores:
+            store_l = store.strip().lower()
+            if store_l in title_lower:
+                logger.debug(
+                    "classify_group_deal: no prefix but title %r contains member store %r",
+                    title, store,
+                )
+                return store, False, []
         logger.debug(
-            "resolve_group_store: prefix '%s' not found in title '%s'",
-            prefix, title,
+            "classify_group_deal: no prefix matched title %r (tried: %s) — group-wide",
+            title, prefixes,
         )
-        return brand
+        return matched_key, True, member_stores
+
+    if not candidate:
+        # Prefix found but nothing remained after stripping — group-wide
+        logger.debug(
+            "classify_group_deal: prefix consumed entire title %r — group-wide",
+            title,
+        )
+        return matched_key, True, member_stores
+
+    # Check if the candidate matches a known sub-store (case-insensitive).
+    # Also accepts a prefix match for cases where the title has trailing content
+    # after the store name (e.g. "תו קניה sabon 200 ₪" → candidate "sabon 200 ₪"
+    # should still resolve to canonical "sabon").
+    candidate_lower = candidate.lower()
+    for store in member_stores:
+        store_l = store.strip().lower()
+        if candidate_lower == store_l or store_l in candidate_lower:
+            logger.debug(
+                "classify_group_deal: %r -> store-specific %r (from title: %r)",
+                brand, store, title,
+            )
+            # Return the canonical store name from the whitelist, not the raw
+            # candidate, so the case and trailing text are normalised.
+            return store, False, []
+
+    # If the remaining text starts with the group name itself, it is still a
+    # group-wide gift card (e.g. "תו קניה קבוצת גולף - תווים" → candidate
+    # "קבוצת גולף - תווים" starts with "קבוצת גולף").
+    group_lower = matched_key.strip().lower()
+    if candidate_lower.startswith(group_lower):
+        logger.debug(
+            "classify_group_deal: %r — candidate %r starts with group name — group-wide",
+            brand, candidate,
+        )
+        return matched_key, True, member_stores
+
+    # Candidate exists but didn't match any known sub-store or group self-reference.
+    # If the group has a stores whitelist, treat as group-wide to avoid creating
+    # phantom stores (e.g. "DREAM CARD" from "תו קניה DREAM CARD" in Fox group).
+    if member_stores:
+        logger.debug(
+            "classify_group_deal: %r -> unrecognised candidate %r not in stores whitelist — group-wide",
+            brand, candidate,
+        )
+        return matched_key, True, member_stores
 
     logger.debug(
-        "resolve_group_store: '%s' -> '%s' (from title: '%s')",
-        brand, store_name, title,
+        "classify_group_deal: %r -> unrecognised sub-store %r (no whitelist) — treating as specific",
+        brand, candidate,
     )
+    return candidate, False, []
+
+
+def resolve_group_store(
+    brand: str,
+    title: str,
+    groups: dict[str, dict] | None = None,
+) -> str:
+    """Resolve a HOT group brand name to the specific sub-store name.
+
+    Thin wrapper around :func:`classify_group_deal` kept for backward
+    compatibility.  Prefer :func:`classify_group_deal` in new code when
+    you also need to know whether the deal is group-wide.
+
+    Returns the resolved store name.  For group-wide deals (where no
+    specific sub-store could be identified) this returns the original
+    *brand* unchanged.
+
+    Examples::
+
+        resolve_group_store("קבוצת פוקס - תווים", "תו קניה FOOT LOCKER")
+        # -> "FOOT LOCKER"
+
+        resolve_group_store("AHAVA", "הנחה בAHAVA")  # unknown group
+        # -> "AHAVA"
+    """
+    store_name, _is_group_wide, _members = classify_group_deal(brand, title, groups)
     return store_name

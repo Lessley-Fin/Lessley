@@ -96,6 +96,7 @@ class PersistStage:
                     redeem_channels=raw_payload.get("redeem_channels", []),
                     coupon_code=raw_payload.get("coupon_code"),
                     club_id=self._club_map.get(prec.raw.source_id),
+                    group_member_stores=raw_payload.get("group_member_stores") or None,
                 )
                 auto_match_batch.append((prec, deal))
 

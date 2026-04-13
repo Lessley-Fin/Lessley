@@ -82,6 +82,17 @@ Conservative thresholds control automation:
 Uncertain matches enter a manual review flow with a learning feedback loop
 that feeds confirmed decisions back into the alias table.
 
+### Group gift cards
+
+Some HOT deals are group-level gift cards (e.g. "קבוצת גולף") redeemable at
+any member store.  The scraper classifies these automatically:
+
+- **Store-specific deals** → attributed directly to the sub-store (e.g. "sabon")
+- **Group-wide gift cards** → attributed to the group and `group_member_stores`
+  is embedded in the record so query-time fan-out can surface them for any member
+
+See [docs/group-deals.md](docs/group-deals.md) for the full reference.
+
 See [docs/architecture.md](docs/architecture.md) for the full design.
 
 ---

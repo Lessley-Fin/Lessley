@@ -35,6 +35,8 @@ from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
 from lessley_deals.scraping.helpers.brand_utils import (
     clean_brand,
+    clean_store_name,
+    classify_group_deal,
     is_generic_hot_brand,
     load_hot_store_groups,
     normalize_website,
@@ -562,7 +564,9 @@ class HotAdapter(BaseSourceAdapter):
 
         When the brand belongs to a known store-group (e.g. "קבוצת פוקס"),
         the real sub-store name is resolved from the deal title and used
-        instead of the group name.
+        instead of the group name.  When the deal is group-wide (no specific
+        sub-store in the title), the group itself is kept as the store so that
+        it gets its own :class:`CanonicalStore`.
         """
         brand = record.get("item_brand")
         if not brand:
@@ -573,7 +577,10 @@ class HotAdapter(BaseSourceAdapter):
             return None
 
         title = record.get("title", "")
-        store_name = resolve_group_store(cleaned, title, self._store_groups)
+        store_name, _is_group_wide, _members = classify_group_deal(
+            cleaned, title, self._store_groups
+        )
+        store_name = clean_store_name(store_name)
 
         return RawStore(
             id=generate_id(),
@@ -590,21 +597,37 @@ class HotAdapter(BaseSourceAdapter):
         """Map a benefit record to a :class:`RawScrapedRecord`.
 
         When the brand belongs to a known store-group, the real sub-store
-        name is resolved from the deal title.
+        name is resolved from the deal title.  When the deal is a group-wide
+        gift card (no specific sub-store in the title), the group brand is
+        kept as the store name and ``group_member_stores`` is added to
+        ``raw_payload`` so that query-time fan-out can surface the deal for
+        any member store.
         """
         raw_brand = record.get("item_brand") or record.get("title", "")
         title = record.get("title", "")
+        group_member_stores: list[str] = []
         if raw_brand:
+            logger.info("the title is [%s] and the raw brand is [%s]",
+                    title, raw_brand)
             cleaned_brand = self._clean_brand(raw_brand)
-            store_name = resolve_group_store(cleaned_brand, title, self._store_groups)
+            store_name, is_group_wide, group_member_stores = classify_group_deal(
+                cleaned_brand, title, self._store_groups
+            )
+            store_name = clean_store_name(store_name)
+            logger.info("the group brand is [%s] and is_group_wide is [%s]",
+                    store_name, is_group_wide)
         else:
             store_name = ""
+            is_group_wide = False
         description = record.get("description", "")
         deal_description = f"{title} - {description}" if description else title
         price_text = record.get("value") or record.get("small_text") or ""
 
         record_id = record.get("id")
         url = f"https://www.hot.co.il/benefit/{record_id}" if record_id else None
+
+        if is_group_wide and group_member_stores:
+            record["group_member_stores"] = group_member_stores
 
         return RawScrapedRecord(
             id=generate_id(),

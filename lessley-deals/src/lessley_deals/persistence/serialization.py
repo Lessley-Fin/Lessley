@@ -210,6 +210,7 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         redeem_channels=d.get("redeem_channels", []),
         coupon_code=d.get("coupon_code"),
         club_id=d.get("club_id"),
+        group_member_stores=d.get("group_member_stores") or None,
     )
 
 

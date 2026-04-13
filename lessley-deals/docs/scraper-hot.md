@@ -47,6 +47,20 @@ Scrapes deals from the **HOT Mobile loyalty club** public API.  HOT is one of Is
 - Cleaning: Strip `_N` suffixes (HOT's internal dedup), collapse whitespace
 - Generic filtering: Skip "מועדון הוט", "הוט מועדון צרכנות", "HOT club"
 
+### Group Brand Resolution
+
+Some brands refer to a **retail group** (e.g. `"קבוצת גולף"`) rather than a
+specific store.  The scraper calls `classify_group_deal()` to distinguish two cases:
+
+| Case | Title example | Result |
+|---|---|---|
+| **Store-specific deal** | `"תו קניה sabon"` | `store_name = "sabon"` |
+| **Group-wide gift card** | `"תו קניה קבוצת גולף - תווים"` | `store_name = "קבוצת גולף"` + `raw_payload["group_member_stores"]` injected |
+
+The member-store list in `raw_payload["group_member_stores"]` enables
+query-time fan-out via `get_deals_for_store()` — see
+[docs/group-deals.md](group-deals.md) for the full reference.
+
 ### Deal Description
 - Combined from `title` + `description`
 - Price text from `value` field, fallback to `small_text`

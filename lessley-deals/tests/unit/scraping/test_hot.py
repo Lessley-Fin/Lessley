@@ -113,3 +113,96 @@ class TestHotAdapter:
         deal = adapter._to_raw_deal(record, now)
 
         assert deal.url is None
+
+
+# ---------------------------------------------------------------------------
+# Inline groups fixture so tests are isolated from the real JSON file
+# ---------------------------------------------------------------------------
+
+_TEST_GROUPS: dict = {
+    "קבוצת גולף": {
+        "title_prefix": "תו קניה",
+        "stores": ["kitan", "sabon", "golf&co", "golf", "polgat"],
+    },
+}
+
+
+class TestHotAdapterGroupBrands:
+    """Tests for group-brand classification in _to_raw_deal / _to_raw_store."""
+
+    def _make_adapter(self) -> HotAdapter:
+        adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
+        adapter._store_groups = _TEST_GROUPS  # type: ignore[assignment]
+        return adapter
+
+    def test_to_raw_deal_store_specific_group(self) -> None:
+        """Brand is a group but title encodes a specific sub-store."""
+        adapter = self._make_adapter()
+        record = _make_api_record(
+            brand="קבוצת גולף",
+            title="תו קניה sabon",
+        )
+        now = datetime.now(timezone.utc)
+        deal = adapter._to_raw_deal(record, now)
+
+        assert deal.store_name == "sabon"
+        assert "group_member_stores" not in deal.raw_payload
+
+    def test_to_raw_deal_group_wide(self) -> None:
+        """Brand is a group and title doesn’t resolve to a known sub-store."""
+        adapter = self._make_adapter()
+        record = _make_api_record(
+            brand="קבוצת גולף",
+            title="תו קניה קבוצת גולף - תווים",
+        )
+        now = datetime.now(timezone.utc)
+        deal = adapter._to_raw_deal(record, now)
+
+        # store_name stays as the group so it gets its own CanonicalStore
+        assert "קבוצת גולף" in deal.store_name
+        # group_member_stores must be present in the payload
+        assert "group_member_stores" in deal.raw_payload
+        members = deal.raw_payload["group_member_stores"]
+        assert isinstance(members, list)
+        assert "sabon" in members
+        assert "kitan" in members
+
+    def test_to_raw_store_group_wide_keeps_group_name(self) -> None:
+        """A group-wide deal produces a RawStore with the group name."""
+        adapter = self._make_adapter()
+        record = _make_api_record(
+            brand="קבוצת גולף",
+            title="תו קניה קבוצת גולף - תווים",
+        )
+        now = datetime.now(timezone.utc)
+        store = adapter._to_raw_store(record, now)
+
+        assert store is not None
+        assert "קבוצת גולף" in store.name
+
+    def test_to_raw_store_store_specific_uses_substore_name(self) -> None:
+        """A store-specific group deal produces a RawStore with the sub-store name."""
+        adapter = self._make_adapter()
+        record = _make_api_record(
+            brand="קבוצת גולף",
+            title="תו קניה sabon",
+        )
+        now = datetime.now(timezone.utc)
+        store = adapter._to_raw_store(record, now)
+
+        assert store is not None
+        assert store.name == "sabon"
+
+    def test_to_raw_deal_original_record_not_mutated(self) -> None:
+        """The original API record dict must not be modified."""
+        adapter = self._make_adapter()
+        record = _make_api_record(
+            brand="קבוצת גולף",
+            title="תו קניה קבוצת גולף - תווים",
+        )
+        import copy
+        original = copy.deepcopy(record)
+        now = datetime.now(timezone.utc)
+        adapter._to_raw_deal(record, now)
+
+        assert record == original, "Original record was mutated"

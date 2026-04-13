@@ -12,7 +12,10 @@ class DealJsonRepository:
         self._store = JsonStore(path)
 
     def save(self, deal: Deal) -> None:
-        self._store.append(to_dict(deal))
+        d = to_dict(deal)
+        if d.get("group_member_stores") is None:
+            d.pop("group_member_stores", None)
+        self._store.append(d)
 
     def exists_by_fingerprint(self, fingerprint: str) -> bool:
         return any(
