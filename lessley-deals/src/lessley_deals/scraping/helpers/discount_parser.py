@@ -115,18 +115,18 @@ def deduce_hot_discount_mechanics(
         reward = {"type": "fixed_total_amount", "value": price_after}
 
     # --- Priority 2: Voucher (1300) with title ₪ + percentage ---
-    elif benefit_type == "1300":
-        title_amount = _TITLE_SHEKEL_RE.search(title)
-        search_fields = f"{value_field} {value_num_field} {combined_text}"
-        pct = _PERCENT_RE.search(search_fields)
-        if title_amount and pct:
-            total_val = int(title_amount.group(1).replace(",", ""))
-            discount_pct = float(pct.group(1)) / 100.0
-            condition = {"type": "exact_spend", "value": total_val}
-            reward = {
-                "type": "fixed_total_amount",
-                "value": round(total_val * (1 - discount_pct), 2),
-            }
+    elif (
+        benefit_type == "1300"
+        and (title_amount := _TITLE_SHEKEL_RE.search(title))
+        and (pct := _PERCENT_RE.search(f"{value_field} {value_num_field} {combined_text}"))
+    ):
+        total_val = int(title_amount.group(1).replace(",", ""))
+        discount_pct = float(pct.group(1)) / 100.0
+        condition = {"type": "exact_spend", "value": total_val}
+        reward = {
+            "type": "fixed_total_amount",
+            "value": round(total_val * (1 - discount_pct), 2),
+        }
 
     # --- Priority 3: "שווי X ב Y" pattern ---
     elif (match := _SHOVI_RE.search(combined_text)):
