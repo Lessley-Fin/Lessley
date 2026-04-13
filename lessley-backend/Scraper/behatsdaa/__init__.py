@@ -1,2 +1,0 @@
-"""Behatsdaa scraper package."""
-
