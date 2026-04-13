@@ -68,7 +68,7 @@ def scrape_topcash_to_json(html_content):
             # 5. Build the JSON object matching the Mastercard schema
             discount_entry = {
                 "_id": str(uuid.uuid4()),
-                "source_id": "src_topcash",
+                "source_id": "topcash",
                 "external_id": external_id,
                 "store_id": store_id,
                 "club_id": "topcash",
