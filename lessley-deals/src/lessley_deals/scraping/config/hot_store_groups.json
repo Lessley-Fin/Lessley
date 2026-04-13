@@ -1,16 +1,20 @@
 {
   "_comment": "HOT store-group configuration. When item_brand matches a key here, the resolver extracts the real store name from the deal title using the given title_prefix to strip.",
-  "קבוצת פוקס": {
+  "קבוצת פוקס - תווים": {
     "title_prefix": "תו קניה",
     "stores": [
-      "AMERICAN EAGLE",
-      "THE CHILDREN'S PLACE",
-      "FLYING TIGER",
-      "FOOT LOCKER",
-      "שילב"
+      "minene",
+      "terminal x",
+      "ruby bay",
+      "fox",
+      "mango",
+      "foot locker",
+      "the children's place",
+      "fox home",
+      "laline"
     ]
   },
-  "קבוצת בריל": {
+  "קבוצת בריל - תווים": {
     "title_prefix": "תו קניה",
     "stores": [
       "Emporium",
@@ -20,6 +24,28 @@
       "Timberland",
       "נעלי GALI",
       "GALI"
+    ]
+  },
+  "אקסטרה ריטייל - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      "ורדינון",
+      "נעמן",
+      "הום סטייל",
+      "בוניטה דה מאס",
+      "מגנוליה"
+    ]
+  },
+  "קבוצת גולף - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      "sabon",
+      "golf&co",
+      "kitan",
+      "גולף קידס",
+      "אינטימה",
+      "polgat",
+      "golf"
     ]
   }
 }

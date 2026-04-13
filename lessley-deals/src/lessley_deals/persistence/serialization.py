@@ -16,6 +16,7 @@ from lessley_deals.domain.enums import (
 )
 from lessley_deals.domain.models import (
     CanonicalStore,
+    Club,
     Deal,
     Explanation,
     ExternalReference,
@@ -208,6 +209,17 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         stackable=d.get("stackable"),
         redeem_channels=d.get("redeem_channels", []),
         coupon_code=d.get("coupon_code"),
+        club_id=d.get("club_id"),
+    )
+
+
+def club_from_dict(d: dict[str, Any]) -> Club:
+    return Club(
+        id=d["id"],
+        name=d["name"],
+        source_id=d["source_id"],
+        description=d.get("description"),
+        metadata=d.get("metadata", {}),
     )
 
 

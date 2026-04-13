@@ -114,54 +114,55 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
             return False
 
     def _process_store(self, store: BeautifulSoup, now: datetime) -> RawScrapedRecord | None:
-        name_tag = store.find("div", class_="storeName")
-        if not name_tag:
-            return None
-        a_tag = name_tag.find("a")
+        a_tag = store.find('div', class_='storeName').find('a')
         if not a_tag:
             return None
 
         title = a_tag.text.strip()
-        details_url = str(a_tag.get("href", ""))
-        if details_url and details_url.startswith("/"):
-            details_url = f"https://www.topcash.co.il{details_url}"
+        details_url = a_tag.get('href', '')
+        if details_url:
+            details_url = details_url.strip()
+            if details_url.startswith("/"):
+                details_url = f"https://www.topcash.co.il{details_url}"
 
         external_id = None
         store_id = None
         if details_url:
-            parts = details_url.rstrip("/").split("/")
+            parts = details_url.rstrip('/').split('/')
             if len(parts) >= 2:
                 store_id = parts[-2]
                 external_id = parts[-1]
 
-        subtitle_tag = store.find("div", class_="store-block-sub-title")
+        subtitle_tag = store.find('div', class_='store-block-sub-title')
         reward_text = subtitle_tag.text.strip() if subtitle_tag else ""
 
         reward_type = "unknown"
         reward_value = None
 
-        if "%" in reward_text:
+        if '%' in reward_text:
             reward_type = "percentage_off"
-            match = re.search(r"([\d.]+)", reward_text)
+            match = re.search(r'([\d.]+)', reward_text)
             if match:
                 reward_value = float(match.group(1)) / 100.0
-        elif "₪" in reward_text:
+        elif '₪' in reward_text or "$" in reward_text:
             reward_type = "fixed_discount_amount"
-            match = re.search(r"([\d.]+)", reward_text)
+            match = re.search(r'([\d.]+)', reward_text)
             if match:
                 reward_value = float(match.group(1))
 
-        img_tag = store.find("img")
+        img_tag = store.find('img')
         image_url = ""
         if img_tag:
-            image_url = img_tag.get("data-src") or img_tag.get("src", "")
-            if image_url and str(image_url).startswith("/"):
+            image_url = img_tag.get('data-src') or img_tag.get('src')
+            if image_url and image_url.startswith('/'):
                 image_url = f"https://www.topcash.co.il{image_url}"
 
-        buy_btn = store.find("a", class_="isracard-new-button")
-        store_url = str(buy_btn.get("href", "")) if buy_btn else details_url
-        if store_url and store_url.startswith("/"):
-            store_url = f"https://www.topcash.co.il{store_url}"
+        buy_btn = store.find('a', class_='isracard-new-button')
+        store_url = buy_btn.get('href') if buy_btn else details_url
+        if store_url:
+            store_url = store_url.strip()
+            if store_url.startswith("/"):
+                store_url = f"https://www.topcash.co.il{store_url}"
 
         discount_logic = None
         if reward_type != "unknown":

@@ -4,9 +4,8 @@ import logging
 from typing import Sequence
 
 from lessley_deals.domain.models import NormalizedRecord, PipelineRecord
+from lessley_deals.domain.protocols import AliasRepository, CanonicalStoreRepository
 from lessley_deals.matching.index import AliasIndex
-from lessley_deals.persistence.repositories.aliases import AliasJsonRepository
-from lessley_deals.persistence.repositories.stores import CanonicalStoreJsonRepository
 from lessley_deals.pipeline.context import PipelineContext
 from lessley_deals.pipeline.match_stage import MatchStage
 from lessley_deals.pipeline.normalize_stage import NormalizeStage
@@ -26,8 +25,8 @@ class PipelineOrchestrator:
         normalize_stage: NormalizeStage,
         match_stage: MatchStage,
         persist_stage: PersistStage,
-        store_repo: CanonicalStoreJsonRepository,
-        alias_repo: AliasJsonRepository,
+        store_repo: CanonicalStoreRepository,
+        alias_repo: AliasRepository,
     ) -> None:
         self._scrape = scrape_stage
         self._normalize = normalize_stage
@@ -69,7 +68,7 @@ class PipelineOrchestrator:
 
         # Stage 4: Persist
         logger.info("Starting persist stage...")
-        self._persist.run(pipeline_records, normalized_map, verdict_map)
+        await self._persist.run(pipeline_records, normalized_map, verdict_map)
 
         ctx.finish()
         report = PipelineReport.from_context(ctx)

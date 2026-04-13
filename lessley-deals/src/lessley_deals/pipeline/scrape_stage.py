@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Sequence
 
@@ -39,23 +40,25 @@ class ScrapeStage:
         all_stores: list[RawStore] = []
         all_deals: list[RawScrapedRecord] = []
 
+        loop = asyncio.get_event_loop()
+
         for result in results:
             # Dedup stores by fingerprint
             new_stores = [
                 s for s in result.stores
-                if not self._store_repo.exists_by_fingerprint(s.fingerprint)
+                if not await loop.run_in_executor(None, self._store_repo.exists_by_fingerprint, s.fingerprint)
             ]
             if new_stores:
-                self._store_repo.save_many(new_stores)
+                await loop.run_in_executor(None, self._store_repo.save_many, new_stores)
                 all_stores.extend(new_stores)
 
             # Dedup deals by fingerprint
             new_deals = [
                 d for d in result.deals
-                if not self._deal_repo.exists_by_fingerprint(d.fingerprint)
+                if not await loop.run_in_executor(None, self._deal_repo.exists_by_fingerprint, d.fingerprint)
             ]
             if new_deals:
-                self._deal_repo.save_many(new_deals)
+                await loop.run_in_executor(None, self._deal_repo.save_many, new_deals)
                 all_deals.extend(new_deals)
 
             for err in result.errors:

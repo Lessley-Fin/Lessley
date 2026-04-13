@@ -103,8 +103,14 @@ services:
       - DEALS_LOG_LEVEL=${DEALS_LOG_LEVEL:-INFO}
       - DEALS_AUTO_MATCH_THRESHOLD=${DEALS_AUTO_MATCH_THRESHOLD:-0.90}
       - DEALS_REVIEW_THRESHOLD=${DEALS_REVIEW_THRESHOLD:-0.50}
+      - DEALS_STORAGE=mongo
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DB=${DB_NAME}
+    depends_on:
+      mongodb:
+        condition: service_healthy
     entrypoint: ["python", "-m", "lessley_deals.cli.main"]
-    command: ["scrape", "--all"]
+    command: ["scrape", "--all", "--hot-fetch-details"]
 
   # --- Deals Review CLI (interactive) ---
   deals-review:
@@ -114,6 +120,13 @@ services:
       - deals_data:/app/data
     stdin_open: true
     tty: true
+    environment:
+      - DEALS_STORAGE=mongo
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DB=${DB_NAME}
+    depends_on:
+      mongodb:
+        condition: service_healthy
     entrypoint: ["python", "-m", "lessley_deals.cli.main"]
     command: ["review"]
 

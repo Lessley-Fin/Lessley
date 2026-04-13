@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 from lessley_deals.domain.enums import MatchDecision, RecordFate, ReviewStatus
 from lessley_deals.domain.models import (
@@ -11,37 +13,58 @@ from lessley_deals.domain.models import (
     PipelineRecord,
     ReviewItem,
 )
+from lessley_deals.domain.protocols import (
+    CanonicalStoreRepository,
+    DealRepository,
+    ReviewRepository,
+)
 from lessley_deals.persistence.id_gen import generate_id
-from lessley_deals.persistence.repositories.deals import DealJsonRepository
-from lessley_deals.persistence.repositories.reviews import ReviewJsonRepository
-from lessley_deals.persistence.repositories.stores import CanonicalStoreJsonRepository
 from lessley_deals.review.actions import build_name_forms
 
 logger = logging.getLogger(__name__)
 
+_BATCH_SIZE = 50
+
 
 class PersistStage:
-    """Stage 4: Route matched records to deals or review queue."""
+    """Stage 4: Route matched records to deals or review queue.
+
+    Works with any storage backend (JSON files or database) as long as the
+    repositories satisfy the protocol interfaces defined in domain.protocols.
+    Records are processed in batches so the event loop is not starved when
+    dealing with large result sets.
+    """
 
     def __init__(
         self,
-        deal_repo: DealJsonRepository,
-        review_repo: ReviewJsonRepository,
-        store_repo: CanonicalStoreJsonRepository,
+        deal_repo: DealRepository,
+        review_repo: ReviewRepository,
+        store_repo: CanonicalStoreRepository,
         review_no_match: bool = False,
+        club_repo: Any = None,
     ) -> None:
         self._deal_repo = deal_repo
         self._review_repo = review_repo
         self._store_repo = store_repo
         self._review_no_match = review_no_match
+        # Build source_id → club_id map once at init (small dataset)
+        self._club_map: dict[str, str] = {}
+        if club_repo is not None:
+            self._club_map = {c.source_id: c.id for c in club_repo.get_all()}
 
-    def run(
+    async def run(
         self,
         pipeline_records: list[PipelineRecord],
         normalized_map: dict[str, NormalizedRecord],
         verdict_map: dict[str, MatchVerdict],
     ) -> None:
         now = datetime.now(timezone.utc)
+
+        # ------------------------------------------------------------------ #
+        # Classify every record by verdict so we can batch-persist per type. #
+        # ------------------------------------------------------------------ #
+        auto_match_batch: list[tuple[PipelineRecord, Deal]] = []
+        review_batch: list[tuple[PipelineRecord, ReviewItem]] = []
 
         for prec in pipeline_records:
             raw_id = prec.raw.id
@@ -58,17 +81,6 @@ class PersistStage:
 
             if verdict.decision == MatchDecision.AUTO_MATCH and verdict.best:
                 raw_payload = prec.raw.raw_payload
-                
-                # Move image_url to the store's metadata
-                image_url = raw_payload.get("image_url")
-                if image_url:
-                    store = self._store_repo.get_by_id(verdict.best.store_id)
-                    if store:
-                        image_urls = store.metadata.setdefault("image_urls", [])
-                        if image_url not in image_urls:
-                            image_urls.append(image_url)
-                            self._store_repo.save(store)
-
                 deal = Deal(
                     id=generate_id(),
                     store_id=verdict.best.store_id,
@@ -83,43 +95,59 @@ class PersistStage:
                     stackable=raw_payload.get("stackable"),
                     redeem_channels=raw_payload.get("redeem_channels", []),
                     coupon_code=raw_payload.get("coupon_code"),
+                    club_id=self._club_map.get(prec.raw.source_id),
                 )
+                auto_match_batch.append((prec, deal))
+
+            elif verdict.decision == MatchDecision.REVIEW or self._review_no_match:
+                review_item = ReviewItem(
+                    id=generate_id(),
+                    raw_id=raw_id,
+                    input_name=verdict.input_name,
+                    input_name_forms=build_name_forms(verdict.input_name),
+                    raw_input_name=prec.raw.store_name,
+                    verdict=verdict,
+                    created_at=now,
+                    status=ReviewStatus.PENDING,
+                )
+                review_batch.append((prec, review_item))
+
+            else:
+                prec.fate = RecordFate.NO_MATCH
+
+        # ------------------------------------------------------------------ #
+        # Persist auto-matched deals in batches.                             #
+        # image_url propagation and fingerprint dedup happen per record.     #
+        # ------------------------------------------------------------------ #
+        for i in range(0, len(auto_match_batch), _BATCH_SIZE):
+            chunk = auto_match_batch[i : i + _BATCH_SIZE]
+            for prec, deal in chunk:
+                raw_payload = prec.raw.raw_payload
+                image_url = raw_payload.get("image_url")
+                if image_url:
+                    store = self._store_repo.get_by_id(deal.store_id)
+                    if store:
+                        image_urls = store.metadata.setdefault("image_urls", [])
+                        if image_url not in image_urls:
+                            image_urls.append(image_url)
+                            self._store_repo.save(store)
+
                 if not self._deal_repo.exists_by_fingerprint(deal.fingerprint):
                     self._deal_repo.save(deal)
                     prec.fate = RecordFate.AUTO_MATCHED
                 else:
                     prec.fate = RecordFate.DUPLICATE
+            await asyncio.sleep(0)  # yield control between batches
 
-            elif verdict.decision == MatchDecision.REVIEW:
-                review_item = ReviewItem(
-                    id=generate_id(),
-                    raw_id=raw_id,
-                    input_name=verdict.input_name,
-                    input_name_forms=build_name_forms(verdict.input_name),
-                    raw_input_name=prec.raw.store_name,
-                    verdict=verdict,
-                    created_at=now,
-                    status=ReviewStatus.PENDING,
-                )
+        # ------------------------------------------------------------------ #
+        # Persist review items in batches.                                   #
+        # ------------------------------------------------------------------ #
+        for i in range(0, len(review_batch), _BATCH_SIZE):
+            chunk = review_batch[i : i + _BATCH_SIZE]
+            for prec, review_item in chunk:
                 self._review_repo.save(review_item)
                 prec.fate = RecordFate.SENT_TO_REVIEW
-
-            elif self._review_no_match:
-                review_item = ReviewItem(
-                    id=generate_id(),
-                    raw_id=raw_id,
-                    input_name=verdict.input_name,
-                    input_name_forms=build_name_forms(verdict.input_name),
-                    raw_input_name=prec.raw.store_name,
-                    verdict=verdict,
-                    created_at=now,
-                    status=ReviewStatus.PENDING,
-                )
-                self._review_repo.save(review_item)
-                prec.fate = RecordFate.SENT_TO_REVIEW
-
-            else:
-                prec.fate = RecordFate.NO_MATCH
+            await asyncio.sleep(0)
 
         auto = sum(1 for r in pipeline_records if r.fate == RecordFate.AUTO_MATCHED)
         review = sum(1 for r in pipeline_records if r.fate == RecordFate.SENT_TO_REVIEW)

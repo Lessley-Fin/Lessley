@@ -158,11 +158,21 @@ class Deal:
     stackable: bool | None = None
     redeem_channels: list[str] = field(default_factory=list)
     coupon_code: str | None = None
+    club_id: str | None = None
 
     @property
     def fingerprint(self) -> str:
         data = f"{self.store_id}|{self.source_id}|{self.description}|{self.currency or ''}"
         return hashlib.sha256(data.encode()).hexdigest()
+
+
+@dataclass
+class Club:
+    id: str
+    name: str
+    source_id: str
+    description: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

@@ -2,12 +2,32 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Optional
 
 import typer
 from bidi.algorithm import get_display
+from dotenv import load_dotenv
 from rich.console import Console
+
+# Load .env from the current directory or walk up to find it (e.g. lessley-cd/.env).
+# This lets the CLI pick up DEALS_STORAGE, MONGO_URI, etc. without manual exports.
+def _load_env() -> None:
+    cwd = Path.cwd()
+    for directory in [cwd, *cwd.parents]:
+        candidate = directory / ".env"
+        if candidate.is_file():
+            load_dotenv(candidate, override=False)  # never overwrite already-exported vars
+            return
+        # Also check the lessley-cd sibling directory (monorepo layout)
+        sibling = directory / "lessley-cd" / ".env"
+        if sibling.is_file():
+            load_dotenv(sibling, override=False)
+            return
+
+_load_env()
 
 from lessley_deals.cli.review_session import run_review_session
 from lessley_deals.matching.config import MatchConfig
@@ -39,6 +59,106 @@ def _get_config(data_dir: str) -> PersistenceConfig:
     return PersistenceConfig(base_dir=Path(data_dir))
 
 
+def _make_repos(data_dir: str) -> SimpleNamespace:
+    """Return all repositories — MongoDB when DEALS_STORAGE=mongo, else JSON files.
+
+    review_repo always stays on JSON — the review queue is local per-user.
+
+    When MongoDB is selected and the stores collection is empty the seed files
+    (data/seed/stores.json + data/seed/store_aliases.json) are imported
+    automatically so the pipeline can start matching immediately.
+    """
+    config = _get_config(data_dir)
+    review_repo = ReviewJsonRepository(config.reviews_path)
+
+    storage = os.environ.get("DEALS_STORAGE", "json").lower()
+    if storage == "mongo":
+        from lessley_deals.persistence.mongo_client import get_database
+        from lessley_deals.persistence.repositories.mongo.aliases import AliasMongoRepository
+        from lessley_deals.persistence.repositories.mongo.clubs import ClubMongoRepository
+        from lessley_deals.persistence.repositories.mongo.deals import DealMongoRepository
+        from lessley_deals.persistence.repositories.mongo.raw_deals import RawDealMongoRepository
+        from lessley_deals.persistence.repositories.mongo.raw_stores import RawStoreMongoRepository
+        from lessley_deals.persistence.repositories.mongo.stores import CanonicalStoreMongoRepository
+        db = get_database()
+        repos = SimpleNamespace(
+            store_repo=CanonicalStoreMongoRepository(db),
+            alias_repo=AliasMongoRepository(db),
+            deal_repo=DealMongoRepository(db),
+            raw_deal_repo=RawDealMongoRepository(db),
+            raw_store_repo=RawStoreMongoRepository(db),
+            review_repo=review_repo,
+            club_repo=ClubMongoRepository(db),
+        )
+        _auto_seed_mongo_if_empty(db, data_dir)
+        return repos
+    return SimpleNamespace(
+        store_repo=CanonicalStoreJsonRepository(config.stores_path),
+        alias_repo=AliasJsonRepository(config.aliases_path),
+        deal_repo=DealJsonRepository(config.deals_path),
+        raw_deal_repo=RawDealJsonRepository(config.raw_deals_path),
+        raw_store_repo=RawStoreJsonRepository(config.raw_stores_path),
+        review_repo=review_repo,
+        club_repo=None,
+    )
+
+
+def _auto_seed_mongo_if_empty(db: object, data_dir: str) -> None:  # type: ignore[type-arg]
+    """Seed stores, aliases and clubs from the seed JSON files when MongoDB is empty.
+
+    This is idempotent — uses $setOnInsert so existing documents are never
+    overwritten.  Runs silently on every startup; the actual DB round-trip is
+    negligible because count_documents returns quickly when the collection is
+    non-empty.
+    """
+    import json
+    import logging as _logging
+
+    _log = _logging.getLogger(__name__)
+
+    # Check if stores already exist — if so, skip (fast path).
+    if db["stores"].count_documents({}, limit=1) > 0:  # type: ignore[index]
+        return
+
+    _log.info("MongoDB stores collection is empty — seeding from seed files…")
+
+    # Prefer data/seed/ directory; fall back to data/ for stores/aliases.
+    seed_candidates = [Path("data/seed"), Path(data_dir)]
+    _CLUBS = [
+        {"_id": "club_hot",        "name": "HOT Israel",       "source_id": "hot",        "description": "HOT Israel — cable TV & internet member benefits",   "metadata": {}},
+        {"_id": "club_mastercard", "name": "Mastercard Israel", "source_id": "mastercard", "description": "Mastercard Israel credit card benefits",              "metadata": {}},
+        {"_id": "club_topcash",    "name": "Isracard TopCash",  "source_id": "topcash",    "description": "Isracard TopCash cashback benefits",                  "metadata": {}},
+        {"_id": "club_behatsdaa",  "name": "Behatsdaa",         "source_id": "behatsdaa",  "description": "Behatsdaa deals aggregator",                          "metadata": {}},
+    ]
+
+    def _upsert_file(collection: str, path: Path) -> int:
+        if not path.exists():
+            return 0
+        items = json.loads(path.read_text(encoding="utf-8"))
+        inserted = 0
+        for d in items:
+            doc = dict(d)
+            doc_id = doc.pop("id", None) or doc.pop("_id", None)
+            doc["_id"] = doc_id
+            result = db[collection].update_one({"_id": doc_id}, {"$setOnInsert": doc}, upsert=True)  # type: ignore[index]
+            if result.upserted_id is not None:
+                inserted += 1
+        return inserted
+
+    for seed_dir_path in seed_candidates:
+        stores_file = seed_dir_path / "stores.json"
+        aliases_file = seed_dir_path / "store_aliases.json"
+        if stores_file.exists():
+            n = _upsert_file("stores", stores_file)
+            _log.info("Auto-seeded %d stores from %s", n, stores_file)
+            _upsert_file("store_aliases", aliases_file)
+            break  # found and seeded — done
+
+    # Clubs are always seeded (they're hardcoded, not from a file)
+    for club_doc in _CLUBS:
+        db["clubs"].update_one({"_id": club_doc["_id"]}, {"$setOnInsert": club_doc}, upsert=True)  # type: ignore[index]
+
+
 def _setup_logging(log_level: str) -> None:
     logging.basicConfig(
         level=getattr(logging, log_level.upper(), logging.INFO),
@@ -61,11 +181,11 @@ def scrape(
         ),
     ),
     hot_fetch_details: bool = typer.Option(
-        False,
-        "--hot-fetch-details",
+        True,
+        "--hot-fetch-details/--no-hot-fetch-details",
         help=(
             "Fetch full detail data for every HOT benefit (terms, locations, "
-            "discount mechanics). Significantly slower but produces richer data."
+            "discount mechanics). On by default; use --no-hot-fetch-details to skip."
         ),
     ),
     hot_details_delay: float = typer.Option(
@@ -92,7 +212,6 @@ def scrape(
 ) -> None:
     """Run the full scrape -> normalize -> match -> persist pipeline."""
     _setup_logging(log_level)
-    config = _get_config(data_dir)
 
     # Validate HOT benefit types early so we fail fast.
     from lessley_deals.scraping.sources.hot import BENEFIT_TYPES, HotAdapter
@@ -108,12 +227,13 @@ def scrape(
             raise typer.Exit(code=1)
 
     # Build repositories
-    raw_deal_repo = RawDealJsonRepository(config.raw_deals_path)
-    raw_store_repo = RawStoreJsonRepository(config.raw_stores_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
-    alias_repo = AliasJsonRepository(config.aliases_path)
-    deal_repo = DealJsonRepository(config.deals_path)
-    review_repo = ReviewJsonRepository(config.reviews_path)
+    repos = _make_repos(data_dir)
+    raw_deal_repo = repos.raw_deal_repo
+    raw_store_repo = repos.raw_store_repo
+    store_repo = repos.store_repo
+    alias_repo = repos.alias_repo
+    deal_repo = repos.deal_repo
+    review_repo = repos.review_repo
 
     # Build pipeline components
     registry = SourceRegistry()
@@ -134,7 +254,9 @@ def scrape(
     normalize_stage = NormalizeStage(create_default_pipeline())
     match_pipeline = MatchPipeline(MatchConfig())
     match_stage = MatchStage(match_pipeline)
-    persist_stage = PersistStage(deal_repo, review_repo, store_repo, review_no_match=review_no_match)
+    persist_stage = PersistStage(deal_repo, review_repo, store_repo,
+                                 review_no_match=review_no_match,
+                                 club_repo=repos.club_repo)
 
     pipeline = PipelineOrchestrator(
         scrape_stage=scrape_stage,
@@ -163,18 +285,18 @@ def process(
 ) -> None:
     """Run normalize -> match -> persist on existing raw data (no scraping)."""
     _setup_logging(log_level)
-    config = _get_config(data_dir)
 
     from lessley_deals.domain.models import NormalizedRecord
     from lessley_deals.matching.index import AliasIndex
     from lessley_deals.pipeline.context import PipelineContext
     from lessley_deals.pipeline.report import PipelineReport
 
-    raw_deal_repo = RawDealJsonRepository(config.raw_deals_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
-    alias_repo = AliasJsonRepository(config.aliases_path)
-    deal_repo = DealJsonRepository(config.deals_path)
-    review_repo = ReviewJsonRepository(config.reviews_path)
+    repos = _make_repos(data_dir)
+    raw_deal_repo = repos.raw_deal_repo
+    store_repo = repos.store_repo
+    alias_repo = repos.alias_repo
+    deal_repo = repos.deal_repo
+    review_repo = repos.review_repo
 
     raw_deals = raw_deal_repo.get_by_source(source) if source else raw_deal_repo.get_all()
     if not raw_deals:
@@ -196,8 +318,10 @@ def process(
     verdicts = match_stage.run(normalized, index)
     verdict_map = {v.record_id: v for v in verdicts}
 
-    persist_stage = PersistStage(deal_repo, review_repo, store_repo, review_no_match=review_no_match)
-    persist_stage.run(pipeline_records, normalized_map, verdict_map)
+    persist_stage = PersistStage(deal_repo, review_repo, store_repo,
+                                 review_no_match=review_no_match,
+                                 club_repo=repos.club_repo)
+    asyncio.run(persist_stage.run(pipeline_records, normalized_map, verdict_map))
 
     ctx.finish()
     console.print(PipelineReport.from_context(ctx).summary())
@@ -217,13 +341,13 @@ def review(
 ) -> None:
     """Start an interactive review session for uncertain matches."""
     _setup_logging(log_level)
-    config = _get_config(data_dir)
 
-    review_repo = ReviewJsonRepository(config.reviews_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
-    alias_repo = AliasJsonRepository(config.aliases_path)
-    deal_repo = DealJsonRepository(config.deals_path)
-    raw_deal_repo = RawDealJsonRepository(config.raw_deals_path)
+    repos = _make_repos(data_dir)
+    review_repo = repos.review_repo
+    store_repo = repos.store_repo
+    alias_repo = repos.alias_repo
+    deal_repo = repos.deal_repo
+    raw_deal_repo = repos.raw_deal_repo
 
     run_review_session(
         review_repo=review_repo,
@@ -242,8 +366,8 @@ def review_stats(
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
 ) -> None:
     """Show review queue statistics."""
-    config = _get_config(data_dir)
-    review_repo = ReviewJsonRepository(config.reviews_path)
+    repos = _make_repos(data_dir)
+    review_repo = repos.review_repo
     stats_calc = ReviewStats(review_repo)
     display = ReviewDisplay(console)
     display.show_stats(stats_calc.compute())
@@ -259,9 +383,9 @@ def list_matches(
     """Show deals that were auto-matched by the pipeline."""
     from rich.table import Table
 
-    config = _get_config(data_dir)
-    deal_repo = DealJsonRepository(config.deals_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
+    repos = _make_repos(data_dir)
+    deal_repo = repos.deal_repo
+    store_repo = repos.store_repo
 
     deals = deal_repo.get_all()
     stores_by_id = {s.id: s for s in store_repo.get_all()}
@@ -310,8 +434,8 @@ def list_stores(
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
 ) -> None:
     """List canonical stores."""
-    config = _get_config(data_dir)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
+    repos = _make_repos(data_dir)
+    store_repo = repos.store_repo
 
     if query:
         stores = store_repo.search(query)
@@ -366,11 +490,11 @@ def discover_stores(
     from lessley_deals.normalization.pipeline import create_default_pipeline
 
     _setup_logging(log_level)
-    config = _get_config(data_dir)
 
-    raw_deal_repo = RawDealJsonRepository(config.raw_deals_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
-    alias_repo = AliasJsonRepository(config.aliases_path)
+    repos = _make_repos(data_dir)
+    raw_deal_repo = repos.raw_deal_repo
+    store_repo = repos.store_repo
+    alias_repo = repos.alias_repo
 
     # Load raw deals
     raw_deals = raw_deal_repo.get_by_source(source) if source else raw_deal_repo.get_all()
@@ -565,12 +689,12 @@ def seed_from_raw(
     from lessley_deals.normalization.text import collapse_whitespace
 
     _setup_logging(log_level)
-    config = _get_config(data_dir)
     seed_path = Path(seed_dir)
 
-    raw_store_repo = RawStoreJsonRepository(config.raw_stores_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
-    alias_repo = AliasJsonRepository(config.aliases_path)
+    repos = _make_repos(data_dir)
+    raw_store_repo = repos.raw_store_repo
+    store_repo = repos.store_repo
+    alias_repo = repos.alias_repo
 
     raw_stores = raw_store_repo.get_by_source(source) if source else raw_store_repo.get_all()
     if not raw_stores:
@@ -766,12 +890,12 @@ def rematch_reviews(
     from rich.table import Table
 
     _setup_logging(log_level)
-    config = _get_config(data_dir)
 
-    review_repo = ReviewJsonRepository(config.reviews_path)
-    store_repo = CanonicalStoreJsonRepository(config.stores_path)
-    alias_repo = AliasJsonRepository(config.aliases_path)
-    deal_repo = DealJsonRepository(config.deals_path)
+    repos = _make_repos(data_dir)
+    review_repo = repos.review_repo
+    store_repo = repos.store_repo
+    alias_repo = repos.alias_repo
+    deal_repo = repos.deal_repo
 
     # Collect items to re-process
     target_statuses = {ReviewStatus.PENDING}
@@ -854,6 +978,145 @@ def rematch_reviews(
         actions.approve(item, reviewed_by="system:rematch")
 
     console.print(f"[green]Approved {len(to_approve)} items.[/green]")
+
+
+@app.command(name="seed")
+def seed_mongo(
+    seed_dir: str = typer.Option("data/seed", "--seed-dir", help="Directory containing seed JSON files"),
+    from_live: bool = typer.Option(
+        False,
+        "--from-live",
+        help="Also migrate current data/ JSON files (stores, aliases, deals, reviews) into MongoDB.",
+    ),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Import seed data into MongoDB (idempotent — safe to run multiple times).
+
+    Reads data/seed/stores.json and data/seed/store_aliases.json and upserts
+    each record using $setOnInsert so existing documents are never overwritten.
+
+    Use --from-live to also migrate the current working data/ JSON files into
+    MongoDB (one-time operation when moving from JSON to MongoDB storage).
+
+    Requires DEALS_STORAGE=mongo (or pass MONGO_URI directly).
+    """
+    import json
+
+    _setup_logging(log_level)
+
+    storage = os.environ.get("DEALS_STORAGE", "json").lower()
+    if storage != "mongo":
+        console.print(
+            "[red]seed command requires DEALS_STORAGE=mongo.[/red]\n"
+            "Set the environment variable and retry."
+        )
+        raise typer.Exit(code=1)
+
+    from lessley_deals.persistence.mongo_client import get_database
+    from lessley_deals.persistence.repositories.mongo.aliases import AliasMongoRepository
+    from lessley_deals.persistence.repositories.mongo.stores import CanonicalStoreMongoRepository
+    from lessley_deals.persistence.serialization import (
+        alias_from_dict,
+        canonical_store_from_dict,
+        deal_from_dict,
+        raw_deal_from_dict,
+        raw_store_from_dict,
+    )
+
+    db = get_database()
+    store_repo = CanonicalStoreMongoRepository(db)
+    alias_repo = AliasMongoRepository(db)
+
+    seed_path = Path(seed_dir)
+
+    # --- Seed stores ---
+    stores_file = seed_path / "stores.json"
+    if stores_file.exists():
+        stores_data = json.loads(stores_file.read_text(encoding="utf-8"))
+        inserted = 0
+        for d in stores_data:
+            doc = {k: v for k, v in d.items()}
+            doc_id = doc.pop("id")
+            doc["_id"] = doc_id
+            result = db["stores"].update_one({"_id": doc_id}, {"$setOnInsert": doc}, upsert=True)
+            if result.upserted_id is not None:
+                inserted += 1
+        console.print(f"[green]Stores seed:[/green] {inserted} inserted, {len(stores_data) - inserted} already existed")
+    else:
+        console.print(f"[yellow]No stores seed file found at {stores_file}[/yellow]")
+
+    # --- Seed aliases ---
+    aliases_file = seed_path / "store_aliases.json"
+    if aliases_file.exists():
+        aliases_data = json.loads(aliases_file.read_text(encoding="utf-8"))
+        inserted = 0
+        for d in aliases_data:
+            doc = {k: v for k, v in d.items()}
+            doc_id = doc.pop("id")
+            doc["_id"] = doc_id
+            result = db["store_aliases"].update_one({"_id": doc_id}, {"$setOnInsert": doc}, upsert=True)
+            if result.upserted_id is not None:
+                inserted += 1
+        console.print(f"[green]Aliases seed:[/green] {inserted} inserted, {len(aliases_data) - inserted} already existed")
+    else:
+        console.print(f"[yellow]No aliases seed file found at {aliases_file}[/yellow]")
+
+    # --- Seed clubs (sources) ---
+    _CLUBS = [
+        {"_id": "club_hot",        "id": "club_hot",        "name": "HOT Israel",       "source_id": "hot",        "description": "HOT Israel — cable TV & internet member benefits", "metadata": {}},
+        {"_id": "club_mastercard", "id": "club_mastercard", "name": "Mastercard Israel", "source_id": "mastercard", "description": "Mastercard Israel credit card benefits", "metadata": {}},
+        {"_id": "club_topcash",    "id": "club_topcash",    "name": "Isracard TopCash",  "source_id": "topcash",    "description": "Isracard TopCash cashback benefits", "metadata": {}},
+        {"_id": "club_behatsdaa",  "id": "club_behatsdaa",  "name": "Behatsdaa",         "source_id": "behatsdaa",  "description": "Behatsdaa deals aggregator", "metadata": {}},
+    ]
+    inserted = 0
+    for club_doc in _CLUBS:
+        doc = {k: v for k, v in club_doc.items() if k != "id"}
+        result = db["clubs"].update_one({"_id": club_doc["_id"]}, {"$setOnInsert": doc}, upsert=True)
+        if result.upserted_id is not None:
+            inserted += 1
+    console.print(f"[green]Clubs seed:[/green] {inserted} inserted, {len(_CLUBS) - inserted} already existed")
+
+    if not from_live:
+        console.print("\n[dim]Tip: use --from-live to also migrate your current data/ JSON files.[/dim]")
+        return
+
+    # --- Migrate live JSON data ---
+    config = _get_config(data_dir)
+    console.print("\n[bold]Migrating live JSON files → MongoDB…[/bold]")
+
+    def _migrate(path: Path, collection: str, from_dict_fn, get_id) -> None:  # type: ignore[type-arg]
+        from pymongo.errors import DuplicateKeyError as _DupKey
+        if not path.exists():
+            console.print(f"  [dim]{path} not found, skipping[/dim]")
+            return
+        items = json.loads(path.read_text(encoding="utf-8"))
+        inserted = skipped = 0
+        for raw in items:
+            obj = from_dict_fn(raw)
+            doc = {k: v for k, v in raw.items()}
+            doc_id = get_id(obj)
+            doc.pop("id", None)
+            doc["_id"] = doc_id
+            try:
+                result = db[collection].update_one({"_id": doc_id}, {"$setOnInsert": doc}, upsert=True)
+                if result.upserted_id is not None:
+                    inserted += 1
+                else:
+                    skipped += 1
+            except _DupKey:
+                # Duplicate fingerprint/alias under a different _id — already in DB
+                skipped += 1
+        console.print(f"  [green]{collection}:[/green] {inserted} inserted, {skipped} skipped (already in DB)")
+
+    _migrate(config.stores_path, "stores", canonical_store_from_dict, lambda o: o.id)
+    _migrate(config.aliases_path, "store_aliases", alias_from_dict, lambda o: o.id)
+    _migrate(config.deals_path, "deals", deal_from_dict, lambda o: o.id)
+    _migrate(config.raw_deals_path, "raw_source_deals", raw_deal_from_dict, lambda o: o.id)
+    _migrate(config.raw_stores_path, "raw_source_stores", raw_store_from_dict, lambda o: o.id)
+    console.print("  [dim]store_match_review stays in local JSON (per-user review queue)[/dim]")
+
+    console.print("\n[green]Migration complete.[/green]")
 
 
 if __name__ == "__main__":
