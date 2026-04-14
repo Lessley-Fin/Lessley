@@ -133,11 +133,8 @@ class PersistStage:
                             image_urls.append(image_url)
                             self._store_repo.save(store)
 
-                if not self._deal_repo.exists_by_fingerprint(deal.fingerprint):
-                    self._deal_repo.save(deal)
-                    prec.fate = RecordFate.AUTO_MATCHED
-                else:
-                    prec.fate = RecordFate.DUPLICATE
+                self._deal_repo.save(deal)
+                prec.fate = RecordFate.AUTO_MATCHED
             await asyncio.sleep(0)  # yield control between batches
 
         # ------------------------------------------------------------------ #

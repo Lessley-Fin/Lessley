@@ -16,6 +16,37 @@
       "BILLABONG",
       "AMERICAN EAGLE",
       "FLYING TIGER"
+    ],
+    "sub_groups": {
+      "dream card family": [
+        "fox",
+        "fox home",
+        "שילב",
+        "the children's place",
+        "laline",
+        "minene"
+      ]
+    }
+  },
+  "קבוצת קסטרו - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      "castro",
+      "castro home",
+      "hoodies",
+      "urbanica",
+      "carolina lemke",
+      "topten",
+      "kiko milano",
+      "yves rocher",
+      "קסטרו",
+      "קסטרו הום",
+      "הודיס",
+      "אורבניקה",
+      "קרולינה למקה",
+      "טופ טן",
+      "קיקו מילאנו",
+      "איב רושה"
     ]
   },
   "קבוצת בריל - תווים": {
