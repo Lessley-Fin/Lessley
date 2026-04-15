@@ -49,3 +49,4 @@ __pycache__/
 lessley-deals/data/*.json
 !lessley-deals/data/
 lessley-deals/.venv/
+lessley-deals/swish_session/

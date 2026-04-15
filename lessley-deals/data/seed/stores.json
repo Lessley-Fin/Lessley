@@ -38,7 +38,6 @@
     "metadata": {
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_Lee-Cooper_26-02_462x80.jpg",
-        "https://cdn.hot.co.il/media/7f6693fd-83a2-4e1b-b54c-c105c2bfa6d4.jpg",
         "https://cdn.hot.co.il/media/6935a9bd-207c-4194-88c3-c5a08d4bd669.jpg"
       ]
     }
@@ -59,9 +58,9 @@
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_terminalX_26-01_462x80.png",
         "https://www.topcash.co.il/images/stores/TerminalTerminalXX.png",
-        "https://cdn.hot.co.il/media/5b867f09-9007-44a2-92e3-fc6534296699.jpg",
         "https://cdn.hot.co.il/media/4d189f3c-df11-47ed-b160-aeedd32fc604.jpg",
-        "https://cdn.hot.co.il/media/adfb3577-5657-4199-ad92-310dd6bedf2f.jpg"
+        "https://cdn.hot.co.il/media/adfb3577-5657-4199-ad92-310dd6bedf2f.jpg",
+        "https://cdn.hot.co.il/media/5b867f09-9007-44a2-92e3-fc6534296699.jpg"
       ]
     }
   },
@@ -210,7 +209,6 @@
     "metadata": {
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_Emporium_25-05_462x80.jpg",
-        "https://cdn.hot.co.il/media/17b48958-ed60-4135-874c-d7e1a9a0e069.jpg",
         "https://cdn.hot.co.il/media/a2536a20-cbe0-4b38-9b0d-88b0f9d01ed1.jpg"
       ]
     }
@@ -230,7 +228,6 @@
     "metadata": {
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_Minene_26-04_462x80.jpg",
-        "https://cdn.hot.co.il/media/fbbd4538-a7f2-4be3-bdd9-32378623a88b.jpg",
         "https://cdn.hot.co.il/media/8ed25a2a-948f-42cd-adf8-f486f7fedeac.jpg"
       ]
     }
@@ -250,7 +247,6 @@
     "metadata": {
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_ALDO_25-11_462x80.jpg",
-        "https://cdn.hot.co.il/media/10d17f8d-780e-4564-9eb2-f3955e252bff.jpg",
         "https://cdn.hot.co.il/media/c43a6d9f-cb59-4670-84de-807062289e34.jpg"
       ]
     }
@@ -308,7 +304,6 @@
     "metadata": {
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_Gali_25-11_462x80.jpg",
-        "https://cdn.hot.co.il/media/628d821a-4f08-4a90-bb67-0d17f05ed67d.jpg",
         "https://cdn.hot.co.il/media/18515ee3-bc5e-4ca6-9b24-d819a72a5aae.jpg"
       ]
     }
@@ -347,7 +342,6 @@
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_Nautica_25-02_462x80.jpg",
         "https://www.topcash.co.il/images/stores/NAUTICA.png",
-        "https://cdn.hot.co.il/media/ee3a7717-d185-4173-bedd-7715dad18bcc.jpg",
         "https://cdn.hot.co.il/media/cf0da071-150d-4087-9369-048f54c9804a.jpg"
       ]
     }
@@ -368,7 +362,6 @@
       "image_urls": [
         "https://www.mastercard.co.il/content/dam/public/mastercardcom/il/he/consumers/images/MDay_Timberland_25-11_462x80.jpg",
         "https://www.topcash.co.il/images/stores/TIMBERLAND.png",
-        "https://cdn.hot.co.il/media/2f325338-665a-4225-b9b2-5153be489028.jpg",
         "https://cdn.hot.co.il/media/0d94b757-1551-4b04-a369-b63ecc39d61f.jpg"
       ]
     }
@@ -1037,7 +1030,17 @@
         "https://cdn.hot.co.il/media/5b867f09-9007-44a2-92e3-fc6534296699.jpg",
         "https://cdn.hot.co.il/media/69a34219-3f5c-4337-a020-afcf176108c2.jpg",
         "https://cdn.hot.co.il/media/ea5c2315-f56b-4611-9015-ab34a224a628.jpg",
-        "https://cdn.hot.co.il/media/25fa954b-b01e-4e78-b382-629cb3602208.jpg"
+        "https://cdn.hot.co.il/media/25fa954b-b01e-4e78-b382-629cb3602208.jpg",
+        "https://cdn.hot.co.il/media/8ed25a2a-948f-42cd-adf8-f486f7fedeac.jpg",
+        "https://cdn.hot.co.il/media/40aa9c7b-1c33-4191-b82b-8e36cf307066.jpg",
+        "https://cdn.hot.co.il/media/4879f431-78d9-4403-af16-8864d92bd799.jpg",
+        "https://cdn.hot.co.il/media/5fe9ae37-3abc-4c65-97eb-742d5ea63ad6.jpg",
+        "https://cdn.hot.co.il/media/687e1b10-1b94-4590-989b-2327afe4efc8.jpg",
+        "https://cdn.hot.co.il/media/6d055eb4-0fd2-4b06-ba0d-9a772a4f127e.jpg",
+        "https://cdn.hot.co.il/media/3793c2e5-bbd1-4d8b-a2a2-ff1d684974e3.jpg",
+        "https://cdn.hot.co.il/media/a7d96b99-f8a0-442a-8c84-7470398c1e22.jpg",
+        "https://cdn.hot.co.il/media/56ad542b-adcd-4a21-bcf9-0aeb94a11ed9.jpg",
+        "https://cdn.hot.co.il/media/d6e90abe-3a80-4b57-8445-bb50ebf20296.jpg"
       ]
     }
   },
@@ -2004,7 +2007,9 @@
         "https://cdn.hot.co.il/media/751a0132-bdae-4a24-b8d8-e08ece13e446.jpg",
         "https://cdn.hot.co.il/media/54a122fb-7abe-4a34-8dbc-69cadfd00605.jpg",
         "https://cdn.hot.co.il/media/727b0686-fba9-4f13-99ae-9ba42dae8103.jpg",
-        "https://cdn.hot.co.il/media/867d234a-5efd-4fc6-861f-9b0c547d537e.jpg"
+        "https://cdn.hot.co.il/media/867d234a-5efd-4fc6-861f-9b0c547d537e.jpg",
+        "https://cdn.hot.co.il/media/aac06b60-2a63-4f09-adea-e0c662adba75.jpg",
+        "https://cdn.hot.co.il/media/d31b54d8-df88-4dbd-809b-1c3626fd230f.jpg"
       ]
     }
   },
@@ -2044,10 +2049,7 @@
     "metadata": {
       "image_urls": [
         "https://www.topcash.co.il/images/stores/TRAKLIN-LOGO.png",
-        "https://cdn.hot.co.il/media/7d1013e9-8edb-4328-b0c6-f616af3adf7a.jpg",
-        "https://cdn.hot.co.il/media/529fd30d-ce73-4a4b-850f-a22688d5d75c.jpg",
-        "https://cdn.hot.co.il/media/6b54616a-a170-446c-90fa-ef2ad2408839.jpg",
-        "https://cdn.hot.co.il/media/085b137d-a475-4adc-9c43-7b75326f3626.jpg"
+        "https://cdn.hot.co.il/media/7d1013e9-8edb-4328-b0c6-f616af3adf7a.jpg"
       ]
     }
   },
@@ -2699,7 +2701,11 @@
         "https://cdn.hot.co.il/media/e9e4783f-d98e-4ce7-bdfe-646013476f9a.jpg",
         "https://cdn.hot.co.il/media/23c9357b-3b89-4907-9f4a-a1fb0feaf360.jpg",
         "https://cdn.hot.co.il/media/5d13b150-cfa2-41ab-9cd9-4d8047ad3917.jpg",
-        "https://cdn.hot.co.il/media/312a0e5d-640c-4ab7-b704-4f6749c36c59.jpg"
+        "https://cdn.hot.co.il/media/312a0e5d-640c-4ab7-b704-4f6749c36c59.jpg",
+        "https://cdn.hot.co.il/media/8832f3de-84bf-4e54-8c1c-d0a853261855.jpg",
+        "https://cdn.hot.co.il/media/86f71251-fc5f-4e17-b8f5-d80d7439bd0d.jpg",
+        "https://cdn.hot.co.il/media/fdf6314e-a272-4024-8ebd-fab83156666d.jpg",
+        "https://cdn.hot.co.il/media/5936f9b4-67a6-41b9-9d7f-cfd8bcb4f6ba.jpg"
       ]
     }
   },
@@ -3115,7 +3121,8 @@
     "updated_at": "2026-03-25T08:11:59.124057+00:00",
     "metadata": {
       "image_urls": [
-        "https://cdn.hot.co.il/media/e9336ea0-3d30-405d-bd6a-7760924dbe10.jpg"
+        "https://cdn.hot.co.il/media/e9336ea0-3d30-405d-bd6a-7760924dbe10.jpg",
+        "https://cdn.hot.co.il/media/b3cee5a3-cd86-44c5-a4a8-51de2e1d15fd.jpg"
       ]
     }
   },
@@ -7035,6 +7042,8 @@
         "https://cdn.hot.co.il/media/071decf0-fe30-45a0-99f6-c83eac84dc9b.jpg",
         "https://cdn.hot.co.il/media/a9b68dc3-a82c-473b-b60a-c531b19d9fca.jpg",
         "https://cdn.hot.co.il/media/0c233303-e406-4b09-a293-3c64acacf504.jpg",
+        "https://cdn.hot.co.il/media/96f30dfd-d751-4357-995c-d447fd39cf90.jpg",
+        "https://cdn.hot.co.il/media/c4636db5-ff53-4c0e-a693-7b87d810c350.jpg",
         "https://cdn.hot.co.il/media/e36adb14-4d0d-4bd4-ab2c-e9f99b7b0333.jpg"
       ]
     }
@@ -7245,6 +7254,12 @@
         "https://cdn.hot.co.il/media/628d821a-4f08-4a90-bb67-0d17f05ed67d.jpg",
         "https://cdn.hot.co.il/media/f5b54c50-80e6-4051-abaa-a47ba61c28cb.jpg",
         "https://cdn.hot.co.il/media/7865244d-7182-47d0-bed3-1dbb181f0b7e.jpg",
+        "https://cdn.hot.co.il/media/a2536a20-cbe0-4b38-9b0d-88b0f9d01ed1.jpg",
+        "https://cdn.hot.co.il/media/cf0da071-150d-4087-9369-048f54c9804a.jpg",
+        "https://cdn.hot.co.il/media/6935a9bd-207c-4194-88c3-c5a08d4bd669.jpg",
+        "https://cdn.hot.co.il/media/c43a6d9f-cb59-4670-84de-807062289e34.jpg",
+        "https://cdn.hot.co.il/media/0d94b757-1551-4b04-a369-b63ecc39d61f.jpg",
+        "https://cdn.hot.co.il/media/18515ee3-bc5e-4ca6-9b24-d819a72a5aae.jpg",
         "https://cdn.hot.co.il/media/8d97f0a7-b56a-498b-8ab0-322b6ffc5830.jpg"
       ]
     }
@@ -7285,9 +7300,8 @@
     "metadata": {
       "image_urls": [
         "https://www.topcash.co.il/images/stores/AceAce.png",
-        "https://cdn.hot.co.il/media/2629fe6d-19b6-4cd1-8eaa-7c43f1e400cc.jpg",
-        "https://cdn.hot.co.il/media/8209bf47-9190-40f5-a596-288544ca55bd.jpg",
-        "https://cdn.hot.co.il/media/5dedaf1a-e81e-472e-bfbd-dca2d99fb1e8.jpg"
+        "https://cdn.hot.co.il/media/5dedaf1a-e81e-472e-bfbd-dca2d99fb1e8.jpg",
+        "https://cdn.hot.co.il/media/8209bf47-9190-40f5-a596-288544ca55bd.jpg"
       ]
     }
   },
@@ -9630,10 +9644,7 @@
     "updated_at": "2026-04-01T13:36:41.387492+00:00",
     "metadata": {
       "image_urls": [
-        "https://www.topcash.co.il/images/stores/mashbir.png",
-        "https://cdn.hot.co.il/media/bada8181-cbec-4a45-8849-183b50a99505.jpg",
-        "https://cdn.hot.co.il/media/d1ef7352-36f2-4ba6-8042-37af8e0b9d96.jpg",
-        "https://cdn.hot.co.il/media/f5efadb6-7879-491a-8b9a-d2f4dda8dbee.jpg"
+        "https://www.topcash.co.il/images/stores/mashbir.png"
       ]
     }
   },
@@ -9910,7 +9921,6 @@
       "image_urls": [
         "https://www.topcash.co.il/images/stores/naaman logo.png",
         "https://www.topcash.co.il/images/stores/naaman%20logo.png",
-        "https://cdn.hot.co.il/media/f4ca40c2-cb39-4ac8-9227-4d61aa23483d.jpg",
         "https://cdn.hot.co.il/media/96f30dfd-d751-4357-995c-d447fd39cf90.jpg"
       ]
     }
@@ -10279,7 +10289,6 @@
     "metadata": {
       "image_urls": [
         "https://www.topcash.co.il/images/stores/shilav-_logo.png",
-        "https://cdn.hot.co.il/media/e1549d63-55d3-4dc2-a78a-4c6b048820a3.jpg",
         "https://cdn.hot.co.il/media/a7d96b99-f8a0-442a-8c84-7470398c1e22.jpg"
       ]
     }
@@ -10318,7 +10327,6 @@
     "metadata": {
       "image_urls": [
         "https://www.topcash.co.il/images/stores/FOX--LOGO.png",
-        "https://cdn.hot.co.il/media/ee7f41d5-1134-4cc6-bcb8-a6a489247d8b.jpg",
         "https://cdn.hot.co.il/media/d6e90abe-3a80-4b57-8445-bb50ebf20296.jpg"
       ]
     }
@@ -10542,7 +10550,6 @@
       "image_urls": [
         "https://www.topcash.co.il/images/stores/vardinon logo.png",
         "https://www.topcash.co.il/images/stores/vardinon%20logo.png",
-        "https://cdn.hot.co.il/media/071decf0-fe30-45a0-99f6-c83eac84dc9b.jpg",
         "https://cdn.hot.co.il/media/c4636db5-ff53-4c0e-a693-7b87d810c350.jpg"
       ]
     }
@@ -12926,8 +12933,7 @@
     "metadata": {
       "image_urls": [
         "https://www.topcash.co.il/images/stores/Frame 57.png",
-        "https://www.topcash.co.il/images/stores/Frame%2057.png",
-        "https://cdn.hot.co.il/media/f05e912a-f1d9-4f92-bb2a-42509f1cf010.jpg"
+        "https://www.topcash.co.il/images/stores/Frame%2057.png"
       ]
     }
   },
@@ -16849,11 +16855,7 @@
     },
     "created_at": "2026-04-05T21:16:03.700622+00:00",
     "updated_at": "2026-04-05T21:16:03.700622+00:00",
-    "metadata": {
-      "image_urls": [
-        "https://cdn.hot.co.il/media/151/15416.jpg"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "019d5f80cfe3_4cda314077de9045",
@@ -17551,11 +17553,7 @@
     },
     "created_at": "2026-04-05T21:19:35.671152+00:00",
     "updated_at": "2026-04-05T21:19:35.671152+00:00",
-    "metadata": {
-      "image_urls": [
-        "https://cdn.hot.co.il/media/43/719.jpg"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "019d5f840598_2c016bfde86285ec",
@@ -17906,11 +17904,7 @@
     },
     "created_at": "2026-04-05T21:25:38.481807+00:00",
     "updated_at": "2026-04-05T21:25:38.481807+00:00",
-    "metadata": {
-      "image_urls": [
-        "https://cdn.hot.co.il/media/172/20528.jpg"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "019d5f898bcc_e3912eb45b1bc706",
@@ -20343,7 +20337,11 @@
     },
     "created_at": "2026-04-10T14:24:21.662299+00:00",
     "updated_at": "2026-04-10T14:24:21.662299+00:00",
-    "metadata": {}
+    "metadata": {
+      "image_urls": [
+        "https://cdn.hot.co.il/media/43/5658.jpg"
+      ]
+    }
   },
   {
     "id": "019d77c7cb09_1f1ad64e1ed95085",
@@ -20362,7 +20360,12 @@
     },
     "created_at": "2026-04-10T14:24:35.593826+00:00",
     "updated_at": "2026-04-10T14:24:35.593826+00:00",
-    "metadata": {}
+    "metadata": {
+      "image_urls": [
+        "https://cdn.hot.co.il/media/46/794.jpg",
+        "https://cdn.hot.co.il/media/60/20414.jpg"
+      ]
+    }
   },
   {
     "id": "019d77c84f66_060507b7b717d95c",
@@ -20391,7 +20394,11 @@
     },
     "created_at": "2026-04-10T14:25:55.761149+00:00",
     "updated_at": "2026-04-10T14:25:55.761149+00:00",
-    "metadata": {}
+    "metadata": {
+      "image_urls": [
+        "https://cdn.hot.co.il/media/43/870.jpg"
+      ]
+    }
   },
   {
     "id": "019d77c92f31_4d616910b57a04b4",
@@ -20454,7 +20461,11 @@
     },
     "created_at": "2026-04-10T14:28:05.155807+00:00",
     "updated_at": "2026-04-10T14:28:05.155807+00:00",
-    "metadata": {}
+    "metadata": {
+      "image_urls": [
+        "https://cdn.hot.co.il/media/43/719.jpg"
+      ]
+    }
   },
   {
     "id": "019d77cb1d0f_6873f245547f8a98",
@@ -20489,7 +20500,11 @@
     },
     "created_at": "2026-04-10T14:28:21.162298+00:00",
     "updated_at": "2026-04-10T14:28:21.162298+00:00",
-    "metadata": {}
+    "metadata": {
+      "image_urls": [
+        "https://cdn.hot.co.il/media/151/15266.jpg"
+      ]
+    }
   },
   {
     "id": "019d77cb7134_11a54eb459457ca8",
@@ -20604,7 +20619,11 @@
     },
     "created_at": "2026-04-11T16:26:10.404201+00:00",
     "updated_at": "2026-04-11T16:26:10.404201+00:00",
-    "metadata": {}
+    "metadata": {
+      "image_urls": [
+        "https://cdn.hot.co.il/media/183/37910.png"
+      ]
+    }
   },
   {
     "id": "019d7d5d914c_03be4495d74012ad",
@@ -20883,7 +20902,10 @@
     "updated_at": "2026-04-12T18:38:22.127267+00:00",
     "metadata": {
       "image_urls": [
-        "https://cdn.hot.co.il/media/ea5c2315-f56b-4611-9015-ab34a224a628.jpg"
+        "https://cdn.hot.co.il/media/ea5c2315-f56b-4611-9015-ab34a224a628.jpg",
+        "https://cdn.hot.co.il/media/21700199-9138-4b2d-b14d-f19fbceae6e3.jpg",
+        "https://cdn.hot.co.il/media/25fa954b-b01e-4e78-b382-629cb3602208.jpg",
+        "https://cdn.hot.co.il/media/a1d431e3-15c5-4a53-bdc6-6204b9b4bb54.jpg"
       ]
     }
   },
@@ -20906,5 +20928,20 @@
         "https://cdn.hot.co.il/media/95a8e03f-38b7-452c-9a62-30b55eb8bae1.jpg"
       ]
     }
+  },
+  {
+    "id": "019d8d465eb8_7a4c832b56c5a08b",
+    "name": "סופר סופר קדומים",
+    "name_forms": {
+      "normalized": "סופר סופר קדומימ",
+      "compact": "סופרסופרקדומימ",
+      "tokens": [
+        "סופר",
+        "קדומימ"
+      ]
+    },
+    "created_at": "2026-04-14T18:34:52.472440+00:00",
+    "updated_at": "2026-04-14T18:34:52.472440+00:00",
+    "metadata": {}
   }
 ]

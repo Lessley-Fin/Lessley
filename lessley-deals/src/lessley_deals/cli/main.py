@@ -1119,5 +1119,44 @@ def seed_mongo(
     console.print("\n[green]Migration complete.[/green]")
 
 
+@app.command(name="export")
+def export_stores(
+    out_dir: str = typer.Option("data/seed", "--out", "-o", help="Directory to write stores.json and store_aliases.json"),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Export canonical stores and aliases from the active storage backend to JSON files.
+
+    Works with both JSON and MongoDB storage (DEALS_STORAGE env var).
+    Output files are written in the same format as the seed files, so you can
+    review/edit them and re-import with: python -m deals seed-mongo --seed-dir <out>
+    """
+    import json
+
+    _setup_logging(log_level)
+
+    repos = _make_repos(data_dir)
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    from lessley_deals.persistence.serialization import to_dict
+
+    stores = repos.store_repo.get_all()
+    stores_file = out_path / "stores.json"
+    stores_file.write_text(
+        json.dumps([to_dict(s) for s in stores], ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    console.print(f"[green]Exported {len(stores)} stores →[/green] {stores_file}")
+
+    aliases = repos.alias_repo.get_all()
+    aliases_file = out_path / "store_aliases.json"
+    aliases_file.write_text(
+        json.dumps([to_dict(a) for a in aliases], ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    console.print(f"[green]Exported {len(aliases)} aliases →[/green] {aliases_file}")
+
+
 if __name__ == "__main__":
     app()
