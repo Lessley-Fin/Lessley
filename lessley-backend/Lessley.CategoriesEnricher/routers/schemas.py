@@ -16,3 +16,35 @@ class CategoryEnrichmentRequestSchema(BaseModel):
 
     transactions: list[TransactionSchema]
     user_id: Optional[str] = None
+
+
+class StoreCategoryRequestSchema(BaseModel):
+    """Schema for store category classification request"""
+
+    store_name: str
+
+
+class StoreCategoryResponseSchema(BaseModel):
+    """Schema for store category classification response"""
+
+    store_name: str
+    primary_category: str
+    mcc_code: int
+    confidence_level: str
+
+
+class DealCategoryRequestSchema(BaseModel):
+    """Schema for deal category classification request"""
+
+    deal_name: str
+    deal_description: Optional[str] = None
+
+
+class DealCategoryResponseSchema(BaseModel):
+    """Schema for deal category classification response"""
+
+    deal_name: str
+    category: str
+    subcategory: str
+    relevance_score: float
+    confidence_level: str
