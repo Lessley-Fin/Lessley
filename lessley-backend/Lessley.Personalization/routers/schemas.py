@@ -14,7 +14,7 @@ class UserRequests(BaseModel):
 
 class InsightsCalcRequests(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
-    use_mock: bool = Field(True, description="Use mock data")
+    use_mock: bool = Field(False, description="Use mock data")
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
 
