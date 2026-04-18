@@ -13,7 +13,6 @@ from logging.handlers import QueueHandler, QueueListener
 import queue
 import logging_loki
 from services.di_container import DIContainer
-import time
 from config.settings import settings
 from config.structured_logging import StructuredFormatter, ContextInjectingFilter
 from routers import open_finance_controller  # Import your new controller
@@ -45,8 +44,10 @@ class LocalQueueHandler(QueueHandler):
     The default QueueHandler flattens the exception into the message and strips exc_info
     to make records picklable for multiprocessing. Since we use threads, we bypass this.
     """
+
     def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
         return record
+
 
 # Use QueueHandler to prevent Loki HTTP requests from blocking the async event loop
 log_queue = queue.Queue(-1)
@@ -176,6 +177,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Rate limit exceeded", "request_id": getattr(request.state, "request_id", "unknown")},
     )
 
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     endpoint_logger = logging.getLogger(__name__)
@@ -194,6 +196,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
         content={"detail": exc.detail, "request_id": getattr(request.state, "request_id", "unknown")},
     )
+
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
@@ -255,7 +258,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
-app.add_middleware(UnifiedContextMiddleware) # Inject Request ID and logging context
+app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging context
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
