@@ -41,23 +41,15 @@ class CategoriesService:
 
             store_category = llm_integration.get_store_category(store_name)
 
-            result = {
-                "store_name": store_name,
-                "official_name": store_category.official_name,
-                "primary_category": store_category.primary_category,
-                "mcc_code": store_category.mcc_code,
-                "confidence_level": store_category.confidence_level,
-            }
-
             logger.info(
                 "Store MCC retrieved successfully",
                 extra={
                     "reason": "Store classification complete",
-                    "extra_data": {"store_name": store_name, "mcc_code": store_category.mcc_code},
+                    "extra_data": {"store_name": store_name},
                 },
             )
 
-            return result
+            return store_category.dict()
 
         except Exception as e:
             logger.error(

@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, Field
+from typing import List, Literal
 from openai import OpenAI
 import logging
 from config.settings import settings
@@ -16,8 +16,9 @@ client = OpenAI(
 # 1. Define DTOs for store classification
 class StoreCategory(BaseModel):
     official_name: str
-    primary_category: str
-    mcc_code: int
+    mcc_codes: List[int] = Field(
+        description="A ranked list of the 1 to 3 most accurate MCC codes, from most specific to least specific."
+    )
     confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
 
 
@@ -52,15 +53,19 @@ def get_store_category(store_name: str) -> StoreCategory:
                     "Assume that the store exists but have typos or inconsistencies. Try to identify the official store name. "
                     "Process raw, messy store strings (typos, hyphens, missing spaces, domain extensions) and perform Entity Resolution. "
                     "1. Return the official name of the store if you can identify it. If not, return the cleaned name with typos corrected and extraneous characters removed. "
-                    "2. Return the most accurate broad primary_category. Use the standard MCC categories where possible. If you cannot determine a specific category, return 'Unknown'. "
-                    "3. Return the standard 4-digit mcc_code."
-                    "4. Provide a confidence_level of HIGH, MEDIUM, or LOW based on how certain you are. Use HIGH if you're very certain and found a clear match, MEDIUM if fairly certain, LOW if uncertain. If you cannot classify, return LOW"
+                    "2. Provide an array of the top 1 to 3 most applicable 4-digit Merchant Category Codes (MCC). Rank the array from most specific/likely to least specific/likely."
+                    "3. Provide a confidence_level of HIGH, MEDIUM, or LOW based on how certain you are. Use HIGH if you're very certain and found a clear match, MEDIUM if fairly certain, LOW if uncertain. If you cannot classify, return LOW"
+                    "EXAMPLES: "
+                    "a) Input: 'nikestore' -> official_name: 'Nike', mcc_codes: [5941, 5661, 5651]. "
+                    "b) Input: 'shufersal-deal' -> official_name: 'Shufersal', mcc_codes: [5411, 5310]. "
+                    "c) Input: 'ksp.co.il' -> official_name: 'KSP', mcc_codes: [5732, 5722]"
                 ),
             },
             {"role": "user", "content": f"Analyze and classify this store string: {store_name.strip()}"},
         ],
         response_format=StoreCategory,
         temperature=0.0,  # Deterministic output for classification
+        seed=42,  # Fixed seed for reproducibility
     )
 
     return completion.choices[0].message.parsed
