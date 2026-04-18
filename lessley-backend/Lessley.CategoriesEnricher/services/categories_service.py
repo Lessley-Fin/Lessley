@@ -43,6 +43,7 @@ class CategoriesService:
 
             result = {
                 "store_name": store_name,
+                "official_name": store_category.official_name,
                 "primary_category": store_category.primary_category,
                 "mcc_code": store_category.mcc_code,
                 "confidence_level": store_category.confidence_level,

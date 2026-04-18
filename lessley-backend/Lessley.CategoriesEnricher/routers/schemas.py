@@ -28,6 +28,7 @@ class StoreCategoryResponseSchema(BaseModel):
     """Schema for store category classification response"""
 
     store_name: str
+    official_name: str
     primary_category: str
     mcc_code: int
     confidence_level: str
