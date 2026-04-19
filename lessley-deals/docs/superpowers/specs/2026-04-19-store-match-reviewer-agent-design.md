@@ -31,6 +31,7 @@ Automate processing of `data/store_match_review.json` (the human-review queue pr
 | `src/lessley_deals/cli/main.py` | EDIT | Add `review apply-batch` Click subcommand |
 | `tests/unit/review/test_batch_apply.py` | NEW | Unit tests for `BatchApplier` |
 | `data/.tmp/decisions.json` | RUNTIME | Transient agent output, consumed by CLI |
+| `.gitignore` | EDIT | Add `data/.tmp/` (transient agent scratch) |
 
 Read-only inputs: `data/store_match_review.json`.
 Write targets via existing repos: `data/seed/stores.json`, `data/seed/store_aliases.json`, deals storage, review status.
@@ -83,7 +84,10 @@ model: sonnet
    - The original `input_name` (always included if it differs from store name)
    - User can edit/add/remove before save.
 6. **Output** — write `data/.tmp/decisions.json`, run `python -m deals review apply-batch data/.tmp/decisions.json` via Bash.
-7. **Failure handling** — if CLI exits non-zero, do NOT mark items processed; surface stderr verbatim and stop.
+7. **Failure handling** — interpret CLI exit code:
+   - `0` (full success): report counts to user.
+   - `1` (partial success / per-decision errors): report counts AND list errored item_ids with reasons; do NOT retry automatically.
+   - `2` (schema or IO failure): nothing was written; surface stderr verbatim and stop.
 
 ### Python: `BatchApplier`
 
