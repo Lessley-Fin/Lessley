@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     OpenFinanceConfig_BaseUrl: str | None = None  # Optional setting
     Loki_Url: str | None = None  # Optional setting for Loki logging
     OpenAI_ApiKey: str | None = None  # Optional setting for OpenAI API
+    personalization_service_url: str = "http://localhost:5000"  # Personalization service base URL
 
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
