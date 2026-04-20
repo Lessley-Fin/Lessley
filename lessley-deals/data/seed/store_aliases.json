@@ -18201,5 +18201,147 @@
     },
     "source": "review",
     "created_at": "2026-04-12T19:08:38.812130+00:00"
+  },
+  {
+    "id": "019d884f4a36_31d785f451d06156",
+    "store_id": "019d4dcf6282_cccea963dc47074d",
+    "alias": "כיתן",
+    "alias_forms": {
+      "normalized": "כיתנ",
+      "compact": "כיתנ",
+      "tokens": [
+        "כיתנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-13T19:26:30.966217+00:00"
+  },
+  {
+    "id": "019d884f9a08_2e31984f9838bdef",
+    "store_id": "019d4dc5f336_5d94810c7b81c080",
+    "alias": "golf&co",
+    "alias_forms": {
+      "normalized": "golf&co",
+      "compact": "golfco",
+      "tokens": [
+        "golf&co"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-13T19:26:51.400487+00:00"
+  },
+  {
+    "id": "019d884fbc29_e345fdd31c6b1bb0",
+    "store_id": "019d4dcbc8ef_cf5bc3c452d0d6e1",
+    "alias": "גולף קידס",
+    "alias_forms": {
+      "normalized": "גולפ קידס",
+      "compact": "גולפקידס",
+      "tokens": [
+        "גולפ",
+        "קידס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-13T19:27:00.137679+00:00"
+  },
+  {
+    "id": "019d884fe752_cf27640f64991c3d",
+    "store_id": "019d4dd9d4b6_f78a3794da181fe7",
+    "alias": "אינטימה",
+    "alias_forms": {
+      "normalized": "אינטימה",
+      "compact": "אינטימה",
+      "tokens": [
+        "אינטימה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-13T19:27:11.185645+00:00"
+  },
+  {
+    "id": "019d88716baf_074e64ff7e5e7a3c",
+    "store_id": "019d4dcb7ccc_5994c9109a057a6e",
+    "alias": "נעמן",
+    "alias_forms": {
+      "normalized": "נעמנ",
+      "compact": "נעמנ",
+      "tokens": [
+        "נעמנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-13T20:03:47.758114+00:00"
+  },
+  {
+    "id": "019da761556d_da68a5f2b9ffd8cb",
+    "store_id": "019d2090d408_04f0484327138601",
+    "alias": "cwc",
+    "alias_forms": {
+      "normalized": "cwc",
+      "compact": "cwc",
+      "tokens": [
+        "cwc"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-19T20:14:27.181585+00:00"
+  },
+  {
+    "id": "019da76176aa_33fe13d6cda54430",
+    "store_id": "019d20a0add0_2d82dc6610d4bb08",
+    "alias": "elite coffee",
+    "alias_forms": {
+      "normalized": "elite coffee",
+      "compact": "elitecoffee",
+      "tokens": [
+        "coffee",
+        "elite"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-19T20:14:35.690381+00:00"
+  },
+  {
+    "id": "019da7639297_622d055cba0de4f4",
+    "store_id": "019d20a0c4a9_0188a0685241649c",
+    "alias": "wine",
+    "alias_forms": {
+      "normalized": "wine",
+      "compact": "wine",
+      "tokens": [
+        "wine"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-19T20:16:53.910483+00:00"
+  },
+  {
+    "id": "019da763af62_bdebb4d02efa421b",
+    "store_id": "019d20c92f52_9a4bb91d086a2033",
+    "alias": "e-vrit",
+    "alias_forms": {
+      "normalized": "e-vrit",
+      "compact": "evrit",
+      "tokens": [
+        "e-vrit"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-19T20:17:01.282880+00:00"
+  },
+  {
+    "id": "019da76404f0_47e4e87b1a4e5ddb",
+    "store_id": "019da76404bb_795976221dbe8ac7",
+    "alias": "lenovo",
+    "alias_forms": {
+      "normalized": "lenovo",
+      "compact": "lenovo",
+      "tokens": [
+        "lenovo"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-04-19T20:17:23.131153+00:00"
   }
 ]
