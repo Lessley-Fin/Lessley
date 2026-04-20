@@ -200,9 +200,12 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         store_id=d["store_id"],
         raw_id=d["raw_id"],
         source_id=d["source_id"],
-        description=d["description"],
         scraped_at=_parse_datetime(d["scraped_at"]),  # type: ignore[arg-type]
         resolved_at=_parse_datetime(d["resolved_at"]),  # type: ignore[arg-type]
+        title=d.get("title"),
+        deal_description=d.get("deal_description") or d.get("description"),
+        terms_and_conditions=d.get("terms_and_conditions"),
+        benefit_url=d.get("benefit_url"),
         currency=d.get("currency"),
         url=d.get("url"),
         discount_logic=d.get("discount_logic"),

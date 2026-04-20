@@ -100,9 +100,9 @@ class ReviewActions:
             store_id=store_id,
             raw_id=item.raw_id,
             source_id=item.verdict.record_id,
-            description=item.verdict.input_name,
             scraped_at=item.created_at,
             resolved_at=now,
+            deal_description=item.verdict.input_name,
         )
         self._deal_repo.save(deal)
 
@@ -150,9 +150,9 @@ class ReviewActions:
             store_id=store_id,
             raw_id=item.raw_id,
             source_id=item.verdict.record_id,
-            description=item.verdict.input_name,
             scraped_at=item.created_at,
             resolved_at=now,
+            deal_description=item.verdict.input_name,
         )
         self._deal_repo.save(deal)
 
@@ -201,9 +201,9 @@ class ReviewActions:
             store_id=store.id,
             raw_id=item.raw_id,
             source_id=item.verdict.record_id,
-            description=item.verdict.input_name,
             scraped_at=item.created_at,
             resolved_at=now,
+            deal_description=item.verdict.input_name,
         )
         self._deal_repo.save(deal)
 

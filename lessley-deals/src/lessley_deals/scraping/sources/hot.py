@@ -450,6 +450,7 @@ class HotAdapter(BaseSourceAdapter):
 
         merged["_terms_text"] = terms_text
         merged["_details_text"] = details_text
+        merged["_dynamic_link"] = main.get("dynamicLink")
         merged["discount_logic"] = deduce_hot_discount_mechanics(main, combined_text)
         merged["stackable"] = check_stackable(combined_text)
         merged["redeem_channels"] = extract_redeem_channels(combined_text)
@@ -623,11 +624,31 @@ class HotAdapter(BaseSourceAdapter):
         deal_description = f"{title} - {description}" if description else title
         price_text = record.get("value") or record.get("small_text") or ""
 
-        record_id = record.get("id")
-        url = f"https://www.hot.co.il/benefit/{record_id}" if record_id else None
+        supplier_website = record.get("supplierWebsite") or ""
+        if supplier_website and not supplier_website.startswith("http"):
+            supplier_website = f"https://{supplier_website}"
+        url = supplier_website or None
 
         if is_group_wide and group_member_stores:
             record["group_member_stores"] = group_member_stores
+
+        record["deal_title"] = title
+        record["full_description"] = deal_description
+        record["benefit_url"] = record.get("_dynamic_link") or record.get("dynamicLink")
+
+        # Extract T&C from the record's own information array if detail hasn't
+        # already been merged (which sets _terms_text via _merge_detail).
+        if "_terms_text" not in record:
+            terms_html = ""
+            for section in record.get("information", []):
+                if not isinstance(section, dict):
+                    continue
+                section_title = section.get("title", "")
+                if "תנאי" in section_title or "מימוש" in section_title:
+                    terms_html += section.get("content", "") + " \n"
+            record["terms_and_conditions"] = clean_html(terms_html) if terms_html else None
+        else:
+            record["terms_and_conditions"] = record["_terms_text"] or None
 
         return RawScrapedRecord(
             id=generate_id(),

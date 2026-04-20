@@ -200,10 +200,20 @@ class MastercardAdapter(BaseSourceAdapter):
         now: datetime,
     ) -> RawScrapedRecord | None:
         """Parse one ``<dxp-content-item>`` and return a record, or *None*."""
-        # --- Description text ---
-        # The new page embeds description text directly inside the teaser div.
-        clean_text = block.get_text(" ").translate(_JUNK_CHARS).strip()
-        if not clean_text:
+        # --- Title from dedicated h3 element ---
+        title_tag = block.find("h3", class_="cmp-teaser__title")
+        extracted_title: str | None = None
+        if isinstance(title_tag, Tag):
+            extracted_title = title_tag.get_text(" ").translate(_JUNK_CHARS).strip() or None
+
+        # --- Description from dedicated div element ---
+        desc_tag = block.find("div", class_="cmp-teaser__description")
+        if isinstance(desc_tag, Tag):
+            clean_text = desc_tag.get_text(" ").translate(_JUNK_CHARS).strip()
+        else:
+            clean_text = block.get_text(" ").translate(_JUNK_CHARS).strip()
+
+        if not clean_text and not extracted_title:
             return None
 
         # --- Image & store name ---
@@ -228,7 +238,7 @@ class MastercardAdapter(BaseSourceAdapter):
         modal_text = self._extract_modal_text(modal_id, soup) if modal_id else None
 
         # --- Title ---
-        title = self._extract_title(clean_text)
+        title = extracted_title or self._extract_title(clean_text)
 
         # --- Discount logic ---
         combined_text = f"{clean_text} {modal_text or ''}"
@@ -260,6 +270,8 @@ class MastercardAdapter(BaseSourceAdapter):
             parent = parent.parent  # type: ignore[assignment]
 
         raw_payload: dict[str, Any] = {
+            "deal_title": title,
+            "benefit_url": _MC_URL,
             "image_url": image_url,
             "modal_id": modal_id,
             "modal_text": modal_text,
@@ -269,7 +281,7 @@ class MastercardAdapter(BaseSourceAdapter):
             "stackable": stackable,
             "redeem_channels": channels,
             "coupon_code": coupon,
-            "full_description": clean_text,
+            "terms_and_conditions": clean_text,
         }
 
         return RawScrapedRecord(

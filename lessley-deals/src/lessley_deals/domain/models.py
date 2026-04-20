@@ -149,9 +149,12 @@ class Deal:
     store_id: str
     raw_id: str
     source_id: str
-    description: str
     scraped_at: datetime
     resolved_at: datetime
+    title: str | None = None
+    deal_description: str | None = None
+    terms_and_conditions: str | None = None
+    benefit_url: str | None = None
     currency: str | None = None
     url: str | None = None
     discount_logic: dict[str, Any] | None = None
@@ -163,7 +166,7 @@ class Deal:
 
     @property
     def fingerprint(self) -> str:
-        data = f"{self.store_id}|{self.source_id}|{self.description}|{self.currency or ''}"
+        data = f"{self.store_id}|{self.source_id}|{self.deal_description or ''}|{self.currency or ''}"
         return hashlib.sha256(data.encode()).hexdigest()
 
 

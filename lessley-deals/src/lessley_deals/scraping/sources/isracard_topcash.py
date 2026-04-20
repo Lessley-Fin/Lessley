@@ -4,10 +4,9 @@ import asyncio
 import logging
 import re
 from datetime import datetime, timezone
-from typing import Any
 
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
@@ -26,11 +25,14 @@ _USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/120.0.0.0 Safari/537.36"
 )
+_DETAIL_CONCURRENCY = 5
+_DETAIL_DELAY = 0.5
+
 
 class IsracardTopcashAdapter(BaseSourceAdapter):
     """Scraper for Isracard TOPCASH benefits website."""
 
-    def __init__(self, config: SourceConfig | None = None) -> None:
+    def __init__(self, config: SourceConfig | None = None, fetch_details: bool = True) -> None:
         super().__init__(
             config
             or SourceConfig(
@@ -39,6 +41,7 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
                 timeout_seconds=30.0,
             )
         )
+        self._fetch_details = fetch_details
 
     @property
     def source_id(self) -> str:
@@ -56,39 +59,39 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
                 resp = await client.get(self.config.base_url)
                 resp.raise_for_status()
                 html = resp.text
+
+                soup = BeautifulSoup(html, "html.parser")
+                store_containers = soup.find_all("div", class_="store-container")
+                logger.info("[%s] Found %d store containers", self.source_id, len(store_containers))
+
+                now = datetime.now(timezone.utc)
+                deals: list[RawScrapedRecord] = []
+
+                for store in store_containers:
+                    try:
+                        record = self._process_store(store, now)
+                    except Exception:
+                        logger.warning("[%s] Failed to process a store container, skipping", self.source_id, exc_info=True)
+                        continue
+                    if record is not None:
+                        deals.append(record)
+
+                if self._fetch_details:
+                    deals = await self._enrich_with_details(client, deals)
+
         except Exception:
             logger.exception("[%s] Failed to fetch TOPCASH page", self.source_id)
             return [], []
 
-        soup = BeautifulSoup(html, "html.parser")
-        store_containers = soup.find_all("div", class_="store-container")
-
-        logger.info("[%s] Found %d store containers", self.source_id, len(store_containers))
-
-        now = datetime.now(timezone.utc)
         stores_map: dict[str, RawStore] = {}
-        deals: list[RawScrapedRecord] = []
-
-        for store in store_containers:
-            try:
-                record = self._process_store(store, now)
-            except Exception:
-                logger.warning("[%s] Failed to process a store container, skipping", self.source_id, exc_info=True)
-                continue
-
-            if record is None:
-                continue
-
-            deals.append(record)
-
-            # Deduplicate stores by name.
+        for record in deals:
             sname = record.store_name
             if sname and sname not in stores_map:
                 stores_map[sname] = RawStore(
                     id=generate_id(),
                     source_id=self.source_id,
                     name=sname,
-                    scraped_at=now,
+                    scraped_at=record.scraped_at,
                     url=record.url,
                     raw_payload={"source_page": _TOPCASH_URL},
                 )
@@ -101,6 +104,56 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
             len(deals),
         )
         return stores, deals
+
+    async def _enrich_with_details(
+        self, client: httpx.AsyncClient, deals: list[RawScrapedRecord]
+    ) -> list[RawScrapedRecord]:
+        """Fetch each deal's detail page and enrich raw_payload with description and terms."""
+        semaphore = asyncio.Semaphore(_DETAIL_CONCURRENCY)
+        logger.info("[%s] Enriching %d deals with detail pages", self.source_id, len(deals))
+
+        async def enrich_one(record: RawScrapedRecord) -> RawScrapedRecord:
+            benefit_url = record.raw_payload.get("benefit_url")
+            if not benefit_url:
+                return record
+            async with semaphore:
+                try:
+                    resp = await client.get(benefit_url)
+                    resp.raise_for_status()
+                    detail_soup = BeautifulSoup(resp.text, "html.parser")
+
+                    desc_tag = detail_soup.find("p", class_="details")
+                    description = desc_tag.get_text(" ").strip() if isinstance(desc_tag, Tag) else None
+
+                    limits_tag = detail_soup.find("div", id="limits")
+                    terms = limits_tag.get_text(" ").strip() if isinstance(limits_tag, Tag) else None
+
+                    updated_payload = dict(record.raw_payload)
+                    if description:
+                        updated_payload["full_description"] = description
+                    if terms:
+                        updated_payload["terms_and_conditions"] = terms
+
+                    return RawScrapedRecord(
+                        id=record.id,
+                        source_id=record.source_id,
+                        store_name=record.store_name,
+                        deal_description=description or record.deal_description,
+                        price_text=record.price_text,
+                        scraped_at=record.scraped_at,
+                        url=record.url,
+                        raw_payload=updated_payload,
+                    )
+                except Exception:
+                    logger.warning(
+                        "[%s] Failed to fetch detail page %s, skipping",
+                        self.source_id, benefit_url, exc_info=True,
+                    )
+                    await asyncio.sleep(_DETAIL_DELAY)
+                    return record
+            await asyncio.sleep(_DETAIL_DELAY)
+
+        return list(await asyncio.gather(*[enrich_one(r) for r in deals]))
 
     async def health_check(self) -> bool:
         try:
@@ -202,6 +255,8 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
             "stackable": stackable,
             "redeem_channels": channels,
             "coupon_code": coupon,
+            "deal_title": raw_payload["title"],
+            "full_description": raw_payload["description"],
         })
 
         return RawScrapedRecord(
