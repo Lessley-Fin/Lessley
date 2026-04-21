@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -68,10 +69,8 @@ def _atomic_write_json(path: Path, payload: Any) -> None:
             os.fsync(f.fileno())
         os.replace(tmp_path, str(path))
     except BaseException:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
         raise
 
 

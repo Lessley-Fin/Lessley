@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
-import pytest
+import pytest  # noqa: TCH002
 
 from lessley_deals.scraping.helpers.swish_scanner import (
     ScanState,
