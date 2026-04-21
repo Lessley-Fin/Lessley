@@ -5,6 +5,8 @@ from .insights_service import InsightsService
 from .transaction_stash_service import TransactionStashService
 from .processing_core_service import ProcessingCoreService
 from .mcc_service import MccService
+from .recommendation_service import RecommendationService
+from .recommendation_core_service import RecommendationCoreService
 
 
 class DIContainer:
@@ -60,3 +62,20 @@ class DIContainer:
                     client=DIContainer.get_open_finance_client()
                 )
             return DIContainer._instances["open_finance_service"]
+
+    @staticmethod
+    def get_recommendation_service() -> RecommendationService:
+        with DIContainer._lock:
+            if "recommendation_service" not in DIContainer._instances:
+                DIContainer._instances["recommendation_service"] = RecommendationService(
+                    recommendation_core_service=DIContainer.get_recommendation_core_service(),
+                    insights_service=DIContainer.get_insights_service(),
+                )
+            return DIContainer._instances["recommendation_service"]
+
+    @staticmethod
+    def get_recommendation_core_service() -> RecommendationCoreService:
+        with DIContainer._lock:
+            if "recommendation_core_service" not in DIContainer._instances:
+                DIContainer._instances["recommendation_core_service"] = RecommendationCoreService()
+            return DIContainer._instances["recommendation_core_service"]

@@ -47,26 +47,3 @@ class DealCategoryResponseSchema(BaseModel):
     subcategory: str
     relevance_score: float
     confidence_level: str
-
-
-class ClubScoreSchema(BaseModel):
-    """Schema for club recommendation score"""
-
-    club_id: str
-    club_name: str
-    hit_count: int
-    total_stores: int
-
-
-class RecommendationByCategoryRequestSchema(BaseModel):
-    """Schema for recommendation by category request"""
-
-    user_id: str
-
-
-class RecommendationByCategoryResponseSchema(BaseModel):
-    """Schema for recommendation by category response"""
-
-    user_id: str
-    club_scores: list[ClubScoreSchema]
-    recommended_club: Optional[ClubScoreSchema] = None
