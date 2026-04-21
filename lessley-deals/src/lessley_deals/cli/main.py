@@ -327,6 +327,175 @@ def process(
     console.print(PipelineReport.from_context(ctx).summary())
 
 
+@app.command(name="sync-swish-groups")
+def sync_swish_groups_cmd(
+    swish_db: Optional[str] = typer.Option(
+        None,
+        "--swish-db",
+        help="Path to swish_database.json. Defaults to $SWISH_DATA_DIR/swish_database.json.",
+    ),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Refresh hot_store_groups.json with the latest Swish catalogue.
+
+    Resolves each Swish member store against the canonical stores via the
+    matching pipeline.  Auto-matched members get their store_id written into
+    the config; unresolved members are pushed to the review queue.
+    """
+    _setup_logging(log_level)
+
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.scraping.helpers.swish_group_sync import sync_swish_groups
+    from lessley_deals.scraping.helpers.swish_scanner import SwishPaths
+
+    repos = _make_repos(data_dir)
+    index = AliasIndex(
+        aliases=repos.alias_repo.get_all(),
+        stores=repos.store_repo.get_all(),
+    )
+    queue = ReviewQueue(repos.review_repo)
+
+    resolved_db = Path(swish_db) if swish_db else SwishPaths.from_env().database
+    if not resolved_db.exists():
+        console.print(f"[red]Swish database not found at {resolved_db}[/red]")
+        raise typer.Exit(code=1)
+
+    result = sync_swish_groups(
+        swish_db_path=resolved_db,
+        alias_index=index,
+        review_queue=queue,
+    )
+    console.print(
+        f"Swish sync: {result.benefits_processed} benefits, "
+        f"{result.members_total} members "
+        f"([green]{result.members_resolved} resolved[/green], "
+        f"[yellow]{result.members_to_review} to review[/yellow]), "
+        f"{result.review_items_created} new review items, "
+        f"{result.groups_removed} stale groups removed."
+    )
+
+
+def _swish_paths(data_dir: str | None) -> "SwishPaths":  # noqa: F821
+    from lessley_deals.scraping.helpers.swish_scanner import SwishPaths
+    if data_dir is not None:
+        os.environ["SWISH_DATA_DIR"] = data_dir
+    return SwishPaths.from_env()
+
+
+_SWISH_DATA_DIR_OPT: str | None = typer.Option(
+    None,
+    "--data-dir",
+    "-d",
+    help="Swish data directory. Overrides $SWISH_DATA_DIR (default: data/swish).",
+)
+
+
+@app.command(name="swish-catalog")
+def swish_catalog_cmd(
+    data_dir: str | None = _SWISH_DATA_DIR_OPT,
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Map all Swish gift-card IDs via two-phase catalog scrape."""
+    _setup_logging(log_level)
+    from lessley_deals.scraping.helpers.swish_scanner import SwishScanner
+
+    with SwishScanner(paths=_swish_paths(data_dir)) as scanner:
+        result = scanner.catalog()
+
+    console.print(
+        f"Catalog: {len(result.ids_found)} IDs found "
+        f"({len(result.new_ids)} new, {len(result.ids_found) - len(result.new_ids)} already processed). "
+        f"Stable: {result.stable}"
+    )
+    if not result.stable:
+        raise typer.Exit(code=2)
+
+
+@app.command(name="swish-scan")
+def swish_scan_cmd(
+    data_dir: str | None = _SWISH_DATA_DIR_OPT,
+    limit: int = typer.Option(0, "--limit", help="Max IDs to scrape this run (0=unlimited)."),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Scrape pending Swish gift-card IDs into swish_database.json."""
+    _setup_logging(log_level)
+    from lessley_deals.scraping.helpers.swish_scanner import SwishScanner
+
+    with SwishScanner(paths=_swish_paths(data_dir), scan_limit=limit or None) as scanner:
+        count = scanner.scan()
+
+    console.print(f"Scan complete: {count} new records saved.")
+
+
+@app.command(name="swish-retry")
+def swish_retry_cmd(
+    data_dir: str | None = _SWISH_DATA_DIR_OPT,
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Retry blocked/failed Swish gift-card IDs."""
+    _setup_logging(log_level)
+    from lessley_deals.scraping.helpers.swish_scanner import SwishScanner
+
+    with SwishScanner(paths=_swish_paths(data_dir)) as scanner:
+        count = scanner.retry()
+
+    console.print(f"Retry complete: {count} records recovered.")
+
+
+@app.command(name="swish-all")
+def swish_all_cmd(
+    data_dir: str | None = _SWISH_DATA_DIR_OPT,
+    deals_data_dir: str = typer.Option(
+        "data", "--deals-data-dir", help="Deals data directory (for review queue, stores, aliases)."
+    ),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Full Swish run: catalog -> scan -> retry loop -> sync-swish-groups."""
+    _setup_logging(log_level)
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.scraping.helpers.swish_group_sync import sync_swish_groups
+    from lessley_deals.scraping.helpers.swish_scanner import SwishScanner
+
+    paths = _swish_paths(data_dir)
+
+    with SwishScanner(paths=paths) as scanner:
+        summary = scanner.run_all()
+
+    console.print(
+        f"Swish run: {summary.ids_total} IDs, "
+        f"{summary.records_new} new, {summary.records_retried} retried, "
+        f"{len(summary.still_missing)} still missing, {summary.attempts} attempt(s). "
+        f"Catalog stable: {summary.catalog_stable}"
+    )
+    if summary.still_missing:
+        n_missing = len(summary.still_missing)
+        console.print(
+            f"[yellow]Warning: {n_missing} IDs have no record after {summary.attempts} attempts[/yellow]"
+        )
+
+    repos = _make_repos(deals_data_dir)
+    index = AliasIndex(
+        aliases=repos.alias_repo.get_all(),
+        stores=repos.store_repo.get_all(),
+    )
+    queue = ReviewQueue(repos.review_repo)
+    sync_result = sync_swish_groups(
+        swish_db_path=paths.database,
+        alias_index=index,
+        review_queue=queue,
+    )
+    console.print(
+        f"Sync: {sync_result.benefits_processed} benefits, "
+        f"[green]{sync_result.members_resolved} resolved[/green], "
+        f"[yellow]{sync_result.members_to_review} to review[/yellow], "
+        f"{sync_result.review_items_created} new review items."
+    )
+
+    if summary.still_missing:
+        raise typer.Exit(code=2)
+
+
 @app.command()
 def review(
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
