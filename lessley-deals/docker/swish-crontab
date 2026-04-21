@@ -1,0 +1,1 @@
+SWISH_CRON_PLACEHOLDER  root  cd /app && python -m deals swish-all >> /var/log/swish.log 2>&1

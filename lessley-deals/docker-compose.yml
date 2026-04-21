@@ -1,0 +1,16 @@
+services:
+  swish-scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile.swish
+    environment:
+      SWISH_CRON: "0 3 1 * *"         # 03:00 on the 1st of each month
+      SWISH_DATA_DIR: /app/data/swish
+      DEALS_DATA_DIR: /app/data
+      DEALS_STORAGE: json              # change to mongo + add MONGO_URI if needed
+      SWISH_RUN_ON_START: "0"
+      SWISH_HEADLESS: "1"
+    volumes:
+      - ./data:/app/data
+      - ./src/lessley_deals/scraping/config:/app/src/lessley_deals/scraping/config
+    restart: unless-stopped
