@@ -4,8 +4,10 @@ import contextlib
 import json
 import logging
 import os
+import random
 import re
 import tempfile
+import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -195,3 +197,172 @@ class SwishScanner:
         finally:
             if self._pw is not None:
                 self._pw.__exit__(*exc)
+
+    def catalog(self) -> CatalogResult:
+        """Two-phase catalog scrape. Stable when both passes return identical IDs."""
+        sleep_s = int(os.getenv("SWISH_CATALOG_SLEEP_S", "30"))
+
+        self._page.goto(CATALOG_URL, wait_until="networkidle", timeout=60_000)
+        if self._is_blocked(self._page):
+            raise RuntimeError("Blocked on catalog page (pass 1)")
+        html1 = self._page.content()
+        ids1 = self._extract_product_ids(html1)
+
+        time.sleep(sleep_s)
+
+        self._page.goto(CATALOG_URL, wait_until="networkidle", timeout=60_000)
+        if self._is_blocked(self._page):
+            logger.warning("Blocked on catalog page (pass 2) — using pass 1 results")
+            ids2 = ids1[:]
+        else:
+            html2 = self._page.content()
+            ids2 = self._extract_product_ids(html2)
+
+        stable = sorted(ids1) == sorted(ids2)
+        if not stable:
+            logger.warning(
+                "Catalog unstable: %d vs %d IDs — using union", len(ids1), len(ids2)
+            )
+
+        all_ids = list(dict.fromkeys(ids1 + ids2))
+
+        state = _load_state(self._paths.state)
+        processed_set = set(state.processed)
+        new_ids = [pid for pid in all_ids if pid not in processed_set]
+        for pid in new_ids:
+            if pid not in state.queue:
+                state.queue.append(pid)
+        state.last_catalog_count = len(all_ids)
+        _save_state(self._paths.state, state)
+
+        return CatalogResult(ids_found=all_ids, new_ids=new_ids, stable=stable)
+
+    def scan(self) -> int:
+        """Scrape every pending ID in state.queue → append records to swish_database.json."""
+        from playwright.sync_api import TimeoutError as PlaywrightTimeout
+
+        state = _load_state(self._paths.state)
+        records = _load_database(self._paths.database)
+        saved_ids = {r["benefit_id"] for r in records}
+
+        fresh = [pid for pid in state.queue if pid not in state.blocked]
+        random.shuffle(fresh)
+        ids_to_scan = state.blocked[:] + fresh
+
+        if self._scan_limit is not None:
+            ids_to_scan = ids_to_scan[: self._scan_limit]
+
+        new_count = 0
+        for pid in ids_to_scan:
+            if pid in saved_ids:
+                _reconcile_state(state, pid)
+                _save_state(self._paths.state, state)
+                continue
+
+            url = PRODUCT_URL.format(pid=pid)
+            logger.info("Scanning ID %s", pid)
+            try:
+                self._page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+                self._page.wait_for_timeout(2000)
+
+                if self._is_blocked(self._page):
+                    if pid not in state.blocked:
+                        state.blocked.append(pid)
+                    state.queue = [q for q in state.queue if q != pid]
+                    _save_state(self._paths.state, state)
+                    cooldown = random.uniform(20, 60)
+                    logger.warning("Blocked on %s — cooldown %.0fs", pid, cooldown)
+                    time.sleep(cooldown)
+                    continue
+
+                html = self._page.content()
+                record = self._extract_product_data(html, pid)
+                if record is None:
+                    logger.warning("No RSC data for ID %s — will retry later", pid)
+                    continue
+
+                records.append(record)
+                saved_ids.add(pid)
+                _save_database(self._paths.database, records)
+                _reconcile_state(state, pid)
+                _save_state(self._paths.state, state)
+                new_count += 1
+                logger.info(
+                    "Saved: %s (%d stores)",
+                    record.get("benefit_name"),
+                    len(record.get("stores", [])),
+                )
+
+            except PlaywrightTimeout:
+                logger.warning("Timeout on ID %s — will retry", pid)
+            except Exception as exc:
+                logger.error("Error on ID %s: %s", pid, exc)
+
+            time.sleep(random.uniform(5, 12))
+
+        return new_count
+
+    def verify_complete(self) -> tuple[bool, list[str]]:
+        """Check every known ID has an entry in swish_database.json."""
+        state = _load_state(self._paths.state)
+        records = _load_database(self._paths.database)
+        saved_ids = {r["benefit_id"] for r in records}
+        all_known = set(state.processed) | set(state.queue) | set(state.blocked)
+        missing = [pid for pid in all_known if pid not in saved_ids]
+        return len(missing) == 0, missing
+
+    def retry(self) -> int:
+        """Re-queue blocked IDs and IDs with no record, then run scan()."""
+        state = _load_state(self._paths.state)
+        records = _load_database(self._paths.database)
+        saved_ids = {r["benefit_id"] for r in records}
+
+        all_known = set(state.processed) | set(state.queue) | set(state.blocked)
+        missing_no_record = [pid for pid in all_known if pid not in saved_ids]
+
+        ids_to_retry = list(dict.fromkeys(state.blocked + missing_no_record))
+        if not ids_to_retry:
+            logger.info("Nothing to retry")
+            return 0
+
+        for pid in ids_to_retry:
+            if pid not in state.queue:
+                state.queue.append(pid)
+        for pid in state.blocked[:]:
+            state.blocked.remove(pid)
+        _save_state(self._paths.state, state)
+
+        return self.scan()
+
+    def run_all(self, *, max_attempts: int = 3) -> SwishRunSummary:
+        """Full run: catalog → (scan → retry → verify) loop → return summary.
+
+        The caller (swish-all CLI) is responsible for running sync_swish_groups
+        after this method returns.
+        """
+        catalog_result = self.catalog()
+        records_new = 0
+        records_retried = 0
+        attempts = 0
+
+        for attempt in range(max_attempts):
+            attempts = attempt + 1
+            records_new += self.scan()
+            recovered = self.retry()
+            records_retried += recovered
+            ok, missing = self.verify_complete()
+            if ok:
+                break
+            logger.warning(
+                "Attempt %d/%d: %d IDs still missing", attempts, max_attempts, len(missing)
+            )
+
+        _, still_missing = self.verify_complete()
+        return SwishRunSummary(
+            catalog_stable=catalog_result.stable,
+            ids_total=len(catalog_result.ids_found),
+            records_new=records_new,
+            records_retried=records_retried,
+            still_missing=still_missing,
+            attempts=attempts,
+        )
