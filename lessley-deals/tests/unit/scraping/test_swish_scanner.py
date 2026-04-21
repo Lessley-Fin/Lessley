@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest  # noqa: TCH002
 
@@ -124,3 +125,26 @@ class TestExtractProductData:
         result = SwishScanner._extract_product_data(html, "456")
         assert result is not None
         assert result["benefit_name"] == "My Benefit"
+
+
+class TestIsBlocked:
+    def test_not_blocked_when_locator_returns_zero(self, tmp_path: Path) -> None:
+        paths = make_paths(tmp_path)
+        scanner = SwishScanner(paths=paths)
+        mock_page = MagicMock()
+        mock_page.locator.return_value.count.return_value = 0
+        assert scanner._is_blocked(mock_page) is False
+
+    def test_blocked_when_locator_returns_nonzero(self, tmp_path: Path) -> None:
+        paths = make_paths(tmp_path)
+        scanner = SwishScanner(paths=paths)
+        mock_page = MagicMock()
+        mock_page.locator.return_value.count.return_value = 1
+        assert scanner._is_blocked(mock_page) is True
+
+    def test_blocked_returns_false_on_exception(self, tmp_path: Path) -> None:
+        paths = make_paths(tmp_path)
+        scanner = SwishScanner(paths=paths)
+        mock_page = MagicMock()
+        mock_page.locator.side_effect = RuntimeError("page closed")
+        assert scanner._is_blocked(mock_page) is False

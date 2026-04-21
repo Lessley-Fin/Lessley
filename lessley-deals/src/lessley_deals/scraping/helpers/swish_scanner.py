@@ -166,3 +166,32 @@ class SwishScanner:
             "scraped_at": datetime.now(UTC).isoformat(),
         }
 
+    def _is_blocked(self, page: Any) -> bool:
+        try:
+            return page.locator(f"text={BLOCK_TEXT}").count() > 0  # type: ignore[no-any-return]
+        except Exception:
+            return False
+
+    def __enter__(self) -> SwishScanner:
+        from playwright.sync_api import sync_playwright
+        from playwright_stealth import Stealth
+
+        self._paths.session.mkdir(parents=True, exist_ok=True)
+        self._pw = sync_playwright().__enter__()
+        headless = os.getenv("SWISH_HEADLESS", "1") == "1"
+        self._context = self._pw.chromium.launch_persistent_context(
+            str(self._paths.session),
+            headless=headless,
+            args=["--disable-blink-features=AutomationControlled"],
+        )
+        Stealth().apply_stealth_sync(self._context)
+        self._page = self._context.new_page()
+        return self
+
+    def __exit__(self, *exc: Any) -> None:
+        try:
+            if self._context is not None:
+                self._context.close()
+        finally:
+            if self._pw is not None:
+                self._pw.__exit__(*exc)
