@@ -4,8 +4,10 @@ import contextlib
 import json
 import logging
 import os
+import re
 import tempfile
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -88,12 +90,15 @@ def _load_state(path: Path) -> ScanState:
 
 
 def _save_state(path: Path, state: ScanState) -> None:
-    _atomic_write_json(path, {
-        "processed": state.processed,
-        "blocked": state.blocked,
-        "queue": state.queue,
-        "last_catalog_count": state.last_catalog_count,
-    })
+    _atomic_write_json(
+        path,
+        {
+            "processed": state.processed,
+            "blocked": state.blocked,
+            "queue": state.queue,
+            "last_catalog_count": state.last_catalog_count,
+        },
+    )
 
 
 def _load_database(path: Path) -> list[dict[str, Any]]:
@@ -113,3 +118,51 @@ def _reconcile_state(state: ScanState, pid: str) -> None:
         state.processed.append(pid)
     state.queue = [q for q in state.queue if q != pid]
     state.blocked = [b for b in state.blocked if b != pid]
+
+
+class SwishScanner:
+    """Stateful Swish gift-card scraper.
+
+    Holds one Playwright browser context for the duration of a run.
+    Use as a context manager:
+
+        with SwishScanner(paths=SwishPaths.from_env()) as scanner:
+            scanner.catalog()
+            scanner.scan()
+    """
+
+    def __init__(
+        self,
+        paths: SwishPaths,
+        *,
+        scan_limit: int | None = None,
+    ) -> None:
+        self._paths = paths
+        self._scan_limit = scan_limit
+        self._pw: Any = None
+        self._context: Any = None
+        self._page: Any = None
+
+    @staticmethod
+    def _extract_product_ids(html: str) -> list[str]:
+        hits = re.findall(r"/product-(\d+)", html)
+        return list(dict.fromkeys(hits))
+
+    @staticmethod
+    def _extract_product_data(html: str, pid: str) -> dict[str, Any] | None:
+        unescaped = html.replace('\\"', '"')
+        store_names = re.findall(r'"storeName":"([^"]+)"', unescaped)
+        if not store_names:
+            return None
+        benefit_names = re.findall(r'"whatWillUGet":"([^"]+)"', unescaped)
+        benefit_name = benefit_names[0] if benefit_names else None
+        if not benefit_name:
+            h1 = re.search(r"<h1[^>]*>\s*([^<]+)\s*</h1>", html)
+            benefit_name = h1.group(1).strip() if h1 else None
+        return {
+            "benefit_id": pid,
+            "benefit_name": benefit_name,
+            "stores": list(dict.fromkeys(store_names)),
+            "scraped_at": datetime.now(UTC).isoformat(),
+        }
+

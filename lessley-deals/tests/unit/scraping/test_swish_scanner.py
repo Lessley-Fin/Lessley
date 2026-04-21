@@ -8,6 +8,7 @@ import pytest  # noqa: TCH002
 from lessley_deals.scraping.helpers.swish_scanner import (
     ScanState,
     SwishPaths,
+    SwishScanner,
     _load_database,
     _load_state,
     _save_database,
@@ -82,3 +83,44 @@ class TestDatabaseIO:
         # Must be valid JSON (no partial writes)
         with path.open(encoding="utf-8") as f:
             assert json.load(f) == [{"benefit_id": "1"}]
+
+
+class TestExtractProductIds:
+    def test_extracts_ids_from_catalog_links(self) -> None:
+        html = (
+            '<a href="/home/all-gifts-giftcard/product-111">A</a><a href="/home/all-gifts-giftcard/product-222">B</a>'
+        )
+        ids = SwishScanner._extract_product_ids(html)
+        assert ids == ["111", "222"]
+
+    def test_deduplicates_ids_preserving_order(self) -> None:
+        html = "/product-111 /product-222 /product-111"
+        ids = SwishScanner._extract_product_ids(html)
+        assert ids == ["111", "222"]
+
+    def test_empty_html_returns_empty(self) -> None:
+        assert SwishScanner._extract_product_ids("<html>no products</html>") == []
+
+
+class TestExtractProductData:
+    def test_extracts_store_names_and_benefit_name(self) -> None:
+        html = (
+            r'self.__next_f.push([1, "{\"whatWillUGet\":\"Spa day\",'
+            r"\"tagsChains\":[{\"chainsByWallet\":[{\"storeName\":\"Zeus Spa\"},"
+            r'{\"storeName\":\"Hamei Gaash\"}]}]}"])'
+        )
+        result = SwishScanner._extract_product_data(html, "123")
+        assert result is not None
+        assert result["benefit_id"] == "123"
+        assert result["benefit_name"] == "Spa day"
+        assert result["stores"] == ["Zeus Spa", "Hamei Gaash"]
+
+    def test_returns_none_when_no_store_names(self) -> None:
+        result = SwishScanner._extract_product_data("<html>no stores here</html>", "999")
+        assert result is None
+
+    def test_fallback_to_h1_for_benefit_name(self) -> None:
+        html = '<h1 class="title">My Benefit</h1>"storeName":"Store A"'
+        result = SwishScanner._extract_product_data(html, "456")
+        assert result is not None
+        assert result["benefit_name"] == "My Benefit"
