@@ -131,7 +131,49 @@ def _resolve_member_list(
     summary: HotGroupSyncSummary,
     now: datetime,
 ) -> list[dict[str, Any]]:
-    raise NotImplementedError("implemented in Task 2")
+    """Resolve a list of member entries (strings or dicts) for one group."""
+    result: list[dict[str, Any]] = []
+    for entry in members:
+        if isinstance(entry, str):
+            raw_name = entry.strip()
+        elif isinstance(entry, dict):
+            if entry.get("store_id"):
+                result.append(entry)
+                continue
+            raw_name = str(entry.get("name") or "").strip()
+        else:
+            continue
+        if not raw_name:
+            continue
+
+        member, verdict = _resolve_member(raw_name, group_key, pipeline, index)
+        result.append(member)
+
+        if member["store_id"]:
+            summary.members_resolved += 1
+            continue
+
+        summary.members_pending += 1
+        if raw_name in pending_names:
+            summary.pre_existing_review_skipped += 1
+            continue
+        if verdict is None:
+            continue
+
+        review_item = ReviewItem(
+            id=generate_id(),
+            raw_id=f"{group_key}::{raw_name}",
+            input_name=raw_name,
+            input_name_forms=_build_name_forms(raw_name),
+            raw_input_name=raw_name,
+            verdict=_make_review_verdict(group_key, raw_name, verdict),
+            created_at=now,
+        )
+        review_queue.add(review_item)
+        pending_names.add(raw_name)
+        summary.review_items_created += 1
+
+    return result
 
 
 def sync_hot_groups(
