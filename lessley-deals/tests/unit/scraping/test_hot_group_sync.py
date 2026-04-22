@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from lessley_deals.domain.enums import MatchDecision
@@ -19,6 +21,7 @@ from lessley_deals.scraping.helpers.hot_group_sync import (
     _resolve_member,
     _resolve_member_list,
     _to_normalized_record,
+    sync_hot_groups,
 )
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -256,3 +259,117 @@ def test_empty_string_members_skipped():
     pipeline.match.assert_not_called()
     assert summary.members_resolved == 0
     assert summary.members_pending == 0
+
+
+# ── sync_hot_groups tests ─────────────────────────────────────────────────────
+
+def _write_groups_json(path: Path, data: dict) -> None:
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def test_sync_hot_groups_skips_swish_entries(tmp_path):
+    groups_file = tmp_path / "groups.json"
+    _write_groups_json(groups_file, {
+        "swish:12345": {
+            "managed_by": "swish_scraper",
+            "stores": [{"name": "fox", "store_id": None, "confidence": None}],
+        },
+        "קבוצת פוקס": {
+            "stores": ["mango"],
+        },
+    })
+    verdict = _make_verdict(MatchDecision.AUTO_MATCH, store_id="mango_id", conf=0.95)
+    pipeline = _make_pipeline(verdict)
+    queue = _make_queue()
+
+    result = sync_hot_groups(
+        alias_index=MagicMock(),
+        review_queue=queue,
+        groups_config_path=groups_file,
+        pipeline=pipeline,
+    )
+
+    updated = json.loads(groups_file.read_text(encoding="utf-8"))
+    # Swish entry untouched
+    assert updated["swish:12345"]["stores"][0]["store_id"] is None
+    # HOT entry resolved
+    assert updated["קבוצת פוקס"]["stores"][0]["store_id"] == "mango_id"
+    assert result.groups_processed == 1
+    assert result.members_resolved == 1
+
+
+def test_sync_hot_groups_resolves_sub_groups(tmp_path):
+    groups_file = tmp_path / "groups.json"
+    _write_groups_json(groups_file, {
+        "קבוצת פוקס": {
+            "stores": ["fox"],
+            "sub_groups": {
+                "dream card family": ["fox home"],
+            },
+        },
+    })
+    verdict = _make_verdict(MatchDecision.AUTO_MATCH, store_id="store_id_x", conf=0.98)
+    pipeline = _make_pipeline(verdict)
+    queue = _make_queue()
+
+    sync_hot_groups(
+        alias_index=MagicMock(),
+        review_queue=queue,
+        groups_config_path=groups_file,
+        pipeline=pipeline,
+    )
+
+    updated = json.loads(groups_file.read_text(encoding="utf-8"))
+    sub = updated["קבוצת פוקס"]["sub_groups"]["dream card family"]
+    assert sub[0]["store_id"] == "store_id_x"
+
+
+def test_sync_hot_groups_unresolved_pushed_to_review(tmp_path):
+    groups_file = tmp_path / "groups.json"
+    _write_groups_json(groups_file, {
+        "קבוצת פוקס": {"stores": ["mystery store"]},
+    })
+    verdict = _make_verdict(MatchDecision.NO_MATCH)
+    pipeline = _make_pipeline(verdict)
+    queue = _make_queue()
+
+    result = sync_hot_groups(
+        alias_index=MagicMock(),
+        review_queue=queue,
+        groups_config_path=groups_file,
+        pipeline=pipeline,
+    )
+
+    queue.add.assert_called_once()
+    assert result.review_items_created == 1
+    assert result.members_pending == 1
+
+
+def test_sync_hot_groups_summary_counts(tmp_path):
+    groups_file = tmp_path / "groups.json"
+    _write_groups_json(groups_file, {
+        "group_a": {"stores": ["fox", "unknown"]},
+        "group_b": {"stores": [{"name": "already", "store_id": "sid", "confidence": 1.0}]},
+    })
+
+    def match_side_effect(normalized, index):
+        if "unknown" in normalized.raw_id:
+            return _make_verdict(MatchDecision.NO_MATCH)
+        return _make_verdict(MatchDecision.AUTO_MATCH, store_id="id_x", conf=0.95)
+
+    pipeline = MagicMock()
+    pipeline.match.side_effect = match_side_effect
+    queue = _make_queue()
+
+    result = sync_hot_groups(
+        alias_index=MagicMock(),
+        review_queue=queue,
+        groups_config_path=groups_file,
+        pipeline=pipeline,
+    )
+
+    assert result.groups_processed == 2
+    assert result.members_resolved == 1   # "fox" resolved
+    assert result.members_pending == 1    # "unknown" pending
+    assert result.review_items_created == 1
+    # "already" has store_id — skipped by _resolve_member_list

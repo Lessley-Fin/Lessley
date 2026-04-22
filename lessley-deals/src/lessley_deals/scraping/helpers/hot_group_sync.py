@@ -11,8 +11,12 @@ Swish-managed entries are left untouched (owned by ``sync-swish-groups``).
 
 from __future__ import annotations
 
+import contextlib
+import json
 import logging
+import os
 import re
+import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -33,6 +37,7 @@ from lessley_deals.normalization.hebrew_utils import normalize_final_forms, norm
 from lessley_deals.normalization.text import collapse_whitespace
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.review.queue import ReviewQueue
+from lessley_deals.scraping.helpers.brand_utils import _DEFAULT_GROUPS_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +177,31 @@ def _resolve_member_list(
     return result
 
 
+def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, str(path))
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
+        raise
+
+
+def _load_groups_config(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"Expected JSON object in {path}, got {type(data).__name__}")
+    return data
+
+
 def sync_hot_groups(
     alias_index: AliasIndex,
     review_queue: ReviewQueue,
@@ -180,4 +210,64 @@ def sync_hot_groups(
     match_config: MatchConfig | None = None,
     pipeline: MatchPipeline | None = None,
 ) -> HotGroupSyncSummary:
-    raise NotImplementedError("implemented in Task 3")
+    """Resolve HOT store-group members against the canonical store database.
+
+    Skips Swish-managed entries (``managed_by: "swish_scraper"``).
+    Upgrades plain-string member names to ``{name, store_id, confidence}`` dicts.
+    Pushes unresolved names to ``review_queue``.
+    Writes the updated config back atomically.
+    """
+    config_path = groups_config_path or _DEFAULT_GROUPS_PATH
+    cfg = match_config or MatchConfig()
+    match_pipeline = pipeline or MatchPipeline(config=cfg)
+
+    groups = _load_groups_config(config_path)
+    summary = HotGroupSyncSummary()
+    pending_names = _existing_pending_names(review_queue)
+    now = datetime.now(UTC)
+
+    for group_key, group_entry in groups.items():
+        if group_key.startswith("_"):
+            continue
+        if not isinstance(group_entry, dict):
+            continue
+        if group_entry.get("managed_by") == SWISH_MANAGED_BY:
+            continue
+
+        summary.groups_processed += 1
+
+        group_entry["stores"] = _resolve_member_list(
+            members=group_entry.get("stores", []),
+            group_key=group_key,
+            pending_names=pending_names,
+            pipeline=match_pipeline,
+            index=alias_index,
+            review_queue=review_queue,
+            summary=summary,
+            now=now,
+        )
+
+        sub_groups = group_entry.get("sub_groups", {})
+        if isinstance(sub_groups, dict):
+            for sub_key, sub_members in sub_groups.items():
+                if isinstance(sub_members, list):
+                    sub_groups[sub_key] = _resolve_member_list(
+                        members=sub_members,
+                        group_key=f"{group_key}/{sub_key}",
+                        pending_names=pending_names,
+                        pipeline=match_pipeline,
+                        index=alias_index,
+                        review_queue=review_queue,
+                        summary=summary,
+                        now=now,
+                    )
+
+    _atomic_write_json(config_path, groups)
+    logger.info(
+        "HOT groups sync: %d groups, %d resolved, %d pending, %d review items created",
+        summary.groups_processed,
+        summary.members_resolved,
+        summary.members_pending,
+        summary.review_items_created,
+    )
+    return summary
