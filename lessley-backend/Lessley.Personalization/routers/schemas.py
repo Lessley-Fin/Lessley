@@ -84,6 +84,15 @@ class RecommendationByCategoryRequestSchema(BaseModel):
         return v
 
 
+class DealRequest(BaseModel):
+    """Schema for recommendation by category request"""
+
+    club_id: str = Field(..., min_length=1, max_length=255, description="Club ID")
+    deal_id: str = Field(..., min_length=1, max_length=255, description="Deal ID")
+    store_id: str = Field(..., min_length=1, max_length=255, description="Store ID")
+    user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
+
+
 class RecommendationByCategoryResponseSchema(BaseModel):
     """Schema for recommendation by category response"""
 

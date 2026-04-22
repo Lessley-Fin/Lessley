@@ -123,3 +123,23 @@ class RecommendationService:
                 },
             )
             raise
+
+    async def calculate_deal_recommendation_for_user(
+        self, user_id: str, club_id: str, deal_id: str, store_id: str
+    ) -> Dict:
+        """
+            Check if a specific deal is recommended for the user based on their spending habits and the store's category fit.
+        Args:
+            user_id: The user ID.
+            club_id: The club ID for which the deal is being analyzed.
+            deal_id: The deal ID for which the recommendation is being calculated.
+            store_id: The store ID where the deal is available.
+        """
+
+        # step 1: Get user categories and MCC codes
+
+        # step 2: Get the store's category and MCC code
+
+        # step 3: Check if the store's MCC code is among the user's top MCC codes (already fetch 20 MCC codes, so check if store's MCC is in that list)
+
+        # step 4: Determine if deal is recommended based on fit score and threshold
