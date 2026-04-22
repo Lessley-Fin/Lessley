@@ -611,9 +611,24 @@ class HotAdapter(BaseSourceAdapter):
             logger.info("the title is [%s] and the raw brand is [%s]",
                     title, raw_brand)
             cleaned_brand = self._clean_brand(raw_brand)
+            # נופשונית deals are Swish gift cards — each one references a specific
+            # Swish benefit via a swish.co.il/product-XXXXX URL embedded in the
+            # payload.  Substitute the brand with swish:{id} so the group classifier
+            # can look up the correct member stores from hot_store_groups.json.
+            # The original store name is preserved after classification.
+            lookup_brand = cleaned_brand
+            if cleaned_brand == "נופשונית":
+                swish_ids = re.findall(r"product-(\d+)", str(record))
+                for sid in swish_ids:
+                    swish_key = f"swish:{sid}"
+                    if swish_key in self._store_groups:
+                        lookup_brand = swish_key
+                        break
             store_name, is_group_wide, group_member_stores = classify_group_deal(
-                cleaned_brand, title, self._store_groups
+                lookup_brand, title, self._store_groups
             )
+            if lookup_brand != cleaned_brand:
+                store_name = cleaned_brand
             store_name = clean_store_name(store_name)
             logger.info("the group brand is [%s] and is_group_wide is [%s]",
                     store_name, is_group_wide)
@@ -627,14 +642,19 @@ class HotAdapter(BaseSourceAdapter):
         supplier_website = record.get("supplierWebsite") or ""
         if supplier_website and not supplier_website.startswith("http"):
             supplier_website = f"https://{supplier_website}"
-        url = supplier_website or None
+        benefit_id = record.get("id")
+        url = supplier_website or (
+            f"{self.config.base_url}/benefit/{benefit_id}" if benefit_id else None
+        )
+
+        payload = dict(record)
 
         if is_group_wide and group_member_stores:
-            record["group_member_stores"] = group_member_stores
+            payload["group_member_stores"] = group_member_stores
 
-        record["deal_title"] = title
-        record["full_description"] = deal_description
-        record["benefit_url"] = record.get("_dynamic_link") or record.get("dynamicLink")
+        payload["deal_title"] = title
+        payload["full_description"] = deal_description
+        payload["benefit_url"] = record.get("_dynamic_link") or record.get("dynamicLink")
 
         # Extract T&C from the record's own information array if detail hasn't
         # already been merged (which sets _terms_text via _merge_detail).
@@ -646,9 +666,9 @@ class HotAdapter(BaseSourceAdapter):
                 section_title = section.get("title", "")
                 if "תנאי" in section_title or "מימוש" in section_title:
                     terms_html += section.get("content", "") + " \n"
-            record["terms_and_conditions"] = clean_html(terms_html) if terms_html else None
+            payload["terms_and_conditions"] = clean_html(terms_html) if terms_html else None
         else:
-            record["terms_and_conditions"] = record["_terms_text"] or None
+            payload["terms_and_conditions"] = record["_terms_text"] or None
 
         return RawScrapedRecord(
             id=generate_id(),
@@ -657,7 +677,7 @@ class HotAdapter(BaseSourceAdapter):
             deal_description=str(deal_description),
             price_text=str(price_text),
             scraped_at=now,
-            raw_payload=record,
+            raw_payload=payload,
             url=url,
         )
 

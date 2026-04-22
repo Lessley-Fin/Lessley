@@ -45,7 +45,7 @@ class TestHotAdapter:
         assert deal.store_name == "קפה עלית"
         assert "הנחה 20% על קפה" in deal.deal_description
         assert deal.price_text == "20%"
-        assert deal.raw_payload == record
+        assert record.items() <= deal.raw_payload.items()
         assert deal.url == "https://www.hot.co.il/benefit/1001"
 
     def test_to_raw_deal_fallback_title_as_store(self) -> None:
