@@ -14,6 +14,7 @@ class UserRequests(BaseModel):
 
 class InsightsCalcRequests(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
+    club_id: str = Field(..., min_length=1, max_length=255, description="Club ID")
     use_mock: bool = Field(False, description="Use mock data")
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
@@ -45,6 +46,17 @@ class ClubScoreSchema(BaseModel):
     club_name: str
     hit_count: int
     total_stores: int
+
+
+class MccCountSchema(BaseModel):
+    mcc: int
+    store_count: int
+
+
+class ClubMccDistributionResponseSchema(BaseModel):
+    club_id: str
+    club_name: str
+    relevant_category: list[MccCountSchema]
 
 
 class RecommendationByCategoryRequestSchema(BaseModel):

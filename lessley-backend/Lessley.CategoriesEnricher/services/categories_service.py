@@ -27,7 +27,9 @@ class CategoriesService:
     def _load_categories_data(self):
         """Load categories data from JSON file."""
         try:
-            categories_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "categories.json")
+            # Go up from services -> CategoriesEnricher -> lessley-backend -> Lessley to the root project dir
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            categories_path = os.path.join(project_root, "main", "resources", "categories.json")
             if os.path.exists(categories_path):
                 with open(categories_path, "r", encoding="utf-8") as f:
                     self._categories_data = json.load(f)
