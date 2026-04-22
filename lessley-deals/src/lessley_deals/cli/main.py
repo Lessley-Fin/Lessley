@@ -376,6 +376,51 @@ def sync_swish_groups_cmd(
     )
 
 
+@app.command(name="sync-hot-groups")
+def sync_hot_groups_cmd(
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    groups_file: Optional[str] = typer.Option(
+        None,
+        "--groups-file",
+        help="Path to hot_store_groups.json. Defaults to bundled config.",
+    ),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Resolve HOT store-group member names against the canonical store database.
+
+    Upgrades plain-string member names to {name, store_id, confidence} dicts.
+    Auto-matched members get their store_id written into the config; unresolved
+    members are pushed to the review queue.
+
+    Skips Swish-managed entries (use sync-swish-groups for those).
+    """
+    _setup_logging(log_level)
+
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.scraping.helpers.hot_group_sync import sync_hot_groups
+
+    repos = _make_repos(data_dir)
+    index = AliasIndex(
+        aliases=repos.alias_repo.get_all(),
+        stores=repos.store_repo.get_all(),
+    )
+    queue = ReviewQueue(repos.review_repo)
+
+    groups_path = Path(groups_file) if groups_file else None
+
+    result = sync_hot_groups(
+        alias_index=index,
+        review_queue=queue,
+        groups_config_path=groups_path,
+    )
+    console.print(
+        f"HOT groups sync: {result.groups_processed} groups processed, "
+        f"[green]{result.members_resolved} resolved[/green], "
+        f"[yellow]{result.members_pending} pending[/yellow], "
+        f"{result.review_items_created} new review items."
+    )
+
+
 def _swish_paths(data_dir: str | None) -> "SwishPaths":  # noqa: F821
     from lessley_deals.scraping.helpers.swish_scanner import SwishPaths
     if data_dir is not None:
