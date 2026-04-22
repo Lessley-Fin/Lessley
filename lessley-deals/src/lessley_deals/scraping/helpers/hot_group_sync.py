@@ -11,13 +11,10 @@ Swish-managed entries are left untouched (owned by ``sync-swish-groups``).
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import re
-import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +33,6 @@ from lessley_deals.normalization.hebrew_utils import normalize_final_forms, norm
 from lessley_deals.normalization.text import collapse_whitespace
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.review.queue import ReviewQueue
-from lessley_deals.scraping.helpers.brand_utils import _DEFAULT_GROUPS_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +63,7 @@ def _to_normalized_record(name: str, group_key: str) -> NormalizedRecord:
         source_id=HOT_SOURCE_ID,
         store_name_forms=_build_name_forms(name),
         deal_description="",
-        normalized_at=datetime.now(timezone.utc),
+        normalized_at=datetime.now(UTC),
         price=None,
         domain=None,
     )
@@ -122,7 +118,7 @@ def _existing_pending_names(queue: ReviewQueue) -> set[str]:
 
 
 def _resolve_member_list(
-    members: list[str | dict],
+    members: list[str | dict[str, Any]],
     group_key: str,
     pending_names: set[str],
     pipeline: MatchPipeline,

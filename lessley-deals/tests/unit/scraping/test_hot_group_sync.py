@@ -1,14 +1,7 @@
 from __future__ import annotations
 
-import json
-import tempfile
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
-
-import pytest
+from datetime import UTC, datetime
+from unittest.mock import MagicMock
 
 from lessley_deals.domain.enums import MatchDecision
 from lessley_deals.domain.models import (
@@ -16,7 +9,6 @@ from lessley_deals.domain.models import (
     MatchCandidate,
     MatchVerdict,
     NameForms,
-    NormalizedRecord,
     ReviewItem,
 )
 from lessley_deals.scraping.helpers.hot_group_sync import (
@@ -27,7 +19,6 @@ from lessley_deals.scraping.helpers.hot_group_sync import (
     _resolve_member,
     _resolve_member_list,
     _to_normalized_record,
-    sync_hot_groups,
 )
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -139,7 +130,7 @@ def test_plain_string_auto_match_upgrades_to_dict():
         index=MagicMock(),
         review_queue=queue,
         summary=summary,
-        now=datetime.now(timezone.utc),
+        now=datetime.now(UTC),
     )
 
     assert result == [{"name": "fox", "store_id": "abc_123", "confidence": 0.97}]
@@ -162,7 +153,7 @@ def test_plain_string_no_match_pushed_to_review():
         index=MagicMock(),
         review_queue=queue,
         summary=summary,
-        now=datetime.now(timezone.utc),
+        now=datetime.now(UTC),
     )
 
     assert result == [{"name": "unknown store", "store_id": None, "confidence": None}]
@@ -190,7 +181,7 @@ def test_dict_with_store_id_skipped():
         index=MagicMock(),
         review_queue=queue,
         summary=summary,
-        now=datetime.now(timezone.utc),
+        now=datetime.now(UTC),
     )
 
     assert result == [already_resolved]
@@ -214,7 +205,7 @@ def test_dict_with_null_store_id_reprocessed():
         index=MagicMock(),
         review_queue=queue,
         summary=summary,
-        now=datetime.now(timezone.utc),
+        now=datetime.now(UTC),
     )
 
     assert result[0]["store_id"] == "new_id"
@@ -237,9 +228,31 @@ def test_dedup_already_pending_not_pushed_twice():
         index=MagicMock(),
         review_queue=queue,
         summary=summary,
-        now=datetime.now(timezone.utc),
+        now=datetime.now(UTC),
     )
 
     queue.add.assert_not_called()
     assert summary.pre_existing_review_skipped == 1
     assert summary.review_items_created == 0
+
+
+def test_empty_string_members_skipped():
+    pipeline = MagicMock()
+    queue = _make_queue()
+    summary = HotGroupSyncSummary()
+
+    result = _resolve_member_list(
+        members=["", "  "],
+        group_key="some_group",
+        pending_names=set(),
+        pipeline=pipeline,
+        index=MagicMock(),
+        review_queue=queue,
+        summary=summary,
+        now=datetime.now(UTC),
+    )
+
+    assert result == []
+    pipeline.match.assert_not_called()
+    assert summary.members_resolved == 0
+    assert summary.members_pending == 0
