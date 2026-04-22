@@ -587,7 +587,7 @@ def list_matches(
         store_name = get_display(store_obj.name) if store_obj else f"[dim]{deal.store_id[:12]}…[/dim]"
         # price_str = str(deal.discount_logic) if deal.discount_logic else "—"
         scraped = deal.scraped_at.strftime("%Y-%m-%d") if deal.scraped_at else "—"
-        desc = get_display(deal.description[:80]) if deal.description else "—"
+        desc = get_display(deal.deal_description[:80]) if deal.deal_description else "—"
         table.add_row(store_name, deal.source_id, desc, scraped)
 
     if not deals:

@@ -10,6 +10,7 @@ from lessley_deals.domain.models import RawScrapedRecord
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.helpers.group_deal_query import (
     get_deals_for_store,
+    get_group_member_store_ids,
     get_group_member_stores,
     is_group_wide_deal,
 )
@@ -147,3 +148,53 @@ class TestGetGroupMemberStores:
         deal.raw_payload["group_member_stores"] = ["sabon", 42, None, "kitan"]  # type: ignore[list-item]
         members = get_group_member_stores(deal)
         assert members == ["sabon", "kitan"]
+
+
+# ---------------------------------------------------------------------------
+# Structured-dict member entries (Swish-synced shape)
+# ---------------------------------------------------------------------------
+
+
+class TestStructuredMemberEntries:
+    """Members may be ``{"name", "store_id", "confidence"}`` dicts."""
+
+    def _structured_deal(self, *members: dict) -> RawScrapedRecord:
+        deal = _deal("swish:100")
+        deal.raw_payload["group_member_stores"] = list(members)
+        return deal
+
+    def test_get_member_names_from_dicts(self) -> None:
+        deal = self._structured_deal(
+            {"name": "sabon", "store_id": "store_001", "confidence": 0.97},
+            {"name": "kitan", "store_id": "store_002", "confidence": 0.95},
+        )
+        assert get_group_member_stores(deal) == ["sabon", "kitan"]
+
+    def test_get_member_store_ids(self) -> None:
+        deal = self._structured_deal(
+            {"name": "sabon", "store_id": "store_001"},
+            {"name": "ghost", "store_id": None},  # unresolved member
+            {"name": "kitan", "store_id": "store_002"},
+        )
+        assert get_group_member_store_ids(deal) == ["store_001", "store_002"]
+
+    def test_query_by_store_id_matches_dict_member(self) -> None:
+        deal = self._structured_deal(
+            {"name": "sabon", "store_id": "store_001"},
+        )
+        # Query by store_id (exact, case-sensitive) finds it.
+        assert deal in get_deals_for_store("store_001", [deal])
+        # Query by name (case-insensitive) also finds it.
+        assert deal in get_deals_for_store("SABON", [deal])
+
+    def test_legacy_string_members_still_work(self) -> None:
+        """Mixed payloads (legacy str + new dict) are tolerated."""
+        deal = _deal("swish:200")
+        deal.raw_payload["group_member_stores"] = [
+            "sabon",
+            {"name": "kitan", "store_id": "store_002"},
+        ]
+        assert get_group_member_stores(deal) == ["sabon", "kitan"]
+        assert get_group_member_store_ids(deal) == ["store_002"]
+        assert deal in get_deals_for_store("sabon", [deal])
+        assert deal in get_deals_for_store("store_002", [deal])

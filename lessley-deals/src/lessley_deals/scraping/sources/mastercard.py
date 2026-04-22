@@ -23,8 +23,7 @@ from lessley_deals.scraping.helpers.discount_parser import (
 logger = logging.getLogger(__name__)
 
 _MC_URL = (
-    "https://www.mastercard.co.il/he-il/personal/offers-and-promotions/"
-    "mastercard-day.html"
+    "https://www.mastercard.com/il/he/personal/find-a-card/card-benefits/mastercard-day.html"
 )
 
 # Characters to strip from extracted text (RTL markers + NBSP).
@@ -34,6 +33,9 @@ _JUNK_CHARS = str.maketrans("", "", "\xa0\u200e\u200f\u202a\u202b")
 _TITLE_SPLIT_RE = re.compile(
     r"[.]|\s+(?:תקף|תקפה|המבצע|ההטבה|כולל כפל|לא כולל|בלעדי)"
 )
+
+# Regex that matches the new per-deal wrapper divs: <div id="teaser2-XXXX">
+_TEASER_ID_RE = re.compile(r"^teaser2-.+$")
 
 # Discount patterns.
 _SPEND_SAVE_RE = re.compile(
@@ -86,7 +88,11 @@ class MastercardAdapter(BaseSourceAdapter):
         stores_map: dict[str, RawStore] = {}
         deals: list[RawScrapedRecord] = []
 
-        blocks = soup.find_all("dxp-content-item")
+        blocks = [
+            tag
+            for tag in soup.find_all("div", id=_TEASER_ID_RE)
+            if isinstance(tag, Tag)
+        ]
         logger.info("[%s] Found %d content blocks", self.source_id, len(blocks))
 
         for block in blocks:
@@ -194,19 +200,33 @@ class MastercardAdapter(BaseSourceAdapter):
         now: datetime,
     ) -> RawScrapedRecord | None:
         """Parse one ``<dxp-content-item>`` and return a record, or *None*."""
-        # --- Description text ---
-        desc_html = block.get("description", "")
-        if not desc_html:
-            return None
-        desc_soup = BeautifulSoup(str(desc_html), "html.parser")
-        clean_text = desc_soup.get_text().translate(_JUNK_CHARS).strip()
-        if not clean_text:
+        # --- Title from dedicated h3 element ---
+        title_tag = block.find("h3", class_="cmp-teaser__title")
+        extracted_title: str | None = None
+        if isinstance(title_tag, Tag):
+            extracted_title = title_tag.get_text(" ").translate(_JUNK_CHARS).strip() or None
+
+        # --- Description from dedicated div element ---
+        desc_tag = block.find("div", class_="cmp-teaser__description")
+        if isinstance(desc_tag, Tag):
+            clean_text = desc_tag.get_text(" ").translate(_JUNK_CHARS).strip()
+        else:
+            clean_text = block.get_text(" ").translate(_JUNK_CHARS).strip()
+
+        if not clean_text and not extracted_title:
             return None
 
-        # --- Image ---
-        image_url: str | None = block.get("src")  # type: ignore[assignment]
+        # --- Image & store name ---
+        img_tag = block.find("img")
+        image_url: str | None = None
+        store_name: str | None = None
+        if isinstance(img_tag, Tag):
+            raw_src = img_tag.get("src") or img_tag.get("data-src") or ""
+            image_url = str(raw_src) if raw_src else None
+            alt = img_tag.get("alt")
+            store_name = str(alt).strip() if alt else None
         if image_url and not image_url.startswith("http"):
-            image_url = f"https://www.mastercard.co.il{image_url}"
+            image_url = f"https://www.mastercard.com{image_url}"
 
         # --- Modal ID (from embedded script) ---
         modal_id = self._extract_modal_id(block)
@@ -218,7 +238,7 @@ class MastercardAdapter(BaseSourceAdapter):
         modal_text = self._extract_modal_text(modal_id, soup) if modal_id else None
 
         # --- Title ---
-        title = self._extract_title(clean_text)
+        title = extracted_title or self._extract_title(clean_text)
 
         # --- Discount logic ---
         combined_text = f"{clean_text} {modal_text or ''}"
@@ -250,6 +270,8 @@ class MastercardAdapter(BaseSourceAdapter):
             parent = parent.parent  # type: ignore[assignment]
 
         raw_payload: dict[str, Any] = {
+            "deal_title": title,
+            "benefit_url": _MC_URL,
             "image_url": image_url,
             "modal_id": modal_id,
             "modal_text": modal_text,
@@ -259,13 +281,13 @@ class MastercardAdapter(BaseSourceAdapter):
             "stackable": stackable,
             "redeem_channels": channels,
             "coupon_code": coupon,
-            "full_description": clean_text,
+            "terms_and_conditions": clean_text,
         }
 
         return RawScrapedRecord(
             id=generate_id(),
             source_id=self.source_id,
-            store_name=modal_id,
+            store_name=store_name,
             deal_description=clean_text,
             price_text=price_text,
             scraped_at=now,
@@ -320,27 +342,24 @@ class MastercardAdapter(BaseSourceAdapter):
     def _extract_store_url(
         self, block: Tag, modal_id: str | None, soup: BeautifulSoup
     ) -> str | None:
-        """Extract the store URL from CTA script data or modal links.
+        """Extract the store URL from the action-container inside the teaser div.
 
-        Handles two DXP CTA data formats observed in production:
-
-        1. **Flat format** — ``ctaData = [{ctaText, ctaLink}]``
-        2. **Nested format** — ``dxpSelector.ctaData = [{ctaList: [{text, href}]}]``
-           (legacy Mastercard page variant)
+        The new Mastercard page wraps CTA links in:
+            <div class="cmp-teaser__action-container">
+                <a data-cmp-clickable href="...">לאתר</a>   ← store URL
+                <a data-cmp-clickable href="...">תקנון</a>  ← T&Cs (ignored)
+            </div>
         """
-        store_url = None
-        script_tag = block.find('script')
-        if script_tag and script_tag.string:
-            modal_match = re.search(r'"modal-target"\s*:\s*"([^"]+)"', script_tag.string)
-            if modal_match:
-                modal_id = modal_match.group(1)
-            store_url = self.extract_store_url_from_script(script_tag.string)
-
-            if not store_url and modal_id:
-                modal = soup.find('dxp-modal', {'modal-id': modal_id})
-                store_url = self.extract_store_url_from_modal(modal)
-            
-        return store_url
+        action_container = block.find("div", class_="cmp-teaser__action-container")
+        if isinstance(action_container, Tag):
+            links = action_container.find_all("a", recursive=False)
+            if links:
+                first_link = links[0]
+                # Prefer the dedicated data-cmp-clickable attribute; fall back to href.
+                href = first_link.get("data-cmp-clickable") or first_link.get("href")
+                if href and isinstance(href, str) and href.strip():
+                    return href.strip()
+        return None
 
         # for script in block.find_all("script"):
         #     text = script.string or ""

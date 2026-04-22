@@ -141,7 +141,8 @@ class SwishScanner:
     ) -> None:
         self._paths = paths
         self._scan_limit = scan_limit
-        self._pw: Any = None
+        self._pw_cm: Any = None  # SyncPlaywrightContextManager
+        self._pw: Any = None     # Playwright object (result of __enter__)
         self._context: Any = None
         self._page: Any = None
 
@@ -179,7 +180,8 @@ class SwishScanner:
         from playwright_stealth import Stealth
 
         self._paths.session.mkdir(parents=True, exist_ok=True)
-        self._pw = sync_playwright().__enter__()
+        self._pw_cm = sync_playwright()
+        self._pw = self._pw_cm.__enter__()
         headless = os.getenv("SWISH_HEADLESS", "1") == "1"
         self._context = self._pw.chromium.launch_persistent_context(
             str(self._paths.session),
@@ -195,8 +197,8 @@ class SwishScanner:
             if self._context is not None:
                 self._context.close()
         finally:
-            if self._pw is not None:
-                self._pw.__exit__(*exc)
+            if self._pw_cm is not None:
+                self._pw_cm.__exit__(*exc)
 
     def catalog(self) -> CatalogResult:
         """Two-phase catalog scrape. Stable when both passes return identical IDs."""

@@ -58,12 +58,14 @@ class SourceRegistry:
         from lessley_deals.scraping.sources.hot import HotAdapter
         from lessley_deals.scraping.sources.isracard_topcash import IsracardTopcashAdapter
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
+        from lessley_deals.scraping.sources.swish import SwishAdapter
 
         defaults: list[tuple[type[BaseSourceAdapter], str]] = [
             (HotAdapter, "https://www.hot.co.il"),
             (MastercardAdapter, "https://www.mastercard.co.il"),
             (BehatsdaaAdapter, "https://back.behatsdaa.org.il"),
             (IsracardTopcashAdapter, "https://www.topcash.co.il/all-stores"),
+            (SwishAdapter, "https://swish.co.il"),
         ]
         for cls, url in defaults:
             try:

@@ -82,5 +82,20 @@
       "polgat",
       "golf"
     ]
+  },
+  "swish:101": {
+    "managed_by": "swish_scraper",
+    "source_id": "swish",
+    "benefit_id": "101",
+    "display_name": "A",
+    "title_prefix": "תו קניה",
+    "last_scraped": "2026-04-21T16:43:45.149817+00:00",
+    "stores": [
+      {
+        "name": "רנואר",
+        "store_id": null,
+        "confidence": null
+      }
+    ]
   }
 }

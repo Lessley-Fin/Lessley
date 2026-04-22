@@ -15,6 +15,8 @@ class DealJsonRepository:
         d = to_dict(deal)
         if d.get("group_member_stores") is None:
             d.pop("group_member_stores", None)
+        if d.get("group_member_store_ids") is None:
+            d.pop("group_member_store_ids", None)
         self._store.append(d)
 
     def exists_by_fingerprint(self, fingerprint: str) -> bool:

@@ -31,21 +31,25 @@ logger = logging.getLogger(__name__)
 
 
 def get_deals_for_store(
-    store_name: str,
+    store_name_or_id: str,
     all_deals: list[RawScrapedRecord],
 ) -> list[RawScrapedRecord]:
-    """Return all deals relevant to *store_name*.
+    """Return all deals relevant to *store_name_or_id*.
 
     Merges two result sets without duplicates, preserving the original order
     of *all_deals*:
 
-    1. **Direct deals** — ``deal.store_name`` matches *store_name*
+    1. **Direct deals** — ``deal.store_name`` matches *store_name_or_id*
        (case-insensitive).
     2. **Group-wide deals** — ``deal.raw_payload["group_member_stores"]``
-       contains *store_name* (case-insensitive list membership).
+       contains the target.  Each member entry is either:
+         - a legacy ``str`` name (matched case-insensitively against the input), or
+         - a structured ``{"name": ..., "store_id": ...}`` dict (the input
+           matches *either* the ``name`` or the ``store_id``).
 
     Args:
-        store_name: The target store.  Case-insensitive.
+        store_name_or_id: The target store name or canonical store id.
+            Case-insensitive for name comparisons; exact for store_id.
         all_deals:  Full collection of :class:`RawScrapedRecord` instances.
 
     Returns:
@@ -53,12 +57,12 @@ def get_deals_for_store(
 
     Examples::
 
-        relevant = get_deals_for_store("sabon", all_deals)
-        # Includes direct sabon deals + any group-wide gift card that has
-        # "sabon" in its raw_payload["group_member_stores"].
+        relevant = get_deals_for_store("sabon", all_deals)          # by name
+        relevant = get_deals_for_store("store_0123", all_deals)     # by id
     """
-    store_lower = store_name.strip().lower()
-    if not store_lower:
+    raw_target = store_name_or_id.strip()
+    target_lower = raw_target.lower()
+    if not target_lower:
         return []
 
     seen_ids: set[str] = set()
@@ -71,7 +75,7 @@ def get_deals_for_store(
         matched = False
 
         # 1. Direct match on store_name
-        if deal.store_name.strip().lower() == store_lower:
+        if deal.store_name.strip().lower() == target_lower:
             matched = True
 
         # 2. Group-wide: check raw_payload["group_member_stores"]
@@ -79,9 +83,16 @@ def get_deals_for_store(
             group_members = deal.raw_payload.get("group_member_stores")
             if isinstance(group_members, list):
                 for member in group_members:
-                    if isinstance(member, str) and member.strip().lower() == store_lower:
-                        matched = True
-                        break
+                    if isinstance(member, str):
+                        if member.strip().lower() == target_lower:
+                            matched = True
+                            break
+                    elif isinstance(member, dict):
+                        member_name = str(member.get("name") or "").strip().lower()
+                        member_sid = str(member.get("store_id") or "").strip()
+                        if member_name == target_lower or member_sid == raw_target:
+                            matched = True
+                            break
 
         if matched:
             seen_ids.add(deal.id)
@@ -89,7 +100,7 @@ def get_deals_for_store(
 
     logger.debug(
         "get_deals_for_store('%s'): %d/%d deals matched",
-        store_name,
+        store_name_or_id,
         len(result),
         len(all_deals),
     )
@@ -113,18 +124,46 @@ def is_group_wide_deal(deal: RawScrapedRecord) -> bool:
 
 
 def get_group_member_stores(deal: RawScrapedRecord) -> list[str]:
-    """Return the list of member stores covered by a group-wide gift card.
+    """Return the list of member-store names covered by a group-wide gift card.
 
-    Returns an empty list for non-group deals.
+    Returns an empty list for non-group deals.  Both legacy ``str`` entries
+    and structured ``{"name", "store_id"}`` dict entries are supported; only
+    the ``name`` is returned.  See :func:`get_group_member_store_ids` for the
+    resolved-id variant.
 
     Args:
         deal: Any :class:`RawScrapedRecord`.
 
     Returns:
-        List of store name strings from ``raw_payload["group_member_stores"]``,
-        or ``[]`` if the deal is not group-wide.
+        List of store-name strings, or ``[]`` if the deal is not group-wide.
     """
     members = deal.raw_payload.get("group_member_stores")
-    if isinstance(members, list):
-        return [m for m in members if isinstance(m, str)]
-    return []
+    if not isinstance(members, list):
+        return []
+    out: list[str] = []
+    for m in members:
+        if isinstance(m, str):
+            out.append(m)
+        elif isinstance(m, dict):
+            name = m.get("name")
+            if isinstance(name, str) and name:
+                out.append(name)
+    return out
+
+
+def get_group_member_store_ids(deal: RawScrapedRecord) -> list[str]:
+    """Return the list of resolved canonical ``store_id`` values for a group deal.
+
+    Empty list for legacy deals where members are bare strings, or when no
+    member has been resolved against the canonical stores table yet.
+    """
+    members = deal.raw_payload.get("group_member_stores")
+    if not isinstance(members, list):
+        return []
+    out: list[str] = []
+    for m in members:
+        if isinstance(m, dict):
+            sid = m.get("store_id")
+            if isinstance(sid, str) and sid:
+                out.append(sid)
+    return out

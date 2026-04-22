@@ -75,7 +75,9 @@ Thresholds from `MatchConfig`: auto-accept ≥ 0.90, send to review ≥ 0.50, di
 
 **`src/lessley_deals/pipeline/`** — `PipelineOrchestrator` wires `scrape_stage.py`, `normalize_stage.py`, `match_stage.py`, `persist_stage.py` via a shared `context.py`. Each stage is independently testable.
 
-**Group gift cards** — HOT deals are classified as either store-specific or group-wide gift cards (e.g. "קבוצת גולף"). Group deals embed `group_member_stores` on the record so query-time fan-out can surface them for any member. See `docs/group-deals.md`.
+**Group gift cards** — HOT deals are classified as either store-specific or group-wide gift cards (e.g. "קבוצת גולף"). Group deals embed `group_member_stores` on the record so query-time fan-out can surface them for any member.
+
+The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json` by `sync_swish_groups()` (`scraping/helpers/swish_group_sync.py`). Swish entries are tagged `managed_by: "swish_scraper"`, store members as structured `{name, store_id, confidence}` dicts (resolved against the canonical stores via the matching pipeline), and push unresolved members to the review queue with `verdict.explanation.details["kind"] == "group_member_match"`. CLI: `python -m deals sync-swish-groups`. See `docs/group-deals.md`.
 
 **`src/lessley_deals/domain/`** — Core dataclasses and enums. Raw/normalized records and verdicts are **frozen**; entities (stores, aliases) are **mutable**. Never mutate frozen records.
 

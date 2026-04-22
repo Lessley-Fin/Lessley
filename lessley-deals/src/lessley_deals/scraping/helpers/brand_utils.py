@@ -11,10 +11,23 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+
+class GroupMember(TypedDict, total=False):
+    """A member store entry inside a group config.
+
+    ``name`` is always present.  ``store_id`` is filled when the member
+    has been resolved against the canonical stores table (e.g. by the
+    Swish group sync); ``None`` otherwise.  ``confidence`` records the
+    matcher confidence at resolution time when available.
+    """
+    name: str
+    store_id: str | None
+    confidence: float | None
 
 _DEFAULT_GROUPS_PATH = (
     Path(__file__).parent.parent / "config" / "hot_store_groups.json"
@@ -166,6 +179,41 @@ def to_slug(value: str) -> str:
 _groups_cache: dict[str, dict[str, dict]] = {}
 
 
+def _normalize_member_entries(raw_stores: Any) -> list[GroupMember]:
+    """Coerce the ``stores`` field into a uniform ``list[GroupMember]`` form.
+
+    Accepts either:
+    - ``list[str]``  — legacy: each string becomes ``{"name": s, "store_id": None}``
+    - ``list[dict]`` — explicit: each dict must carry ``name`` and may carry
+      ``store_id`` and ``confidence``.
+
+    Unknown shapes are dropped with a debug log.
+    """
+    if not isinstance(raw_stores, list):
+        return []
+    out: list[GroupMember] = []
+    for entry in raw_stores:
+        if isinstance(entry, str):
+            stripped = entry.strip()
+            if stripped:
+                out.append({"name": stripped, "store_id": None, "confidence": None})
+        elif isinstance(entry, dict):
+            name = str(entry.get("name") or "").strip()
+            if not name:
+                logger.debug("group store entry missing 'name': %r", entry)
+                continue
+            sid = entry.get("store_id")
+            conf = entry.get("confidence")
+            out.append({
+                "name": name,
+                "store_id": str(sid) if sid else None,
+                "confidence": float(conf) if isinstance(conf, (int, float)) else None,
+            })
+        else:
+            logger.debug("group store entry has unsupported type: %r", entry)
+    return out
+
+
 def load_hot_store_groups(
     path: Path | None = None,
 ) -> dict[str, dict]:
@@ -206,41 +254,52 @@ def classify_group_deal(
 ) -> tuple[str, bool, list[str]]:
     """Classify a HOT group brand deal as store-specific or group-wide.
 
-    When ``brand`` matches a known store-group (case-insensitive), the
-    function strips each configured prefix from *title* (trying each in
-    order) to derive the candidate sub-store name.  It then checks whether
-    that candidate appears in the group's ``stores`` whitelist:
+    Backward-compatible wrapper that returns member **names only**.  Use
+    :func:`classify_group_deal_resolved` to get the richer
+    ``list[GroupMember]`` form (with resolved canonical store IDs).
 
-    - **Store-specific deal** — the resolved name matches a known sub-store.
-      The real sub-store name is returned and ``is_group_wide`` is ``False``.
-    - **Group-wide gift card** — the resolved name does *not* match any
-      sub-store (e.g. the gift card covers the whole group).
-      The original group brand is returned, ``is_group_wide`` is ``True``,
-      and ``group_member_stores`` lists every member store.
+    See :func:`classify_group_deal_resolved` for full classification logic.
 
-    When ``brand`` is *not* a known group the deal is returned unchanged
-    as a non-group deal.
+    Returns:
+        ``(resolved_store_name, is_group_wide, member_store_names)``
+    """
+    name, is_group_wide, members = classify_group_deal_resolved(brand, title, groups)
+    return name, is_group_wide, [m["name"] for m in members]
+
+
+def classify_group_deal_resolved(
+    brand: str,
+    title: str,
+    groups: dict[str, dict] | None = None,
+) -> tuple[str, bool, list[GroupMember]]:
+    """Classify a group brand deal and return resolved member metadata.
+
+    Same logic as :func:`classify_group_deal` but each returned member is a
+    :class:`GroupMember` dict carrying ``name`` plus optional ``store_id`` /
+    ``confidence`` populated from the source config (e.g. by the Swish group
+    sync).
 
     Args:
-        brand: Cleaned brand name from the HOT API (``item_brand`` field).
-        title: Deal title string from the HOT API.
+        brand: Cleaned brand name (``item_brand`` field).
+        title: Deal title string.
         groups: Override the groups dict (mainly for testing).  When
             ``None`` the bundled config is loaded via
             :func:`load_hot_store_groups`.
 
     Returns:
         ``(resolved_store_name, is_group_wide, group_member_stores)``
+        where ``group_member_stores`` is ``list[GroupMember]``.
 
     Examples::
 
-        classify_group_deal("קבוצת גולף - תווים", "תו קניה sabon")
+        classify_group_deal_resolved("קבוצת גולף - תווים", "תו קניה sabon")
         # -> ("sabon", False, [])
 
-        classify_group_deal("קבוצת גולף - תווים", "תו קניה קבוצת גולף - תווים")
-        # -> ("קבוצת גולף - תווים", True, ["kitan", "sabon", ...])
-
-        classify_group_deal("AHAVA", "הנחה בAHAVA")  # not a group
-        # -> ("AHAVA", False, [])
+        classify_group_deal_resolved(
+            "swish:45680", "תו קניה swish:45680",
+        )
+        # -> ("swish:45680", True,
+        #     [{"name": "זאוס ספא", "store_id": "store_001", ...}, ...])
     """
     if groups is None:
         groups = load_hot_store_groups()
@@ -271,8 +330,8 @@ def classify_group_deal(
     else:
         prefixes = []
 
-    raw_stores = cfg_found.get("stores")
-    member_stores: list[str] = list(raw_stores) if isinstance(raw_stores, list) else []
+    member_stores: list[GroupMember] = _normalize_member_entries(cfg_found.get("stores"))
+    member_names: list[str] = [m["name"] for m in member_stores]
 
     if not prefixes:
         # Group with no prefix config — treat as group-wide
@@ -301,14 +360,14 @@ def classify_group_deal(
         # No prefix matched the start of the title — check if any known
         # member store name appears in the title before falling back to group-wide.
         title_lower = title.strip().lower()
-        for store in member_stores:
-            store_l = store.strip().lower()
+        for store_name in member_names:
+            store_l = store_name.strip().lower()
             if store_l in title_lower:
                 logger.debug(
                     "classify_group_deal: no prefix but title %r contains member store %r",
-                    title, store,
+                    title, store_name,
                 )
-                return store, False, []
+                return store_name, False, []
         logger.debug(
             "classify_group_deal: no prefix matched title %r (tried: %s) — group-wide",
             title, prefixes,
@@ -328,16 +387,16 @@ def classify_group_deal(
     # after the store name (e.g. "תו קניה sabon 200 ₪" → candidate "sabon 200 ₪"
     # should still resolve to canonical "sabon").
     candidate_lower = candidate.lower()
-    for store in member_stores:
-        store_l = store.strip().lower()
+    for store_name in member_names:
+        store_l = store_name.strip().lower()
         if candidate_lower == store_l or store_l in candidate_lower:
             logger.debug(
                 "classify_group_deal: %r -> store-specific %r (from title: %r)",
-                brand, store, title,
+                brand, store_name, title,
             )
             # Return the canonical store name from the whitelist, not the raw
             # candidate, so the case and trailing text are normalised.
-            return store, False, []
+            return store_name, False, []
 
     # If the remaining text starts with the group name itself, it is still a
     # group-wide gift card (e.g. "תו קניה קבוצת גולף - תווים" → candidate
@@ -365,6 +424,16 @@ def classify_group_deal(
         brand, candidate,
     )
     return candidate, False, []
+
+
+def get_member_names(members: list[GroupMember]) -> list[str]:
+    """Return only the ``name`` field of each member (helper for legacy callers)."""
+    return [m["name"] for m in members]
+
+
+def get_member_store_ids(members: list[GroupMember]) -> list[str]:
+    """Return only resolved ``store_id`` values, dropping unresolved members."""
+    return [str(m["store_id"]) for m in members if m.get("store_id")]
 
 
 def resolve_group_store(

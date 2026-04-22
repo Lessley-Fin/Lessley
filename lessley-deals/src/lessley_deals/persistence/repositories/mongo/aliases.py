@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from pymongo.collection import Collection
 from pymongo.database import Database
 
@@ -37,6 +39,25 @@ class AliasMongoRepository:
     def get_by_store(self, store_id: str) -> list[StoreAlias]:
         result = []
         for doc in self._col.find({"store_id": store_id}):
+            doc["id"] = doc.pop("_id")
+            result.append(alias_from_dict(doc))
+        return result
+
+    def search(self, query: str) -> list[StoreAlias]:
+        """Case-insensitive substring search on ``alias`` and ``alias_forms.normalized``.
+
+        Mirrors :meth:`AliasJsonRepository.search` so the review TUI works
+        against either backend.
+        """
+        q = query.strip()
+        if not q:
+            return []
+        pattern = re.escape(q)
+        result = []
+        for doc in self._col.find({"$or": [
+            {"alias": {"$regex": pattern, "$options": "i"}},
+            {"alias_forms.normalized": {"$regex": pattern, "$options": "i"}},
+        ]}):
             doc["id"] = doc.pop("_id")
             result.append(alias_from_dict(doc))
         return result

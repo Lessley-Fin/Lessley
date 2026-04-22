@@ -35,6 +35,23 @@ def build_name_forms(name: str) -> NameForms:
     return NameForms(normalized=normalized, compact=compact, tokens=tokens)
 
 
+def is_group_member_review(item: ReviewItem) -> bool:
+    """True when the item is a synthetic group-member resolution review.
+
+    Group-member items are produced by the group-sync flow (e.g. Swish) and
+    differ from deal-store-match items in that approving / creating-new
+    must NOT also create a :class:`Deal` — the item exists purely to teach
+    the alias index a new store name → store_id mapping.
+
+    Detection key: ``raw_id`` carries a synthetic prefix
+    (e.g. ``"swish:45680::חמי געש"``) and the verdict's explanation details
+    include ``kind == "group_member_match"``.
+    """
+    if item.verdict.explanation.details.get("kind") == "group_member_match":
+        return True
+    return item.raw_id.startswith("swish:")
+
+
 class ReviewActions:
     def __init__(
         self,
@@ -94,17 +111,18 @@ class ReviewActions:
         )
         self._alias_repo.save(alias)
 
-        # Create deal linked to the matched store
-        deal = Deal(
-            id=generate_id(),
-            store_id=store_id,
-            raw_id=item.raw_id,
-            source_id=item.verdict.record_id,
-            description=item.verdict.input_name,
-            scraped_at=item.created_at,
-            resolved_at=now,
-        )
-        self._deal_repo.save(deal)
+        if not is_group_member_review(item):
+            # Create deal linked to the matched store (skip for group-member reviews)
+            deal = Deal(
+                id=generate_id(),
+                store_id=store_id,
+                raw_id=item.raw_id,
+                source_id=item.verdict.record_id,
+                scraped_at=item.created_at,
+                resolved_at=now,
+                deal_description=item.verdict.input_name,
+            )
+            self._deal_repo.save(deal)
 
         self._review_repo.update(item)
         return item
@@ -145,16 +163,17 @@ class ReviewActions:
         )
         self._alias_repo.save(alias)
 
-        deal = Deal(
-            id=generate_id(),
-            store_id=store_id,
-            raw_id=item.raw_id,
-            source_id=item.verdict.record_id,
-            description=item.verdict.input_name,
-            scraped_at=item.created_at,
-            resolved_at=now,
-        )
-        self._deal_repo.save(deal)
+        if not is_group_member_review(item):
+            deal = Deal(
+                id=generate_id(),
+                store_id=store_id,
+                raw_id=item.raw_id,
+                source_id=item.verdict.record_id,
+                scraped_at=item.created_at,
+                resolved_at=now,
+                deal_description=item.verdict.input_name,
+            )
+            self._deal_repo.save(deal)
 
         self._review_repo.update(item)
         return item
@@ -195,17 +214,18 @@ class ReviewActions:
         )
         self._alias_repo.save(alias)
 
-        # Create deal linked to the new store
-        deal = Deal(
-            id=generate_id(),
-            store_id=store.id,
-            raw_id=item.raw_id,
-            source_id=item.verdict.record_id,
-            description=item.verdict.input_name,
-            scraped_at=item.created_at,
-            resolved_at=now,
-        )
-        self._deal_repo.save(deal)
+        if not is_group_member_review(item):
+            # Create deal linked to the new store (skip for group-member reviews)
+            deal = Deal(
+                id=generate_id(),
+                store_id=store.id,
+                raw_id=item.raw_id,
+                source_id=item.verdict.record_id,
+                scraped_at=item.created_at,
+                resolved_at=now,
+                deal_description=item.verdict.input_name,
+            )
+            self._deal_repo.save(deal)
 
         # Record the decision
         item.status = ReviewStatus.CREATED

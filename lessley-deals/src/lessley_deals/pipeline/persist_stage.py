@@ -81,14 +81,18 @@ class PersistStage:
 
             if verdict.decision == MatchDecision.AUTO_MATCH and verdict.best:
                 raw_payload = prec.raw.raw_payload
+                full_desc = raw_payload.get("full_description")
                 deal = Deal(
                     id=generate_id(),
                     store_id=verdict.best.store_id,
                     raw_id=raw_id,
                     source_id=prec.raw.source_id,
-                    description=normalized.deal_description,
                     scraped_at=prec.raw.scraped_at,
                     resolved_at=now,
+                    title=raw_payload.get("deal_title"),
+                    deal_description=full_desc,
+                    terms_and_conditions=raw_payload.get("terms_and_conditions", full_desc),
+                    benefit_url=raw_payload.get("benefit_url") or prec.raw.url,
                     currency=normalized.price.currency if normalized.price else "ILS",
                     url=prec.raw.url,
                     discount_logic=raw_payload.get("discount_logic"),
@@ -97,6 +101,7 @@ class PersistStage:
                     coupon_code=raw_payload.get("coupon_code"),
                     club_id=self._club_map.get(prec.raw.source_id),
                     group_member_stores=raw_payload.get("group_member_stores") or None,
+                    group_member_store_ids=raw_payload.get("group_member_store_ids") or None,
                 )
                 auto_match_batch.append((prec, deal))
 

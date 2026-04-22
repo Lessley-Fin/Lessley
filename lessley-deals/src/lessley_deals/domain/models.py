@@ -149,9 +149,12 @@ class Deal:
     store_id: str
     raw_id: str
     source_id: str
-    description: str
     scraped_at: datetime
     resolved_at: datetime
+    title: str | None = None
+    deal_description: str | None = None
+    terms_and_conditions: str | None = None
+    benefit_url: str | None = None
     currency: str | None = None
     url: str | None = None
     discount_logic: dict[str, Any] | None = None
@@ -159,11 +162,16 @@ class Deal:
     redeem_channels: list[str] = field(default_factory=list)
     coupon_code: str | None = None
     club_id: str | None = None
-    group_member_stores: list[str] | None = None
+    # Either a list[str] (legacy: member store names) or list[dict] of
+    # {"name", "store_id", "confidence"} (resolved members from group sync).
+    group_member_stores: list[Any] | None = None
+    # Resolved canonical store IDs for group-wide deals.  Populated by the
+    # group-sync flow; query-time fan-out matches against these for accuracy.
+    group_member_store_ids: list[str] | None = None
 
     @property
     def fingerprint(self) -> str:
-        data = f"{self.store_id}|{self.source_id}|{self.description}|{self.currency or ''}"
+        data = f"{self.store_id}|{self.source_id}|{self.deal_description or ''}|{self.currency or ''}"
         return hashlib.sha256(data.encode()).hexdigest()
 
 

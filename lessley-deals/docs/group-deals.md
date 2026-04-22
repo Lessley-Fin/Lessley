@@ -187,3 +187,88 @@ store_name, is_group_wide, members = classify_group_deal(brand, title)
    }
    ```
 3. Re-run the scraper — no code changes needed.
+
+---
+
+## Auto-managed groups (Swish)
+
+Some groups are kept in sync automatically.  The Swish (נפשונית) gift-card
+catalogue is large and changes frequently, so its group entries are
+populated by `sync_swish_groups()` instead of being maintained by hand.
+
+### Schema discriminator
+
+Every Swish-managed entry carries a `managed_by` field:
+
+```json
+"swish:45680": {
+  "managed_by": "swish_scraper",
+  "source_id": "swish",
+  "benefit_id": "45680",
+  "display_name": "יום פינוק בספא ליחיד",
+  "title_prefix": "תו קניה",
+  "last_scraped": "2026-04-15T12:30:00+00:00",
+  "stores": [
+    {"name": "זאוס ספא", "store_id": "store_001", "confidence": 0.97},
+    {"name": "חמי געש", "store_id": null, "confidence": null}
+  ]
+}
+```
+
+The sync only touches keys whose `managed_by == "swish_scraper"`; all
+hand-maintained entries (HOT) are preserved verbatim on every run.
+
+### Members are resolved against the canonical stores
+
+Each `stores` entry is a structured object:
+
+| Field | Meaning |
+|---|---|
+| `name` | Raw member name as Swish returned it. |
+| `store_id` | Canonical store id (resolved via the matching pipeline) or `null` if no auto-match. |
+| `confidence` | Matcher confidence at resolution time; `null` for unresolved members. |
+
+`classify_group_deal_resolved()` reads the structured form and returns
+`list[GroupMember]`.  The legacy `classify_group_deal()` wrapper still
+returns plain `list[str]` of names so existing call sites keep working.
+
+### Wire shape on `RawScrapedRecord`
+
+For Swish-emitted deals, `raw_payload["group_member_stores"]` is a list of
+the same `{name, store_id, confidence}` dicts and a parallel
+`raw_payload["group_member_store_ids"]` carries just the resolved ids.
+Query-time fan-out (`get_deals_for_store`) accepts either a name or a
+store id and tolerates legacy string entries.
+
+### Unresolved members → review queue
+
+Members that don't auto-match (confidence < `DEALS_AUTO_MATCH_THRESHOLD`,
+default 0.90) are pushed to the review queue with
+`verdict.explanation.details["kind"] == "group_member_match"`.  The
+`raw_id` follows the pattern `swish:<benefit_id>::<raw_member_name>`.
+`is_group_member_review(item)` (in `review/actions.py`) detects them, and
+approving such an item creates an alias *without* also creating a Deal —
+the item exists only to teach the alias index.
+
+### Full-refresh policy
+
+`sync_swish_groups()` rewrites the Swish section of the config in full:
+benefits absent from `swish_database.json` get their config entries
+removed.  The hand-maintained HOT section is untouched.
+
+### CLI
+
+```bash
+# Sync from an existing swish_database.json (no rescrape)
+python -m deals sync-swish-groups --swish-db swish_database.json
+
+# Resolve pending group-member reviews (uses the same review TUI)
+python -m deals review
+```
+
+### Refreshing the source data
+
+The browser-driven Swish scrape lives at `test_swish.py` (Playwright +
+stealth, sync I/O — kept out of the async pipeline).  Run it manually to
+refresh `swish_database.json`, then run `sync-swish-groups` to push the
+results into the config.
