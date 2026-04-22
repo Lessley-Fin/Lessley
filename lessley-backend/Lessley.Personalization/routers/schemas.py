@@ -77,3 +77,20 @@ class RecommendationByCategoryResponseSchema(BaseModel):
     user_id: str
     club_scores: list[ClubScoreSchema]
     recommended_club: ClubScoreSchema | None = None
+
+
+class ClubRecommendationSchema(BaseModel):
+    """Schema for a single club recommendation based on spending analysis."""
+
+    club_id: str
+    club_name: str
+    hit_count: int
+    total_stores: int
+    fit_score: float = Field(..., ge=0, le=1, description="The ratio of matching stores to total stores in the club.")
+
+
+class ClubRecommendationResponseSchema(BaseModel):
+    """Schema for the club recommendation by spending analysis response."""
+
+    user_id: str
+    recommendations: list[ClubRecommendationSchema]

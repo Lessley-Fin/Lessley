@@ -155,3 +155,69 @@ class RecommendationService:
             mcc_codes = list(set(int(code) for code in mcc_codes if code))
 
         return mcc_codes
+
+    async def calculate_club_recommendation_by_spending(
+        self, user_id: str, time_filter: bool = True, days: int = 90, threshold: float = 0.20
+    ) -> Dict:
+        """
+        Orchestrates the process of generating club recommendations based on a user's spending analysis.
+
+        Args:
+            user_id: The user ID.
+            time_filter: Whether to apply a time filter to transactions.
+            days: The number of days of transaction history to analyze.
+            threshold: The fit score threshold for a club to be recommended.
+
+        Returns:
+            A dictionary with club recommendations.
+        """
+        logger.info(
+            "Service method called for spending-based club recommendation",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {
+                    "user_id": user_id,
+                    "time_filter": time_filter,
+                    "days": days,
+                    "threshold": threshold,
+                },
+            },
+        )
+
+        try:
+            # Fetch user categories from insights service
+            categories = await self.insights_service.calculate_user_categories_async(
+                user_id, time_filter, days, use_mock=False
+            )
+
+            # Extract and convert MCC codes from categories
+            mcc_codes = self._extract_mcc_codes(categories)
+
+            # Get club recommendations based on spending analysis
+            recommendation_result = self.recommendation_core_service.get_club_recommendations_by_spending_analysis(
+                user_id, mcc_codes, threshold
+            )
+
+            logger.info(
+                "Spending-based club recommendation calculation complete",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {
+                        "user_id": user_id,
+                        "recommended_club_count": len(recommendation_result.get("recommendations", [])),
+                    },
+                },
+            )
+
+            return recommendation_result
+
+        except Exception as e:
+            logger.error(
+                f"Error in calculate_club_recommendation_by_spending: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {"user_id": user_id, "error_type": type(e).__name__},
+                },
+            )
+            raise

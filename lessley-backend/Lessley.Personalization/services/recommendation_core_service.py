@@ -59,6 +59,42 @@ class RecommendationCoreService:
             )
             self._categories_data = []
 
+    def _calculate_club_scores(self, mcc_codes: List[int]) -> List[Dict]:
+        """
+        A private helper to calculate hit counts for all clubs based on a list of MCCs.
+
+        Args:
+            mcc_codes: A list of user's spending MCC codes.
+
+        Returns:
+            A list of dictionaries, each containing a club's score.
+        """
+        club_scores = []
+        mcc_codes_set = set(mcc_codes)
+
+        # Iterate through all clubs and count hits
+        for club in self._categories_data:
+            hit_count = 0
+            stores = club.get("stores", [])
+            total_stores = len(stores)
+
+            if total_stores > 0:
+                for store in stores:
+                    store_mcc_codes = set(store.get("mcc_codes", []))
+                    # If store has any matching MCC codes, count it as a hit
+                    if store_mcc_codes & mcc_codes_set:
+                        hit_count += 1
+
+            club_scores.append(
+                {
+                    "club_id": club.get("club_id"),
+                    "club_name": club.get("name"),
+                    "hit_count": hit_count,
+                    "total_stores": total_stores,
+                }
+            )
+        return club_scores
+
     def get_club_recommendation_by_category(self, user_id: str, mcc_codes: List[int]) -> Dict:
         """
         Gets club recommendations based on MCC codes from user's transaction history.
@@ -83,33 +119,8 @@ class RecommendationCoreService:
                 },
             )
 
-            club_scores = []
-            mcc_codes_set = set(mcc_codes)
-
-            # Iterate through all clubs and count hits
-            for club in self._categories_data:
-                club_id = club.get("club_id")
-                club_name = club.get("name")
-                hit_count = 0
-
-                # Count stores with matching MCC codes
-                stores = club.get("stores", [])
-                total_stores = len(stores)
-
-                for store in stores:
-                    store_mcc_codes = set(store.get("mcc_codes", []))
-                    # If store has any matching MCC codes, count it as a hit
-                    if store_mcc_codes & mcc_codes_set:
-                        hit_count += 1
-
-                club_scores.append(
-                    {
-                        "club_id": club_id,
-                        "club_name": club_name,
-                        "hit_count": hit_count,
-                        "total_stores": total_stores,
-                    }
-                )
+            # Use the helper method to get the base scores
+            club_scores = self._calculate_club_scores(mcc_codes)
 
             # Sort by hit count (descending) to get recommended club
             sorted_clubs = sorted(club_scores, key=lambda x: x["hit_count"], reverse=True)
@@ -146,3 +157,68 @@ class RecommendationCoreService:
                 },
             )
             raise
+
+    def get_club_recommendations_by_spending_analysis(
+        self, user_id: str, mcc_codes: List[int], threshold: float = 0.20
+    ) -> Dict:
+        """
+        Analyzes all clubs against user's spending categories and recommends those that exceed a fit threshold.
+
+        Args:
+            user_id: The user ID.
+            mcc_codes: List of MCC codes from user's spending.
+            threshold: The minimum ratio of (matching stores / total stores) to be considered a recommendation.
+
+        Returns:
+            A dictionary containing a list of recommended clubs.
+        """
+        try:
+            logger.info(
+                f"Analyzing club fit for user: {user_id}",
+                extra={
+                    "reason": "Club fit analysis request received",
+                    "extra_data": {
+                        "user_id": user_id,
+                        "mcc_codes_count": len(mcc_codes),
+                        "threshold": threshold,
+                    },
+                },
+            )
+
+            # Use the helper method to get the base scores
+            club_scores = self._calculate_club_scores(mcc_codes)
+
+            recommended_clubs = []
+            for score in club_scores:
+                total_stores = score["total_stores"]
+                if total_stores == 0:
+                    continue  # Skip clubs with no stores
+
+                fit_score = score["hit_count"] / total_stores
+
+                if fit_score >= threshold:
+                    recommended_clubs.append(
+                        {
+                            "club_id": score["club_id"],
+                            "club_name": score["club_name"],
+                            "hit_count": score["hit_count"],
+                            "total_stores": score["total_stores"],
+                            "fit_score": fit_score,
+                        }
+                    )
+
+        except Exception as e:
+            logger.error(
+                f"Error during club fit analysis: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Club fit analysis failed", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
+        # Sort recommended clubs by fit_score descending
+        sorted_recommendations = sorted(recommended_clubs, key=lambda x: x["fit_score"], reverse=True)
+
+        return {
+            "user_id": user_id,
+            "recommendations": sorted_recommendations,
+        }
