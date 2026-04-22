@@ -21,7 +21,7 @@ class RecommendationService:
         self.insights_service = insights_service
 
     async def calculate_club_recommendation_by_category(
-        self, user_id: str, time_filter: bool = True, days: int = 90
+        self, user_id: str, time_filter: bool = True, days: int = 90, use_mock: bool = False, threshold: float = 0.20
     ) -> Dict:
         """
         Gets club recommendations based on MCC codes from user's transaction history.
@@ -62,7 +62,7 @@ class RecommendationService:
             )
 
             categories = await self.insights_service.calculate_user_categories_async(
-                user_id, time_filter, days, use_mock=False
+                user_id, time_filter, days, use_mock
             )
 
             logger.info(
@@ -156,7 +156,7 @@ class RecommendationService:
 
         return mcc_codes
 
-    async def calculate_club_recommendation_by_spending(
+    async def calculate_club_recommendation_by_category(
         self, user_id: str, time_filter: bool = True, days: int = 90, threshold: float = 0.20
     ) -> Dict:
         """
@@ -187,7 +187,7 @@ class RecommendationService:
         try:
             # Fetch user categories from insights service
             categories = await self.insights_service.calculate_user_categories_async(
-                user_id, time_filter, days, use_mock=False
+                user_id, time_filter, days
             )
 
             # Extract and convert MCC codes from categories

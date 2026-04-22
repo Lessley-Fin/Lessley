@@ -4,3 +4,4 @@ class LIMITS:
     TOP_STORES = 50
     MAX_PAGE_SIZE = 1000
     DAYS = 90
+    HIT_THRESHOLD = 0.20
