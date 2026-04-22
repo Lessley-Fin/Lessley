@@ -196,16 +196,16 @@ class RecommendationCoreService:
 
                 fit_score = score["hit_count"] / total_stores
 
-                if fit_score >= threshold:
-                    recommended_clubs.append(
-                        {
-                            "club_id": score["club_id"],
-                            "club_name": score["club_name"],
-                            "hit_count": score["hit_count"],
-                            "total_stores": score["total_stores"],
-                            "fit_score": fit_score,
-                        }
-                    )
+                recommended_clubs.append(
+                    {
+                        "club_id": score["club_id"],
+                        "club_name": score["club_name"],
+                        "hit_count": score["hit_count"],
+                        "total_stores": score["total_stores"],
+                        "fit_score": fit_score,
+                        "is_recommended": fit_score >= threshold,
+                    }
+                )
 
         except Exception as e:
             logger.error(

@@ -1,11 +1,10 @@
 import logging
 import time
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 from services.di_container import DIContainer
 from .responses import BasicResponse
 from .schemas import (
     RecommendationByCategoryRequestSchema,
-    RecommendationByCategoryResponseSchema,
     ClubRecommendationResponseSchema,
 )
 
@@ -15,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 # here
 @router.get("/club-by-category")
-async def get_club_recommendation_by_category(request: Request, payload: RecommendationByCategoryRequestSchema):
+async def get_club_recommendation_by_category(
+    request: Request, payload: RecommendationByCategoryRequestSchema = Query()
+):
     """
     Gets club recommendations for a user based on their spending habits.
     Recommends clubs where the user's spending categories match a significant
@@ -39,7 +40,7 @@ async def get_club_recommendation_by_category(request: Request, payload: Recomme
         # Call service to calculate recommendations
         service = DIContainer.get_recommendation_service()
         result = await service.calculate_club_recommendation_by_category(
-            payload.user_id, payload.time_filter, days=payload.days, threshold=payload.threshold
+            payload.user_id, payload.time_filter, payload.days, payload.use_mock, payload.threshold
         )
 
         response_time_ms = (time.time() - start_time) * 1000

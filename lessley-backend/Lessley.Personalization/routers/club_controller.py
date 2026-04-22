@@ -11,10 +11,10 @@ import time
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/insights", tags=["Insights"])
+router = APIRouter(prefix="/clubs", tags=["Clubs"])
 
 
-@router.get("/categories")
+@router.post("/categories")
 async def calculate_user_categories(request: Request, req: ClubCalcRequests = Query()):
     """
     For a given club, analyzes all its stores and returns a distribution of
@@ -75,7 +75,16 @@ async def calculate_user_categories(request: Request, req: ClubCalcRequests = Qu
         # Log successful response
         logger.info(
             "API response: 200",
-            extra={"reason": "Request completed", "extra_data": {"user_id": req.user_id, "club_id": req.club_id, "method": request.method, "endpoint": request.url.path, "response_time_ms": response_time_ms, "mcc_count": len(relevant_categories)}},
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "club_id": req.club_id,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "mcc_count": len(relevant_categories),
+                },
+            },
         )
 
         return BasicResponse(status="success", data=ClubMccDistributionResponseSchema(**result))
@@ -85,6 +94,15 @@ async def calculate_user_categories(request: Request, req: ClubCalcRequests = Qu
         logger.error(
             f"Error calculating club MCC distribution: {str(e)}",
             exc_info=e,
-            extra={"reason": "Service call failed", "extra_data": {"user_id": req.user_id, "club_id": req.club_id, "method": request.method, "endpoint": request.url.path, "response_time_ms": response_time_ms}},
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {
+                    "user_id": req.user_id,
+                    "club_id": req.club_id,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                },
+            },
         )
         raise

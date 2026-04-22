@@ -23,7 +23,7 @@ class InsightsCalcRequests(BaseModel):
         if not v.strip():
             raise ValueError("user_id cannot be empty")
         return v
-    
+
 
 class ClubCalcRequests(BaseModel):
     club_id: str = Field(..., min_length=1, max_length=255, description="Club ID")
@@ -70,6 +70,7 @@ class ClubMccDistributionResponseSchema(BaseModel):
 
 class RecommendationByCategoryRequestSchema(BaseModel):
     """Schema for recommendation by category request"""
+
     user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
     use_mock: bool = Field(False, description="Use mock data")
     time_filter: bool = Field(True, description="Filter by time")
@@ -99,6 +100,9 @@ class ClubRecommendationSchema(BaseModel):
     hit_count: int
     total_stores: int
     fit_score: float = Field(..., ge=0, le=1, description="The ratio of matching stores to total stores in the club.")
+    is_recommended: bool = Field(
+        ..., description="Whether the club is recommended based on the fit score and threshold."
+    )
 
 
 class ClubRecommendationResponseSchema(BaseModel):
