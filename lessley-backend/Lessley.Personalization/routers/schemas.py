@@ -48,26 +48,6 @@ class GetTransactionsRequest(BaseModel):
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
 
 
-class ClubScoreSchema(BaseModel):
-    """Schema for club recommendation score"""
-
-    club_id: str
-    club_name: str
-    hit_count: int
-    total_stores: int
-
-
-class MccCountSchema(BaseModel):
-    mcc: int
-    store_count: int
-
-
-class ClubMccDistributionResponseSchema(BaseModel):
-    club_id: str
-    club_name: str
-    relevant_category: list[MccCountSchema]
-
-
 class RecommendationByCategoryRequestSchema(BaseModel):
     """Schema for recommendation by category request"""
 
@@ -91,43 +71,3 @@ class DealRequest(BaseModel):
     deal_id: str = Field(..., min_length=1, max_length=255, description="Deal ID")
     store_id: str = Field(..., min_length=1, max_length=255, description="Store ID")
     user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
-
-
-class RecommendationByCategoryResponseSchema(BaseModel):
-    """Schema for recommendation by category response"""
-
-    user_id: str
-    club_scores: list[ClubScoreSchema]
-    recommended_club: ClubScoreSchema | None = None
-
-
-class ClubRecommendationSchema(BaseModel):
-    """Schema for a single club recommendation based on spending analysis."""
-
-    club_id: str
-    club_name: str
-    hit_count: int
-    total_stores: int
-    fit_score: float = Field(..., ge=0, le=1, description="The ratio of matching stores to total stores in the club.")
-    is_recommended: bool = Field(
-        ..., description="Whether the club is recommended based on the fit score and threshold."
-    )
-
-
-class ClubRecommendationResponseSchema(BaseModel):
-    """Schema for the club recommendation by spending analysis response."""
-
-    user_id: str
-    recommendations: list[ClubRecommendationSchema]
-
-
-class DealRecommendationResponseSchema(BaseModel):
-    """Schema for a single deal recommendation response."""
-
-    deal_id: str
-    user_id: str
-    store_id: str
-    club_id: str
-    is_recommended: bool
-    fit_score: float
-    matching_mcc_codes: list[int]

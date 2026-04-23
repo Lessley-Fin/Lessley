@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Query, Request
 from services.di_container import DIContainer
-from .schemas import (
-    ClubCalcRequests,
-    ClubMccDistributionResponseSchema,
-)
-from .responses import BasicResponse
+from .schemas import ClubCalcRequests
 import logging
+from .responses import BasicResponse, ClubMccDistributionResponseSchema
 from collections import Counter
 import time
 

@@ -2,12 +2,10 @@ import logging
 import time
 from fastapi import APIRouter, Request, Query
 from services.di_container import DIContainer
-from .responses import BasicResponse
+from .responses import BasicResponse, ClubRecommendationResponseSchema, DealRecommendationResponseSchema
 from .schemas import (
     DealRequest,
     RecommendationByCategoryRequestSchema,
-    ClubRecommendationResponseSchema,
-    DealRecommendationResponseSchema,
 )
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
