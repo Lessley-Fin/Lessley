@@ -42,16 +42,20 @@ class RecommendationService:
             },
         )
 
-        mcc_codes = []
-
+        all_mcc_codes = set()
         for category in categories:
-            if isinstance(category, dict) and "mcc_codes" in category:
-                mcc_codes.extend(category.get("mcc_codes", []))
+            if isinstance(category, dict):
+                for code in category.get("mcc_codes", []):
+                    if code:  # Ensure code is not empty or None
+                        try:
+                            all_mcc_codes.add(int(code))
+                        except (ValueError, TypeError):
+                            logger.warning(
+                                f"Could not convert MCC code '{code}' to an integer. Skipping.",
+                                extra={"reason": "Invalid data format", "extra_data": {"invalid_code": code}},
+                            )
 
-            # Convert string MCC codes to integers and remove duplicates
-            mcc_codes = list(set(int(code) for code in mcc_codes if code))
-
-        return mcc_codes
+        return list(all_mcc_codes)
 
     async def calculate_club_recommendation_by_category(
         self,
@@ -135,11 +139,86 @@ class RecommendationService:
             deal_id: The deal ID for which the recommendation is being calculated.
             store_id: The store ID where the deal is available.
         """
+        logger.info(
+            "Calculating deal recommendation for user",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {
+                    "user_id": user_id,
+                    "club_id": club_id,
+                    "deal_id": deal_id,
+                    "store_id": store_id,
+                },
+            },
+        )
+        try:
+            # step 1: Get user categories and MCC codes using insights_service
+            categories = await self.insights_service.calculate_user_categories_async(
+                user_id=user_id, time_filter=True, days=LIMITS.DAYS, use_mock=False
+            )
+            user_mcc_codes = self._extract_mcc_codes(categories)
 
-        # step 1: Get user categories and MCC codes
+            # step 2: Get the store's MCC codes, using logic from club_controller
+            store_mcc_codes = []
+            if self.recommendation_core_service._categories_data:
+                for club in self.recommendation_core_service._categories_data:
+                    if club.get("club_id") == club_id:
+                        for store in club.get("stores", []):
+                            if store.get("store_id") == store_id:
+                                raw_codes = store.get("mcc_codes", [])
+                                store_mcc_codes = [int(code) for code in raw_codes if str(code).isdigit()]
+                                break
+                        break
 
-        # step 2: Get the store's category and MCC code
+            if not store_mcc_codes:
+                logger.warning(
+                    f"Store '{store_id}' in club '{club_id}' not found or has no MCC codes.",
+                    extra={
+                        "reason": "Data lookup failed",
+                        "extra_data": {"user_id": user_id, "club_id": club_id, "store_id": store_id},
+                    },
+                )
 
-        # step 3: Check if the store's MCC code is among the user's top MCC codes (already fetch 20 MCC codes, so check if store's MCC is in that list)
+            # step 3: Check if the store's MCC codes are among the user's top MCC codes
+            user_mcc_set = set(user_mcc_codes)
+            matching_mcc_codes = [mcc for mcc in store_mcc_codes if mcc in user_mcc_set]
 
-        # step 4: Determine if deal is recommended based on fit score and threshold
+            # step 4: Determine if deal is recommended based on fit score and threshold
+            fit_score = 0.0
+            if store_mcc_codes:
+                fit_score = len(matching_mcc_codes) / len(store_mcc_codes)
+
+            is_recommended = fit_score >= LIMITS.HIT_THRESHOLD
+
+            result = {
+                "deal_id": deal_id,
+                "user_id": user_id,
+                "store_id": store_id,
+                "club_id": club_id,
+                "is_recommended": is_recommended,
+                "fit_score": fit_score,
+                "matching_mcc_codes": matching_mcc_codes,
+                "user_mcc_codes": user_mcc_codes,
+                "store_mcc_codes": store_mcc_codes,
+            }
+
+            logger.info(
+                "Deal recommendation calculation complete",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, "deal_id": deal_id, "is_recommended": is_recommended},
+                },
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error in calculate_deal_recommendation_for_user: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {"user_id": user_id, "deal_id": deal_id, "error_type": type(e).__name__},
+                },
+            )
+            raise

@@ -119,3 +119,15 @@ class ClubRecommendationResponseSchema(BaseModel):
 
     user_id: str
     recommendations: list[ClubRecommendationSchema]
+
+
+class DealRecommendationResponseSchema(BaseModel):
+    """Schema for a single deal recommendation response."""
+
+    deal_id: str
+    user_id: str
+    store_id: str
+    club_id: str
+    is_recommended: bool
+    fit_score: float
+    matching_mcc_codes: list[int]

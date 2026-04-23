@@ -7,6 +7,7 @@ from .schemas import (
     DealRequest,
     RecommendationByCategoryRequestSchema,
     ClubRecommendationResponseSchema,
+    DealRecommendationResponseSchema,
 )
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
@@ -83,12 +84,11 @@ async def get_club_recommendation_by_category(
         raise
 
 
-@router.post("/club-by-category")
+@router.post("/calculate-deal-recommendation")
 async def calculate_deal_recommendation(request: Request, payload: DealRequest = Query()):
     """
-    Gets club recommendations for a user based on their spending habits.
-    Recommends clubs where the user's spending categories match a significant
-    percentage of the club's stores (e.g., >20%).
+    Gets a deal recommendation for a user based on their spending habits
+    and the category fit of the store where the deal is offered.
     """
     start_time = time.time()
 
@@ -98,6 +98,9 @@ async def calculate_deal_recommendation(request: Request, payload: DealRequest =
             "reason": "Request received",
             "extra_data": {
                 "user_id": payload.user_id,
+                "club_id": payload.club_id,
+                "deal_id": payload.deal_id,
+                "store_id": payload.store_id,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -122,14 +125,15 @@ async def calculate_deal_recommendation(request: Request, payload: DealRequest =
                     "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
-                    "recommended_club_count": len(result.get("recommendations", [])),
+                    "is_recommended": result.get("is_recommended"),
+                    "fit_score": result.get("fit_score"),
                 },
             },
         )
 
         return BasicResponse(
             status="success",
-            data=ClubRecommendationResponseSchema(**result),
+            data=DealRecommendationResponseSchema(**result),
         )
 
     except Exception as e:
