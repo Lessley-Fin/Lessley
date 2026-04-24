@@ -182,6 +182,7 @@ class Club:
     source_id: str
     description: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    stores: list[str] = field(default_factory=list)
 
 
 @dataclass

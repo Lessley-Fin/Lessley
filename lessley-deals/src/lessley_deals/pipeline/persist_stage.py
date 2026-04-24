@@ -48,10 +48,19 @@ class PersistStage:
         self._review_repo = review_repo
         self._store_repo = store_repo
         self._review_no_match = review_no_match
+        self._club_repo = club_repo
         # Build source_id → club_id map once at init (small dataset)
         self._club_map: dict[str, str] = {}
         if club_repo is not None:
             self._club_map = {c.source_id: c.id for c in club_repo.get_all()}
+
+    def _update_club_stores(self, club_id: str | None, store_id: str) -> None:
+        if not club_id or self._club_repo is None:
+            return
+        club = self._club_repo.get_by_id(club_id)
+        if club and store_id not in club.stores:
+            club.stores.append(store_id)
+            self._club_repo.save(club)
 
     async def run(
         self,
@@ -149,6 +158,7 @@ class PersistStage:
                             self._store_repo.save(store)
 
                 self._deal_repo.save(deal)
+                self._update_club_stores(deal.club_id, deal.store_id)
                 prec.fate = RecordFate.AUTO_MATCHED
             await asyncio.sleep(0)  # yield control between batches
 

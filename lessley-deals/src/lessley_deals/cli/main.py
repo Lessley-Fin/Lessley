@@ -35,6 +35,7 @@ from lessley_deals.matching.pipeline import MatchPipeline
 from lessley_deals.normalization.pipeline import NormalizationPipeline, create_default_pipeline
 from lessley_deals.persistence.config import PersistenceConfig
 from lessley_deals.persistence.repositories.aliases import AliasJsonRepository
+from lessley_deals.persistence.repositories.clubs import ClubJsonRepository
 from lessley_deals.persistence.repositories.deals import DealJsonRepository
 from lessley_deals.persistence.repositories.raw_deals import RawDealJsonRepository
 from lessley_deals.persistence.repositories.raw_stores import RawStoreJsonRepository
@@ -99,7 +100,7 @@ def _make_repos(data_dir: str) -> SimpleNamespace:
         raw_deal_repo=RawDealJsonRepository(config.raw_deals_path),
         raw_store_repo=RawStoreJsonRepository(config.raw_stores_path),
         review_repo=review_repo,
-        club_repo=None,
+        club_repo=ClubJsonRepository(config.clubs_path),
     )
 
 
@@ -125,10 +126,10 @@ def _auto_seed_mongo_if_empty(db: object, data_dir: str) -> None:  # type: ignor
     # Prefer data/seed/ directory; fall back to data/ for stores/aliases.
     seed_candidates = [Path("data/seed"), Path(data_dir)]
     _CLUBS = [
-        {"_id": "club_hot",        "name": "HOT Israel",       "source_id": "hot",        "description": "HOT Israel — cable TV & internet member benefits",   "metadata": {}},
-        {"_id": "club_mastercard", "name": "Mastercard Israel", "source_id": "mastercard", "description": "Mastercard Israel credit card benefits",              "metadata": {}},
-        {"_id": "club_topcash",    "name": "Isracard TopCash",  "source_id": "topcash",    "description": "Isracard TopCash cashback benefits",                  "metadata": {}},
-        {"_id": "club_behatsdaa",  "name": "Behatsdaa",         "source_id": "behatsdaa",  "description": "Behatsdaa deals aggregator",                          "metadata": {}},
+        {"_id": "club_hot",        "name": "HOT Israel",       "source_id": "hot",        "description": "HOT Israel — cable TV & internet member benefits",   "metadata": {}, "stores": []},
+        {"_id": "club_mastercard", "name": "Mastercard Israel", "source_id": "mastercard", "description": "Mastercard Israel credit card benefits",              "metadata": {}, "stores": []},
+        {"_id": "club_topcash",    "name": "Isracard TopCash",  "source_id": "topcash",    "description": "Isracard TopCash cashback benefits",                  "metadata": {}, "stores": []},
+        {"_id": "club_behatsdaa",  "name": "Behatsdaa",         "source_id": "behatsdaa",  "description": "Behatsdaa deals aggregator",                          "metadata": {}, "stores": []},
     ]
 
     def _upsert_file(collection: str, path: Path) -> int:

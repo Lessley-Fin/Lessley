@@ -225,6 +225,7 @@ def club_from_dict(d: dict[str, Any]) -> Club:
         source_id=d["source_id"],
         description=d.get("description"),
         metadata=d.get("metadata", {}),
+        stores=d.get("stores", []),
     )
 
 

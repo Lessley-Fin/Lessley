@@ -35,3 +35,7 @@ class PersistenceConfig:
     @property
     def deals_path(self) -> Path:
         return self.base_dir / "deals.json"
+
+    @property
+    def clubs_path(self) -> Path:
+        return self.base_dir / "clubs.json"
