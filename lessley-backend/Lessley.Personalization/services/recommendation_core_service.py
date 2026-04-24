@@ -95,69 +95,6 @@ class RecommendationCoreService:
             )
         return club_scores
 
-    def get_club_recommendation_by_category(self, user_id: str, mcc_codes: List[int]) -> Dict:
-        """
-        Gets club recommendations based on MCC codes from user's transaction history.
-        Counts hits (stores with matching MCC codes) for each club and returns ranked results.
-
-        Args:
-            user_id: The user ID
-            mcc_codes: List of MCC codes from user's spending categories
-
-        Returns:
-            Dictionary with club scores and recommended club
-        """
-        try:
-            logger.info(
-                f"Getting club recommendation for user: {user_id}",
-                extra={
-                    "reason": "Club recommendation request received",
-                    "extra_data": {
-                        "user_id": user_id,
-                        "mcc_codes_count": len(mcc_codes),
-                    },
-                },
-            )
-
-            # Use the helper method to get the base scores
-            club_scores = self._calculate_club_scores(mcc_codes)
-
-            # Sort by hit count (descending) to get recommended club
-            sorted_clubs = sorted(club_scores, key=lambda x: x["hit_count"], reverse=True)
-            recommended_club = sorted_clubs[0] if sorted_clubs else None
-
-            logger.info(
-                "Club recommendation generated successfully",
-                extra={
-                    "reason": "Club recommendation generation complete",
-                    "extra_data": {
-                        "user_id": user_id,
-                        "club_count": len(club_scores),
-                        "recommended_club": recommended_club.get("club_name") if recommended_club else None,
-                    },
-                },
-            )
-
-            return {
-                "user_id": user_id,
-                "club_scores": sorted_clubs,
-                "recommended_club": recommended_club,
-            }
-
-        except Exception as e:
-            logger.error(
-                f"Error getting club recommendation: {str(e)}",
-                exc_info=e,
-                extra={
-                    "reason": "Club recommendation generation failed",
-                    "extra_data": {
-                        "user_id": user_id,
-                        "error_type": type(e).__name__,
-                    },
-                },
-            )
-            raise
-
     def get_club_recommendations_by_spending_analysis(
         self, user_id: str, mcc_codes: List[int], threshold: float = 0.20
     ) -> Dict:

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/clubs", tags=["Clubs"])
 
 
 @router.post("/categories")
-async def calculate_user_categories(request: Request, req: ClubCalcRequests = Query()):
+async def calculate_club_categories(request: Request, req: ClubCalcRequests = Query()):
     """
     For a given club, analyzes all its stores and returns a distribution of
     MCCs, sorted by the number of stores they appear in.
@@ -64,7 +64,7 @@ async def calculate_user_categories(request: Request, req: ClubCalcRequests = Qu
         result = {
             "club_id": club_to_analyze.get("club_id"),
             "club_name": club_to_analyze.get("name"),
-            "relevant_category": relevant_categories,
+            "categories": relevant_categories,
         }
 
         response_time_ms = (time.time() - start_time) * 1000
@@ -94,7 +94,6 @@ async def calculate_user_categories(request: Request, req: ClubCalcRequests = Qu
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
                     "club_id": req.club_id,
                     "method": request.method,
                     "endpoint": request.url.path,

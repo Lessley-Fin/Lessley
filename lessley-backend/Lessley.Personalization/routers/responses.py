@@ -30,7 +30,7 @@ class MccCountSchema(BaseModel):
 class ClubMccDistributionResponseSchema(BaseModel):
     club_id: str
     club_name: str
-    relevant_category: list[MccCountSchema]
+    categories: list[MccCountSchema]
 
 
 class ClubRecommendationSchema(BaseModel):
