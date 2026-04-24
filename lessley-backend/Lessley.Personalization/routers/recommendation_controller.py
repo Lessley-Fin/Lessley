@@ -111,6 +111,11 @@ async def calculate_deal_recommendation(request: Request, payload: DealRequest =
             "extra_data": {
                 "user_id": payload.user_id,
                 "deal_id": payload.deal_id,
+                "store_id": payload.store_id,
+                "club_id": payload.club_id,
+                "use_mock": payload.use_mock,
+                "time_filter": payload.time_filter,
+                "days": payload.days,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -120,7 +125,14 @@ async def calculate_deal_recommendation(request: Request, payload: DealRequest =
     try:
         service = DIContainer.get_recommendation_service()
         result = await service.calculate_deal_recommendation_for_user(
-            payload.user_id, payload.club_id, payload.deal_id, payload.store_id
+            payload.user_id,
+            payload.club_id,
+            payload.deal_id,
+            payload.store_id,
+            payload.use_mock,
+            payload.time_filter,
+            payload.days,
+            payload.threshold,
         )
 
         response_time_ms = (time.time() - start_time) * 1000

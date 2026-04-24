@@ -125,6 +125,9 @@ class RecommendationService:
         club_id: str,
         deal_id: str,
         store_id: str,
+        use_mock: bool = False,
+        time_filter: bool = True,
+        days: int = LIMITS.DAYS,
         threshold: LIMITS = LIMITS.HIT_THRESHOLD,
     ) -> Dict:
         """
@@ -152,7 +155,9 @@ class RecommendationService:
         )
 
         try:
-            categories = await self.insights_service.calculate_user_categories_async(user_id, True, 30, False)
+            categories = await self.insights_service.calculate_user_categories_async(
+                user_id, time_filter, days, use_mock
+            )
             user_mcc_codes = self._extract_mcc_codes_from_categories(categories)
             store_mcc_codes = self.recommendation_core_service.get_store_mcc_codes(club_id, store_id)
 
