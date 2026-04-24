@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List
 import json
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,7 @@ class RecommendationCoreService:
     def _load_categories_data(self):
         """Load categories/clubs data from JSON file."""
         try:
-            # Go up from services -> Personalization -> lessley-backend -> Lessley to the root project dir
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-            categories_path = os.path.join(project_root, "main", "resources", "categories.json")
+            categories_path = Path("./resources/categories.json")
             if os.path.exists(categories_path):
                 with open(categories_path, "r", encoding="utf-8") as f:
                     self._categories_data = json.load(f)
