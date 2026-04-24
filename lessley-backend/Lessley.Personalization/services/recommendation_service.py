@@ -10,185 +10,156 @@ logger = logging.getLogger(__name__)
 class RecommendationService:
     """
     Service for recommending clubs based on user spending categories.
-    Uses MCC codes from user spending to match against available clubs and their stores.
+    Orchestrates insights service and core recommendation logic.
     """
 
     def __init__(
         self,
-        recommendation_core_service: RecommendationCoreService,
-        insights_service: InsightsService,
+        recommendation_core_service: RecommendationCoreService = None,
+        insights_service: InsightsService = None,
     ):
         self.recommendation_core_service = recommendation_core_service
         self.insights_service = insights_service
 
-    def _extract_mcc_codes(self, categories: List[Dict]) -> List[int]:
+    def _extract_mcc_codes_from_categories(self, categories: List[Dict]) -> List[int]:
         """
         Extract and convert MCC codes from category list.
-        Handles both string and integer MCC codes.
+        Handles both string and integer MCC codes with graceful error handling.
 
         Args:
-            categories: List of category dictionaries
+            categories: List of category dictionaries containing mcc_codes
 
         Returns:
             List of unique integer MCC codes
         """
-        logger.info(
-            "Extracting MCC codes",
-            extra={
-                "reason": "Data transformation",
-                "extra_data": {
-                    "category_count": len(categories),
-                },
-            },
-        )
+        mcc_set = set()
+        conversion_errors = 0
 
-        all_mcc_codes = set()
         for category in categories:
-            if isinstance(category, dict):
-                for code in category.get("mcc_codes", []):
-                    if code:  # Ensure code is not empty or None
-                        try:
-                            all_mcc_codes.add(int(code))
-                        except (ValueError, TypeError):
-                            logger.warning(
-                                f"Could not convert MCC code '{code}' to an integer. Skipping.",
-                                extra={"reason": "Invalid data format", "extra_data": {"invalid_code": code}},
-                            )
+            if not isinstance(category, dict):
+                continue
 
-        return list(all_mcc_codes)
+            for code in category.get("mcc_codes", []):
+                if not code:
+                    continue
+
+                try:
+                    mcc_set.add(int(code))
+                except (ValueError, TypeError):
+                    conversion_errors += 1
+
+        return list(mcc_set)
 
     async def calculate_club_recommendation_by_category(
         self,
         user_id: str,
         time_filter: bool,
-        days: int = LIMITS.DAYS,
+        days: int,
         use_mock: bool = False,
-        threshold: float = LIMITS.HIT_THRESHOLD,
+        threshold: LIMITS = LIMITS.HIT_THRESHOLD,
     ) -> Dict:
         """
-        Orchestrates the process of generating club recommendations based on a user's spending analysis.
+        Calculate club recommendations based on user spending patterns.
 
         Args:
-            user_id: The user ID.
-            time_filter: Whether to apply a time filter to transactions.
-            days: The number of days of transaction history to analyze.
-            threshold: The fit score threshold for a club to be recommended.
+            user_id: The user ID
+            time_filter: Whether to apply time filter to transactions
+            days: Number of days of history to analyze
+            use_mock: Whether to use mock data for testing
+            threshold: Fit score threshold (0-1) for recommendation
 
         Returns:
-            A dictionary with club recommendations.
+            Dictionary containing recommendations list
         """
         logger.info(
-            "Service method called for spending-based club recommendation",
+            "Club recommendation calculation started",
             extra={
-                "reason": "Method invocation",
+                "reason": "Service method invoked",
                 "extra_data": {
                     "user_id": user_id,
-                    "time_filter": time_filter,
-                    "days": days,
                     "threshold": threshold,
                 },
             },
         )
 
         try:
-            # Fetch user categories from insights service
             categories = await self.insights_service.calculate_user_categories_async(
                 user_id, time_filter, days, use_mock
             )
 
-            # Extract and convert MCC codes from categories
-            mcc_codes = self._extract_mcc_codes(categories)
-
-            # Get club recommendations based on spending analysis
-            recommendation_result = self.recommendation_core_service.get_club_recommendations_by_spending_analysis(
+            mcc_codes = self._extract_mcc_codes_from_categories(categories)
+            result = self.recommendation_core_service.get_club_recommendations_by_spending_analysis(
                 user_id, mcc_codes, threshold
             )
 
             logger.info(
-                "Spending-based club recommendation calculation complete",
+                "Club recommendation calculation completed",
                 extra={
-                    "reason": "Business logic complete",
+                    "reason": "Service execution complete",
                     "extra_data": {
                         "user_id": user_id,
-                        "recommended_club_count": len(recommendation_result.get("recommendations", [])),
+                        "recommendation_count": len(result.get("recommendations", [])),
                     },
                 },
             )
 
-            return recommendation_result
+            return result
 
         except Exception as e:
             logger.error(
-                f"Error in calculate_club_recommendation_by_spending: {str(e)}",
+                f"Error: {str(e)}",
                 exc_info=e,
                 extra={
                     "reason": "Service execution failure",
-                    "extra_data": {"user_id": user_id, "error_type": type(e).__name__},
+                    "extra_data": {
+                        "user_id": user_id,
+                        "error_type": type(e).__name__,
+                    },
                 },
             )
             raise
 
     async def calculate_deal_recommendation_for_user(
-        self, user_id: str, club_id: str, deal_id: str, store_id: str
+        self,
+        user_id: str,
+        club_id: str,
+        deal_id: str,
+        store_id: str,
+        threshold: LIMITS = LIMITS.HIT_THRESHOLD,
     ) -> Dict:
         """
-            Check if a specific deal is recommended for the user based on their spending habits and the store's category fit.
+        Calculate deal recommendation based on store-user category fit.
+
         Args:
-            user_id: The user ID.
-            club_id: The club ID for which the deal is being analyzed.
-            deal_id: The deal ID for which the recommendation is being calculated.
-            store_id: The store ID where the deal is available.
+            user_id: The user ID
+            club_id: The club ID
+            deal_id: The deal ID
+            store_id: The store ID
+            threshold: Fit score threshold for recommendation
+
+        Returns:
+            Dictionary with deal recommendation details
         """
         logger.info(
-            "Calculating deal recommendation for user",
+            "Deal recommendation calculation started",
             extra={
-                "reason": "Method invocation",
+                "reason": "Service method invoked",
                 "extra_data": {
                     "user_id": user_id,
-                    "club_id": club_id,
                     "deal_id": deal_id,
-                    "store_id": store_id,
                 },
             },
         )
+
         try:
-            # step 1: Get user categories and MCC codes using insights_service
-            categories = await self.insights_service.calculate_user_categories_async(
-                user_id=user_id, time_filter=True, days=LIMITS.DAYS, use_mock=False
-            )
-            user_mcc_codes = self._extract_mcc_codes(categories)
+            categories = await self.insights_service.calculate_user_categories_async(user_id, True, 30, False)
+            user_mcc_codes = self._extract_mcc_codes_from_categories(categories)
+            store_mcc_codes = self.recommendation_core_service.get_store_mcc_codes(club_id, store_id)
 
-            # step 2: Get the store's MCC codes, using logic from club_controller
-            store_mcc_codes = []
-            if self.recommendation_core_service._categories_data:
-                for club in self.recommendation_core_service._categories_data:
-                    if club.get("club_id") == club_id:
-                        for store in club.get("stores", []):
-                            if store.get("store_id") == store_id:
-                                raw_codes = store.get("mcc_codes", [])
-                                store_mcc_codes = [int(code) for code in raw_codes if str(code).isdigit()]
-                                break
-                        break
-
-            if not store_mcc_codes:
-                logger.warning(
-                    f"Store '{store_id}' in club '{club_id}' not found or has no MCC codes.",
-                    extra={
-                        "reason": "Data lookup failed",
-                        "extra_data": {"user_id": user_id, "club_id": club_id, "store_id": store_id},
-                    },
-                )
-
-            # step 3: Check if the store's MCC codes are among the user's top MCC codes
             user_mcc_set = set(user_mcc_codes)
-            matching_mcc_codes = [mcc for mcc in store_mcc_codes if mcc in user_mcc_set]
-
-            # step 4: Determine if deal is recommended based on fit score and threshold
-            fit_score = 0.0
-            if store_mcc_codes:
-                fit_score = len(matching_mcc_codes) / len(store_mcc_codes)
-
-            is_recommended = fit_score >= LIMITS.HIT_THRESHOLD
+            matching_codes = [code for code in store_mcc_codes if code in user_mcc_set]
+            fit_score = len(matching_codes) / len(store_mcc_codes) if store_mcc_codes else 0.0
+            is_recommended = fit_score >= threshold
 
             result = {
                 "deal_id": deal_id,
@@ -197,16 +168,18 @@ class RecommendationService:
                 "club_id": club_id,
                 "is_recommended": is_recommended,
                 "fit_score": fit_score,
-                "matching_mcc_codes": matching_mcc_codes,
-                "user_mcc_codes": user_mcc_codes,
-                "store_mcc_codes": store_mcc_codes,
+                "matching_mcc_codes": matching_codes,
             }
 
             logger.info(
-                "Deal recommendation calculation complete",
+                "Deal recommendation calculation completed",
                 extra={
-                    "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "deal_id": deal_id, "is_recommended": is_recommended},
+                    "reason": "Service execution complete",
+                    "extra_data": {
+                        "user_id": user_id,
+                        "deal_id": deal_id,
+                        "is_recommended": is_recommended,
+                    },
                 },
             )
 
@@ -214,11 +187,14 @@ class RecommendationService:
 
         except Exception as e:
             logger.error(
-                f"Error in calculate_deal_recommendation_for_user: {str(e)}",
+                f"Error: {str(e)}",
                 exc_info=e,
                 extra={
                     "reason": "Service execution failure",
-                    "extra_data": {"user_id": user_id, "deal_id": deal_id, "error_type": type(e).__name__},
+                    "extra_data": {
+                        "user_id": user_id,
+                        "error_type": type(e).__name__,
+                    },
                 },
             )
             raise

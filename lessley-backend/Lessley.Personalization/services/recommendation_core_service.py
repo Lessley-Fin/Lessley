@@ -159,3 +159,177 @@ class RecommendationCoreService:
             "user_id": user_id,
             "recommendations": sorted_recommendations,
         }
+
+    def get_store_mcc_codes(self, club_id: str, store_id: str) -> List[int]:
+        """
+        Retrieve MCC codes for a specific store in a club.
+
+        Args:
+            club_id: The club ID
+            store_id: The store ID
+
+        Returns:
+            List of MCC codes for the store, or empty list if not found
+        """
+        logger.debug(
+            "Retrieving store MCC codes",
+            extra={
+                "reason": "Store data lookup",
+                "extra_data": {"club_id": club_id, "store_id": store_id},
+            },
+        )
+
+        try:
+            for club in self._categories_data:
+                if club.get("club_id") == club_id:
+                    for store in club.get("stores", []):
+                        if store.get("store_id") == store_id:
+                            raw_codes = store.get("mcc_codes", [])
+                            # Convert to int, filtering out non-numeric codes
+                            mcc_codes = [int(code) for code in raw_codes if str(code).isdigit()]
+                            logger.debug(
+                                "Store MCC codes retrieved",
+                                extra={
+                                    "reason": "Data lookup complete",
+                                    "extra_data": {
+                                        "club_id": club_id,
+                                        "store_id": store_id,
+                                        "mcc_count": len(mcc_codes),
+                                    },
+                                },
+                            )
+                            return mcc_codes
+
+            logger.warning(
+                "Store not found",
+                extra={
+                    "reason": "Store lookup failed",
+                    "extra_data": {"club_id": club_id, "store_id": store_id},
+                },
+            )
+            return []
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving store MCC codes: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Store lookup failed",
+                    "extra_data": {
+                        "club_id": club_id,
+                        "store_id": store_id,
+                        "error_type": type(e).__name__,
+                    },
+                },
+            )
+            return []
+
+    def get_club_mcc_distribution(self, club_id: str) -> Dict:
+        """
+        Get MCC distribution for a specific club across all its stores.
+
+        Args:
+            club_id: The club ID
+
+        Returns:
+            Dictionary with club info and MCC distribution
+        """
+        logger.info(
+            "Retrieving club MCC distribution",
+            extra={
+                "reason": "Club data lookup",
+                "extra_data": {"club_id": club_id},
+            },
+        )
+
+        try:
+            # Find the specific club
+            club_data = None
+            for club in self._categories_data:
+                if club.get("club_id") == club_id:
+                    club_data = club
+                    break
+
+            if not club_data:
+                logger.warning(
+                    "Club not found",
+                    extra={
+                        "reason": "Club lookup failed",
+                        "extra_data": {"club_id": club_id},
+                    },
+                )
+                raise ValueError(f"Club with id '{club_id}' not found")
+
+            # Count MCCs across all stores in the club
+            mcc_counts = {}
+            stores = club_data.get("stores", [])
+
+            for store in stores:
+                # Count each MCC only once per store to get store count
+                unique_mcc_in_store = set(store.get("mcc_codes", []))
+                for mcc in unique_mcc_in_store:
+                    try:
+                        mcc_int = int(mcc)
+                        mcc_counts[mcc_int] = mcc_counts.get(mcc_int, 0) + 1
+                    except (ValueError, TypeError):
+                        logger.debug(
+                            "Invalid MCC code in store",
+                            extra={
+                                "reason": "Data validation",
+                                "extra_data": {"club_id": club_id, "mcc": str(mcc)},
+                            },
+                        )
+
+            # Format and sort results
+            categories = [
+                {"mcc": mcc, "store_count": count}
+                for mcc, count in sorted(mcc_counts.items(), key=lambda x: x[1], reverse=True)
+            ]
+
+            result = {
+                "club_id": club_data.get("club_id"),
+                "club_name": club_data.get("name"),
+                "categories": categories,
+            }
+
+            logger.info(
+                "Club MCC distribution retrieved successfully",
+                extra={
+                    "reason": "Data lookup complete",
+                    "extra_data": {
+                        "club_id": club_id,
+                        "mcc_count": len(categories),
+                        "store_count": len(stores),
+                    },
+                },
+            )
+
+            return result
+
+        except ValueError as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Club lookup failed",
+                    "extra_data": {
+                        "club_id": club_id,
+                        "error_type": type(e).__name__,
+                    },
+                },
+            )
+            raise
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving club MCC distribution: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failed",
+                    "extra_data": {
+                        "club_id": club_id,
+                        "error_type": type(e).__name__,
+                    },
+                },
+            )
+            raise
