@@ -36,7 +36,7 @@ from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
 from lessley_deals.scraping.helpers.brand_utils import (
     clean_brand,
     clean_store_name,
-    classify_group_deal,
+    classify_group_deal_resolved,
     is_generic_hot_brand,
     load_hot_store_groups,
     normalize_website,
@@ -578,7 +578,7 @@ class HotAdapter(BaseSourceAdapter):
             return None
 
         title = record.get("title", "")
-        store_name, _is_group_wide, _members = classify_group_deal(
+        store_name, _is_group_wide, _members = classify_group_deal_resolved(
             cleaned, title, self._store_groups
         )
         store_name = clean_store_name(store_name)
@@ -624,9 +624,13 @@ class HotAdapter(BaseSourceAdapter):
                     if swish_key in self._store_groups:
                         lookup_brand = swish_key
                         break
-            store_name, is_group_wide, group_member_stores = classify_group_deal(
+            store_name, is_group_wide, resolved_members = classify_group_deal_resolved(
                 lookup_brand, title, self._store_groups
             )
+            group_member_stores = [
+                m["store_id"] if m.get("store_id") else m["name"]
+                for m in resolved_members
+            ]
             if lookup_brand != cleaned_brand:
                 store_name = cleaned_brand
             store_name = clean_store_name(store_name)
