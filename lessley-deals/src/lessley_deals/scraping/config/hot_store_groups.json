@@ -109,83 +109,83 @@
     "stores": [
       {
         "name": "castro",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbe3647b5_0406f1fdd94ea3a1",
+        "confidence": 1.0
       },
       {
         "name": "castro home",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfbfd916_7d79f608360b3c5c",
+        "confidence": 1.0
       },
       {
         "name": "hoodies",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc021b3_1d483a5c7088682e",
+        "confidence": 1.0
       },
       {
         "name": "urbanica",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc061cb_876f9eef1f682a71",
+        "confidence": 1.0
       },
       {
         "name": "carolina lemke",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc0e102_37c43b550e5c79e4",
+        "confidence": 1.0
       },
       {
         "name": "topten",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc0f932_f9de6650ba3a38ea",
+        "confidence": 1.0
       },
       {
         "name": "kiko milano",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc12a14_39e9c90d68fe3990",
+        "confidence": 1.0
       },
       {
         "name": "yves rocher",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc19230_183752f785f20df2",
+        "confidence": 1.0
       },
       {
         "name": "קסטרו",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbe3647b5_0406f1fdd94ea3a1",
+        "confidence": 1.0
       },
       {
         "name": "קסטרו הום",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfbfd916_7d79f608360b3c5c",
+        "confidence": 1.0
       },
       {
         "name": "הודיס",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc021b3_1d483a5c7088682e",
+        "confidence": 1.0
       },
       {
         "name": "אורבניקה",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc061cb_876f9eef1f682a71",
+        "confidence": 1.0
       },
       {
         "name": "קרולינה למקה",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc0e102_37c43b550e5c79e4",
+        "confidence": 1.0
       },
       {
         "name": "טופ טן",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc0f932_f9de6650ba3a38ea",
+        "confidence": 1.0
       },
       {
         "name": "קיקו מילאנו",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc12a14_39e9c90d68fe3990",
+        "confidence": 1.0
       },
       {
         "name": "איב רושה",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc19230_183752f785f20df2",
+        "confidence": 1.0
       }
     ]
   },
@@ -244,18 +244,18 @@
       },
       {
         "name": "הום סטייל",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbe364854_f766418d4f187847",
+        "confidence": 1.0
       },
       {
         "name": "בוניטה דה מאס",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbe364846_cbe1478b3d4d3a79",
+        "confidence": 1.0
       },
       {
         "name": "מגנוליה",
-        "store_id": null,
-        "confidence": null
+        "store_id": "019dbfc35361_0b9f316ceb58b920",
+        "confidence": 1.0
       }
     ]
   },
