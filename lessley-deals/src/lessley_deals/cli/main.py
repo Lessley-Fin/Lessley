@@ -209,6 +209,11 @@ def scrape(
     ),
     data_dir: str = typer.Option("data", "--data-dir", "-d"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
+    enrich: bool = typer.Option(
+        False,
+        "--enrich/--no-enrich",
+        help="After scraping, classify stores missing `metadata.mcc_codes` via the LLM.",
+    ),
 ) -> None:
     """Run the full scrape -> normalize -> match -> persist pipeline."""
     _setup_logging(log_level)
@@ -270,6 +275,16 @@ def scrape(
     source_ids = [source] if source else None
     report = asyncio.run(pipeline.run(source_ids))
     console.print(report.summary())
+
+    if enrich:
+        from lessley_deals.enrichment.enrich_stores import enrich_stores as _enrich
+
+        console.print("[cyan]Enriching stores missing mcc_codes…[/cyan]")
+        stats = _enrich(data_dir=data_dir)
+        console.print(
+            f"[green]Enrichment done.[/green] total={stats['total']} "
+            f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']}"
+        )
 
 
 @app.command()
@@ -1370,6 +1385,47 @@ def export_stores(
         encoding="utf-8",
     )
     console.print(f"[green]Exported {len(aliases)} aliases →[/green] {aliases_file}")
+
+
+@app.command(name="enrich-stores")
+def enrich_stores_cmd(
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    limit: int = typer.Option(0, "--limit", "-n", help="Enrich at most N stores (0 = all)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Call the LLM but do not write stores.json"),
+    force: bool = typer.Option(False, "--force", help="Re-enrich stores that already have mcc_codes"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Add `metadata.mcc_codes` to each store in stores.json using the LLM classifier."""
+    logging.basicConfig(level=log_level.upper(), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+    from lessley_deals.enrichment.enrich_stores import enrich_stores
+
+    stats = enrich_stores(data_dir=data_dir, limit=limit, dry_run=dry_run, force=force)
+    console.print(
+        f"[green]Done.[/green] total={stats['total']} "
+        f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']}"
+        + (" [yellow](dry-run)[/yellow]" if dry_run else "")
+    )
+
+
+@app.command(name="enrich-store-urls")
+def enrich_store_urls_cmd(
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would change without writing stores.json"),
+    force: bool = typer.Option(False, "--force", help="Re-check stores that already have a non-null store_url"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Populate `metadata.store_url` on each store from the first usable deal URL."""
+    _setup_logging(log_level)
+
+    from lessley_deals.enrichment.enrich_store_urls import enrich_store_urls
+
+    stats = enrich_store_urls(data_dir=data_dir, dry_run=dry_run, force=force)
+    console.print(
+        f"[green]Done.[/green] total={stats['total']} "
+        f"set={stats['set']} nulled={stats['nulled']} skipped={stats['skipped']}"
+        + (" [yellow](dry-run)[/yellow]" if dry_run else "")
+    )
 
 
 if __name__ == "__main__":

@@ -304,12 +304,16 @@ def classify_group_deal_resolved(
     if groups is None:
         groups = load_hot_store_groups()
 
-    # Case-insensitive group lookup
-    brand_lower = brand.strip().lower()
+    # Case-insensitive group lookup, normalising spaces around dashes so that
+    # "קבוצת קסטרו-תווים" (API) matches "קבוצת קסטרו - תווים" (config key).
+    def _norm(s: str) -> str:
+        return re.sub(r"\s*-\s*", "-", s.strip().lower())
+
+    brand_norm = _norm(brand)
     group_cfg: dict | None = None
     matched_key: str = brand
     for key, cfg in groups.items():
-        if key.strip().lower() == brand_lower:
+        if _norm(key) == brand_norm:
             group_cfg = cfg
             matched_key = key
             break

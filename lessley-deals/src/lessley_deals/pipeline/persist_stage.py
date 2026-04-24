@@ -18,6 +18,7 @@ from lessley_deals.domain.protocols import (
     DealRepository,
     ReviewRepository,
 )
+from lessley_deals.enrichment.enrich_store_urls import clean_store_url
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.review.actions import build_name_forms
 
@@ -130,12 +131,21 @@ class PersistStage:
             for prec, deal in chunk:
                 raw_payload = prec.raw.raw_payload
                 image_url = raw_payload.get("image_url")
-                if image_url:
+                store_url_candidate = clean_store_url(deal.url)
+
+                if image_url or store_url_candidate:
                     store = self._store_repo.get_by_id(deal.store_id)
                     if store:
-                        image_urls = store.metadata.setdefault("image_urls", [])
-                        if image_url not in image_urls:
-                            image_urls.append(image_url)
+                        changed = False
+                        if image_url:
+                            image_urls = store.metadata.setdefault("image_urls", [])
+                            if image_url not in image_urls:
+                                image_urls.append(image_url)
+                                changed = True
+                        if store_url_candidate and not store.metadata.get("store_url"):
+                            store.metadata["store_url"] = store_url_candidate
+                            changed = True
+                        if changed:
                             self._store_repo.save(store)
 
                 self._deal_repo.save(deal)
