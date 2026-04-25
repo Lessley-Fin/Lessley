@@ -37,7 +37,7 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem("lessley_username") ?? "User")
   const [userId, setUserId] = useState(() => localStorage.getItem("lessley_user_id") ?? "")
   const [email, setEmail] = useState(() => localStorage.getItem("lessley_user_email") ?? "")
-  const [mainTab, setMainTab] = useState<MainTab>("insights")
+  const [mainTab, setMainTab] = useState<MainTab>("optimizer")
 
   useEffect(() => {
     if (!isAuthenticated || (userId && email)) return
@@ -88,7 +88,7 @@ function App() {
     setUsername("User")
     setUserId("")
     setEmail("")
-    setMainTab("insights")
+    setMainTab("optimizer")
   }
 
   if (!isAuthenticated) {
