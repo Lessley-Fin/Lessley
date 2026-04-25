@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowRight, CalendarRange, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   getCategoryInsights,
   getOpenFinanceConnectionUrl,
@@ -21,6 +29,16 @@ interface InsightsRecommendationsPageProps {
   userId: string
   email: string
 }
+
+/** Long window so short filters (e.g. 1 week) do not look “disconnected” when older data exists. */
+const CONNECTION_PROBE_DAYS = 365
+
+const TIME_RANGE_OPTIONS = [
+  { label: "1 week", days: 7 },
+  { label: "1 month", days: 30 },
+  { label: "90 days", days: 90 },
+  { label: "1 year", days: 365 },
+] as const
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -45,6 +63,7 @@ function formatDate(value: string | undefined) {
 }
 
 export function InsightsRecommendationsPage({ username, userId, email }: InsightsRecommendationsPageProps) {
+  const [timeRangeDays, setTimeRangeDays] = useState(90)
   const [checkingConnection, setCheckingConnection] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
   const [connectionHint, setConnectionHint] = useState("")
@@ -74,7 +93,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       const accessToken = localStorage.getItem("lessley_access_token") ?? undefined
       let resolvedLookupId = ""
       for (const candidate of candidates) {
-        const connected = await hasPersonalizationConnection(candidate, accessToken)
+        const connected = await hasPersonalizationConnection(candidate, accessToken, CONNECTION_PROBE_DAYS)
         if (connected) {
           resolvedLookupId = candidate
           break
@@ -134,9 +153,9 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       setPersonalizationError("")
       try {
         const [tx, categories, accounts] = await Promise.all([
-          getPersonalizationTransactions(activeLookupId, accessToken),
-          getCategoryInsights(activeLookupId, accessToken),
-          getTopAccountInsights(activeLookupId, accessToken),
+          getPersonalizationTransactions(activeLookupId, accessToken, timeRangeDays),
+          getCategoryInsights(activeLookupId, accessToken, timeRangeDays),
+          getTopAccountInsights(activeLookupId, accessToken, timeRangeDays),
         ])
         if (!isMounted) return
         setTransactions(tx)
@@ -157,7 +176,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
     return () => {
       isMounted = false
     }
-  }, [isConnected, activeLookupId])
+  }, [isConnected, activeLookupId, timeRangeDays])
 
   const recentTransactions = transactions.slice(0, 5)
   const topCategories = categoryInsights.slice(0, 3)
@@ -181,6 +200,42 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
             <CardContent className="flex items-center gap-2 pt-5 text-sm text-emerald-700">
               <CheckCircle2 className="size-4" />
               Open Banking connected
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
+            <CardHeader className="pb-3 pt-5">
+              <div className="flex items-center gap-2">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                  <CalendarRange className="size-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Time range</CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-0">
+              <Label htmlFor="insights-time-range" className="sr-only">
+                Time range
+              </Label>
+              <Select
+                value={String(timeRangeDays)}
+                onValueChange={(value) => setTimeRangeDays(Number(value))}
+              >
+                <SelectTrigger
+                  id="insights-time-range"
+                  className="min-h-12 rounded-xl border-0 bg-slate-100 px-4 shadow-none focus:ring-slate-300"
+                >
+                  <SelectValue placeholder="Choose period" />
+                </SelectTrigger>
+                <SelectContent className="z-[100]">
+                  {TIME_RANGE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.days} value={String(opt.days)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
 
