@@ -53,6 +53,31 @@ services:
     depends_on:
       - mongodb
 
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/tmp/loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    depends_on:
+      - loki
+
   # --- Your Microservices ---
   gateway:
     image: lessley/gateway:dev
@@ -82,9 +107,9 @@ services:
 
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
-      
+
       # 4. Logging Configuration
-      - Loki__Url=http://loki:3100
+      - Loki__Url=${LOKI_URL}
     depends_on:
       - mongodb   
       - loki
@@ -159,35 +184,14 @@ services:
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
+<<<<<<< HEAD
       - Loki_Url=http://loki:3100/loki/api/v1/push
+=======
+      - Loki_Url=${LOKI_URL}/loki/api/v1/push
+>>>>>>> origin
     depends_on:
       - rabbitmq
       - mongodb
-      - loki
-  
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - loki_data:/tmp/loki
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    env_file:
-      - .env
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
-    volumes:
-      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
-    depends_on:
       - loki
 
 # Defined volumes for persistence

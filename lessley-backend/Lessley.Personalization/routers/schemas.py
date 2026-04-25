@@ -14,7 +14,7 @@ class UserRequests(BaseModel):
 
 class InsightsCalcRequests(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
-    use_mock: bool = Field(True, description="Use mock data")
+    use_mock: bool = Field(False, description="Use mock data")
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
 
@@ -22,6 +22,16 @@ class InsightsCalcRequests(BaseModel):
     def validate_user_id(cls, v):
         if not v.strip():
             raise ValueError("user_id cannot be empty")
+        return v
+
+
+class ClubCalcRequests(BaseModel):
+    club_id: str = Field(..., min_length=1, max_length=255, description="Club ID")
+
+    @validator("club_id")
+    def validate_club_id(cls, v):
+        if not v.strip():
+            raise ValueError("club_id cannot be empty")
         return v
 
 
@@ -36,3 +46,32 @@ class GetTransactionsRequest(BaseModel):
     user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
+
+
+class RecommendationByCategoryRequestSchema(BaseModel):
+    """Schema for recommendation by category request"""
+
+    user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
+    use_mock: bool = Field(False, description="Use mock data")
+    time_filter: bool = Field(True, description="Filter by time")
+    days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
+    threshold: float = Field(LIMITS.HIT_THRESHOLD, ge=0, le=1, description="Threshold for club recommendation")
+
+    @validator("user_id")
+    def validate_user_id(cls, v):
+        if not v.strip():
+            raise ValueError("user_id cannot be empty")
+        return v
+
+
+class DealRequest(BaseModel):
+    """Schema for recommendation by category request"""
+
+    club_id: str = Field(..., min_length=1, max_length=255, description="Club ID")
+    deal_id: str = Field(..., min_length=1, max_length=255, description="Deal ID")
+    store_id: str = Field(..., min_length=1, max_length=255, description="Store ID")
+    user_id: str = Field(..., min_length=1, max_length=255, description="User ID")
+    use_mock: bool = Field(False, description="Use mock data")
+    time_filter: bool = Field(True, description="Filter by time")
+    days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
+    threshold: float = Field(LIMITS.HIT_THRESHOLD, ge=0, le=1, description="Threshold for club recommendation")

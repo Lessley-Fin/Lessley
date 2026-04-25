@@ -1,16 +1,13 @@
 using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Extensions;
+using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Seeders;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.RateLimiting;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
 
@@ -22,25 +19,25 @@ var lokiUrl = builder.Configuration["Loki:Url"] ?? "http://localhost:3100";
 // Configure Serilog to push logs to Loki and the Docker Console
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft.AspNetCore.DataProtection", Serilog.Events.LogEventLevel.Error)
     .Enrich.FromLogContext()
-    .Enrich.WithProperty("Application", "lessley-gateway")
-    .WriteTo.Console()
-    .WriteTo.GrafanaLoki(lokiUrl, propertiesAsLabels: new[] { "Application" })
+    .Enrich.WithProperty("app_name", "gateway")
+    .Enrich.With(new Lessley.Gateway.Api.Configuration.ExceptionAsArrayEnricher())
+    .WriteTo.Console(new Lessley.Gateway.Api.Configuration.CustomLogFormatter())
+    .WriteTo.GrafanaLoki(lokiUrl, propertiesAsLabels: new[] { "app_name" }, textFormatter: new Lessley.Gateway.Api.Configuration.CustomLogFormatter())
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
 // CORS
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-        policy =>
-        {
-            policy.AllowAnyOrigin() // your Angular / frontend URL
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("DefaultCorsPolicy", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
 });
 
 // DB
@@ -52,49 +49,9 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// JWT
-var jwtKey = builder.Configuration["JwtConfig:Key"];
-var jwtIssuer = builder.Configuration["JwtConfig:Issuer"];
-var jwtAudience = builder.Configuration["JwtConfig:Audience"];
-
-if (string.IsNullOrWhiteSpace(jwtKey) || string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
-    throw new InvalidOperationException("JWT configuration is not set.");
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ClockSkew = TimeSpan.Zero,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-    };
-});
-
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = 429; // Too Many Requests
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-    {
-        var user = httpContext.User.Claims.FirstOrDefault(d => d.Type == ClaimTypes.NameIdentifier)?.Value ?? "";
-
-        return RateLimitPartition.GetFixedWindowLimiter(user, _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 10,
-            Window = TimeSpan.FromSeconds(5),
-            QueueLimit = 2,
-            AutoReplenishment = true
-        });
-    });
-});
+// Extracted Configurations (Keeps Program.cs clean!)
+builder.Services.AddCustomAuthentication(builder.Configuration);
+builder.Services.AddCustomRateLimiting();
 
 // Add services to the container.
 builder.Services.Configure<AuthConfig>(builder.Configuration.GetSection(nameof(AuthConfig)));
@@ -109,43 +66,13 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
-
-    // Add JWT Bearer
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter JWT token with 'Bearer ' prefix, e.g. Bearer eyJhbGciOiJIUzI1NiIs..."
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+builder.Services.AddCustomSwagger();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    Console.WriteLine("Applying Database Migrations...");
-    var services = scope.ServiceProvider;
+    Log.Information("Applying Database Migrations...");
     await RoleSeeder.SeedAsync(scope.ServiceProvider);
 }
 
@@ -156,14 +83,41 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseSerilogRequestLogging(); // Logs streamlined HTTP request summaries
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        var exception = exceptionHandlerPathFeature?.Error;
+        
+        Log.Error(exception, "An unhandled exception occurred during request processing.");
+        
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { detail = "Internal server error" });
+    });
+});
 
-app.UseCors(MyAllowSpecificOrigins);
+app.UseSerilogRequestLogging(options => 
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        var username = httpContext.User?.FindFirst(ClaimTypes.Name)?.Value ?? httpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anonymous";
+        diagnosticContext.Set("username", username);
+        diagnosticContext.Set("request_id", httpContext.TraceIdentifier);
+    };
+}); // Logs streamlined HTTP request summaries
+
+app.UseCors("DefaultCorsPolicy");
 
 app.UseAuthentication();
+
+app.UseMiddleware<LogContextMiddleware>();
+
 app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+Log.CloseAndFlush();

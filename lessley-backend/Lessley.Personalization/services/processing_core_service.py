@@ -63,6 +63,7 @@ class ProcessingCoreService:
                 aggregations={
                     "total_count": ("amount_spent", "count"),
                     "total_amount": ("amount_spent", "sum"),
+                    "mcc_codes": ("categoryCode", lambda x: list(x.dropna().unique())),
                 },
                 sort_by=["total_count", "total_amount"],
                 ascending=[False, False],
