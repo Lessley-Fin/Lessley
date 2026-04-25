@@ -18,6 +18,8 @@ from config.structured_logging import StructuredFormatter, ContextInjectingFilte
 from routers import open_finance_controller  # Import your new controller
 from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
+from routers import recommendation_controller  # Import recommendation controller
+from routers import club_controller  # Import club controller
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 import uuid
 
@@ -262,3 +264,5 @@ app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging co
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
+app.include_router(recommendation_controller.router)
+app.include_router(club_controller.router)
