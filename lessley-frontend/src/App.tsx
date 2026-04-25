@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react"
 
 import { LoginPage } from "@/features/auth/LoginPage"
-import { DashboardPage } from "@/features/dashboard/DashboardPage"
+import { InsightsRecommendationsPage } from "@/features/insights/InsightsRecommendationsPage"
+import { OptimizerPage } from "@/features/optimizer/OptimizerPage"
+import { MainShell, type MainTab } from "@/features/shell/MainShell"
 import { getMyProfile } from "@/lib/api"
 
 function decodeBase64Url(value: string) {
@@ -35,6 +37,8 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem("lessley_username") ?? "User")
   const [userId, setUserId] = useState(() => localStorage.getItem("lessley_user_id") ?? "")
   const [email, setEmail] = useState(() => localStorage.getItem("lessley_user_email") ?? "")
+  const [mainTab, setMainTab] = useState<MainTab>("insights")
+
   useEffect(() => {
     if (!isAuthenticated || (userId && email)) return
 
@@ -65,7 +69,7 @@ function App() {
         localStorage.setItem("lessley_username", profile.userName)
       })
       .catch(() => {
-        // Keep current state; dashboard will still render.
+        // Keep current state; shell will still render.
       })
 
     return () => {
@@ -84,6 +88,7 @@ function App() {
     setUsername("User")
     setUserId("")
     setEmail("")
+    setMainTab("insights")
   }
 
   if (!isAuthenticated) {
@@ -100,12 +105,13 @@ function App() {
   }
 
   return (
-    <DashboardPage
-      username={username}
-      userId={userId}
-      email={email}
-      onLogout={handleLogout}
-    />
+    <MainShell username={username} activeTab={mainTab} onTabChange={setMainTab} onLogout={handleLogout}>
+      {mainTab === "optimizer" ? (
+        <OptimizerPage />
+      ) : (
+        <InsightsRecommendationsPage username={username} userId={userId} email={email} />
+      )}
+    </MainShell>
   )
 }
 
