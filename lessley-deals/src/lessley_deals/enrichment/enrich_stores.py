@@ -37,8 +37,9 @@ def enrich_stores(
             logger.debug("Skipping already-enriched store: %s", store.name)
             continue
 
+        store_url: str | None = store.metadata.get("store_url")
         try:
-            result = get_store_category(store.name)
+            result = get_store_category(store.name, store_url=store_url)
         except Exception as exc:
             stats["failed"] += 1
             logger.warning("Enrichment failed for %s: %s", store.name, exc)
@@ -51,6 +52,8 @@ def enrich_stores(
 
         if not dry_run:
             store.metadata["mcc_codes"] = list(result.mcc_codes)
+            store.metadata["official_name"] = result.official_name
+            store.metadata["mcc_confidence"] = result.confidence_level
             repo.save(store)
 
         stats["processed"] += 1
