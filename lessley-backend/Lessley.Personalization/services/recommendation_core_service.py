@@ -11,6 +11,7 @@ class RecommendationCoreService:
     """
     Service for recommending clubs based on user spending categories.
     Uses MCC codes from user spending to match against available clubs and their stores.
+    Leverages dictionary-based lookups for efficient data access.
     """
 
     def __init__(self):
@@ -21,46 +22,93 @@ class RecommendationCoreService:
                 "extra_data": {},
             },
         )
-        self._categories_data = None
-        self._load_categories_data()
+        self._clubs_dict = {}  # {club_id: club_data}
+        self._stores_dict = {}  # {store_id: store_data}
+        self._load_data()
 
-    def _load_categories_data(self):
-        """Load categories/clubs data from JSON file."""
+    def _load_data(self):
+        """Load clubs and stores data from JSON files into dictionaries."""
         try:
-            categories_path = Path("./resources/categories.json")
-            if os.path.exists(categories_path):
-                with open(categories_path, "r", encoding="utf-8") as f:
-                    self._categories_data = json.load(f)
+            # Load clubs
+            clubs_path = Path("./resources/clubs.json")
+            if os.path.exists(clubs_path):
+                with open(clubs_path, "r", encoding="utf-8") as f:
+                    clubs_list = json.load(f)
+                    self._clubs_dict = {club.get("id"): club for club in clubs_list}
                 logger.info(
-                    "Categories data loaded successfully",
+                    "Clubs data loaded successfully",
                     extra={
                         "reason": "Data file loaded",
-                        "extra_data": {"file_path": categories_path},
+                        "extra_data": {"file_path": clubs_path, "count": len(self._clubs_dict)},
                     },
                 )
             else:
                 logger.warning(
-                    f"Categories data file not found: {categories_path}",
+                    f"Clubs data file not found: {clubs_path}",
                     extra={
                         "reason": "Missing data file",
-                        "extra_data": {"file_path": categories_path},
+                        "extra_data": {"file_path": clubs_path},
                     },
                 )
-                self._categories_data = []
+
+            # Load stores
+            stores_path = Path("./resources/stores.json")
+            if os.path.exists(stores_path):
+                with open(stores_path, "r", encoding="utf-8") as f:
+                    stores_list = json.load(f)
+                    self._stores_dict = {store.get("id"): store for store in stores_list}
+                logger.info(
+                    "Stores data loaded successfully",
+                    extra={
+                        "reason": "Data file loaded",
+                        "extra_data": {"file_path": stores_path, "count": len(self._stores_dict)},
+                    },
+                )
+            else:
+                logger.warning(
+                    f"Stores data file not found: {stores_path}",
+                    extra={
+                        "reason": "Missing data file",
+                        "extra_data": {"file_path": stores_path},
+                    },
+                )
         except Exception as e:
             logger.error(
-                f"Error loading categories data: {str(e)}",
+                f"Error loading data: {str(e)}",
                 exc_info=e,
                 extra={
                     "reason": "Data file load failed",
                     "extra_data": {"error_type": type(e).__name__},
                 },
             )
-            self._categories_data = []
+
+    def _get_store_mcc_codes_from_store(self, store_data: Dict) -> List[int]:
+        """
+        Extract MCC codes from store metadata.
+
+        Args:
+            store_data: The store dictionary
+
+        Returns:
+            List of integer MCC codes
+        """
+        if not store_data:
+            return []
+
+        try:
+            mcc_codes = store_data.get("metadata", {}).get("mcc_codes", [])
+            # Convert to int, filtering out non-numeric codes
+            return [int(code) for code in mcc_codes if str(code).isdigit()]
+        except Exception as e:
+            logger.debug(
+                f"Error extracting MCC codes from store: {str(e)}",
+                extra={"reason": "Data parsing", "extra_data": {"error_type": type(e).__name__}},
+            )
+            return []
 
     def _calculate_club_scores(self, mcc_codes: List[int]) -> List[Dict]:
         """
-        A private helper to calculate hit counts for all clubs based on a list of MCCs.
+        Calculate hit counts for all clubs based on a list of MCCs using dictionary lookups.
 
         Args:
             mcc_codes: A list of user's spending MCC codes.
@@ -71,22 +119,25 @@ class RecommendationCoreService:
         club_scores = []
         mcc_codes_set = set(mcc_codes)
 
-        # Iterate through all clubs and count hits
-        for club in self._categories_data:
+        # Iterate through clubs dictionary
+        for club_id, club in self._clubs_dict.items():
             hit_count = 0
-            stores = club.get("stores", [])
-            total_stores = len(stores)
+            store_ids = club.get("stores", [])
+            total_stores = len(store_ids)
 
             if total_stores > 0:
-                for store in stores:
-                    store_mcc_codes = set(store.get("mcc_codes", []))
-                    # If store has any matching MCC codes, count it as a hit
-                    if store_mcc_codes & mcc_codes_set:
-                        hit_count += 1
+                # Look up each store in the stores dictionary
+                for store_id in store_ids:
+                    store = self._stores_dict.get(store_id)
+                    if store:
+                        store_mcc_codes = set(self._get_store_mcc_codes_from_store(store))
+                        # If store has any matching MCC codes, count it as a hit
+                        if store_mcc_codes & mcc_codes_set:
+                            hit_count += 1
 
             club_scores.append(
                 {
-                    "club_id": club.get("club_id"),
+                    "club_id": club_id,
                     "club_name": club.get("name"),
                     "hit_count": hit_count,
                     "total_stores": total_stores,
@@ -161,7 +212,7 @@ class RecommendationCoreService:
 
     def get_store_mcc_codes(self, club_id: str, store_id: str) -> List[int]:
         """
-        Retrieve MCC codes for a specific store in a club.
+        Retrieve MCC codes for a specific store in a club using direct dictionary lookups.
 
         Args:
             club_id: The club ID
@@ -179,34 +230,54 @@ class RecommendationCoreService:
         )
 
         try:
-            for club in self._categories_data:
-                if club.get("club_id") == club_id:
-                    for store in club.get("stores", []):
-                        if store.get("store_id") == store_id:
-                            raw_codes = store.get("mcc_codes", [])
-                            # Convert to int, filtering out non-numeric codes
-                            mcc_codes = [int(code) for code in raw_codes if str(code).isdigit()]
-                            logger.debug(
-                                "Store MCC codes retrieved",
-                                extra={
-                                    "reason": "Data lookup complete",
-                                    "extra_data": {
-                                        "club_id": club_id,
-                                        "store_id": store_id,
-                                        "mcc_count": len(mcc_codes),
-                                    },
-                                },
-                            )
-                            return mcc_codes
+            # Verify club exists and store is in its stores list
+            club = self._clubs_dict.get(club_id)
+            if not club:
+                logger.warning(
+                    "Club not found",
+                    extra={
+                        "reason": "Club lookup failed",
+                        "extra_data": {"club_id": club_id},
+                    },
+                )
+                return []
 
-            logger.warning(
-                "Store not found",
+            store_ids = club.get("stores", [])
+            if store_id not in store_ids:
+                logger.warning(
+                    "Store not in club",
+                    extra={
+                        "reason": "Store validation failed",
+                        "extra_data": {"club_id": club_id, "store_id": store_id},
+                    },
+                )
+                return []
+
+            # Direct lookup in stores dictionary
+            store = self._stores_dict.get(store_id)
+            if not store:
+                logger.warning(
+                    "Store not found in stores dictionary",
+                    extra={
+                        "reason": "Store lookup failed",
+                        "extra_data": {"store_id": store_id},
+                    },
+                )
+                return []
+
+            mcc_codes = self._get_store_mcc_codes_from_store(store)
+            logger.debug(
+                "Store MCC codes retrieved",
                 extra={
-                    "reason": "Store lookup failed",
-                    "extra_data": {"club_id": club_id, "store_id": store_id},
+                    "reason": "Data lookup complete",
+                    "extra_data": {
+                        "club_id": club_id,
+                        "store_id": store_id,
+                        "mcc_count": len(mcc_codes),
+                    },
                 },
             )
-            return []
+            return mcc_codes
 
         except Exception as e:
             logger.error(
@@ -225,7 +296,7 @@ class RecommendationCoreService:
 
     def get_club_mcc_distribution(self, club_id: str) -> Dict:
         """
-        Get MCC distribution for a specific club across all its stores.
+        Get MCC distribution for a specific club across all its stores using dictionary lookups.
 
         Args:
             club_id: The club ID
@@ -242,12 +313,8 @@ class RecommendationCoreService:
         )
 
         try:
-            # Find the specific club
-            club_data = None
-            for club in self._categories_data:
-                if club.get("club_id") == club_id:
-                    club_data = club
-                    break
+            # Direct lookup in clubs dictionary
+            club_data = self._clubs_dict.get(club_id)
 
             if not club_data:
                 logger.warning(
@@ -261,23 +328,16 @@ class RecommendationCoreService:
 
             # Count MCCs across all stores in the club
             mcc_counts = {}
-            stores = club_data.get("stores", [])
+            store_ids = club_data.get("stores", [])
 
-            for store in stores:
-                # Count each MCC only once per store to get store count
-                unique_mcc_in_store = set(store.get("mcc_codes", []))
-                for mcc in unique_mcc_in_store:
-                    try:
-                        mcc_int = int(mcc)
-                        mcc_counts[mcc_int] = mcc_counts.get(mcc_int, 0) + 1
-                    except (ValueError, TypeError):
-                        logger.debug(
-                            "Invalid MCC code in store",
-                            extra={
-                                "reason": "Data validation",
-                                "extra_data": {"club_id": club_id, "mcc": str(mcc)},
-                            },
-                        )
+            for store_id in store_ids:
+                # Look up store in stores dictionary
+                store = self._stores_dict.get(store_id)
+                if store:
+                    # Get unique MCCs in this store
+                    unique_mcc_in_store = set(self._get_store_mcc_codes_from_store(store))
+                    for mcc in unique_mcc_in_store:
+                        mcc_counts[mcc] = mcc_counts.get(mcc, 0) + 1
 
             # Format and sort results
             categories = [
@@ -286,7 +346,7 @@ class RecommendationCoreService:
             ]
 
             result = {
-                "club_id": club_data.get("club_id"),
+                "club_id": club_id,
                 "club_name": club_data.get("name"),
                 "categories": categories,
             }
@@ -298,7 +358,7 @@ class RecommendationCoreService:
                     "extra_data": {
                         "club_id": club_id,
                         "mcc_count": len(categories),
-                        "store_count": len(stores),
+                        "store_count": len(store_ids),
                     },
                 },
             )

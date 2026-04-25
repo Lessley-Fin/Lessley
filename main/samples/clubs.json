@@ -1,6 +1,0 @@
-[
-    {"_id":"club_hot","description":"HOT Israel — cable TV & internet member benefits","metadata":{},"name":"HOT Israel","source_id":"hot"},
-    {"_id":"club_mastercard","description":"Mastercard Israel credit card benefits","metadata":{},"name":"Mastercard Israel","source_id":"mastercard"},
-    {"_id":"club_topcash","description":"Isracard TopCash cashback benefits","metadata":{},"name":"Isracard TopCash","source_id":"topcash"},
-    {"_id":"club_behatsdaa","description":"Behatsdaa deals aggregator","metadata":{},"name":"Behatsdaa","source_id":"behatsdaa"}
-]
