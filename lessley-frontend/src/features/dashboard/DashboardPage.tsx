@@ -25,14 +25,14 @@ interface DashboardPageProps {
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "EUR",
+  currency: "ILS",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
 
 function formatAmount(value: number | undefined, currency?: string) {
   if (typeof value !== "number" || Number.isNaN(value)) return "-"
-  if (currency && currency !== "EUR") {
+  if (currency && currency !== "ILS") {
     return `${value.toFixed(2)} ${currency}`
   }
   return currencyFormatter.format(value)
@@ -171,12 +171,12 @@ export function DashboardPage({
 
   const recentTransactions = transactions.slice(0, 5)
   const topCategories = categoryInsights.slice(0, 3)
+  const moreHotCategories = categoryInsights.slice(1, 4)
   const accountHighlights = topAccounts.slice(0, 3)
   const totalTransactionAmount = transactions.reduce((sum, tx) => {
     const amount = tx.amount?.chargedAmount?.amount ?? tx.amount?.originalAmount?.amount
     return sum + (typeof amount === "number" ? amount : 0)
   }, 0)
-  const totalCategoryAmount = categoryInsights.reduce((sum, item) => sum + item.total_amount, 0)
   const topCategory = topCategories[0]
 
   return (
@@ -242,13 +242,15 @@ export function DashboardPage({
                       </div>
                       <div className="rounded-xl bg-slate-50 p-3">
                         <p className="text-xs uppercase tracking-wide text-slate-500">Category spend</p>
-                        <p className="mt-1 text-lg font-semibold text-slate-800">{formatAmount(totalCategoryAmount)}</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-800">
+                          {formatAmount(topCategory?.total_amount)}
+                        </p>
                       </div>
                     </div>
-                    {topCategories.length ? (
+                    {moreHotCategories.length ? (
                       <div className="space-y-2">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Top spending categories</p>
-                        {topCategories.map((item) => (
+                        <p className="text-xs uppercase tracking-wide text-slate-500">More hot categories</p>
+                        {moreHotCategories.map((item) => (
                           <div key={item.category} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
                             <p className="text-slate-700">{item.category}</p>
                             <p className="text-sm font-medium text-slate-800">
