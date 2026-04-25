@@ -1,14 +1,15 @@
-import type { FeedbackSubmission } from "@/lib/types"
+import type {
+  FeedbackSubmission,
+  PaginatedApiResponse,
+  PersonalizationTransaction,
+  SpendingCategoryInsight,
+  TopAccountInsight,
+} from "@/lib/types"
 
 export const API_GATEWAY_URL =
   import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:5001"
 export const PERSONALIZATION_API_URL =
-  import.meta.env.VITE_PERSONALIZATION_API_URL ?? "http://localhost:8001"
-
-interface ApiErrorPayload {
-  message?: string
-  title?: string
-}
+  import.meta.env.VITE_PERSONALIZATION_API_URL ?? "http://localhost:5002"
 
 export interface LoginRequest {
   userName: string
@@ -29,6 +30,7 @@ export interface LoginResponse {
 export interface MeResponse {
   userId: string
   userName: string
+  email?: string
   roles: string[]
 }
 
@@ -40,19 +42,60 @@ interface TransactionsResponse {
   }>
 }
 
-function parseApiError(payload: unknown, fallback: string) {
-  if (!payload || typeof payload !== "object") return fallback
-  const maybeError = payload as ApiErrorPayload
-  return maybeError.message ?? maybeError.title ?? fallback
+function collectMessages(value: unknown): string[] {
+  if (typeof value === "string") {
+    return value.trim() ? [value.trim()] : []
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectMessages(item))
+  }
+
+  if (!value || typeof value !== "object") {
+    return []
+  }
+
+  const objectValue = value as Record<string, unknown>
+  const directMessages = [
+    objectValue.message,
+    objectValue.title,
+    objectValue.detail,
+    objectValue.description,
+  ].flatMap((item) => collectMessages(item))
+
+  const code = collectMessages(objectValue.code)
+  const fieldErrors = objectValue.errors
+  const nestedErrors = fieldErrors && typeof fieldErrors === "object"
+    ? Object.entries(fieldErrors as Record<string, unknown>).flatMap(([field, fieldValue]) =>
+        collectMessages(fieldValue).map((message) => `${field}: ${message}`)
+      )
+    : []
+
+  const allMessages = [...directMessages, ...code, ...nestedErrors]
+  return Array.from(new Set(allMessages))
 }
 
-function toNetworkError(error: unknown) {
+function parseApiError(payload: unknown, fallback: string) {
+  const messages = collectMessages(payload)
+  if (messages.length === 0) return fallback
+  return messages.join("\n")
+}
+
+function toNetworkError(error: unknown, serviceName: string, serviceUrl: string) {
   if (error instanceof TypeError) {
     return new Error(
-      `Cannot reach API Gateway at ${API_GATEWAY_URL}. Check that the gateway is running and your URL/CORS are correct.`
+      `Cannot reach ${serviceName} at ${serviceUrl}. Check that the service is running and your URL/CORS are correct.`
     )
   }
   return error
+}
+
+async function parseJsonResponse<T>(response: Response, fallbackMessage: string) {
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(parseApiError(payload, fallbackMessage))
+  }
+  return payload as T
 }
 
 export async function loginWithGateway(body: LoginRequest): Promise<LoginResponse> {
@@ -72,7 +115,7 @@ export async function loginWithGateway(body: LoginRequest): Promise<LoginRespons
 
     return response.json() as Promise<LoginResponse>
   } catch (error) {
-    throw toNetworkError(error)
+    throw toNetworkError(error, "API Gateway", API_GATEWAY_URL)
   }
 }
 
@@ -91,7 +134,7 @@ export async function registerWithGateway(body: RegisterRequest) {
       throw new Error(parseApiError(payload, "Unable to complete registration."))
     }
   } catch (error) {
-    throw toNetworkError(error)
+    throw toNetworkError(error, "API Gateway", API_GATEWAY_URL)
   }
 }
 
@@ -111,7 +154,7 @@ export async function getMyProfile(accessToken: string): Promise<MeResponse> {
 
     return response.json() as Promise<MeResponse>
   } catch (error) {
-    throw toNetworkError(error)
+    throw toNetworkError(error, "API Gateway", API_GATEWAY_URL)
   }
 }
 
@@ -141,6 +184,114 @@ export async function hasOpenFinanceConnection(userId: string, accessToken?: str
     return items.some((item) => Boolean(item?.id || item?.accountId || item?.providerId))
   } catch {
     return false
+  }
+}
+
+export async function hasPersonalizationConnection(userId: string, accessToken?: string) {
+  try {
+    const params = new URLSearchParams({
+      user_id: userId,
+      time_filter: "true",
+    })
+    const response = await fetch(`${PERSONALIZATION_API_URL}/open-finance/transactions?${params.toString()}`, {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    })
+
+    const payload = await parseJsonResponse<PaginatedApiResponse<PersonalizationTransaction>>(
+      response,
+      "Unable to load transactions."
+    )
+
+    return Array.isArray(payload.data) && payload.data.length > 0
+  } catch {
+    return false
+  }
+}
+
+export async function getPersonalizationTransactions(
+  userId: string,
+  accessToken?: string
+): Promise<PersonalizationTransaction[]> {
+  try {
+    const params = new URLSearchParams({
+      user_id: userId,
+      time_filter: "true",
+    })
+    const response = await fetch(`${PERSONALIZATION_API_URL}/open-finance/transactions?${params.toString()}`, {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    })
+
+    const payload = await parseJsonResponse<PaginatedApiResponse<PersonalizationTransaction>>(
+      response,
+      "Unable to load transactions."
+    )
+    return Array.isArray(payload.data) ? payload.data : []
+  } catch (error) {
+    throw toNetworkError(error, "Personalization API", PERSONALIZATION_API_URL)
+  }
+}
+
+export async function getCategoryInsights(
+  userId: string,
+  accessToken?: string
+): Promise<SpendingCategoryInsight[]> {
+  try {
+    const params = new URLSearchParams({
+      user_id: userId,
+      time_filter: "true",
+      use_mock: "false",
+    })
+    const response = await fetch(`${PERSONALIZATION_API_URL}/insights/categories?${params.toString()}`, {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    })
+
+    const payload = await parseJsonResponse<PaginatedApiResponse<SpendingCategoryInsight>>(
+      response,
+      "Unable to load category insights."
+    )
+    return Array.isArray(payload.data) ? payload.data : []
+  } catch (error) {
+    throw toNetworkError(error, "Personalization API", PERSONALIZATION_API_URL)
+  }
+}
+
+export async function getTopAccountInsights(
+  userId: string,
+  accessToken?: string
+): Promise<TopAccountInsight[]> {
+  try {
+    const params = new URLSearchParams({
+      user_id: userId,
+      time_filter: "true",
+      use_mock: "false",
+    })
+    const response = await fetch(`${PERSONALIZATION_API_URL}/insights/top-accounts?${params.toString()}`, {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    })
+
+    const payload = await parseJsonResponse<PaginatedApiResponse<TopAccountInsight>>(
+      response,
+      "Unable to load account insights."
+    )
+    return Array.isArray(payload.data) ? payload.data : []
+  } catch (error) {
+    throw toNetworkError(error, "Personalization API", PERSONALIZATION_API_URL)
   }
 }
 
