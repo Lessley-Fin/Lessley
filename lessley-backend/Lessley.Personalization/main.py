@@ -8,6 +8,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 from logging.handlers import QueueHandler, QueueListener
 import queue
@@ -210,6 +211,21 @@ app = FastAPI(
     docs_url="/docs"        if _is_dev else None,
     redoc_url="/redoc"      if _is_dev else None,
     openapi_url="/openapi.json" if _is_dev else None,
+)
+
+# --- CORS Configuration ---
+allowed_origins = [
+    origin.strip()
+    for origin in settings.Cors_AllowOrigins.split(",")
+    if origin and origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

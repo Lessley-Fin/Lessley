@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     Loki_Url: str | None = None
     Gateway_ApiKey: str | None = None
 
+    Cors_AllowOrigins: str = "http://localhost:5173,http://127.0.0.1:5173"  # Comma-separated origins
+
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

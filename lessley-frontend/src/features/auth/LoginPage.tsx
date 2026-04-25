@@ -11,15 +11,27 @@ interface LoginPageProps {
   onSuccess: () => void
 }
 
-const USERNAME_BY_EMAIL_KEY = "lessley_username_by_email"
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/")
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4)
+  return atob(padded)
+}
 
-function readUsernameMap() {
-  const raw = localStorage.getItem(USERNAME_BY_EMAIL_KEY)
-  if (!raw) return {} as Record<string, string>
+function getEmailFromAccessToken(accessToken: string) {
   try {
-    return JSON.parse(raw) as Record<string, string>
+    const parts = accessToken.split(".")
+    if (parts.length < 2) return ""
+    const payload = JSON.parse(decodeBase64Url(parts[1])) as Record<string, unknown>
+    const claimCandidates = [
+      payload.email,
+      payload.upn,
+      payload.preferred_username,
+      payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+    ]
+    const match = claimCandidates.find((item) => typeof item === "string" && item.includes("@"))
+    return typeof match === "string" ? match.trim().toLowerCase() : ""
   } catch {
-    return {} as Record<string, string>
+    return ""
   }
 }
 
@@ -29,13 +41,13 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("")
+  const [errorMessages, setErrorMessages] = useState<string[]>([])
   const [successMessage, setSuccessMessage] = useState("")
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsLoading(true)
-    setErrorMessage("")
+    setErrorMessages([])
     setSuccessMessage("")
 
     try {
@@ -48,54 +60,26 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           password,
         })
 
-        const usernameMap = readUsernameMap()
-        usernameMap[normalizedEmail] = normalizedUsername
-        localStorage.setItem(USERNAME_BY_EMAIL_KEY, JSON.stringify(usernameMap))
+        localStorage.setItem("lessley_user_email", normalizedEmail)
 
         setSuccessMessage("Registration successful. You can sign in now.")
         setMode("login")
       } else {
-        const normalizedEmail = email.trim().toLowerCase()
-        const usernameMap = readUsernameMap()
-        const mappedUsername = usernameMap[normalizedEmail]
-
-        const candidates = [mappedUsername, normalizedEmail].filter(Boolean) as string[]
-        if (normalizedEmail.includes("@")) {
-          const localPart = normalizedEmail.split("@")[0]
-          if (localPart && !candidates.includes(localPart)) {
-            candidates.push(localPart)
-          }
-        }
-
-        let data: Awaited<ReturnType<typeof loginWithGateway>> | null = null
-        let lastError: Error | null = null
-        for (const candidate of candidates) {
-          try {
-            data = await loginWithGateway({
-              userName: candidate,
-              password,
-            })
-            break
-          } catch (error) {
-            lastError = error instanceof Error ? error : new Error("Request failed.")
-            if (!lastError.message.includes("Unable to sign in with provided credentials.")) {
-              throw lastError
-            }
-          }
-        }
-
-        if (!data) {
-          throw lastError ?? new Error("Unable to sign in with provided credentials.")
-        }
+        const normalizedUsername = username.trim()
+        const data = await loginWithGateway({
+          userName: normalizedUsername,
+          password,
+        })
 
         localStorage.setItem("lessley_poc_session", "active")
         localStorage.setItem("lessley_access_token", data.accessToken)
         localStorage.setItem("lessley_refresh_token", data.refreshToken)
         const profile = await getMyProfile(data.accessToken).catch(() => null)
-        localStorage.setItem(
-          "lessley_username",
-          profile?.userName ?? mappedUsername ?? candidates[0] ?? "User"
-        )
+        localStorage.setItem("lessley_username", profile?.userName ?? normalizedUsername ?? "User")
+        const resolvedEmail = profile?.email?.trim().toLowerCase() || getEmailFromAccessToken(data.accessToken)
+        if (resolvedEmail) {
+          localStorage.setItem("lessley_user_email", resolvedEmail)
+        }
         if (profile?.userId) {
           localStorage.setItem("lessley_user_id", profile.userId)
         }
@@ -103,7 +87,11 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Request failed."
-      setErrorMessage(message)
+      const parsed = message
+        .split("\n")
+        .map((item) => item.trim())
+        .filter(Boolean)
+      setErrorMessages(parsed.length ? parsed : [message])
     } finally {
       setIsLoading(false)
     }
@@ -146,40 +134,40 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
+            <div className="space-y-2.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                autoComplete="username"
+                required
+                className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                disabled={isLoading}
+              />
+            </div>
             {mode === "register" ? (
               <div className="space-y-2.5">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  autoComplete="username"
+                  id="email"
+                  type="email"
+                  autoComplete="email"
                   required
                   className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   disabled={isLoading}
                 />
               </div>
             ) : null}
             <div className="space-y-2.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2.5">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete={mode === "register" ? "new-password" : "current-password"}
                 required
                 className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
                 value={password}
@@ -187,7 +175,13 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
                 disabled={isLoading}
               />
             </div>
-            {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+            {errorMessages.length ? (
+              <ul className="space-y-1 text-sm text-destructive">
+                {errorMessages.map((item, index) => (
+                  <li key={`${index}-${item}`}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
             {successMessage ? <p className="text-sm text-emerald-600">{successMessage}</p> : null}
             <Button type="submit" className="min-h-12 w-full rounded-xl shadow-sm" disabled={isLoading}>
               {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
