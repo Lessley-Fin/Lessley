@@ -184,11 +184,7 @@ services:
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
-<<<<<<< HEAD
-      - Loki_Url=http://loki:3100/loki/api/v1/push
-=======
       - Loki_Url=${LOKI_URL}/loki/api/v1/push
->>>>>>> origin
     depends_on:
       - rabbitmq
       - mongodb
