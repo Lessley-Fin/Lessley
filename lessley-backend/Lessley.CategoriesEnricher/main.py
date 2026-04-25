@@ -27,13 +27,15 @@ ROUTING_KEY = "Categories.enrich"
 # Create a structured formatter
 structured_formatter = StructuredFormatter()
 
-# Create Loki handler with structured formatter
-loki_handler = logging_loki.LokiHandler(
-    url=settings.Loki_Url,
-    tags={"app_name": "categories_enricher", "environment": getattr(settings, "Environment", "dev")},
-    version="1",
-)
-loki_handler.setFormatter(structured_formatter)
+# Create Loki handler only if URL is configured
+loki_handler = None
+if settings.Loki_Url:
+    loki_handler = logging_loki.LokiHandler(
+        url=settings.Loki_Url,
+        tags={"app_name": "categories_enricher", "environment": getattr(settings, "Environment", "dev")},
+        version="1",
+    )
+    loki_handler.setFormatter(structured_formatter)
 
 
 class LocalQueueHandler(QueueHandler):
@@ -58,7 +60,12 @@ queue_handler.addFilter(ContextInjectingFilter())
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(structured_formatter)
 
-listener = QueueListener(log_queue, stream_handler, loki_handler)
+# Only add loki_handler if it was successfully created
+listener_handlers = [stream_handler]
+if loki_handler is not None:
+    listener_handlers.append(loki_handler)
+
+listener = QueueListener(log_queue, *listener_handlers)
 listener.start()
 
 # Configure root logger
