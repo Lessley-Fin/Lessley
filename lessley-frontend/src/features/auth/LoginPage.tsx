@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,6 +43,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessages, setErrorMessages] = useState<string[]>([])
   const [successMessage, setSuccessMessage] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -164,16 +165,28 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
             ) : null}
             <div className="space-y-2.5">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete={mode === "register" ? "new-password" : "current-password"}
-                required
-                className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "register" ? "new-password" : "current-password"}
+                  required
+                  className="min-h-12 border-0 bg-slate-100 px-4 pr-12 shadow-none focus-visible:ring-slate-300"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 focus:outline-none"
+                  onClick={() => setShowPassword((s) => !s)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                </button>
+              </div>
             </div>
             {errorMessages.length ? (
               <ul className="space-y-1 text-sm text-destructive">
