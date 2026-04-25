@@ -187,11 +187,16 @@ export async function hasOpenFinanceConnection(userId: string, accessToken?: str
   }
 }
 
-export async function hasPersonalizationConnection(userId: string, accessToken?: string) {
+export async function hasPersonalizationConnection(
+  userId: string,
+  accessToken?: string,
+  days: number = 90
+) {
   try {
     const params = new URLSearchParams({
       user_id: userId,
       time_filter: "true",
+      days: String(days),
     })
     const response = await fetch(`${PERSONALIZATION_API_URL}/open-finance/transactions?${params.toString()}`, {
       headers: accessToken
@@ -214,12 +219,14 @@ export async function hasPersonalizationConnection(userId: string, accessToken?:
 
 export async function getPersonalizationTransactions(
   userId: string,
-  accessToken?: string
+  accessToken?: string,
+  days: number = 90
 ): Promise<PersonalizationTransaction[]> {
   try {
     const params = new URLSearchParams({
       user_id: userId,
       time_filter: "true",
+      days: String(days),
     })
     const response = await fetch(`${PERSONALIZATION_API_URL}/open-finance/transactions?${params.toString()}`, {
       headers: accessToken
@@ -241,13 +248,15 @@ export async function getPersonalizationTransactions(
 
 export async function getCategoryInsights(
   userId: string,
-  accessToken?: string
+  accessToken?: string,
+  days: number = 90
 ): Promise<SpendingCategoryInsight[]> {
   try {
     const params = new URLSearchParams({
       user_id: userId,
       time_filter: "true",
       use_mock: "false",
+      days: String(days),
     })
     const response = await fetch(`${PERSONALIZATION_API_URL}/insights/categories?${params.toString()}`, {
       headers: accessToken
@@ -269,13 +278,15 @@ export async function getCategoryInsights(
 
 export async function getTopAccountInsights(
   userId: string,
-  accessToken?: string
+  accessToken?: string,
+  days: number = 90
 ): Promise<TopAccountInsight[]> {
   try {
     const params = new URLSearchParams({
       user_id: userId,
       time_filter: "true",
       use_mock: "false",
+      days: String(days),
     })
     const response = await fetch(`${PERSONALIZATION_API_URL}/insights/top-accounts?${params.toString()}`, {
       headers: accessToken
