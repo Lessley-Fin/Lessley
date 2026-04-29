@@ -50,6 +50,7 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
       ME_CONFIG_BASICAUTH_USERNAME: ${DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${DB_PASS}
+      ME_CONFIG_REQUEST_SIZE: ${DB_FILE_LIMIT_SIZE}
     depends_on:
       - mongodb
 
