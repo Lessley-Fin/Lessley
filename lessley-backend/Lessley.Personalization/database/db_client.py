@@ -1,7 +1,6 @@
 import logging
 import motor.motor_asyncio
 from beanie import init_beanie
-
 from config.settings import settings
 from models.db.entities import Club, Store, Deal, MccCode
 
