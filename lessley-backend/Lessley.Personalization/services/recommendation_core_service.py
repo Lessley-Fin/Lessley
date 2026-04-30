@@ -1,8 +1,6 @@
 import logging
 from typing import Dict, List
-import json
-import os
-from pathlib import Path
+from models.db.entities import Club, Store
 
 logger = logging.getLogger(__name__)
 
@@ -16,73 +14,52 @@ class RecommendationCoreService:
 
     def __init__(self):
         logger.info(
-            "RecommendationService initialized",
+            "RecommendationCoreService initialized. Call initialize() to load data.",
             extra={
                 "reason": "Service creation",
                 "extra_data": {},
             },
         )
-        self._clubs_dict = {}  # {club_id: club_data}
-        self._stores_dict = {}  # {store_id: store_data}
-        self._load_data()
+        self._clubs_dict: Dict[str, Club] = {}  # {club_id: club_data}
+        self._stores_dict: Dict[str, Store] = {}  # {store_id: store_data}
 
-    def _load_data(self):
-        """Load clubs and stores data from JSON files into dictionaries."""
+    async def initialize(self):
+        """Load clubs and stores data from MongoDB into dictionaries."""
+        logger.info("Loading clubs and stores data from MongoDB...")
         try:
             # Load clubs
-            clubs_path = Path("./resources/clubs.json")
-            if os.path.exists(clubs_path):
-                with open(clubs_path, "r", encoding="utf-8") as f:
-                    clubs_list = json.load(f)
-                    self._clubs_dict = {club.get("id"): club for club in clubs_list}
-                logger.info(
-                    "Clubs data loaded successfully",
-                    extra={
-                        "reason": "Data file loaded",
-                        "extra_data": {"file_path": clubs_path, "count": len(self._clubs_dict)},
-                    },
-                )
-            else:
-                logger.warning(
-                    f"Clubs data file not found: {clubs_path}",
-                    extra={
-                        "reason": "Missing data file",
-                        "extra_data": {"file_path": clubs_path},
-                    },
-                )
-
-            # Load stores
-            stores_path = Path("./resources/stores.json")
-            if os.path.exists(stores_path):
-                with open(stores_path, "r", encoding="utf-8") as f:
-                    stores_list = json.load(f)
-                    self._stores_dict = {store.get("id"): store for store in stores_list}
-                logger.info(
-                    "Stores data loaded successfully",
-                    extra={
-                        "reason": "Data file loaded",
-                        "extra_data": {"file_path": stores_path, "count": len(self._stores_dict)},
-                    },
-                )
-            else:
-                logger.warning(
-                    f"Stores data file not found: {stores_path}",
-                    extra={
-                        "reason": "Missing data file",
-                        "extra_data": {"file_path": stores_path},
-                    },
-                )
-        except Exception as e:
-            logger.error(
-                f"Error loading data: {str(e)}",
-                exc_info=e,
+            clubs_list = await Club.find_all().to_list()
+            self._clubs_dict = {club.club_id: club for club in clubs_list}
+            logger.info(
+                "Clubs data loaded successfully from MongoDB",
                 extra={
-                    "reason": "Data file load failed",
-                    "extra_data": {"error_type": type(e).__name__},
+                    "reason": "Data loading",
+                    "extra_data": {"count": len(self._clubs_dict)},
                 },
             )
 
-    def _get_store_mcc_codes_from_store(self, store_data: Dict) -> List[int]:
+            # Load stores
+            stores_list = await Store.find_all().to_list()
+            self._stores_dict = {store.store_id: store for store in stores_list}
+            logger.info(
+                "Stores data loaded successfully from MongoDB",
+                extra={
+                    "reason": "Data loading",
+                    "extra_data": {"count": len(self._stores_dict)},
+                },
+            )
+        except Exception as e:
+            logger.error(
+                f"Error loading data from MongoDB: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Database query failed",
+                    "extra_data": {"error_type": type(e).__name__},
+                },
+            )
+            raise
+
+    def _get_store_mcc_codes_from_store(self, store_data: Store) -> List[int]:
         """
         Extract MCC codes from store metadata.
 
@@ -96,9 +73,9 @@ class RecommendationCoreService:
             return []
 
         try:
-            mcc_codes = store_data.get("metadata", {}).get("mcc_codes", [])
+            mcc_codes = store_data.metadata.mcc_codes
             # Convert to int, filtering out non-numeric codes
-            return [int(code) for code in mcc_codes if str(code).isdigit()]
+            return [int(code) for code in mcc_codes if code and str(code).isdigit()]
         except Exception as e:
             logger.debug(
                 f"Error extracting MCC codes from store: {str(e)}",
@@ -122,8 +99,8 @@ class RecommendationCoreService:
         # Iterate through clubs dictionary
         for club_id, club in self._clubs_dict.items():
             hit_count = 0
-            store_ids = club.get("stores", [])
-            total_stores = len(store_ids)
+            store_ids = club.stores
+            total_stores = len(store_ids) if store_ids else 0
 
             if total_stores > 0:
                 # Look up each store in the stores dictionary
@@ -138,7 +115,7 @@ class RecommendationCoreService:
             club_scores.append(
                 {
                     "club_id": club_id,
-                    "club_name": club.get("name"),
+                    "club_name": club.name,
                     "hit_count": hit_count,
                     "total_stores": total_stores,
                 }
@@ -242,7 +219,7 @@ class RecommendationCoreService:
                 )
                 return []
 
-            store_ids = club.get("stores", [])
+            store_ids = club.stores
             if store_id not in store_ids:
                 logger.warning(
                     "Store not in club",
@@ -328,7 +305,7 @@ class RecommendationCoreService:
 
             # Count MCCs across all stores in the club
             mcc_counts = {}
-            store_ids = club_data.get("stores", [])
+            store_ids = club_data.stores
 
             for store_id in store_ids:
                 # Look up store in stores dictionary
@@ -347,7 +324,7 @@ class RecommendationCoreService:
 
             result = {
                 "club_id": club_id,
-                "club_name": club_data.get("name"),
+                "club_name": club_data.name,
                 "categories": categories,
             }
 

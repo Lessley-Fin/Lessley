@@ -20,6 +20,7 @@ from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
 from routers import recommendation_controller  # Import recommendation controller
 from routers import club_controller  # Import club controller
+from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 import uuid
 
@@ -135,6 +136,11 @@ async def consume_rabbitmq():
 # --- FastAPI Lifespan Management ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup: Connect to MongoDB and fetch setup data
+    await init_db()
+    await DIContainer.get_mcc_service().initialize()
+    await DIContainer.get_recommendation_core_service().initialize()
+
     if settings.RabbitMQ_Enabled:
         # Startup: Launch the RabbitMQ consumer as a background task
         task = asyncio.create_task(consume_rabbitmq())
@@ -144,8 +150,10 @@ async def lifespan(app: FastAPI):
     else:
         yield
 
+    # Shutdown
     client = DIContainer.get_open_finance_client()
     await client.close_client()  # Ensure the HTTP client is properly closed on shutdown
+    await close_db()
     listener.stop()  # Gracefully stop the logging queue listener
 
 
