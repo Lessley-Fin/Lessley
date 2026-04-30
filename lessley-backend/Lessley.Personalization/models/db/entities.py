@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any, Dict, List
-
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 
