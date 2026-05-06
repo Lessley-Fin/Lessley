@@ -12,7 +12,7 @@ class ProcessingCoreService:
     def __init__(self, mcc_service: MccService):
         self.mcc_service = mcc_service  # Inject the MCC service dependency
 
-    def get_top_spending_categories(self, transactions: list[Transaction], limit: int = LIMITS.TOP_CATEGORIES) -> list[dict]:
+    def get_top_spending_categories(self, transactions: list[Transaction], limit: int = LIMITS.TOP_CATEGORIES) -> list[Transaction]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top spending categories by total spend.
 
@@ -23,7 +23,7 @@ class ProcessingCoreService:
             limit: Number of top categories to return (default: 20)
 
         Returns:
-            List of dictionaries with category, total_count, and total_amount
+            List of Transaction objects with category, total_count, and total_amount
             [
                 {"category": "FOOD_&_DRINKS - GROCERIES", "total_count": 15, "total_amount": 350.50},
                 {"category": "TRANSPORT", "total_count": 8, "total_amount": 200.00}
@@ -79,7 +79,7 @@ class ProcessingCoreService:
         group_by_column: str = "accountId",
         ascending: bool = False,
         limit: int = LIMITS.TOP_ACCOUNTS,
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top accounts by total spend.
 
@@ -93,10 +93,10 @@ class ProcessingCoreService:
             limit: Number of top accounts to return (default: 10)
 
         Returns:
-            List of dictionaries with accountId, accountNumber, total_count, and total_amount
+            List of Transaction objects with accountId, accountNumber, total_count, and total_amount
             [
-                {"accountId": "123", "accountNumber": "****1234", "total_count": 50, "total_amount": 5000.00},
-                {"accountId": "456", "accountNumber": "****5678", "total_count": 30, "total_amount": 3000.00}
+                Transaction(accountId="123", accountNumber="****1234", total_count=50, total_amount=5000.00),
+                Transaction(accountId="456", accountNumber="****5678", total_count=30, total_amount=3000.00)
             ]
         """
         if not transactions:
@@ -135,7 +135,7 @@ class ProcessingCoreService:
         self,
         transactions: list[Transaction],
         limit: int = LIMITS.TOP_STORES,
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         INFRASTRUCTURE: Analyzes transactions and returns stores with nested accounts.
 
@@ -150,12 +150,13 @@ class ProcessingCoreService:
             limit: Number of top merchants to return (default: 50)
 
         Returns:
-            List of nested dictionaries:
+            List of nested Transaction objects:
             [
-                {
-                    "merchantName": "STARBUCKS",
-                    "total_count": 10,
-                    "total_amount": 500.50,
+                Transaction(merchantName="STARBUCKS", total_count=10, total_amount=500.50, items=[...]),
+                Transaction(merchantName="COFFEE SHOP", total_count=8, total_amount=400.00, items=[...])
+            ]
+        if not transactions:
+            return []
                     "items": [
                         {"accountNumber": "****1234", "total_count": 6, "total_amount": 300.00},
                         {"accountNumber": "****5678", "total_count": 4, "total_amount": 200.50}
