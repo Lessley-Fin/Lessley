@@ -2,6 +2,7 @@ import threading
 from .clients.open_finance_client import OpenFinanceClient
 from .open_finance_service import OpenFinanceService
 from .insights_service import InsightsService
+from .transaction_stash_service import TransactionStashService
 from .processing_core_service import ProcessingCoreService
 from .mcc_service import MccService
 from .recommendation_service import RecommendationService
@@ -11,6 +12,13 @@ from .recommendation_core_service import RecommendationCoreService
 class DIContainer:
     _instances = {}
     _lock = threading.RLock()
+
+    @staticmethod
+    def get_transaction_stash_service() -> TransactionStashService:
+        with DIContainer._lock:
+            if "transaction_stash_service" not in DIContainer._instances:
+                DIContainer._instances["transaction_stash_service"] = TransactionStashService()
+            return DIContainer._instances["transaction_stash_service"]
 
     @staticmethod
     def get_processing_service() -> ProcessingCoreService:
@@ -34,6 +42,7 @@ class DIContainer:
             if "insights_service" not in DIContainer._instances:
                 DIContainer._instances["insights_service"] = InsightsService(
                     open_finance_service=DIContainer.get_open_finance_service(),
+                    files_service=DIContainer.get_transaction_stash_service(),
                     processing_core_service=DIContainer.get_processing_service(),
                 )
             return DIContainer._instances["insights_service"]
