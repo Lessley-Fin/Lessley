@@ -3,6 +3,7 @@ from services.transaction_stash_service import TransactionStashService
 from services.open_finance_service import OpenFinanceService
 from services.processing_core_service import ProcessingCoreService
 from config.constants import LIMITS
+from models.transaction import Transaction
 
 
 logger = logging.getLogger(__name__)
@@ -11,9 +12,9 @@ logger = logging.getLogger(__name__)
 class InsightsService:
     def __init__(
         self,
-        open_finance_service=OpenFinanceService,
-        files_service=TransactionStashService,
-        processing_core_service=ProcessingCoreService,
+        open_finance_service: OpenFinanceService,
+        files_service: TransactionStashService,
+        processing_core_service: ProcessingCoreService,
     ):
         self.open_finance_service = open_finance_service
         self.files_service = files_service
@@ -21,7 +22,7 @@ class InsightsService:
 
     async def calculate_user_categories_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Calculates user categories based on transactions.
         """
@@ -59,7 +60,7 @@ class InsightsService:
 
     async def calculate_top_accounts_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Calculates top accounts based on transactions.
         """
@@ -109,7 +110,7 @@ class InsightsService:
 
     async def calculate_top_stores_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Calculates top stores based on transactions.
         """
