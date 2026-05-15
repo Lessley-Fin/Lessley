@@ -18,22 +18,6 @@ class Club(Document):
         name = "club_list"
 
 
-class DiscountLogicCondition(BaseModel):
-    type: str
-    value: int | float
-
-
-class DiscountLogicReward(BaseModel):
-    type: str
-    value: int | float
-
-
-class DiscountLogic(BaseModel):
-    condition: DiscountLogicCondition
-    reward: DiscountLogicReward
-    constraints: Dict[str, Any] = {}
-
-
 class Deal(Document):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     deal_id: str = Field(..., alias="id")
