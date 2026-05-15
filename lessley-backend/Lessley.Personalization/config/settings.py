@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     # Pydantic will automatically look for these keys in the .env file or system environment variables
     Environment: str
     ConnectionStrings_Rabbit: str
-    MONGO_CONNECTION_STRING: str
+    ConnectionStrings_MongoDb: str
     RabbitMQ_Enabled: bool = False  # Default to False if not set
     OpenFinanceConfig_ClientId: str | None = None  # Optional setting
     OpenFinanceConfig_ClientSecret: str | None = None  # Optional setting

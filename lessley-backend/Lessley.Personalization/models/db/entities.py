@@ -44,7 +44,7 @@ class MccCode(Document):
     irs_reportable: str | None = None
 
     class Settings:
-        name = "mcc_codes"
+        name = "mcc_list"
 
 
 class NameForms(BaseModel):

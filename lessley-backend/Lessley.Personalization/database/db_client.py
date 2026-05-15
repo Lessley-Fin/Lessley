@@ -18,7 +18,7 @@ async def init_db():
     logger.info("Initializing database connection...")
     try:
         client = motor.motor_asyncio.AsyncIOMotorClient(
-            settings.MONGO_CONNECTION_STRING,
+            settings.ConnectionStrings_MongoDb,
         )
 
         # Ping the server to check the connection
