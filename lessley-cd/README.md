@@ -1,3 +1,55 @@
+### How to use docker
+# Print all containers:
+```bash
+docker ps
+```
+
+# Remove all containers from docker-compose
+```bash
+docker-compose -f FILENAME.yml down
+```
+
+# Remove all containers from docker-compose including your data (recommended only when you want to restart db, rabbitmq, etc)
+```bash
+docker-compose -f FILENAME.yml down -v
+```
+
+# Start all container from docker-compose
+```bash
+docker-compose -f FILENAME.yml up -d
+```
+
+# Start all container from docker-compose including build (new version you updated)
+```bash
+docker-compose -f FILENAME.yml up -d --build
+```
+
+### How to work with lessley-cd ?
+
+# Step 1: Create .env file
+copy .env.template to .env
+
+# Step 2:
+carefully configure your secrets, password, etc...
+look for other projects .env and appsettings.json and carefully update it too.
+
+# Step 3: Run infrastructure (mogno, rabbitmq, loki...)
+```bash
+.\manage.bat infra up
+```
+
+# Step 4: Run services
+```bash
+.\manage.bat app build
+```
+
+or if already build:
+```bash
+.\manage.bat app build
+```
+
+# Step 5: Just have fun!
+
 ### How to insert init mongo using .json files:
 
 # Steps:
