@@ -3,9 +3,9 @@
 :: 1. Check if the target argument is missing
 if "%~1"=="" goto help
 
-:: 2. Route based on the target (infra or service)
+:: 2. Route based on the target (infra or app)
 if /I "%~1"=="infra" goto infra
-if /I "%~1"=="service" goto service
+if /I "%~1"=="app" goto app
 if /I "%~1"=="status" goto status
 
 :: 3. Fallback if they type something wrong
@@ -52,9 +52,9 @@ goto end
 
 
 :: ==========================================
-:: SERVICE COMMANDS (Lessley App)
+:: APP COMMANDS (Lessley App)
 :: ==========================================
-:service
+:app
 if /I "%~2"=="up" (
     echo [!] Starting Lessley core service: Personalization, Gateway...
     docker compose up -d personalization gateway
@@ -79,7 +79,7 @@ if /I "%~2"=="status" (
     goto end
 )
 
-echo [X] Invalid action. Try: manage.bat service up, manage.bat service down, or manage.bat service status
+echo [X] Invalid action. Try: manage.bat app up, manage.bat app down, or manage.bat app status
 goto end
 
 
@@ -98,10 +98,10 @@ echo   manage.bat infra down      - Removes containers (-v to wipe volumes)
 echo   manage.bat infra status    - Shows status of infrastructure
 echo.
 echo Core Services (Personalization, Gateway):
-echo   manage.bat service up      - Starts application containers
-echo   manage.bat service build   - Rebuilds code and starts containers
-echo   manage.bat service down    - Removes application containers
-echo   manage.bat service status  - Shows status of application containers
+echo   manage.bat app up      - Starts application containers
+echo   manage.bat app build   - Rebuilds code and starts containers
+echo   manage.bat app down    - Removes application containers
+echo   manage.bat app status  - Shows status of application containers
 goto end
 
 
