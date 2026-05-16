@@ -1,84 +1,93 @@
-# How to use docker
-## Print all containers:
+# Lessley CD Environment Guide
+
+Welcome to the Lessley Continuous Deployment (CD) repository. This guide covers how to set up the project locally, manage Docker containers using built-in shortcuts, and initialize the database.
+
+## 🚀 Getting Started
+
+Follow these steps to set up and run the environment.
+
+### 1. Create the Environment File
+Copy the provided template to create your `.env` file:
 ```bash
-docker ps
+copy .env.template .env
 ```
 
-## Remove all containers from docker-compose
-```bash
-docker-compose -f FILENAME.yml down
-```
+### 2. Configure Secrets
+Carefully configure your secrets, passwords, and other variables in the `.env` file. 
+> **Note:** Remember to check other projects for `.env` and `appsettings.json` files and carefully update them as well.
 
-## Remove all containers from docker-compose including your data (recommended only when you want to restart db, rabbitmq, etc)
-```bash
-docker-compose -f FILENAME.yml down -v
-```
-
-## Start all container from docker-compose
-```bash
-docker-compose -f FILENAME.yml up -d
-```
-
-## Start all container from docker-compose including build (new version you updated)
-```bash
-docker-compose -f FILENAME.yml up -d --build
-```
-
-
-
-# How to work with lessley-cd ?
-
-## Step 1: Create .env file
-copy .env.template to .env
-
-## Step 2:
-carefully configure your secrets, password, etc...
-look for other projects .env and appsettings.json and carefully update it too.
-
-## Step 3: Run infrastructure (mogno, rabbitmq, loki...)
+### 3. Run Infrastructure
+Start the required infrastructure services (MongoDB, RabbitMQ, Loki, etc.):
 ```bash
 .\manage.bat infra up
 ```
 
-## Step 4: Run services
+### 4. Run Services
+Build and start the application services (Personalization, Gateway, etc.):
 ```bash
 .\manage.bat app build
 ```
 
-or if already build:
-```bash
-.\manage.bat app build
-```
+### 5. Have Fun! 🎉
+Your Lessley environment should now be up and running.
 
-## Step 5: Just have fun!
+---
 
-# How to insert init mongo using .json files:
+## 🛠️ Lessley Shortcuts (`manage.bat`)
 
-## Step 1: Identify container
-### Use the right path
+Use the provided batch script to manage your environment without typing long Docker commands.
+Utilize application and infrastructure split commands. 
+Meaning: `docker compose down` removes all containers but `.\manage.bat app down` removes only application containers, keeps mongodb and rabbitmq running.
+
+### General Commands
+| Command               | Description |
+|-----------------------|-------------|
+| `.\manage.bat help`   | Show help menu |
+| `.\manage.bat status` | Show status of all containers (similar to `docker ps`) |
+
+### Infrastructure (RabbitMQ, Grafana, Loki, MongoDB)
+| Command                       | Description |
+|-------------------------------|-------------|
+| `.\manage.bat infra up`       | Start infrastructure containers |
+| `.\manage.bat infra down`     | Remove containers (use `-v` to wipe volumes) |
+| `.\manage.bat infra status`   | Show status of infrastructure containers |
+
+### Application (Personalization, Gateway)
+| Command                       | Description |
+|-------------------------------|-------------|
+| `.\manage.bat app up`         | Start application containers |
+| `.\manage.bat app build`      | Rebuild code and start containers |
+| `.\manage.bat app down`       | Remove application containers |
+| `.\manage.bat app status`     | Show status of application containers |
+
+---
+
+## 🐳 Docker Basics Reference
+
+If you prefer using native Docker and Docker Compose commands, here are the most common operations:
+
+- **List all containers:** `docker ps`
+- **Start containers:** `docker-compose -f FILENAME.yml up -d`
+- **Start containers (with build):** `docker-compose -f FILENAME.yml up -d --build`
+- **Stop and remove containers:** `docker-compose -f FILENAME.yml down`
+- **Stop and wipe data volumes:** `docker-compose -f FILENAME.yml down -v` *(Use when you want to reset DB, RabbitMQ, etc.)*
+
+---
+
+## 🗄️ MongoDB Initialization
+
+Follow these steps to seed MongoDB with initial JSON files.
+
+### Step 1: Navigate to the CD folder
 ```bash
 cd .\lessley-cd\     
 ```
-
-### Print all containers
-```bash
-docker ps
-```
-
-### Look for mongo container
-```bash
-CONTAINER ID   IMAGE                         COMMAND                  CREATED          STATUS                    PORTS                                                                                          NAMES
-d880d2dec8b7   mongo-express:latest          "/sbin/tini -- /dock…"   14 minutes ago   Up 14 minutes             0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp                                                    mongo_express
-
-e617a141c059   mongo:8.0                     "docker-entrypoint.s…"   14 minutes ago   Up 14 minutes (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp                                                mongodb
-```
-
-### You will need the `e617a141c059` container or use name `mongodb`.
 
 ## Step 2: Insert into mongodb container
 ```bash
 docker cp ..\lessley-backend\Lessley.Personalization\resources\mccs.json mongodb:/tmp/mcc_list.json
 ```
+
 ## Step 3: Read from container and write to mongodb 
 ```bash
 docker exec -it mongodb mongoimport --db lessley --collection mcc_list --file /tmp/mcc_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
