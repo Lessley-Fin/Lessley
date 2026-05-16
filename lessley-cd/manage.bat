@@ -24,8 +24,8 @@ goto end
 :: ==========================================
 :infra
 if /I "%~2"=="up" (
-    echo [!] Starting infrastructure: RabbitMQ, Grafana, Loki, MongoDB...
-    docker compose up -d rabbitmq grafana loki mongodb
+    echo [!] Starting infrastructure: RabbitMQ, Grafana, Loki, MongoDB, Mongo Express...
+    docker compose up -d rabbitmq grafana loki mongodb mongo-express
     goto end
 )
 
