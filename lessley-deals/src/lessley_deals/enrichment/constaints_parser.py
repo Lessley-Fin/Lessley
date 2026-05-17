@@ -223,7 +223,7 @@ def parse_deal_constraints(deal_terms: str) -> DealConstraints:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    """Run the parser against a single deal JSON file.
+    """Run the parser against a deal JSON file, storing results in-place.
 
     Usage:
         python -m lessley_deals.enrichment.constaints_parser <path/to/deal.json>
@@ -231,11 +231,10 @@ def main() -> None:
     The file can be:
       - a single deal object  { "terms_and_conditions": "..." }
       - a list of deals       [{ "terms_and_conditions": "..." }, ...]
-        → only the first item is used
+        → all items are processed; those without terms_and_conditions are skipped
 
-    To test with a one-liner, create a file like:
-        echo '{"terms_and_conditions": "ללא כפל מבצעים, למימוש בסניפים בלבד"}' > test_deal.json
-    and pass it as the argument.
+    Constraints are written into a "constraints" field on each deal object and
+    the file is saved in-place.
     """
     load_dotenv()
 
@@ -247,25 +246,25 @@ def main() -> None:
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 
-    deal = data[0] if isinstance(data, list) else data
-    terms = deal.get("terms_and_conditions")
+    is_list = isinstance(data, list)
+    deals = data if is_list else [data]
 
-    if not terms:
-        print(f"No 'terms_and_conditions' field found in {path}")
-        sys.exit(1)
+    for deal in deals:
+        terms = deal.get("terms_and_conditions")
+        if not terms:
+            print(f"Skipping deal (no terms_and_conditions): {deal.get('title') or deal.get('id', '?')}")
+            continue
 
-    print(f"Parsing deal: {deal.get('title') or deal.get('description') or deal.get('id', '?')}")
-    print(f"Terms ({len(terms)} chars):\n{terms}\n")
+        print(f"Parsing deal: {deal.get('title') or deal.get('description') or deal.get('id', '?')}")
+        print(f"Terms ({len(terms)} chars):\n{terms}\n")
 
-    result = parse_deal_constraints(terms)
-    output = json.dumps(result.model_dump(), ensure_ascii=False, indent=2)
+        result = parse_deal_constraints(terms)
+        deal.setdefault("discount_logic", {})["constraints"] = result.model_dump()
 
-    out_path = path.replace(".json", "_constraints.json")
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(output)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-    print(f"Done. Result written to: {out_path}")
-    print("Open that file in VS Code to read the Hebrew correctly.")
+    print(f"Done. Constraints written in-place to: {path}")
 
 
 if __name__ == "__main__":
