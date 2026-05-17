@@ -20,6 +20,7 @@ from routers import mcc_controller  # Import your new controller
 from routers import insights_controller  # Import your new controller
 from routers import recommendation_controller  # Import recommendation controller
 from routers import club_controller  # Import club controller
+from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 import uuid
 
@@ -31,13 +32,15 @@ ROUTING_KEY = "Personalize.calc_history"
 # Create a structured formatter
 structured_formatter = StructuredFormatter()
 
-# Create Loki handler with structured formatter
-loki_handler = logging_loki.LokiHandler(
-    url=settings.Loki_Url,
-    tags={"app_name": "personalization", "environment": getattr(settings, "Environment", "dev")},
-    version="1",
-)
-loki_handler.setFormatter(structured_formatter)
+# Create Loki handler only if URL is configured
+loki_handler = None
+if settings.Loki_Url:
+    loki_handler = logging_loki.LokiHandler(
+        url=settings.Loki_Url,
+        tags={"app_name": "personalization", "environment": getattr(settings, "Environment", "dev")},
+        version="1",
+    )
+    loki_handler.setFormatter(structured_formatter)
 
 
 class LocalQueueHandler(QueueHandler):
@@ -62,7 +65,12 @@ queue_handler.addFilter(ContextInjectingFilter())
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(structured_formatter)
 
-listener = QueueListener(log_queue, stream_handler, loki_handler)
+# Only add loki_handler if it was successfully created
+listener_handlers = [stream_handler]
+if loki_handler is not None:
+    listener_handlers.append(loki_handler)
+
+listener = QueueListener(log_queue, *listener_handlers)
 listener.start()
 
 # Configure root logger
@@ -135,6 +143,11 @@ async def consume_rabbitmq():
 # --- FastAPI Lifespan Management ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup: Connect to MongoDB and fetch setup data
+    await init_db()
+    await DIContainer.get_mcc_service().initialize()
+    await DIContainer.get_recommendation_core_service().initialize()
+
     if settings.RabbitMQ_Enabled:
         # Startup: Launch the RabbitMQ consumer as a background task
         task = asyncio.create_task(consume_rabbitmq())
@@ -144,8 +157,10 @@ async def lifespan(app: FastAPI):
     else:
         yield
 
+    # Shutdown
     client = DIContainer.get_open_finance_client()
     await client.close_client()  # Ensure the HTTP client is properly closed on shutdown
+    await close_db()
     listener.stop()  # Gracefully stop the logging queue listener
 
 

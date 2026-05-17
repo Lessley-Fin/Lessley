@@ -50,6 +50,7 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
       ME_CONFIG_BASICAUTH_USERNAME: ${DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${DB_PASS}
+      ME_CONFIG_REQUEST_SIZE: ${DB_FILE_LIMIT_SIZE}
     depends_on:
       - mongodb
 
@@ -180,7 +181,8 @@ services:
       - PYTHONUNBUFFERED=1
       - ASPNETCORE_ENVIRONMENT=Development
       - RabbitMQ_Enabled=False
-      - ConnectionStrings_Rabbit=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+      - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+      - ConnectionStrings_MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
