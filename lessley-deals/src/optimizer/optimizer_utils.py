@@ -1,3 +1,4 @@
+import argparse
 import json
 from bidi.algorithm import get_display
 
@@ -98,35 +99,36 @@ def get_best_deals_for_store(file_path, target_store_id, cart_total, cart_quanti
 # EXECUTING AND PRINTING THE RESULTS
 # ==========================================
 if __name__ == "__main__":
-    # --- Configuration ---
+    parser = argparse.ArgumentParser(description="Find best deals for a store.")
+    parser.add_argument("store_id", help="The target store_id to search deals for")
+    parser.add_argument("cart_total", type=float, help="Total cart value in ILS")
+    args = parser.parse_args()
+
+    #terminal x store id - 019d209bd92a_e3cb71c9a52ce477
+    #fox group store id - 019d20b5f157_c35408646278afc0
     JSON_FILE_PATH = "data/deals.json"
-    STORE_TO_SEARCH = "019d20b5f157_c35408646278afc0" #קבוצת פוקס
-    MY_CART_TOTAL = 150
     MY_CART_QUANTITY = 1
 
-    print(f"--- Searching deals for Store: {STORE_TO_SEARCH} ---")
-    print(f"Cart Total: {MY_CART_TOTAL} | Items: {MY_CART_QUANTITY}\n")
+    print(f"--- Searching deals for Store: {args.store_id} ---")
+    print(f"Cart Total: {args.cart_total} | Items: {MY_CART_QUANTITY}\n")
 
-    # Run the main function
     sorted_deals = get_best_deals_for_store(
-        file_path=JSON_FILE_PATH, 
-        target_store_id=STORE_TO_SEARCH, 
-        cart_total=MY_CART_TOTAL, 
-        cart_quantity=MY_CART_QUANTITY
+        file_path=JSON_FILE_PATH,
+        target_store_id=args.store_id,
+        cart_total=args.cart_total,
+        cart_quantity=MY_CART_QUANTITY,
     )
 
-    # Print from best to worst
     for index, deal in enumerate(sorted_deals):
         rank = index + 1
-        description = get_display(deal.get("description", "Unnamed Deal"))
+        description = get_display(deal.get("title") or deal.get("deal_description", "Unnamed Deal"))
         saved = deal.get("_calculated_savings", 0)
-        final_price = deal.get("_final_price", MY_CART_TOTAL)
-        
-        # Formatting the output nicely
-        print(f"#{rank}: {description}")
+        final_price = deal.get("_final_price", args.cart_total)
+
+        print(f"#{rank}: {description} [{deal.get('id', 'N/A')}]")
         print(f"    You Save:    {saved:.2f}")
         print(f"    Final Price: {final_price:.2f}")
-        
+
         if saved == 0:
             print("    (Did not qualify for this deal or it is inactive)")
         print("-" * 40)
