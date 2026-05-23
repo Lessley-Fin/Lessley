@@ -2,34 +2,15 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sys
 from typing import List, Literal
 
 from dotenv import load_dotenv
-
-from openai import OpenAI
 from pydantic import BaseModel
 
+from lessley_deals.enrichment.llm_client import _get_client
+
 logger = logging.getLogger(__name__)
-
-
-_client: OpenAI | None = None
-
-
-def _get_client() -> OpenAI:
-    global _client
-    if _client is None:
-        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OpenAI_ApiKey") or ""
-        if not api_key:
-            raise RuntimeError(
-                "No API key found. Set OPENAI_API_KEY (or OpenAI_ApiKey) in your .env file."
-            )
-        _client = OpenAI(
-            base_url="https://models.inference.ai.azure.com/",
-            api_key=api_key,
-        )
-    return _client
 
 
 # ---------------------------------------------------------------------------
@@ -204,8 +185,9 @@ def parse_deal_constraints(deal_terms: str) -> DealConstraints:
     """Parse Hebrew deal terms and conditions into structured constraint data."""
     logger.debug("Parsing deal constraints (%d chars)", len(deal_terms))
 
-    completion = _get_client().beta.chat.completions.parse(
-        model="gpt-4o-mini",
+    client, model = _get_client()
+    completion = client.beta.chat.completions.parse(
+        model=model,
         messages=[
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": deal_terms},

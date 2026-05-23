@@ -4,6 +4,7 @@ import logging
 import os
 from typing import List, Literal
 
+import httpx
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
@@ -11,21 +12,52 @@ logger = logging.getLogger(__name__)
 
 
 _client: OpenAI | None = None
+_model_name: str | None = None
 
 
-def _get_client() -> OpenAI:
-    global _client
-    if _client is None:
-        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OpenAI_ApiKey") or ""
-        if not api_key:
-            raise RuntimeError(
-                "No API key found. Set OPENAI_API_KEY (or OpenAI_ApiKey) in your .env file."
-            )
-        _client = OpenAI(
-            base_url="https://models.inference.ai.azure.com/",
-            api_key=api_key,
+def _build_college_client() -> tuple[OpenAI, str]:
+    base_url = os.environ["COLLEGE_API_BASE"]
+    model_host = os.environ["COLLEGE_MODEL_HOST"]
+    model_name = os.environ["COLLEGE_MODEL_NAME"]
+    api_key = os.environ.get("COLLEGE_API_KEY") or "not-needed"
+
+    # IP-based HTTPS with self-signed cert + Run:AI ingress requires Host header routing.
+    http_client = httpx.Client(
+        verify=False,
+        headers={"Host": model_host},
+        timeout=httpx.Timeout(120.0, connect=10.0),
+    )
+    client = OpenAI(base_url=base_url, api_key=api_key, http_client=http_client)
+    return client, model_name
+
+
+def _build_azure_client() -> tuple[OpenAI, str]:
+    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OpenAI_ApiKey") or ""
+    if not api_key:
+        raise RuntimeError(
+            "No API key found. Set OPENAI_API_KEY (or OpenAI_ApiKey) in your .env file."
         )
-    return _client
+    client = OpenAI(
+        base_url="https://models.inference.ai.azure.com/",
+        api_key=api_key,
+    )
+    return client, "gpt-4o-mini"
+
+
+def _get_client() -> tuple[OpenAI, str]:
+    """Return (client, model_name) tuple. Provider selected via LLM_PROVIDER env."""
+    global _client, _model_name
+    if _client is None:
+        provider = (os.environ.get("LLM_PROVIDER") or "college").lower()
+        if provider == "college":
+            _client, _model_name = _build_college_client()
+        elif provider == "azure":
+            _client, _model_name = _build_azure_client()
+        else:
+            raise RuntimeError(f"Unknown LLM_PROVIDER={provider!r} (expected 'college' or 'azure')")
+        logger.info("LLM client initialized: provider=%s model=%s", provider, _model_name)
+    assert _model_name is not None
+    return _client, _model_name
 
 
 class StoreCategory(BaseModel):
@@ -44,8 +76,9 @@ def get_store_category(store_name: str, store_url: str | None = None) -> StoreCa
     if store_url:
         user_content += f", store_url={store_url!r}"
 
-    completion = _get_client().beta.chat.completions.parse(
-        model="gpt-4o-mini",
+    client, model = _get_client()
+    completion = client.beta.chat.completions.parse(
+        model=model,
         messages=[
             {
                 "role": "system",
