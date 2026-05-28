@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-playwright"
+      ]
+    },
+    "mongodb": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mongodb-js/mcp-server",
+        "mongodb://localhost:27017/"
+      ]
+    },
+    "rabbitmq": {
+      "command": "uvx",
+      "args": [
+        "amq-mcp-server-rabbitmq@latest",
+        "--allow-mutative-tools"
+      ],
+      "env": {
+        "RABBITMQ_URL": "http://localhost:15672",
+        "RABBITMQ_USER": "<REPLACE_USERNAME_HERE>",
+        "RABBITMQ_PASSWORD": "<REPLACE_PASSWORD_HERE>"
+      }
+    },
+    "local-logs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./logs"
+      ]
+    }
+  }
+}
