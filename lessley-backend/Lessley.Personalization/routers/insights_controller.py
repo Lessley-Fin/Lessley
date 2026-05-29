@@ -205,3 +205,70 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
             },
         )
         raise
+
+
+@router.get("/missed-savings")
+async def calculate_missed_savings(request: Request, req: InsightsCalcRequests = Query()):
+    """
+    Triggers the calculation of missed savings opportunities based on user transactions and available deals.
+    Analyzes if the user could have received better discounts at alternative stores.
+    """
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {
+                "user_id": req.user_id,
+                "time_filter": req.time_filter,
+                "days": req.days,
+                "use_mock": req.use_mock,
+                "method": request.method,
+                "endpoint": request.url.path,
+            },
+        },
+    )
+
+    try:
+        # Await the async service call
+        service = DIContainer.get_insights_service()
+        missed_savings = await service.calculate_missed_savings_async(
+            req.user_id, req.time_filter, req.days, req.use_mock
+        )
+
+        response_time_ms = (time.time() - start_time) * 1000
+
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "user_id": req.user_id,
+                    "time_filter": req.time_filter,
+                    "days": req.days,
+                    "use_mock": req.use_mock,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "record_count": len(missed_savings),
+                },
+            },
+        )
+
+        return PaginatedResponse(status="success", data=missed_savings, count=len(missed_savings))
+
+    except Exception as e:
+        logger.error(
+            f"Error calculating missed savings: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {
+                    "user_id": req.user_id,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
+            },
+        )
+        raise

@@ -63,3 +63,29 @@ class DealRecommendationResponseSchema(BaseModel):
     is_recommended: bool
     fit_score: float
     matching_mcc_codes: list[int]
+
+
+class MissedStoreSchema(BaseModel):
+    """Schema for a store with alternative discount."""
+
+    store_id: str = Field(..., description="The store ID")
+    store_name: str = Field(..., description="The store name")
+
+
+class MissedStoreDiscountSchema(BaseModel):
+    """Schema for alternative stores with active discounts for a given club."""
+
+    club_id: str = Field(..., description="The club ID offering the discount")
+    missed_store: list[MissedStoreSchema] = Field(..., description="List of stores with active discounts in this club")
+    store_count: int = Field(..., description="Total count of stores with discounts in this club")
+
+
+class TransactionInsightSchema(BaseModel):
+    """Schema for a single transaction's missed savings insight."""
+
+    transaction_id: str = Field(..., description="Unique transaction identifier")
+    had_discount: bool = Field(..., description="Whether the transaction's store had an active deal")
+    missed_store_discont: list[MissedStoreDiscountSchema] = Field(
+        default_factory=list,
+        description="List of alternative stores grouped by club where better deals were available",
+    )

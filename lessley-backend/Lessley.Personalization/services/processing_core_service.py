@@ -1,18 +1,35 @@
+import logging
+from typing import Dict, List
 import pandas as pd
+
 from .utils.data_frame_builder import DataFrameBuilder
 from .utils.normalize_rows import normalize_amount_spent, normalize_merchant_name
 from models.transaction import Transaction
-
+from models.db.entities import Deal, Store, Club
+from routers.responses import (
+    TransactionInsightSchema,
+    MissedStoreDiscountSchema,
+    MissedStoreSchema,
+)
 
 from services.mcc_service import MccService
 from config.constants import LIMITS
+
+logger = logging.getLogger(__name__)
 
 
 class ProcessingCoreService:
     def __init__(self, mcc_service: MccService):
         self.mcc_service = mcc_service  # Inject the MCC service dependency
+        self._deals_dict: Dict[str, List[Deal]] = {}  # {store_id: [deals]}
+        self._stores_dict: Dict[str, Store] = {}  # {store_id: store}
+        self._stores_by_mcc: Dict[int, List[Store]] = {}  # {mcc_code: [stores]}
+        self._clubs_dict: Dict[str, Club] = {}  # {club_id: club}
+        self._deals_loaded = False
 
-    def get_top_spending_categories(self, transactions: list[Transaction], limit: int = LIMITS.TOP_CATEGORIES) -> list[Transaction]:
+    def get_top_spending_categories(
+        self, transactions: list[Transaction], limit: int = LIMITS.TOP_CATEGORIES
+    ) -> list[Transaction]:
         """
         Analyzes raw Open Finance JSON transactions and returns the top spending categories by total spend.
 
@@ -199,3 +216,344 @@ class ProcessingCoreService:
                 limit=limit,
             )
         )
+
+    async def _load_deals_and_stores_async(self) -> None:
+        """
+        Pre-load deals, stores, and clubs from MongoDB into memory dictionaries for efficient lookups.
+        Indexes stores by: store_id, normalized_name, and MCC codes.
+        Indexes deals by: store_id.
+        """
+        if self._deals_loaded:
+            logger.debug("Deals and stores already loaded, skipping reload")
+            return
+
+        logger.info("Loading deals, stores, and clubs from MongoDB...")
+        try:
+            # Load all stores
+            stores_list = await Store.find_all().to_list()
+            self._stores_dict = {store.store_id: store for store in stores_list}
+            self._stores_by_normalized_name = {store.name_forms.normalized: store for store in stores_list}
+
+            # Index stores by MCC codes for fast lookup
+            for store in stores_list:
+                for mcc_code in store.metadata.mcc_codes:
+                    if mcc_code not in self._stores_by_mcc:
+                        self._stores_by_mcc[mcc_code] = []
+                    self._stores_by_mcc[mcc_code].append(store)
+
+            logger.info(
+                "Stores loaded and indexed",
+                extra={
+                    "reason": "Data preparation for missed savings analysis",
+                    "extra_data": {
+                        "store_count": len(self._stores_dict),
+                        "mcc_unique_codes": len(self._stores_by_mcc),
+                    },
+                },
+            )
+
+            # Load all deals
+            deals_list = await Deal.find_all().to_list()
+            for deal in deals_list:
+                if deal.store_id not in self._deals_dict:
+                    self._deals_dict[deal.store_id] = []
+                self._deals_dict[deal.store_id].append(deal)
+
+            logger.info(
+                "Deals loaded and indexed",
+                extra={
+                    "reason": "Data preparation for missed savings analysis",
+                    "extra_data": {
+                        "deal_count": len(deals_list),
+                        "stores_with_deals": len(self._deals_dict),
+                    },
+                },
+            )
+
+            # Load all clubs
+            clubs_list = await Club.find_all().to_list()
+            self._clubs_dict = {club.club_id: club for club in clubs_list}
+
+            logger.info(
+                "Clubs loaded",
+                extra={
+                    "reason": "Data preparation for missed savings analysis",
+                    "extra_data": {"club_count": len(self._clubs_dict)},
+                },
+            )
+
+            self._deals_loaded = True
+        except Exception as e:
+            logger.error(
+                f"Error loading deals and stores from MongoDB: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Database query failed",
+                    "extra_data": {"error_type": type(e).__name__},
+                },
+            )
+            raise
+
+    def _find_store_by_merchant_name(self, merchant_name: str) -> Store | None:
+        """
+        Find a store by merchant name using fuzzy matching against normalized store names.
+
+        Args:
+            merchant_name: Transaction merchant name (e.g., "STARBUCKS COFFEE #123")
+
+        Returns:
+            Store object if match found (>80% similarity), None otherwise
+        """
+        if not merchant_name or not merchant_name.strip():
+            return None
+
+        merchant_normalized = normalize_merchant_name({"merchantName": merchant_name})
+        best_match = None
+        best_score = 0
+        fuzzy_threshold = 80  # 80% similarity threshold
+
+        # Try exact match first (fastest)
+        if merchant_normalized in self._stores_by_normalized_name:
+            return self._stores_by_normalized_name[merchant_normalized]
+
+        # Fuzzy match against all normalized store names
+        for store_normalized_name, store in self._stores_by_normalized_name.items():
+            # Use token_set_ratio for better matching of partial names
+            score = fuzz.token_set_ratio(merchant_normalized, store_normalized_name)
+            if score > best_score:
+                best_score = score
+                best_match = store if score >= fuzzy_threshold else None
+
+        if best_match:
+            logger.debug(
+                f"Merchant fuzzy match found: '{merchant_name}' -> '{best_match.name}'",
+                extra={
+                    "reason": "Merchant-store mapping",
+                    "extra_data": {"match_score": best_score, "store_id": best_match.store_id},
+                },
+            )
+        else:
+            logger.debug(
+                f"No merchant match found for: '{merchant_name}'",
+                extra={
+                    "reason": "Merchant lookup failed",
+                    "extra_data": {"best_score": best_score},
+                },
+            )
+
+        return best_match
+
+    def _has_active_deal(self, store_id: str) -> bool:
+        """
+        Check if a store has any active deals.
+
+        Args:
+            store_id: The store ID to check
+
+        Returns:
+            True if store has active deals, False otherwise
+        """
+        return store_id in self._deals_dict and len(self._deals_dict[store_id]) > 0
+
+    def _find_alternative_stores_by_mcc(
+        self, mcc_code: str | int, exclude_store_id: str = None
+    ) -> Dict[str, List[Store]]:
+        """
+        Find alternative stores with active deals for a given MCC code.
+        Groups stores by club.
+
+        Args:
+            mcc_code: The MCC code to search for
+            exclude_store_id: Store ID to exclude from results (the original merchant)
+
+        Returns:
+            Dictionary mapping club_id -> list of stores with deals (max 10 per club)
+        """
+        if not mcc_code:
+            return {}
+
+        try:
+            mcc_int = int(mcc_code)
+        except (ValueError, TypeError):
+            logger.debug(
+                f"Invalid MCC code for alternative store search: {mcc_code}",
+                extra={
+                    "reason": "Data validation",
+                    "extra_data": {"mcc_code": str(mcc_code)},
+                },
+            )
+            return {}
+
+        # Find all stores with this MCC code
+        stores_with_mcc = self._stores_by_mcc.get(mcc_int, [])
+
+        # Filter to only stores with active deals, excluding the original merchant
+        alternative_stores = [
+            store
+            for store in stores_with_mcc
+            if store.store_id != exclude_store_id and self._has_active_deal(store.store_id)
+        ]
+
+        if not alternative_stores:
+            return {}
+
+        # Group alternative stores by club (max 10 per club)
+        stores_by_club: Dict[str, List[Store]] = {}
+        for club_id, club in self._clubs_dict.items():
+            club_stores = [store for store in alternative_stores if store.store_id in (club.stores or [])]
+            if club_stores:
+                # Cap at 10 stores per club
+                stores_by_club[club_id] = club_stores[:10]
+
+        return stores_by_club
+
+    def _build_missed_store_discount_schemas(
+        self, stores_by_club: Dict[str, List[Store]]
+    ) -> List[MissedStoreDiscountSchema]:
+        """
+        Build MissedStoreDiscountSchema objects from stores grouped by club.
+
+        Args:
+            stores_by_club: Dictionary mapping club_id -> list of Store objects
+
+        Returns:
+            List of MissedStoreDiscountSchema objects
+        """
+        missed_store_discounts = []
+
+        for club_id, stores in stores_by_club.items():
+            club = self._clubs_dict.get(club_id)
+            if not club:
+                continue
+
+            missed_stores = [MissedStoreSchema(store_id=store.store_id, store_name=store.name) for store in stores]
+
+            if missed_stores:
+                missed_store_discounts.append(
+                    MissedStoreDiscountSchema(
+                        club_id=club_id,
+                        missed_store=missed_stores,
+                        store_count=len(missed_stores),
+                    )
+                )
+
+        return missed_store_discounts
+
+    async def calculate_missed_savings_async(self, transactions: list[Transaction]) -> list[TransactionInsightSchema]:
+        """
+        Analyzes user transactions to identify missed savings opportunities.
+        For each transaction, checks if the user had an active deal at that store.
+        If not, identifies alternative stores with active deals for the same MCC category.
+
+        Algorithm:
+        1. Load deals, stores, clubs from MongoDB (one-time, cached)
+        2. For each transaction:
+           a. Find the merchant store by fuzzy matching merchant name
+           b. Check if store has active deals
+           c. If no deal, find alternative stores with matching MCC codes and active deals
+           d. Group alternatives by club (max 10 per club)
+           e. Build and return TransactionInsightSchema
+
+        Args:
+            transactions: List of transaction objects to analyze
+
+        Returns:
+            List of TransactionInsightSchema objects with missed savings analysis
+        """
+        start_count = len(transactions)
+        logger.info(
+            "Missed savings analysis started",
+            extra={
+                "reason": "Batch transaction processing",
+                "extra_data": {"transaction_count": start_count},
+            },
+        )
+
+        if not transactions:
+            return []
+
+        try:
+            # Load data once (cached after first load)
+            await self._load_deals_and_stores_async()
+
+            insights: List[TransactionInsightSchema] = []
+            processed_count = 0
+            matched_with_deal = 0
+            alternatives_found = 0
+
+            for transaction in transactions:
+                # Skip transactions with missing critical data
+                if not transaction.id or not transaction.merchantName or not transaction.categoryCode:
+                    logger.debug(
+                        f"Skipping transaction with missing data",
+                        extra={
+                            "reason": "Data validation",
+                            "extra_data": {
+                                "has_id": transaction.id is not None,
+                                "has_merchant": transaction.merchantName is not None,
+                                "has_mcc": transaction.categoryCode is not None,
+                            },
+                        },
+                    )
+                    continue
+
+                processed_count += 1
+
+                # Step 1: Find merchant store by fuzzy matching
+                merchant_store = self._find_store_by_merchant_name(transaction.merchantName)
+                had_discount = False
+                missed_stores_list: List[MissedStoreDiscountSchema] = []
+
+                # Step 2: Check if merchant store has active deal
+                if merchant_store and self._has_active_deal(merchant_store.store_id):
+                    had_discount = True
+                    matched_with_deal += 1
+                else:
+                    # Step 3: Find alternative stores with matching MCC code
+                    exclude_store = merchant_store.store_id if merchant_store else None
+                    stores_by_club = self._find_alternative_stores_by_mcc(
+                        transaction.categoryCode, exclude_store_id=exclude_store
+                    )
+
+                    # Step 4: Build missed store discount schemas
+                    if stores_by_club:
+                        missed_stores_list = self._build_missed_store_discount_schemas(stores_by_club)
+                        alternatives_found += len(missed_stores_list)
+
+                # Step 5: Build transaction insight
+                insight = TransactionInsightSchema(
+                    transaction_id=transaction.id,
+                    had_discount=had_discount,
+                    missed_store_discont=missed_stores_list,
+                )
+                insights.append(insight)
+
+            logger.info(
+                "Missed savings analysis completed",
+                extra={
+                    "reason": "Batch processing complete",
+                    "extra_data": {
+                        "transaction_count": start_count,
+                        "processed_count": processed_count,
+                        "matched_with_deal": matched_with_deal,
+                        "alternatives_found": alternatives_found,
+                        "insights_returned": len(insights),
+                    },
+                },
+            )
+
+            return insights
+
+        except Exception as e:
+            logger.error(
+                f"Error in calculate_missed_savings_async: {str(e)}",
+                exc_info=e,
+                extra={
+                    "reason": "Service execution failure",
+                    "extra_data": {
+                        "transaction_count": len(transactions),
+                        "error_type": type(e).__name__,
+                    },
+                },
+            )
+            raise
