@@ -152,8 +152,7 @@ class InsightsService:
     ) -> list[TransactionInsightSchema]:
         """
         Analyzes user transactions to identify missed savings opportunities.
-        For each transaction, checks if the user had an active deal at that store.
-        If not, identifies alternative stores with active deals for the same MCC category.
+        For each transaction, identifies alternative stores with active deals for the same MCC category.
 
         Args:
             user_id: User ID for transaction retrieval
