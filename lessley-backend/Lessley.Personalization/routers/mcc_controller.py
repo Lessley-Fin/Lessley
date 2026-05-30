@@ -87,10 +87,10 @@ async def get_mcc_by_id(
     try:
         service = DIContainer.get_mcc_service()
         mcc = service.get_mcc_by_id(category_code)
-        
+
         response_time_ms = (time.time() - start_time) * 1000
 
-        if mcc == "Unknown Category":
+        if mcc == "N/A":
             logger.warning(
                 f"MCC code {category_code} not found",
                 extra={
