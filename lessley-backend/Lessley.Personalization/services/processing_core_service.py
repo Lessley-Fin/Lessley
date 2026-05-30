@@ -64,7 +64,7 @@ class ProcessingCoreService:
             .apply_row_logic(
                 "category",
                 lambda row: (
-                    row['category.sub'] if pd.notna(row.get('category.sub')) and row.get('category.sub') else "N/A"
+                    row["category.sub"] if pd.notna(row.get("category.sub")) and row.get("category.sub") else "N/A"
                 ),
             )
             # Calculate amount_spent with fallback logic
@@ -457,12 +457,10 @@ class ProcessingCoreService:
                     transaction_id=transaction.id,
                     had_discount=had_discount,
                     missed_store_discont=missed_stores_list,
-                    store_name=transaction.merchantName or "Unknown Store",
+                    store_name=transaction.merchantName or "N/A",
                     mcc_code=transaction.categoryCode,
                     mcc_description=(
-                        transaction.category.sub
-                        if transaction.category and transaction.category.sub
-                        else "N/A"
+                        transaction.category.sub if transaction.category and transaction.category.sub else "N/A"
                     ),
                     amount=(
                         transaction.amount.chargedAmount.amount

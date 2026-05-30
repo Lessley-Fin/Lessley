@@ -18,7 +18,7 @@ class MccService:
             mcc_codes = await MccCode.find_all().to_list()
             for item in mcc_codes:
                 mcc_code_val = item.mcc
-                description = item.category or "Unknown Category"
+                description = item.category or "N/A"
                 if mcc_code_val:
                     self._mcc_map[str(mcc_code_val)] = description
 
@@ -37,4 +37,4 @@ class MccService:
         """
         Returns the clean, human-readable description for an MCC.
         """
-        return self._mcc_map.get(str(category_code), "Unknown Category")
+        return self._mcc_map.get(str(category_code), "N/A")
