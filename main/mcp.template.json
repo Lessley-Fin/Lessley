@@ -1,39 +1,31 @@
 {
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-playwright"
-      ]
-    },
+  "servers": {
     "mongodb": {
+      "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
-        "@mongodb-js/mcp-server",
-        "mongodb://localhost:27017/"
+        "mongodb-mcp-server",
+        "mongodb://guest:guest@localhost:27017/?authSource=admin"
       ]
     },
     "rabbitmq": {
-      "command": "uvx",
+      "type": "stdio",
+      "command": "uv",
       "args": [
+        "tool",
+        "run",
+        "--with",
+        "fastmcp<2.14.0",
         "amq-mcp-server-rabbitmq@latest",
         "--allow-mutative-tools"
       ],
       "env": {
         "RABBITMQ_URL": "http://localhost:15672",
-        "RABBITMQ_USER": "<REPLACE_USERNAME_HERE>",
-        "RABBITMQ_PASSWORD": "<REPLACE_PASSWORD_HERE>"
+        "RABBITMQ_USER": "guest",
+        "RABBITMQ_PASSWORD": "guest"
       }
-    },
-    "local-logs": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "./logs"
-      ]
     }
-  }
+  },
+  "inputs": []
 }

@@ -65,7 +65,7 @@ class ProcessingCoreService:
                 "category",
                 lambda row: (
                     (
-                        f"{row['category.main']} - {row['category.sub']}"
+                        f"{row['category.sub']}"
                         if pd.notna(row["category.sub"]) and row["category.sub"]
                         else row["category.main"]
                     )
@@ -464,7 +464,9 @@ class ProcessingCoreService:
                     missed_store_discont=missed_stores_list,
                     store_name=transaction.merchantName or "Unknown Store",
                     mcc_code=transaction.categoryCode,
-                    mcc_description=transaction.category.main
+                    mcc_description=transaction.category.sub
+                    if transaction.category and transaction.category.sub
+                    else transaction.category.main
                     if transaction.category and transaction.category.main
                     else "Unknown Category",
                     amount=transaction.amount.chargedAmount.amount

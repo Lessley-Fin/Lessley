@@ -37,11 +37,7 @@ class Deal(Document):
 class MccCode(Document):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     mcc: str
-    edited_description: str | None = None
-    combined_description: str | None = None
-    usda_description: str | None = None
-    irs_description: str | None = None
-    irs_reportable: str | None = None
+    category: str
 
     class Settings:
         name = "mcc_list"
