@@ -220,7 +220,7 @@ class ProcessingCoreService:
     async def _load_deals_and_stores_async(self) -> None:
         """
         Pre-load deals, stores, and clubs from MongoDB into memory dictionaries for efficient lookups.
-        Indexes stores by: store_id, normalized_name, and MCC codes.
+        Indexes stores by: store_id and MCC codes.
         Indexes deals by: store_id.
         """
         if self._deals_loaded:
@@ -232,7 +232,6 @@ class ProcessingCoreService:
             # Load all stores
             stores_list = await Store.find_all().to_list()
             self._stores_dict = {store.store_id: store for store in stores_list}
-            self._stores_by_normalized_name = {store.name_forms.normalized: store for store in stores_list}
 
             # Index stores by MCC codes for fast lookup
             for store in stores_list:
@@ -293,55 +292,6 @@ class ProcessingCoreService:
                 },
             )
             raise
-
-    def _find_store_by_merchant_name(self, merchant_name: str) -> Store | None:
-        """
-        Find a store by merchant name using fuzzy matching against normalized store names.
-
-        Args:
-            merchant_name: Transaction merchant name (e.g., "STARBUCKS COFFEE #123")
-
-        Returns:
-            Store object if match found (>80% similarity), None otherwise
-        """
-        if not merchant_name or not merchant_name.strip():
-            return None
-
-        merchant_normalized = normalize_merchant_name({"merchantName": merchant_name})
-        best_match = None
-        best_score = 0
-        fuzzy_threshold = 80  # 80% similarity threshold
-
-        # Try exact match first (fastest)
-        if merchant_normalized in self._stores_by_normalized_name:
-            return self._stores_by_normalized_name[merchant_normalized]
-
-        # Fuzzy match against all normalized store names
-        for store_normalized_name, store in self._stores_by_normalized_name.items():
-            # Use token_set_ratio for better matching of partial names
-            score = fuzz.token_set_ratio(merchant_normalized, store_normalized_name)
-            if score > best_score:
-                best_score = score
-                best_match = store if score >= fuzzy_threshold else None
-
-        if best_match:
-            logger.debug(
-                f"Merchant fuzzy match found: '{merchant_name}' -> '{best_match.name}'",
-                extra={
-                    "reason": "Merchant-store mapping",
-                    "extra_data": {"match_score": best_score, "store_id": best_match.store_id},
-                },
-            )
-        else:
-            logger.debug(
-                f"No merchant match found for: '{merchant_name}'",
-                extra={
-                    "reason": "Merchant lookup failed",
-                    "extra_data": {"best_score": best_score},
-                },
-            )
-
-        return best_match
 
     def _has_active_deal(self, store_id: str) -> bool:
         """
@@ -442,17 +392,15 @@ class ProcessingCoreService:
     async def calculate_missed_savings_async(self, transactions: list[Transaction]) -> list[TransactionInsightSchema]:
         """
         Analyzes user transactions to identify missed savings opportunities.
-        For each transaction, checks if the user had an active deal at that store.
-        If not, identifies alternative stores with active deals for the same MCC category.
+        For each transaction, finds deals available for stores matching the transaction's MCC code.
 
         Algorithm:
         1. Load deals, stores, clubs from MongoDB (one-time, cached)
-        2. For each transaction:
-           a. Find the merchant store by fuzzy matching merchant name
-           b. Check if store has active deals
-           c. If no deal, find alternative stores with matching MCC codes and active deals
-           d. Group alternatives by club (max 10 per club)
-           e. Build and return TransactionInsightSchema
+        2. For each transaction with MCC code X:
+           a. Find all stores with MCC code X that have active deals
+           b. had_discount = true if any deal exists for MCC X
+           c. Group alternative stores by club (max 10 per club)
+           d. Build and return TransactionInsightSchema
 
         Args:
             transactions: List of transaction objects to analyze
@@ -478,19 +426,18 @@ class ProcessingCoreService:
 
             insights: List[TransactionInsightSchema] = []
             processed_count = 0
-            matched_with_deal = 0
+            with_deals_found = 0
             alternatives_found = 0
 
             for transaction in transactions:
                 # Skip transactions with missing critical data
-                if not transaction.id or not transaction.merchantName or not transaction.categoryCode:
+                if not transaction.id or not transaction.categoryCode:
                     logger.debug(
-                        f"Skipping transaction with missing data",
+                        "Skipping transaction with missing data",
                         extra={
                             "reason": "Data validation",
                             "extra_data": {
                                 "has_id": transaction.id is not None,
-                                "has_merchant": transaction.merchantName is not None,
                                 "has_mcc": transaction.categoryCode is not None,
                             },
                         },
@@ -499,28 +446,18 @@ class ProcessingCoreService:
 
                 processed_count += 1
 
-                # Step 1: Find merchant store by fuzzy matching
-                merchant_store = self._find_store_by_merchant_name(transaction.merchantName)
-                had_discount = False
+                # Find all stores with matching MCC that have active deals
+                stores_by_club = self._find_alternative_stores_by_mcc(transaction.categoryCode)
+                had_discount = len(stores_by_club) > 0
                 missed_stores_list: List[MissedStoreDiscountSchema] = []
 
-                # Step 2: Check if merchant store has active deal
-                if merchant_store and self._has_active_deal(merchant_store.store_id):
-                    had_discount = True
-                    matched_with_deal += 1
-                else:
-                    # Step 3: Find alternative stores with matching MCC code
-                    exclude_store = merchant_store.store_id if merchant_store else None
-                    stores_by_club = self._find_alternative_stores_by_mcc(
-                        transaction.categoryCode, exclude_store_id=exclude_store
-                    )
+                # Build missed store discount schemas
+                if stores_by_club:
+                    missed_stores_list = self._build_missed_store_discount_schemas(stores_by_club)
+                    with_deals_found += 1
+                    alternatives_found += sum(schema.store_count for schema in missed_stores_list)
 
-                    # Step 4: Build missed store discount schemas
-                    if stores_by_club:
-                        missed_stores_list = self._build_missed_store_discount_schemas(stores_by_club)
-                        alternatives_found += len(missed_stores_list)
-
-                # Step 5: Build transaction insight
+                # Build transaction insight
                 insight = TransactionInsightSchema(
                     transaction_id=transaction.id,
                     had_discount=had_discount,
@@ -535,8 +472,8 @@ class ProcessingCoreService:
                     "extra_data": {
                         "transaction_count": start_count,
                         "processed_count": processed_count,
-                        "matched_with_deal": matched_with_deal,
-                        "alternatives_found": alternatives_found,
+                        "transactions_with_deals": with_deals_found,
+                        "total_alternative_stores": alternatives_found,
                         "insights_returned": len(insights),
                     },
                 },

@@ -1,11 +1,10 @@
 """
 Integration test for calculate_missed_savings_async function.
-This test validates the core logic without requiring a MongoDB connection.
+Tests the simplified MCC-only deal discovery logic.
 """
 
 import asyncio
-from datetime import datetime
-from unittest.mock import MagicMock, AsyncMock, patch, PropertyMock
+from unittest.mock import MagicMock, AsyncMock, patch
 from models.transaction import Transaction, TransactionAmount, AmountDetail
 from services.processing_core_service import ProcessingCoreService
 from services.mcc_service import MccService
@@ -21,25 +20,24 @@ async def test_calculate_missed_savings():
     # Create service instance
     service = ProcessingCoreService(mock_mcc_service)
 
-    # Create mock data with proper attributes
-    now = datetime.now()
-
     # Create mock Store objects
     store1 = MagicMock()
     store1.store_id = "store_1"
     store1.name = "Starbucks"
-    store1.name_forms = MagicMock()
-    store1.name_forms.normalized = "starbucks"
     store1.metadata = MagicMock()
     store1.metadata.mcc_codes = [5462]  # Coffee shop MCC
 
     store2 = MagicMock()
     store2.store_id = "store_2"
     store2.name = "Costa Coffee"
-    store2.name_forms = MagicMock()
-    store2.name_forms.normalized = "costa coffee"
     store2.metadata = MagicMock()
     store2.metadata.mcc_codes = [5462]  # Same MCC
+
+    store3 = MagicMock()
+    store3.store_id = "store_3"
+    store3.name = "McDonald's"
+    store3.metadata = MagicMock()
+    store3.metadata.mcc_codes = [5814]  # Different MCC
 
     # Create mock Deal objects
     deal1 = MagicMock()
@@ -63,7 +61,7 @@ async def test_calculate_missed_savings():
     club2.name = "Premium Club"
     club2.stores = ["store_2"]
 
-    # Create real Transaction object
+    # Create real Transaction object with MCC 5462 (coffee shop)
     transaction = Transaction(
         id="txn_1",
         merchantName="STARBUCKS COFFEE #123",
@@ -79,7 +77,7 @@ async def test_calculate_missed_savings():
     ):
         # Setup async mock returns
         mock_stores_list = AsyncMock()
-        mock_stores_list.to_list = AsyncMock(return_value=[store1, store2])
+        mock_stores_list.to_list = AsyncMock(return_value=[store1, store2, store3])
         mock_stores.return_value = mock_stores_list
 
         mock_deals_list = AsyncMock()
@@ -94,20 +92,25 @@ async def test_calculate_missed_savings():
         insights = await service.calculate_missed_savings_async([transaction])
 
         # Verify results
-        print(f"\n✓ Test Logic Executed Successfully!")
+        print("\n✓ Test Logic Executed Successfully!")
         print(f"  - Insights generated: {len(insights)}")
         if insights:
             print(f"  - Transaction ID: {insights[0].transaction_id}")
             print(f"  - Had discount: {insights[0].had_discount}")
             print(f"  - Missed store discounts: {len(insights[0].missed_store_discont)} club(s)")
+            for club_discount in insights[0].missed_store_discont:
+                print(f"    - Club {club_discount.club_id}: {club_discount.store_count} store(s)")
 
-        # Basic assertions
+        # Verify assertions
         assert len(insights) == 1, f"Expected 1 insight, got {len(insights)}"
         assert insights[0].transaction_id == "txn_1", "Transaction ID should match"
 
-        # The fuzzy match should find "starbucks" from "STARBUCKS COFFEE #123"
-        # and it should have a deal, so had_discount should be True
-        print(f"\n✓ All validation checks passed!")
+        # For MCC 5462, both store1 and store2 should be found (both have that MCC and deals)
+        # So had_discount should be True
+        assert insights[0].had_discount, "Should have found deals for MCC 5462"
+        assert len(insights[0].missed_store_discont) > 0, "Should have found alternative stores"
+
+        print("\n✓ All validation checks passed!")
         return True
 
 
