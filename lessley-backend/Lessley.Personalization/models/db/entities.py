@@ -27,7 +27,7 @@ class Deal(Document):
     scraped_at: datetime
     resolved_at: datetime | None = None
     title: str
-    deal_description: str
+    deal_description: str | None = None
     club_id: str
 
     class Settings:
