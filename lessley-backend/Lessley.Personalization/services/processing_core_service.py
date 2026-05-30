@@ -64,12 +64,7 @@ class ProcessingCoreService:
             .apply_row_logic(
                 "category",
                 lambda row: (
-                    (
-                        f"{row['category.sub']}"
-                        if pd.notna(row["category.sub"]) and row["category.sub"]
-                        else row["category.main"]
-                    )
-                    or "Uncategorized"
+                    row['category.sub'] if pd.notna(row.get('category.sub')) and row.get('category.sub') else "N/A"
                 ),
             )
             # Calculate amount_spent with fallback logic
@@ -464,18 +459,24 @@ class ProcessingCoreService:
                     missed_store_discont=missed_stores_list,
                     store_name=transaction.merchantName or "Unknown Store",
                     mcc_code=transaction.categoryCode,
-                    mcc_description=transaction.category.sub
-                    if transaction.category and transaction.category.sub
-                    else transaction.category.main
-                    if transaction.category and transaction.category.main
-                    else "Unknown Category",
-                    amount=transaction.amount.chargedAmount.amount
-                    if transaction.amount
-                    and transaction.amount.chargedAmount
-                    and transaction.amount.chargedAmount.amount is not None
-                    else transaction.amount.originalAmount.amount
-                    and transaction.amount.originalAmount
-                    and transaction.amount.originalAmount.amount is not None,
+                    mcc_description=(
+                        transaction.category.sub
+                        if transaction.category and transaction.category.sub
+                        else "N/A"
+                    ),
+                    amount=(
+                        transaction.amount.chargedAmount.amount
+                        if transaction.amount
+                        and transaction.amount.chargedAmount
+                        and transaction.amount.chargedAmount.amount is not None
+                        else (
+                            transaction.amount.originalAmount.amount
+                            if transaction.amount
+                            and transaction.amount.originalAmount
+                            and transaction.amount.originalAmount.amount is not None
+                            else 0.0
+                        )
+                    ),
                 )
                 insights.append(insight)
 
