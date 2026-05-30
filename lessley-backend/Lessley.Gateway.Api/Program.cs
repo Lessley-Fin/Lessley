@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
+using Lessley.Gateway.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,7 +65,11 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
+// SignalR & Connection Management
+builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
+
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCustomSwagger();
 
@@ -117,6 +122,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<Lessley.Gateway.Api.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();
 
