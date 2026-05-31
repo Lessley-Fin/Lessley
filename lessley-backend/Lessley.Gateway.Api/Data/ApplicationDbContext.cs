@@ -9,6 +9,7 @@ namespace Lessley.Gateway.Api.Data
     public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) 
         {
@@ -28,6 +29,7 @@ namespace Lessley.Gateway.Api.Data
             builder.Entity<IdentityUserLogin<string>>().ToCollection("user_logins");
             builder.Entity<IdentityRoleClaim<string>>().ToCollection("role_claims");
             builder.Entity<IdentityUserToken<string>>().ToCollection("user_tokens");
+            builder.Entity<Notification>().ToCollection("notifications");
         }
     }
 }

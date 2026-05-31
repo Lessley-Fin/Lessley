@@ -67,6 +67,7 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
 
 // SignalR & Connection Management
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
+builder.Services.AddScoped<INotificationStore, NotificationStore>();
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();

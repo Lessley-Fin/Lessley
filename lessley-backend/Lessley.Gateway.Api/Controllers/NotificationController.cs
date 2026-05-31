@@ -14,15 +14,18 @@ public class NotificationController : ControllerBase
 {
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IConnectionManager _connectionManager;
+    private readonly INotificationStore _notificationStore;
     private readonly ILogger<NotificationController> _logger;
 
     public NotificationController(
         IHubContext<NotificationHub> hubContext,
         IConnectionManager connectionManager,
+        INotificationStore notificationStore,
         ILogger<NotificationController> logger)
     {
         _hubContext = hubContext;
         _connectionManager = connectionManager;
+        _notificationStore = notificationStore;
         _logger = logger;
     }
 
@@ -41,10 +44,20 @@ public class NotificationController : ControllerBase
             return NotFound(new { error = $"User {userId} is not connected" });
         }
 
-        var payload = new { timestamp = DateTime.UtcNow, message = dto.Message, type = "notification" };
+        var sentAt  = DateTime.UtcNow;
+        var payload = new { timestamp = sentAt, message = dto.Message, type = "notification" };
 
         foreach (var connectionId in connections)
             await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveNotification", payload);
+
+        await _notificationStore.SaveAsync(new Notification
+        {
+            TargetId       = userId,
+            TargetType     = "user",
+            Message        = dto.Message,
+            SentAt         = sentAt,
+            RecipientCount = connections.Count,
+        });
 
         _logger.LogInformation("Notification sent to user {UserId} ({ConnectionCount} connections): {Message}",
             userId, connections.Count, dto.Message);
@@ -59,9 +72,19 @@ public class NotificationController : ControllerBase
         if (string.IsNullOrWhiteSpace(tag))
             return BadRequest(new { error = "Group tag is required" });
 
-        var payload = new { timestamp = DateTime.UtcNow, message = dto.Message, type = "group_notification", group = tag };
+        var sentAt  = DateTime.UtcNow;
+        var payload = new { timestamp = sentAt, message = dto.Message, type = "group_notification", group = tag };
 
         await _hubContext.Clients.Group(tag).SendAsync("ReceiveNotification", payload);
+
+        await _notificationStore.SaveAsync(new Notification
+        {
+            TargetId       = tag,
+            TargetType     = "group",
+            Message        = dto.Message,
+            SentAt         = sentAt,
+            RecipientCount = 0,
+        });
 
         _logger.LogInformation("Notification sent to group {Tag}: {Message}", tag, dto.Message);
 
@@ -72,19 +95,17 @@ public class NotificationController : ControllerBase
     public IActionResult GetUserConnectionStatus(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))
-        {
             return BadRequest(new { error = "User ID is required" });
-        }
 
         var isConnected = _connectionManager.HasConnections(userId);
         var connections = _connectionManager.GetConnections(userId).ToList();
 
         return Ok(new
         {
-            userId = userId,
-            isConnected = isConnected,
+            userId,
+            isConnected,
             connectionCount = connections.Count,
-            connectionIds = connections
+            connectionIds   = connections,
         });
     }
 }

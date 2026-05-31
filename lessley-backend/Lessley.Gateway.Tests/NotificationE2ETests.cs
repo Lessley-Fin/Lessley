@@ -4,9 +4,12 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Models;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 
@@ -43,8 +46,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
                 options.Transports = HttpTransportType.LongPolling;
                 // Route all traffic through the in-process test server
                 options.HttpMessageHandlerFactory = _ => _factory.Server.CreateHandler();
-                // Attach the user's JWT (SignalR reads it from ?access_token= for WS/SSE;
-                // for LongPolling the library puts it in the Authorization header)
+                // Attach the user's JWT
                 options.AccessTokenProvider = () => Task.FromResult<string?>(userToken);
             })
             .Build();
@@ -71,7 +73,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             // -----------------------------------------------------------------
-            // 3. Assert the same message arrives via the SignalR connection
+            // 3. Assert the message arrives via the SignalR connection
             // -----------------------------------------------------------------
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             timeout.Token.Register(() => received.TrySetCanceled());
@@ -80,6 +82,20 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
             Assert.Equal(message,        payload.GetProperty("message").GetString());
             Assert.Equal("notification", payload.GetProperty("type").GetString());
+
+            // -----------------------------------------------------------------
+            // 4. Assert the notification was persisted to the DB
+            // -----------------------------------------------------------------
+            using var scope = _factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var saved = await db.Notifications
+                .FirstOrDefaultAsync(n => n.TargetId == userId && n.Message == message);
+
+            Assert.NotNull(saved);
+            Assert.Equal("user",  saved.TargetType);
+            Assert.Equal(1,       saved.RecipientCount);
+            Assert.True(saved.SentAt > DateTime.UtcNow.AddMinutes(-1));
         }
         finally
         {

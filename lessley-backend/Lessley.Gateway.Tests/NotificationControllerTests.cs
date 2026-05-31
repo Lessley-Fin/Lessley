@@ -14,6 +14,7 @@ namespace Lessley.Gateway.Tests;
 public class NotificationControllerTests
 {
     private readonly Mock<IConnectionManager> _connectionManager = new();
+    private readonly Mock<INotificationStore> _notificationStore = new();
     // In ASP.NET Core 8, IHubClients.Client() returns ISingleClientProxy (extends IClientProxy),
     // while Group() returns the base IClientProxy.
     private readonly Mock<ISingleClientProxy> _singleClientProxy = new();
@@ -36,9 +37,14 @@ public class NotificationControllerTests
         _hubClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_groupProxy.Object);
         _hubContext.Setup(h => h.Clients).Returns(_hubClients.Object);
 
+        _notificationStore
+            .Setup(s => s.SaveAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
         _controller = new NotificationController(
             _hubContext.Object,
             _connectionManager.Object,
+            _notificationStore.Object,
             NullLogger<NotificationController>.Instance);
     }
 
@@ -64,6 +70,26 @@ public class NotificationControllerTests
     }
 
     [Fact]
+    public async Task SendToUser_UserHasConnections_SavesNotificationToStore()
+    {
+        _connectionManager
+            .Setup(m => m.GetConnections("user-1"))
+            .Returns(new[] { "conn-a" });
+
+        await _controller.SendToUser("user-1", new SendNotificationDto("Hello"));
+
+        _notificationStore.Verify(
+            s => s.SaveAsync(
+                It.Is<Notification>(n =>
+                    n.TargetId       == "user-1" &&
+                    n.TargetType     == "user"   &&
+                    n.Message        == "Hello"  &&
+                    n.RecipientCount == 1),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task SendToUser_UserNotConnected_Returns404WithoutSending()
     {
         _connectionManager
@@ -75,6 +101,9 @@ public class NotificationControllerTests
         Assert.IsType<NotFoundObjectResult>(result);
         _singleClientProxy.Verify(
             p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _notificationStore.Verify(
+            s => s.SaveAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -121,6 +150,22 @@ public class NotificationControllerTests
         var json = JsonSerializer.Serialize(ok.Value);
         var doc = JsonDocument.Parse(json);
         Assert.Equal("premium", doc.RootElement.GetProperty("group").GetString());
+    }
+
+    [Fact]
+    public async Task SendToGroup_ValidTag_SavesNotificationToStore()
+    {
+        await _controller.SendToGroup("premium", new SendNotificationDto("Deal!"));
+
+        _notificationStore.Verify(
+            s => s.SaveAsync(
+                It.Is<Notification>(n =>
+                    n.TargetId       == "premium" &&
+                    n.TargetType     == "group"   &&
+                    n.Message        == "Deal!"   &&
+                    n.RecipientCount == 0),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Theory]
