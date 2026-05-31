@@ -1,38 +1,31 @@
-import json
-from pathlib import Path
 import logging
+from models.db.entities import MccCode
 
 logger = logging.getLogger(__name__)
 
 
 class MccService:
     def __init__(self):
-        self._mcc_map: dict[str, str] = {}  # Initialize before _load_mapping
-        path = Path("./data/mcc_codes.json")
+        self._mcc_map: dict[str, str] = {}
+        logger.info("MccService initialized. Call initialize() to load data.")
 
-        if not path.exists() or not path.is_file():
-            logger.error(f"MccService failed to initialize from {path}")
-            raise FileNotFoundError(f"MCC codes file not found: {path}")
-
-        logger.info(f"[*] MccService: Loading MCC codes from {path.absolute()}")
-        self._load_mapping(path)
-
-    def _load_mapping(self, path: Path):
+    async def initialize(self):
         """
-        Reads the JSON array from the file and builds a flat dictionary.
+        Reads MCC codes from the MongoDB database and builds a flat dictionary.
         """
-        with open(path, "r", encoding="utf-8") as file:
-            raw_data = json.load(file)
+        logger.info("Loading MCC codes from database...")
+        try:
+            mcc_codes = await MccCode.find_all().to_list()
+            for item in mcc_codes:
+                mcc_code_val = item.mcc
+                description = item.category or "N/A"
+                if mcc_code_val:
+                    self._mcc_map[str(mcc_code_val)] = description
 
-            for item in raw_data:
-                mcc_code = item.get("mcc")
-
-                description = item.get("edited_description") or item.get("combined_description") or "Unknown Category"
-
-                if mcc_code:
-                    self._mcc_map[str(mcc_code)] = description
-
-        logger.info(f"MccService: Successfully loaded {len(self._mcc_map)} MCC descriptions into memory.")
+            logger.info(f"MccService: Successfully loaded {len(self._mcc_map)} MCC descriptions into memory.")
+        except Exception as e:
+            logger.error(f"Error loading MCC codes from database: {e}", exc_info=True)
+            raise
 
     def get_mcc(self) -> dict[str, str]:
         """
@@ -44,4 +37,4 @@ class MccService:
         """
         Returns the clean, human-readable description for an MCC.
         """
-        return self._mcc_map.get(str(category_code), "Unknown Category")
+        return self._mcc_map.get(str(category_code), "N/A")

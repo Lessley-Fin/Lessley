@@ -3,6 +3,8 @@ from services.transaction_stash_service import TransactionStashService
 from services.open_finance_service import OpenFinanceService
 from services.processing_core_service import ProcessingCoreService
 from config.constants import LIMITS
+from models.transaction import Transaction
+from routers.responses import TransactionInsightSchema
 
 
 logger = logging.getLogger(__name__)
@@ -11,9 +13,9 @@ logger = logging.getLogger(__name__)
 class InsightsService:
     def __init__(
         self,
-        open_finance_service=OpenFinanceService,
-        files_service=TransactionStashService,
-        processing_core_service=ProcessingCoreService,
+        open_finance_service: OpenFinanceService,
+        files_service: TransactionStashService,
+        processing_core_service: ProcessingCoreService,
     ):
         self.open_finance_service = open_finance_service
         self.files_service = files_service
@@ -21,7 +23,7 @@ class InsightsService:
 
     async def calculate_user_categories_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Calculates user categories based on transactions.
         """
@@ -59,7 +61,7 @@ class InsightsService:
 
     async def calculate_top_accounts_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Calculates top accounts based on transactions.
         """
@@ -109,7 +111,7 @@ class InsightsService:
 
     async def calculate_top_stores_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[dict]:
+    ) -> list[Transaction]:
         """
         Calculates top stores based on transactions.
         """
@@ -137,6 +139,54 @@ class InsightsService:
                 },
             )
             return stores
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
+    async def calculate_missed_savings_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> list[TransactionInsightSchema]:
+        """
+        Analyzes user transactions to identify missed savings opportunities.
+        For each transaction, identifies alternative stores with active deals for the same MCC category.
+
+        Args:
+            user_id: User ID for transaction retrieval
+            time_filter: Whether to apply time-based filtering
+            days: Number of past days to analyze
+            use_mock: Whether to use mock data
+
+        Returns:
+            List of TransactionInsightSchema objects with missed savings analysis
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            if use_mock:
+                transactions = self.files_service.read_json("transactions_roee_all.json")
+            else:
+                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+
+            insights = await self.processing_core_service.calculate_missed_savings_async(transactions)
+
+            logger.info(
+                "Missed savings calculated successfully",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, "insight_count": len(insights)},
+                },
+            )
+            return insights
         except Exception as e:
             logger.error(
                 f"Error: {str(e)}",

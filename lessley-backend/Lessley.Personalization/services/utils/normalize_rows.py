@@ -20,4 +20,4 @@ def normalize_merchant_name(row: dict) -> str:
     # str.strip() removes leading/trailing whitespaces
     if pd.notna(name) and str(name).strip() != "":
         return str(name).strip()
-    return "Unknown Merchant"
+    return "N/A"

@@ -1,0 +1,3 @@
+class LIMITS:
+    TOP_CATEGORIES = 20
+    MAX_PAGE_SIZE = 1000

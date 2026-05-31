@@ -6,12 +6,17 @@ class Settings(BaseSettings):
     # Pydantic will automatically look for these keys in the .env file or system environment variables
     Environment: str
     ConnectionStrings_Rabbit: str
+    ConnectionStrings_MongoDb: str
     RabbitMQ_Enabled: bool = False  # Default to False if not set
     OpenFinanceConfig_ClientId: str | None = None  # Optional setting
     OpenFinanceConfig_ClientSecret: str | None = None  # Optional setting
     OpenFinanceConfig_BaseUrl: str | None = None  # Optional setting
+<<<<<<< HEAD
     Loki_Url: str | None = None  # Optional setting for Loki logging  
     Cors_AllowOrigins: str = "http://localhost:5173,http://127.0.0.1:5173"  # Comma-separated origins
+=======
+    Loki_Url: str | None = None  # Optional setting for Loki logging
+>>>>>>> 045dfd3cecf9b2893e946cc4403ce03ab72098c7
 
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
