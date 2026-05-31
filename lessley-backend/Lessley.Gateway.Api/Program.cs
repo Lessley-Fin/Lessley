@@ -127,3 +127,6 @@ app.MapHub<Lessley.Gateway.Api.Hubs.NotificationHub>("/hubs/notifications");
 app.Run();
 
 Log.CloseAndFlush();
+
+// Expose Program to WebApplicationFactory<Program> in the test project
+public partial class Program { }

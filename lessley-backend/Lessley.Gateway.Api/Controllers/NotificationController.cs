@@ -1,3 +1,4 @@
+using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,116 +26,48 @@ public class NotificationController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Sends a notification to a specific user.
-    /// </summary>
-    /// <param name="userId">The target user ID.</param>
-    /// <param name="message">The notification message to send.</param>
-    /// <returns>A response indicating success or failure.</returns>
     [HttpPost("user/{userId}")]
-    public async Task<IActionResult> SendToUser(string userId, [FromQuery] string message)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SendToUser(string userId, [FromBody] SendNotificationDto dto)
     {
         if (string.IsNullOrWhiteSpace(userId))
-        {
             return BadRequest(new { error = "User ID is required" });
-        }
 
-        if (string.IsNullOrWhiteSpace(message))
+        var connections = _connectionManager.GetConnections(userId).ToList();
+
+        if (connections.Count == 0)
         {
-            return BadRequest(new { error = "Message is required" });
+            _logger.LogWarning("No active connections found for user {UserId}", userId);
+            return NotFound(new { error = $"User {userId} is not connected" });
         }
 
-        try
-        {
-            var connections = _connectionManager.GetConnections(userId);
-            
-            if (!connections.Any())
-            {
-                _logger.LogWarning("No active connections found for user {UserId}", userId);
-                return NotFound(new { error = $"User {userId} is not connected" });
-            }
+        var payload = new { timestamp = DateTime.UtcNow, message = dto.Message, type = "notification" };
 
-            var payload = new
-            {
-                timestamp = DateTime.UtcNow,
-                message = message,
-                type = "notification"
-            };
+        foreach (var connectionId in connections)
+            await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveNotification", payload);
 
-            // Send to all connections for this user
-            foreach (var connectionId in connections)
-            {
-                await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveNotification", payload);
-            }
+        _logger.LogInformation("Notification sent to user {UserId} ({ConnectionCount} connections): {Message}",
+            userId, connections.Count, dto.Message);
 
-            _logger.LogInformation("Notification sent to user {UserId} ({ConnectionCount} connections): {Message}", 
-                userId, connections.Count(), message);
-
-            return Ok(new 
-            { 
-                message = "Notification sent successfully", 
-                recipientCount = connections.Count() 
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error sending notification to user {UserId}", userId);
-            return StatusCode(500, new { error = "An error occurred while sending the notification" });
-        }
+        return Ok(new { message = "Notification sent successfully", recipientCount = connections.Count });
     }
 
-    /// <summary>
-    /// Sends a notification to all users in a SignalR group (tag).
-    /// </summary>
-    /// <param name="tag">The group/tag name.</param>
-    /// <param name="message">The notification message to send.</param>
-    /// <returns>A response indicating success or failure.</returns>
     [HttpPost("group/{tag}")]
-    public async Task<IActionResult> SendToGroup(string tag, [FromQuery] string message)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SendToGroup(string tag, [FromBody] SendNotificationDto dto)
     {
         if (string.IsNullOrWhiteSpace(tag))
-        {
             return BadRequest(new { error = "Group tag is required" });
-        }
 
-        if (string.IsNullOrWhiteSpace(message))
-        {
-            return BadRequest(new { error = "Message is required" });
-        }
+        var payload = new { timestamp = DateTime.UtcNow, message = dto.Message, type = "group_notification", group = tag };
 
-        try
-        {
-            var payload = new
-            {
-                timestamp = DateTime.UtcNow,
-                message = message,
-                type = "group_notification",
-                group = tag
-            };
+        await _hubContext.Clients.Group(tag).SendAsync("ReceiveNotification", payload);
 
-            // Send to all users in the group
-            await _hubContext.Clients.Group(tag).SendAsync("ReceiveNotification", payload);
+        _logger.LogInformation("Notification sent to group {Tag}: {Message}", tag, dto.Message);
 
-            _logger.LogInformation("Notification sent to group {Tag}: {Message}", tag, message);
-
-            return Ok(new 
-            { 
-                message = "Notification sent to group successfully", 
-                group = tag 
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error sending notification to group {Tag}", tag);
-            return StatusCode(500, new { error = "An error occurred while sending the notification" });
-        }
+        return Ok(new { message = "Notification sent to group successfully", group = tag });
     }
 
-    /// <summary>
-    /// Health check endpoint to verify if a user is currently connected.
-    /// </summary>
-    /// <param name="userId">The user ID to check.</param>
-    /// <returns>Connection status information.</returns>
     [HttpGet("status/{userId}")]
     public IActionResult GetUserConnectionStatus(string userId)
     {

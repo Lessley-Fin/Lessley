@@ -3,13 +3,11 @@ using System.Collections.Concurrent;
 
 namespace Lessley.Gateway.Api.Services.Classes;
 
-/// <summary>
-/// Manages SignalR connections for users in-memory.
-/// Thread-safe implementation using a concurrent dictionary.
-/// </summary>
 public class ConnectionManager : IConnectionManager
 {
-    private readonly ConcurrentDictionary<string, HashSet<string>> _userConnections = new();
+    // Inner dict: connectionId -> 0 (byte used as valueless placeholder).
+    // ConcurrentDictionary<K,V> is fully thread-safe; HashSet is not.
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _userConnections = new();
     private readonly ILogger<ConnectionManager> _logger;
 
     public ConnectionManager(ILogger<ConnectionManager> logger)
@@ -25,13 +23,8 @@ public class ConnectionManager : IConnectionManager
             return;
         }
 
-        _userConnections.AddOrUpdate(userId,
-            new HashSet<string> { connectionId },
-            (key, existingSet) =>
-            {
-                existingSet.Add(connectionId);
-                return existingSet;
-            });
+        var connections = _userConnections.GetOrAdd(userId, _ => new ConcurrentDictionary<string, byte>());
+        connections.TryAdd(connectionId, 0);
 
         _logger.LogInformation("Connection added for user {UserId}: {ConnectionId}", userId, connectionId);
     }
@@ -44,44 +37,37 @@ public class ConnectionManager : IConnectionManager
             return;
         }
 
-        if (_userConnections.TryGetValue(userId, out var connections))
-        {
-            connections.Remove(connectionId);
+        if (!_userConnections.TryGetValue(userId, out var connections))
+            return;
 
-            if (connections.Count == 0)
-            {
-                _userConnections.TryRemove(userId, out _);
-                _logger.LogInformation("All connections removed for user {UserId}", userId);
-            }
-            else
-            {
-                _logger.LogInformation("Connection removed for user {UserId}: {ConnectionId}", userId, connectionId);
-            }
+        connections.TryRemove(connectionId, out _);
+
+        if (connections.IsEmpty)
+        {
+            _userConnections.TryRemove(userId, out _);
+            _logger.LogInformation("All connections removed for user {UserId}", userId);
+        }
+        else
+        {
+            _logger.LogInformation("Connection removed for user {UserId}: {ConnectionId}", userId, connectionId);
         }
     }
 
     public IEnumerable<string> GetConnections(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))
-        {
             return Enumerable.Empty<string>();
-        }
 
-        if (_userConnections.TryGetValue(userId, out var connections))
-        {
-            return connections.ToList();
-        }
-
-        return Enumerable.Empty<string>();
+        return _userConnections.TryGetValue(userId, out var connections)
+            ? connections.Keys.ToList()
+            : Enumerable.Empty<string>();
     }
 
     public bool HasConnections(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))
-        {
             return false;
-        }
 
-        return _userConnections.ContainsKey(userId) && _userConnections[userId].Count > 0;
+        return _userConnections.TryGetValue(userId, out var connections) && !connections.IsEmpty;
     }
 }

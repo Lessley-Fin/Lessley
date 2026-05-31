@@ -35,6 +35,22 @@ namespace Lessley.Gateway.Api.Extensions
                     ValidAudience = jwtAudience,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
                 };
+                // SignalR WebSocket/SSE transports cannot send headers, so they pass the JWT
+                // as ?access_token=... in the query string. We copy it into the context here
+                // so the standard bearer middleware picks it up and validates it normally.
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            context.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             return services;
