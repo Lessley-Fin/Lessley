@@ -22,6 +22,7 @@ from routers import recommendation_controller  # Import recommendation controlle
 from routers import club_controller  # Import club controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
+from services.rabbitmq_publisher import RabbitMQPublisher
 import uuid
 
 # --- RabbitMQ Configuration ---
@@ -149,12 +150,19 @@ async def lifespan(app: FastAPI):
     await DIContainer.get_recommendation_core_service().initialize()
 
     if settings.RabbitMQ_Enabled:
-        # Startup: Launch the RabbitMQ consumer as a background task
+        # Start publisher so services can emit events to other Lessley services
+        publisher = await RabbitMQPublisher.create(settings.ConnectionStrings_Rabbit)
+        app.state.publisher = publisher
+
+        # Start consumer as a background task
         task = asyncio.create_task(consume_rabbitmq())
         yield
-        # Shutdown: Clean up tasks when the server stops
+
+        # Shutdown
         task.cancel()
+        await publisher.close()
     else:
+        app.state.publisher = None
         yield
 
     # Shutdown

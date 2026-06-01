@@ -1,4 +1,4 @@
-﻿using Lessley.Gateway.Api.Configuration;
+using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Enums;
 using Lessley.Gateway.Api.Models;
@@ -17,14 +17,14 @@ namespace Lessley.Gateway.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJwtService _jwtService;
         private readonly IConfiguration _configuration;
         private readonly bool isRotateRefresh;
 
         public AuthController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             IJwtService jwtTokenService,
             IConfiguration config,
             IOptions<AuthConfig> configuration)
@@ -49,13 +49,12 @@ namespace Lessley.Gateway.Api.Controllers
 
             var username = _configuration["Bootstrap:Username"] ?? "";
             var password = _configuration["Bootstrap:Password"] ?? "";
-            var email = _configuration["Bootstrap:Email"] ?? "";
+            var email    = _configuration["Bootstrap:Email"] ?? "";
 
             if (username == "" || password == "" || email == "")
                 return BadRequest("Bootstrap failed");
 
-            var register = new RegisterDto() { UserName = username, Email = email, Password = password };
-            return await CreateUser(register, UserRoles.Admin);
+            return await CreateUser(new RegisterDto { UserName = username, Email = email, Password = password }, UserRoles.Admin);
         }
 
         [HttpPost("register")]
@@ -66,7 +65,7 @@ namespace Lessley.Gateway.Api.Controllers
 
         private async Task<IActionResult> CreateUser(RegisterDto model, UserRoles roles)
         {
-            var user = new IdentityUser { UserName = model.UserName, Email = model.Email };
+            var user   = new ApplicationUser { UserName = model.UserName, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
@@ -86,7 +85,7 @@ namespace Lessley.Gateway.Api.Controllers
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
                 return Unauthorized("Invalid credentials");
 
-            var accessToken = await _jwtService.GenerateAccessToken(user);
+            var accessToken  = await _jwtService.GenerateAccessToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken(user.Id);
 
             _context.RefreshTokens.Add(refreshToken);
@@ -107,9 +106,7 @@ namespace Lessley.Gateway.Api.Controllers
 
             var newAccessToken = await _jwtService.GenerateAccessToken(user);
             if (!isRotateRefresh)
-            {
                 return Ok(new { accessToken = newAccessToken, refreshToken = tokenEntity.Token });
-            }
 
             tokenEntity.Revoked = DateTime.UtcNow;
             var newRefreshToken = _jwtService.GenerateRefreshToken(tokenEntity.UserId);
@@ -124,10 +121,9 @@ namespace Lessley.Gateway.Api.Controllers
         [HttpGet("me")]
         public IActionResult GetMyProfile()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId   = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userName = User.FindFirstValue(ClaimTypes.Name);
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            var roles    = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
             return Ok(new { userId, userName, roles });
         }
@@ -146,27 +142,21 @@ namespace Lessley.Gateway.Api.Controllers
 
             var currentRoles = await _context.Roles
                 .Where(r => userRoleIds.Contains(r.Id))
-                .Select(r => r.Name)
+                .Select(r => r.Name!)
                 .ToListAsync();
 
-            await _userManager.RemoveFromRolesAsync(user, currentRoles); // remove all old roles
-            await _userManager.AddToRoleAsync(user, newRole.ToString()); // add new role
+            await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            await _userManager.AddToRoleAsync(user, newRole.ToString());
 
             return Ok($"User role changed to {newRole}");
         }
 
         [Authorize(Roles = nameof(UserRoles.Admin))]
         [HttpGet("admin-data")]
-        public IActionResult GetAdminData()
-        {
-            return Ok("admin-data");
-        }
+        public IActionResult GetAdminData() => Ok("admin-data");
 
         [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Operator))]
         [HttpGet("operator-admin-action")]
-        public IActionResult OperatorAdminAction()
-        {
-            return Ok("This endpoint is for Operators and Admins only.");
-        }
+        public IActionResult OperatorAdminAction() => Ok("This endpoint is for Operators and Admins only.");
     }
 }

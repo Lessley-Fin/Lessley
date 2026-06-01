@@ -1,5 +1,7 @@
 using Lessley.Gateway.Api.Hubs;
+using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -11,11 +13,27 @@ public class NotificationHubTests
 {
     private readonly Mock<IConnectionManager> _connectionManager = new();
 
+    // UserManager has a complex constructor — create a minimal mock via the IUserStore overload.
+    // FindByIdAsync returns null for all test user IDs, so the group-join path is skipped
+    // and the connection-manager assertions are unaffected.
+    private static Mock<UserManager<ApplicationUser>> BuildUserManagerMock()
+    {
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        var mgr   = new Mock<UserManager<ApplicationUser>>(
+            store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        mgr.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
+           .ReturnsAsync((ApplicationUser?)null);
+        return mgr;
+    }
+
     // Hub.Context is a public settable property on the base Hub class,
     // so we can inject a mocked HubCallerContext directly.
     private NotificationHub BuildHub(string? userIdentifier, string connectionId)
     {
-        var hub = new NotificationHub(NullLogger<NotificationHub>.Instance, _connectionManager.Object);
+        var hub = new NotificationHub(
+            NullLogger<NotificationHub>.Instance,
+            _connectionManager.Object,
+            BuildUserManagerMock().Object);
 
         var ctx = new Mock<HubCallerContext>();
         ctx.Setup(c => c.UserIdentifier).Returns(userIdentifier);
