@@ -4,27 +4,27 @@ using MassTransit;
 
 namespace Lessley.Gateway.Api.Consumers;
 
-public class SendNotificationCommandConsumer : IConsumer<SendGroupNotificationCommand>
+public class DealTagNotificationConsumer : IConsumer<DealGroupNotification>
 {
     private readonly ISendNotificationService _sendNotificationService;
-    private readonly ILogger<SendNotificationCommandConsumer> _logger;
+    private readonly ILogger<DealTagNotificationConsumer> _logger;
 
-    public SendNotificationCommandConsumer(
+    public DealTagNotificationConsumer(
         ISendNotificationService sendNotificationService,
-        ILogger<SendNotificationCommandConsumer> logger)
+        ILogger<DealTagNotificationConsumer> logger)
     {
         _sendNotificationService = sendNotificationService;
         _logger                  = logger;
     }
 
-    public async Task Consume(ConsumeContext<SendGroupNotificationCommand> context)
+    public async Task Consume(ConsumeContext<DealGroupNotification> context)
     {
-        var (groupTag, message) = (context.Message.GroupTag, context.Message.Message);
+        var msg = context.Message;
 
-        await _sendNotificationService.SendToGroupAsync(groupTag, message, context.CancellationToken);
+        await _sendNotificationService.SendToGroupAsync(msg.GroupTag, msg.Message, msg.DealId, context.CancellationToken);
 
         _logger.LogInformation(
-            "SendGroupNotificationCommand consumed — broadcast to group '{Group}': {Message}",
-            groupTag, message);
+            "DealGroupNotification consumed — group '{Group}', deal '{DealId}'",
+            msg.GroupTag, msg.DealId);
     }
 }

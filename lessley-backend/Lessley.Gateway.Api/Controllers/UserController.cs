@@ -3,12 +3,13 @@ using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Lessley.Gateway.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -20,39 +21,56 @@ public class UserController : ControllerBase
         _userTagService = userTagService;
     }
 
+    /// <summary>
+    /// Update own preferences (MutedTags, Clubs, MatchingScore).
+    /// Admins may update any user; regular users may only update themselves.
+    /// Tags are managed separately via PUT /api/user/{userId}/tags (Admin only).
+    /// </summary>
     [HttpPut("{userId}")]
     public async Task<IActionResult> UpdateUser(string userId, [FromBody] UpdateUserDto dto)
     {
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin  = User.IsInRole("Admin");
+
+        if (!isAdmin && callerId != userId)
+            return Forbid();
+
         var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
             return NotFound(new { error = "User not found" });
 
-        var tagsChanged = dto.Tags is not null
-            && !new HashSet<string>(dto.Tags).SetEquals(new HashSet<string>(user.Tags ?? new List<string>()));
+        if (dto.MutedTags is not null)   user.MutedTags    = dto.MutedTags;
+        if (dto.Clubs is not null)       user.Clubs        = dto.Clubs;
+        if (dto.MatchingScore.HasValue)  user.MatchingScore = dto.MatchingScore.Value;
 
-        if (dto.MutedTags is not null)    user.MutedTags    = dto.MutedTags;
-        if (dto.Clubs is not null)        user.Clubs        = dto.Clubs;
-        if (dto.MatchingScore.HasValue)   user.MatchingScore = dto.MatchingScore.Value;
-
-        // Persist non-tag field changes first so AssignTagsAsync sees updated MutedTags
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
-        // Tag assignment handles SignalR group updates and tag persistence
-        if (tagsChanged && dto.Tags is not null)
-            await _userTagService.AssignTagsAsync(userId, dto.Tags.ToArray());
-
-        // Re-fetch to return the final state
-        user = await _userManager.FindByIdAsync(userId);
-
         return Ok(new
         {
-            userId        = user!.Id,
+            userId        = user.Id,
             tags          = user.Tags,
             mutedTags     = user.MutedTags,
             clubs         = user.Clubs,
             matchingScore = user.MatchingScore,
         });
+    }
+
+    /// <summary>
+    /// Assign tags to a user and update their SignalR group memberships.
+    /// Admin only — tags drive deal category broadcasts and are not self-managed.
+    /// </summary>
+    [HttpPut("{userId}/tags")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateUserTags(string userId, [FromBody] string[] tags)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+            return NotFound(new { error = "User not found" });
+
+        await _userTagService.AssignTagsAsync(userId, tags);
+
+        return Ok(new { userId, tags });
     }
 }

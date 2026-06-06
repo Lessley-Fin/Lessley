@@ -39,7 +39,8 @@ var hub = new HubConnectionBuilder()
     .Build();
 
 // Receive notifications from server
-hub.On<JsonElement>("ReceiveNotification", OnNotificationReceived);
+hub.On<JsonElement>("DealUserNotification",  OnNotificationReceived);
+hub.On<JsonElement>("DealGroupNotification", OnNotificationReceived);
 
 hub.Closed += ex =>
 {

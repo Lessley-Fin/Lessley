@@ -1,10 +1,15 @@
 using Lessley.Gateway.Api.Consumers;
-using Lessley.Gateway.Api.Services.Classes;
-using Lessley.Gateway.Api.Services.Interfaces;
+using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Models;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MongoDB.EntityFrameworkCore.Extensions;
+using Serilog;
+using Serilog.Sinks.Grafana.Loki;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -13,7 +18,53 @@ namespace Lessley.Gateway.Api.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+        // ── Logging ────────────────────────────────────────────────────────────
+
+        public static WebApplicationBuilder AddSerilogLogging(this WebApplicationBuilder builder)
+        {
+            var lokiUrl = builder.Configuration["Loki:Url"] ?? "http://localhost:3100";
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Information)
+                .MinimumLevel.Override("Microsoft.AspNetCore.DataProtection", Serilog.Events.LogEventLevel.Error)
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("app_name", "gateway")
+                .Enrich.With(new Configuration.ExceptionAsArrayEnricher())
+                .WriteTo.Console(new Configuration.CustomLogFormatter())
+                .WriteTo.GrafanaLoki(lokiUrl,
+                    propertiesAsLabels: new[] { "app_name" },
+                    textFormatter:     new Configuration.CustomLogFormatter())
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
+            return builder;
+        }
+
+        // ── Persistence ────────────────────────────────────────────────────────
+
+        public static IServiceCollection AddPersistenceWithIdentity(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseMongoDB(
+                    configuration.GetConnectionString("MongoDb")!,
+                    "lessley"));
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            return services;
+        }
+
+        // ── Authentication ─────────────────────────────────────────────────────
+
+        public static IServiceCollection AddCustomAuthentication(
+            this IServiceCollection services,
+            IConfiguration configuration)
         {
             var jwtKey      = configuration["JwtConfig:Key"];
             var jwtIssuer   = configuration["JwtConfig:Issuer"];
@@ -39,7 +90,7 @@ namespace Lessley.Gateway.Api.Extensions
                     ValidAudience            = jwtAudience,
                     IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
                 };
-                // SignalR WebSocket/SSE transports pass JWT via ?access_token= in the query string
+                // SignalR passes JWT as ?access_token= in query string
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -57,6 +108,8 @@ namespace Lessley.Gateway.Api.Extensions
 
             return services;
         }
+
+        // ── Rate Limiting ──────────────────────────────────────────────────────
 
         public static IServiceCollection AddCustomRateLimiting(this IServiceCollection services)
         {
@@ -81,6 +134,8 @@ namespace Lessley.Gateway.Api.Extensions
             return services;
         }
 
+        // ── Swagger ────────────────────────────────────────────────────────────
+
         public static IServiceCollection AddCustomSwagger(this IServiceCollection services)
         {
             services.AddSwaggerGen(c =>
@@ -89,12 +144,12 @@ namespace Lessley.Gateway.Api.Extensions
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Name        = "Authorization",
-                    Type        = SecuritySchemeType.Http,
-                    Scheme      = "Bearer",
+                    Name         = "Authorization",
+                    Type         = SecuritySchemeType.Http,
+                    Scheme       = "Bearer",
                     BearerFormat = "JWT",
-                    In          = ParameterLocation.Header,
-                    Description = "Enter JWT token with 'Bearer ' prefix"
+                    In           = ParameterLocation.Header,
+                    Description  = "Enter JWT token with 'Bearer ' prefix"
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -112,14 +167,7 @@ namespace Lessley.Gateway.Api.Extensions
             return services;
         }
 
-        public static IServiceCollection AddNotificationServices(this IServiceCollection services)
-        {
-            services.AddSingleton<IConnectionManager, ConnectionManager>();
-            services.AddScoped<INotificationRepository, NotificationRepository>();
-            services.AddScoped<ISendNotificationService, SendNotificationService>();
-            services.AddScoped<IUserTagService, UserTagService>();
-            return services;
-        }
+        // ── MassTransit / RabbitMQ ─────────────────────────────────────────────
 
         public static IServiceCollection AddMassTransitWithRabbitMq(
             this IServiceCollection services,
@@ -132,8 +180,8 @@ namespace Lessley.Gateway.Api.Extensions
             services.AddMassTransit(x =>
             {
                 x.AddConsumer<UserTagAssignedEventConsumer>();
-                x.AddConsumer<SendNotificationCommandConsumer>();
-                x.AddConsumer<SendUserNotificationCommandConsumer>();
+                x.AddConsumer<DealTagNotificationConsumer>();
+                x.AddConsumer<DealUserNotificationConsumer>();
 
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
@@ -141,7 +189,6 @@ namespace Lessley.Gateway.Api.Extensions
                         ?? "amqp://guest:guest@localhost/";
                     cfg.Host(new Uri(rabbit));
 
-                    // Python publishes UserTagAssignedEvent with routing key "Personalize.user_tag_assigned"
                     cfg.ReceiveEndpoint("gateway.user_tag_assigned", e =>
                     {
                         e.ConfigureConsumeTopology = false;
@@ -155,32 +202,30 @@ namespace Lessley.Gateway.Api.Extensions
                         e.ConfigureConsumer<UserTagAssignedEventConsumer>(ctx);
                     });
 
-                    // Python publishes SendGroupNotificationCommand with routing key "Personalize.send_notification"
-                    cfg.ReceiveEndpoint("gateway.send_group_notification", e =>
+                    cfg.ReceiveEndpoint("gateway.deal_group_notification", e =>
                     {
                         e.ConfigureConsumeTopology = false;
                         e.Bind("lessley_events", b =>
                         {
                             b.ExchangeType = "topic";
                             b.Durable      = true;
-                            b.RoutingKey   = "Personalize.send_notification";
+                            b.RoutingKey   = "Personalize.deal_group_notification";
                         });
                         e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<SendNotificationCommandConsumer>(ctx);
+                        e.ConfigureConsumer<DealTagNotificationConsumer>(ctx);
                     });
 
-                    // Python publishes SendUserNotificationCommand with routing key "Personalize.send_user_notification"
-                    cfg.ReceiveEndpoint("gateway.send_user_notification", e =>
+                    cfg.ReceiveEndpoint("gateway.deal_user_notification", e =>
                     {
                         e.ConfigureConsumeTopology = false;
                         e.Bind("lessley_events", b =>
                         {
                             b.ExchangeType = "topic";
                             b.Durable      = true;
-                            b.RoutingKey   = "Personalize.send_user_notification";
+                            b.RoutingKey   = "Personalize.deal_user_notification";
                         });
                         e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<SendUserNotificationCommandConsumer>(ctx);
+                        e.ConfigureConsumer<DealUserNotificationConsumer>(ctx);
                     });
                 });
             });

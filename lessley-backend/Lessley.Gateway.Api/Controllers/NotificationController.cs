@@ -12,18 +12,18 @@ public class NotificationController : ControllerBase
 {
     private readonly IConnectionManager _connectionManager;
     private readonly ISendNotificationService _sendNotificationService;
-    private readonly INotificationRepository _notificationRepository;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<NotificationController> _logger;
 
     public NotificationController(
         IConnectionManager connectionManager,
         ISendNotificationService sendNotificationService,
-        INotificationRepository notificationRepository,
+        INotificationService notificationService,
         ILogger<NotificationController> logger)
     {
         _connectionManager       = connectionManager;
         _sendNotificationService = sendNotificationService;
-        _notificationRepository  = notificationRepository;
+        _notificationService     = notificationService;
         _logger                  = logger;
     }
 
@@ -36,11 +36,11 @@ public class NotificationController : ControllerBase
 
         if (!_connectionManager.HasConnections(userId))
         {
-            _logger.LogWarning("No active connections found for user {UserId}", userId);
+            _logger.LogWarning("No active connections for user {UserId}", userId);
             return NotFound(new { error = $"User {userId} is not connected" });
         }
 
-        var recipientCount = await _sendNotificationService.SendToUserAsync(userId, dto.Message);
+        var recipientCount = await _sendNotificationService.SendToUserAsync(userId, dto.Message, dto.DealId);
         return Ok(new { message = "Notification sent successfully", recipientCount });
     }
 
@@ -51,7 +51,7 @@ public class NotificationController : ControllerBase
         if (string.IsNullOrWhiteSpace(tag))
             return BadRequest(new { error = "Group tag is required" });
 
-        await _sendNotificationService.SendToGroupAsync(tag, dto.Message);
+        await _sendNotificationService.SendToGroupAsync(tag, dto.Message, dto.DealId);
         return Ok(new { message = "Notification sent to group successfully", group = tag });
     }
 
@@ -74,22 +74,22 @@ public class NotificationController : ControllerBase
     }
 
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserNotifications(string userId)
+    public async Task<IActionResult> GetUserNotifications(string userId, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return BadRequest(new { error = "User ID is required" });
 
-        var notifications = await _notificationRepository.GetByUserAsync(userId);
+        var notifications = await _notificationService.GetUserNotificationsAsync(userId, ct);
         return Ok(notifications);
     }
 
     [HttpPost("read/{userId}")]
-    public async Task<IActionResult> MarkUserNotificationsAsRead(string userId)
+    public async Task<IActionResult> MarkUserNotificationsAsRead(string userId, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return BadRequest(new { error = "User ID is required" });
 
-        await _notificationRepository.MarkAllAsReadAsync(userId);
+        await _notificationService.MarkUserNotificationsAsReadAsync(userId, ct);
         return Ok(new { message = "All notifications marked as read" });
     }
 }

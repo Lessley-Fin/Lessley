@@ -20,20 +20,20 @@ namespace Lessley.Gateway.Api.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJwtService _jwtService;
         private readonly IConfiguration _configuration;
-        private readonly bool isRotateRefresh;
+        private readonly bool _isRotateRefresh;
 
         public AuthController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IJwtService jwtTokenService,
+            IJwtService jwtService,
             IConfiguration config,
-            IOptions<AuthConfig> configuration)
+            IOptions<AuthConfig> authConfig)
         {
-            _context = context;
-            _userManager = userManager;
-            _jwtService = jwtTokenService;
-            isRotateRefresh = configuration.Value.IsRotateRefresh;
-            _configuration = config;
+            _context         = context;
+            _userManager     = userManager;
+            _jwtService      = jwtService;
+            _configuration   = config;
+            _isRotateRefresh = authConfig.Value.IsRotateRefresh;
         }
 
         [HttpPost("bootstrap")]
@@ -49,34 +49,17 @@ namespace Lessley.Gateway.Api.Controllers
 
             var username = _configuration["Bootstrap:Username"] ?? "";
             var password = _configuration["Bootstrap:Password"] ?? "";
-            var email    = _configuration["Bootstrap:Email"] ?? "";
+            var email    = _configuration["Bootstrap:Email"]    ?? "";
 
             if (username == "" || password == "" || email == "")
-                return BadRequest("Bootstrap failed");
+                return BadRequest("Bootstrap configuration is incomplete.");
 
             return await CreateUser(new RegisterDto { UserName = username, Email = email, Password = password }, UserRoles.Admin);
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
-        {
-            return await CreateUser(model, UserRoles.Viewer);
-        }
-
-        private async Task<IActionResult> CreateUser(RegisterDto model, UserRoles roles)
-        {
-            var user   = new ApplicationUser { UserName = model.UserName, Email = model.Email };
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            result = await _userManager.AddToRoleAsync(user, roles.ToString());
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok();
-        }
+            => await CreateUser(model, UserRoles.Viewer);
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
@@ -105,7 +88,7 @@ namespace Lessley.Gateway.Api.Controllers
             if (user == null) return Unauthorized();
 
             var newAccessToken = await _jwtService.GenerateAccessToken(user);
-            if (!isRotateRefresh)
+            if (!_isRotateRefresh)
                 return Ok(new { accessToken = newAccessToken, refreshToken = tokenEntity.Token });
 
             tokenEntity.Revoked = DateTime.UtcNow;
@@ -152,12 +135,17 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok($"User role changed to {newRole}");
         }
 
-        [Authorize(Roles = nameof(UserRoles.Admin))]
-        [HttpGet("admin-data")]
-        public IActionResult GetAdminData() => Ok("admin-data");
+        private async Task<IActionResult> CreateUser(RegisterDto model, UserRoles role)
+        {
+            var user   = new ApplicationUser { UserName = model.UserName, Email = model.Email };
+            var result = await _userManager.CreateAsync(user, model.Password);
 
-        [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Operator))]
-        [HttpGet("operator-admin-action")]
-        public IActionResult OperatorAdminAction() => Ok("This endpoint is for Operators and Admins only.");
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            result = await _userManager.AddToRoleAsync(user, role.ToString());
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            return Ok();
+        }
     }
 }

@@ -1,5 +1,4 @@
 using Lessley.Gateway.Api.Configuration;
-using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Extensions;
 using Lessley.Gateway.Api.Hubs;
 using Lessley.Gateway.Api.Middleware;
@@ -8,43 +7,24 @@ using Lessley.Gateway.Api.Seeders;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Serilog;
-using Serilog.Sinks.Grafana.Loki;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var lokiUrl = builder.Configuration["Loki:Url"] ?? "http://localhost:3100";
+// ── Infrastructure ─────────────────────────────────────────────────────────────
+builder.AddSerilogLogging();
+builder.Services.AddPersistenceWithIdentity(builder.Configuration);
+builder.Services.AddCustomAuthentication(builder.Configuration);
+builder.Services.AddCustomRateLimiting();
+builder.Services.AddMassTransitWithRabbitMq(builder.Configuration, builder.Environment);
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Information)
-    .MinimumLevel.Override("Microsoft.AspNetCore.DataProtection", Serilog.Events.LogEventLevel.Error)
-    .Enrich.FromLogContext()
-    .Enrich.WithProperty("app_name", "gateway")
-    .Enrich.With(new Lessley.Gateway.Api.Configuration.ExceptionAsArrayEnricher())
-    .WriteTo.Console(new Lessley.Gateway.Api.Configuration.CustomLogFormatter())
-    .WriteTo.GrafanaLoki(lokiUrl, propertiesAsLabels: new[] { "app_name" }, textFormatter: new Lessley.Gateway.Api.Configuration.CustomLogFormatter())
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
+// ── CORS ───────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("DefaultCorsPolicy", policy =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMongoDB(builder.Configuration.GetConnectionString("MongoDb"), "lessley"));
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddCustomAuthentication(builder.Configuration);
-builder.Services.AddCustomRateLimiting();
-
+// ── Application services ───────────────────────────────────────────────────────
 builder.Services.Configure<AuthConfig>(builder.Configuration.GetSection(nameof(AuthConfig)));
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection(nameof(JwtConfig)));
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -56,9 +36,13 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
-builder.Services.AddNotificationServices();
-builder.Services.AddMassTransitWithRabbitMq(builder.Configuration, builder.Environment);
+builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ISendNotificationService, SendNotificationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IUserTagService, UserTagService>();
 
+// ── Framework ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
@@ -66,6 +50,7 @@ builder.Services.AddCustomSwagger();
 
 var app = builder.Build();
 
+// ── Database seeding ───────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     Log.Information("Seeding database...");
@@ -73,6 +58,7 @@ using (var scope = app.Services.CreateScope())
     await UserSeeder.SeedAsync(scope.ServiceProvider);
 }
 
+// ── Middleware pipeline ────────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

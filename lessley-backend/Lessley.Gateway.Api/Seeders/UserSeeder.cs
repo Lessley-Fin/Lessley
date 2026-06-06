@@ -13,7 +13,7 @@ namespace Lessley.Gateway.Api.Seeders
 
             var username = configuration["Bootstrap:Username"] ?? "";
             var password = configuration["Bootstrap:Password"] ?? "";
-            var email    = configuration["Bootstrap:Email"] ?? "";
+            var email    = configuration["Bootstrap:Email"]    ?? "";
 
             if (username == "" || password == "" || email == "")
                 return;
@@ -23,10 +23,16 @@ namespace Lessley.Gateway.Api.Seeders
 
             var user   = new ApplicationUser { UserName = username, Email = email };
             var result = await userManager.CreateAsync(user, password);
-            if (!result.Succeeded)
-                return;
 
-            await userManager.AddToRoleAsync(user, UserRoles.Admin.ToString());
+            if (!result.Succeeded)
+                throw new InvalidOperationException(
+                    $"Bootstrap user creation failed: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+
+            result = await userManager.AddToRoleAsync(user, UserRoles.Admin.ToString());
+
+            if (!result.Succeeded)
+                throw new InvalidOperationException(
+                    $"Bootstrap role assignment failed: {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
     }
 }

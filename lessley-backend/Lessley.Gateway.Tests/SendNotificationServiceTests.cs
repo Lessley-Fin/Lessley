@@ -57,7 +57,7 @@ public class SendNotificationServiceTests
         Assert.Equal(2, count);
         _hubClients.Verify(c => c.Client(It.IsAny<string>()), Times.Exactly(2));
         _singleClientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
+            p => p.SendCoreAsync("DealUserNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
 
@@ -68,14 +68,15 @@ public class SendNotificationServiceTests
             .Setup(m => m.GetConnections("user-1"))
             .Returns(new[] { "conn-a" });
 
-        await _service.SendToUserAsync("user-1", "Hello");
+        await _service.SendToUserAsync("user-1", "Hello", "deal-123");
 
         _notificationRepository.Verify(
             s => s.SaveAsync(
                 It.Is<Notification>(n =>
                     n.TargetId   == "user-1" &&
                     n.TargetType == "user"   &&
-                    n.Message    == "Hello"),
+                    n.Message    == "Hello"  &&
+                    n.DealId     == "deal-123"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -99,7 +100,7 @@ public class SendNotificationServiceTests
     }
 
     [Fact]
-    public async Task SendToUser_UsesCorrectEventMethodName()
+    public async Task SendToUser_UsesCorrectEventName_DealUserNotification()
     {
         _connectionManager
             .Setup(m => m.GetConnections("user-1"))
@@ -109,7 +110,7 @@ public class SendNotificationServiceTests
 
         _singleClientProxy.Verify(
             p => p.SendCoreAsync(
-                "ReceiveNotification",
+                "DealUserNotification",
                 It.Is<object[]>(args => args.Length == 1),
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -120,19 +121,30 @@ public class SendNotificationServiceTests
     [Fact]
     public async Task SendToGroup_SendsToGroupAndSavesToRepository()
     {
-        await _service.SendToGroupAsync("premium", "Deal!");
+        await _service.SendToGroupAsync("premium", "Deal!", "deal-456");
 
         _hubClients.Verify(c => c.Group("premium"), Times.Once);
         _groupProxy.Verify(
-            p => p.SendCoreAsync("ReceiveNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
+            p => p.SendCoreAsync("DealGroupNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
             Times.Once);
         _notificationRepository.Verify(
             s => s.SaveAsync(
                 It.Is<Notification>(n =>
                     n.TargetId   == "premium" &&
                     n.TargetType == "group"   &&
-                    n.Message    == "Deal!"),
+                    n.Message    == "Deal!"   &&
+                    n.DealId     == "deal-456"),
                 It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task SendToGroup_UsesCorrectEventName_DealGroupNotification()
+    {
+        await _service.SendToGroupAsync("tech", "New deal!");
+
+        _groupProxy.Verify(
+            p => p.SendCoreAsync("DealGroupNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

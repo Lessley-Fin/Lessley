@@ -39,7 +39,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             TaskCreationOptions.RunContinuationsAsynchronously);
 
         var hub = BuildHubConnection(userToken);
-        hub.On<JsonElement>("ReceiveNotification", payload => received.TrySetResult(payload));
+        hub.On<JsonElement>("DealUserNotification", payload => received.TrySetResult(payload));
 
         await hub.StartAsync();
         try
@@ -57,8 +57,8 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             timeout.Token.Register(() => received.TrySetCanceled());
             var payload = await received.Task;
 
-            Assert.Equal(message,        payload.GetProperty("message").GetString());
-            Assert.Equal("notification", payload.GetProperty("type").GetString());
+            Assert.Equal(message, payload.GetProperty("message").GetString());
+            Assert.Equal("user",  payload.GetProperty("type").GetString());
 
             // Notification should be persisted
             using var scope = _factory.Services.CreateScope();

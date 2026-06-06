@@ -13,7 +13,7 @@ public class NotificationControllerTests
 {
     private readonly Mock<IConnectionManager> _connectionManager = new();
     private readonly Mock<ISendNotificationService> _sendNotificationService = new();
-    private readonly Mock<INotificationRepository> _notificationRepository = new();
+    private readonly Mock<INotificationService> _notificationService = new();
     private readonly NotificationController _controller;
 
     public NotificationControllerTests()
@@ -21,7 +21,7 @@ public class NotificationControllerTests
         _controller = new NotificationController(
             _connectionManager.Object,
             _sendNotificationService.Object,
-            _notificationRepository.Object,
+            _notificationService.Object,
             NullLogger<NotificationController>.Instance);
     }
 
@@ -32,13 +32,15 @@ public class NotificationControllerTests
     {
         _connectionManager.Setup(m => m.HasConnections("user-1")).Returns(true);
         _sendNotificationService
-            .Setup(s => s.SendToUserAsync("user-1", "Hello", It.IsAny<CancellationToken>()))
+            .Setup(s => s.SendToUserAsync("user-1", "Hello", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
 
         var result = await _controller.SendToUser("user-1", new SendNotificationDto("Hello"));
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        _sendNotificationService.Verify(s => s.SendToUserAsync("user-1", "Hello", It.IsAny<CancellationToken>()), Times.Once);
+        _sendNotificationService.Verify(
+            s => s.SendToUserAsync("user-1", "Hello", null, It.IsAny<CancellationToken>()),
+            Times.Once);
         var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
         Assert.Equal(2, doc.RootElement.GetProperty("recipientCount").GetInt32());
     }
@@ -52,7 +54,9 @@ public class NotificationControllerTests
 
         Assert.IsType<NotFoundObjectResult>(result);
         _sendNotificationService.Verify(
-            s => s.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            s => s.SendToUserAsync(
+                It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -71,7 +75,7 @@ public class NotificationControllerTests
     {
         _connectionManager.Setup(m => m.HasConnections("user-1")).Returns(true);
         _sendNotificationService
-            .Setup(s => s.SendToUserAsync("user-1", "Test", It.IsAny<CancellationToken>()))
+            .Setup(s => s.SendToUserAsync("user-1", "Test", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3);
 
         var result = await _controller.SendToUser("user-1", new SendNotificationDto("Test"));
@@ -89,7 +93,9 @@ public class NotificationControllerTests
         var result = await _controller.SendToGroup("premium", new SendNotificationDto("Deal!"));
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        _sendNotificationService.Verify(s => s.SendToGroupAsync("premium", "Deal!", It.IsAny<CancellationToken>()), Times.Once);
+        _sendNotificationService.Verify(
+            s => s.SendToGroupAsync("premium", "Deal!", null, It.IsAny<CancellationToken>()),
+            Times.Once);
         var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
         Assert.Equal("premium", doc.RootElement.GetProperty("group").GetString());
     }
@@ -156,17 +162,18 @@ public class NotificationControllerTests
     // ── GetUserNotifications ───────────────────────────────────────────────────
 
     [Fact]
-    public async Task GetUserNotifications_ReturnsListFromRepository()
+    public async Task GetUserNotifications_ReturnsListFromService()
     {
         var notifications = new List<Notification>
         {
             new() { TargetId = "user-1", TargetType = "user", Message = "Hello", IsRead = false },
             new() { TargetId = "user-1", TargetType = "user", Message = "World", IsRead = true },
         };
-        _notificationRepository.Setup(r => r.GetByUserAsync("user-1", It.IsAny<CancellationToken>()))
+        _notificationService
+            .Setup(s => s.GetUserNotificationsAsync("user-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(notifications);
 
-        var result = await _controller.GetUserNotifications("user-1");
+        var result = await _controller.GetUserNotifications("user-1", CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(notifications, ok.Value);
@@ -175,10 +182,11 @@ public class NotificationControllerTests
     [Fact]
     public async Task GetUserNotifications_EmptyResult_ReturnsEmptyList()
     {
-        _notificationRepository.Setup(r => r.GetByUserAsync("user-2", It.IsAny<CancellationToken>()))
+        _notificationService
+            .Setup(s => s.GetUserNotificationsAsync("user-2", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Notification>());
 
-        var result = await _controller.GetUserNotifications("user-2");
+        var result = await _controller.GetUserNotifications("user-2", CancellationToken.None);
 
         var ok   = Assert.IsType<OkObjectResult>(result);
         var list = Assert.IsAssignableFrom<List<Notification>>(ok.Value);
@@ -190,7 +198,7 @@ public class NotificationControllerTests
     [InlineData("   ")]
     public async Task GetUserNotifications_BlankUserId_Returns400(string userId)
     {
-        var result = await _controller.GetUserNotifications(userId);
+        var result = await _controller.GetUserNotifications(userId, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -198,16 +206,18 @@ public class NotificationControllerTests
     // ── MarkUserNotificationsAsRead ────────────────────────────────────────────
 
     [Fact]
-    public async Task MarkUserNotificationsAsRead_CallsRepositoryAndReturns200()
+    public async Task MarkUserNotificationsAsRead_CallsServiceAndReturns200()
     {
-        _notificationRepository
-            .Setup(r => r.MarkAllAsReadAsync("user-1", It.IsAny<CancellationToken>()))
+        _notificationService
+            .Setup(s => s.MarkUserNotificationsAsReadAsync("user-1", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _controller.MarkUserNotificationsAsRead("user-1");
+        var result = await _controller.MarkUserNotificationsAsRead("user-1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        _notificationRepository.Verify(r => r.MarkAllAsReadAsync("user-1", It.IsAny<CancellationToken>()), Times.Once);
+        _notificationService.Verify(
+            s => s.MarkUserNotificationsAsReadAsync("user-1", It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Theory]
@@ -215,7 +225,7 @@ public class NotificationControllerTests
     [InlineData("   ")]
     public async Task MarkUserNotificationsAsRead_BlankUserId_Returns400(string userId)
     {
-        var result = await _controller.MarkUserNotificationsAsRead(userId);
+        var result = await _controller.MarkUserNotificationsAsRead(userId, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }

@@ -4,27 +4,27 @@ using MassTransit;
 
 namespace Lessley.Gateway.Api.Consumers;
 
-public class SendUserNotificationCommandConsumer : IConsumer<SendUserNotificationCommand>
+public class DealUserNotificationConsumer : IConsumer<DealUserNotification>
 {
     private readonly ISendNotificationService _sendNotificationService;
-    private readonly ILogger<SendUserNotificationCommandConsumer> _logger;
+    private readonly ILogger<DealUserNotificationConsumer> _logger;
 
-    public SendUserNotificationCommandConsumer(
+    public DealUserNotificationConsumer(
         ISendNotificationService sendNotificationService,
-        ILogger<SendUserNotificationCommandConsumer> logger)
+        ILogger<DealUserNotificationConsumer> logger)
     {
         _sendNotificationService = sendNotificationService;
         _logger                  = logger;
     }
 
-    public async Task Consume(ConsumeContext<SendUserNotificationCommand> context)
+    public async Task Consume(ConsumeContext<DealUserNotification> context)
     {
-        var (userId, message) = (context.Message.UserId, context.Message.Message);
+        var msg = context.Message;
 
-        await _sendNotificationService.SendToUserAsync(userId, message, context.CancellationToken);
+        await _sendNotificationService.SendToUserAsync(msg.UserId, msg.Message, msg.DealId, context.CancellationToken);
 
         _logger.LogInformation(
-            "SendUserNotificationCommand consumed — sent to user '{UserId}': {Message}",
-            userId, message);
+            "DealUserNotification consumed — user '{UserId}', deal '{DealId}'",
+            msg.UserId, msg.DealId);
     }
 }

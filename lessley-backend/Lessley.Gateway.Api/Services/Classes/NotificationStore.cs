@@ -17,11 +17,16 @@ public class NotificationRepository : INotificationRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<List<Notification>> GetByUserAsync(string userId, CancellationToken ct = default)
-        => await _db.Notifications
-            .Where(n => n.TargetId == userId && n.TargetType == "user")
+    public async Task<List<Notification>> GetByUserAsync(string userId, string[] groupTags, CancellationToken ct = default)
+    {
+        var tagList = groupTags.ToList();
+        return await _db.Notifications
+            .Where(n =>
+                (n.TargetId == userId  && n.TargetType == "user") ||
+                (n.TargetType == "group" && tagList.Contains(n.TargetId)))
             .OrderByDescending(n => n.SentAt)
             .ToListAsync(ct);
+    }
 
     public async Task MarkAllAsReadAsync(string userId, CancellationToken ct = default)
     {

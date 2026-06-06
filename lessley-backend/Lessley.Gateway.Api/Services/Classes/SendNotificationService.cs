@@ -24,47 +24,48 @@ public class SendNotificationService : ISendNotificationService
         _logger                 = logger;
     }
 
-    public async Task<int> SendToUserAsync(string userId, string message, CancellationToken ct = default)
+    public async Task<int> SendToUserAsync(string userId, string message, string? dealId = null, CancellationToken ct = default)
     {
         var connections = _connectionManager.GetConnections(userId).ToList();
         if (connections.Count == 0)
             return 0;
 
         var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, type = "notification" };
+        var payload = new { timestamp = sentAt, message, dealId, type = "user" };
 
         foreach (var connectionId in connections)
-            await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveNotification", payload, ct);
+            await _hubContext.Clients.Client(connectionId).SendAsync("DealUserNotification", payload, ct);
 
         await _notificationRepository.SaveAsync(new Notification
         {
             TargetId   = userId,
             TargetType = "user",
             Message    = message,
+            DealId     = dealId,
             SentAt     = sentAt,
         }, ct);
 
-        _logger.LogInformation("Notification sent to user {UserId} ({Count} connections): {Message}",
-            userId, connections.Count, message);
+        _logger.LogInformation("DealUserNotification sent to user {UserId} ({Count} connections)", userId, connections.Count);
 
         return connections.Count;
     }
 
-    public async Task SendToGroupAsync(string groupTag, string message, CancellationToken ct = default)
+    public async Task SendToGroupAsync(string groupTag, string message, string? dealId = null, CancellationToken ct = default)
     {
         var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, type = "group_notification", group = groupTag };
+        var payload = new { timestamp = sentAt, message, dealId, type = "group", group = groupTag };
 
-        await _hubContext.Clients.Group(groupTag).SendAsync("ReceiveNotification", payload, ct);
+        await _hubContext.Clients.Group(groupTag).SendAsync("DealGroupNotification", payload, ct);
 
         await _notificationRepository.SaveAsync(new Notification
         {
             TargetId   = groupTag,
             TargetType = "group",
             Message    = message,
+            DealId     = dealId,
             SentAt     = sentAt,
         }, ct);
 
-        _logger.LogInformation("Notification sent to group '{Group}': {Message}", groupTag, message);
+        _logger.LogInformation("DealGroupNotification sent to group '{Group}'", groupTag);
     }
 }

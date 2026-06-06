@@ -1,3 +1,3 @@
 namespace Lessley.Gateway.Api.Contracts;
 
-public record SendUserNotificationCommand(string UserId, string Message);
+public record DealUserNotification(string UserId, string Message, string DealId);

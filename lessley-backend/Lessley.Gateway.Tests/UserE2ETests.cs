@@ -28,12 +28,12 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto = new UpdateUserDto(null, null, new List<string> { "clubA", "clubB" }, 0.85);
+        var dto      = new UpdateUserDto(null, new List<string> { "clubA", "clubB" }, 0.85);
         var response = await http.PutAsJsonAsync($"api/user/{userId}", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var body  = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var clubs = body.RootElement.GetProperty("clubs").EnumerateArray().Select(c => c.GetString()).ToList();
         Assert.Contains("clubA", clubs);
         Assert.Contains("clubB", clubs);
@@ -49,7 +49,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto = new UpdateUserDto(null, new List<string> { "spam", "ads" }, null, null);
+        var dto      = new UpdateUserDto(new List<string> { "spam", "ads" }, null, null);
         var response = await http.PutAsJsonAsync($"api/user/{userId}", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -61,35 +61,34 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
-    public async Task UpdateUser_AsAdmin_UpdatesTags_ReturnsUpdatedTags()
+    public async Task UpdateUser_NonAdminUpdatingOwnProfile_Returns200()
     {
-        var userId     = await CreateUserAsync($"user-tags-{Guid.NewGuid():N}");
-        var adminToken = NotificationE2ETests.BuildJwt("admin-tags", "Admin");
+        var userId     = await CreateUserAsync($"user-own-{Guid.NewGuid():N}");
+        // JWT subject matches the userId being updated
+        var viewerToken = NotificationE2ETests.BuildJwt(userId, "Viewer");
 
         using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
+        http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
 
-        var dto = new UpdateUserDto(new List<string> { "tech", "food" }, null, null, null);
+        var dto      = new UpdateUserDto(null, null, 0.6);
         var response = await http.PutAsJsonAsync($"api/user/{userId}", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var tags = body.RootElement.GetProperty("tags").EnumerateArray().Select(t => t.GetString()).ToList();
-        Assert.Contains("tech", tags);
-        Assert.Contains("food", tags);
+        Assert.Equal(0.6, body.RootElement.GetProperty("matchingScore").GetDouble(), 2);
     }
 
     [Fact]
-    public async Task UpdateUser_NonAdminToken_Returns403()
+    public async Task UpdateUser_NonAdminUpdatingOtherUser_Returns403()
     {
-        var userId     = await CreateUserAsync($"user-unauth-{Guid.NewGuid():N}");
+        var userId      = await CreateUserAsync($"user-unauth-{Guid.NewGuid():N}");
         var viewerToken = NotificationE2ETests.BuildJwt("viewer-user", "Viewer");
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
 
-        var dto      = new UpdateUserDto(null, null, null, 0.5);
+        var dto      = new UpdateUserDto(null, null, 0.5);
         var response = await http.PutAsJsonAsync($"api/user/{userId}", dto);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -103,7 +102,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto      = new UpdateUserDto(null, null, null, 0.5);
+        var dto      = new UpdateUserDto(null, null, 0.5);
         var response = await http.PutAsJsonAsync("api/user/nonexistent-user-id", dto);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -113,8 +112,65 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task UpdateUser_WithoutToken_Returns401()
     {
         using var http = _factory.CreateClient();
-        var dto        = new UpdateUserDto(null, null, null, 0.5);
+        var dto        = new UpdateUserDto(null, null, 0.5);
         var response   = await http.PutAsJsonAsync("api/user/any-user", dto);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // ── PUT /api/user/{userId}/tags ────────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateUserTags_AsAdmin_UpdatesTags()
+    {
+        var userId     = await CreateUserAsync($"user-tags-{Guid.NewGuid():N}");
+        var adminToken = NotificationE2ETests.BuildJwt("admin-tags", "Admin");
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
+
+        var response = await http.PutAsJsonAsync($"api/user/{userId}/tags", new[] { "tech", "food" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var tags = body.RootElement.GetProperty("tags").EnumerateArray().Select(t => t.GetString()).ToList();
+        Assert.Contains("tech", tags);
+        Assert.Contains("food", tags);
+    }
+
+    [Fact]
+    public async Task UpdateUserTags_AsNonAdmin_Returns403()
+    {
+        var userId      = await CreateUserAsync($"user-tags-na-{Guid.NewGuid():N}");
+        var viewerToken = NotificationE2ETests.BuildJwt("viewer-for-tags", "Viewer");
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
+
+        var response = await http.PutAsJsonAsync($"api/user/{userId}/tags", new[] { "tech" });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateUserTags_UnknownUser_Returns404()
+    {
+        var adminToken = NotificationE2ETests.BuildJwt("admin-tags-404", "Admin");
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
+
+        var response = await http.PutAsJsonAsync("api/user/no-such-user/tags", new[] { "tech" });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateUserTags_WithoutToken_Returns401()
+    {
+        using var http = _factory.CreateClient();
+        var response   = await http.PutAsJsonAsync("api/user/any-user/tags", new[] { "tech" });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -137,11 +193,9 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         var username = $"login-{Guid.NewGuid():N}";
         using var http = _factory.CreateClient();
 
-        // Register first
         await http.PostAsJsonAsync("api/auth/register",
             new { UserName = username, Email = "login@test.com", Password = "Test1234!" });
 
-        // Login
         var response = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });
 
@@ -172,8 +226,8 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
         var loginResp = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });
-        var loginBody  = JsonDocument.Parse(await loginResp.Content.ReadAsStringAsync());
-        var token      = loginBody.RootElement.GetProperty("accessToken").GetString()!;
+        var loginBody = JsonDocument.Parse(await loginResp.Content.ReadAsStringAsync());
+        var token     = loginBody.RootElement.GetProperty("accessToken").GetString()!;
 
         http.DefaultRequestHeaders.Authorization = new("Bearer", token);
         var meResp = await http.GetAsync("api/auth/me");
