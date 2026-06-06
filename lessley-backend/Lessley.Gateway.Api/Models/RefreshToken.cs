@@ -5,7 +5,7 @@ namespace Lessley.Gateway.Api.Models
     public class RefreshToken
     {
         // Data
-        public ObjectId Id { get; set; }
+        public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
         public string Token { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;
         public DateTime Created { get; set; }

@@ -123,9 +123,10 @@ namespace Lessley.Gateway.Api.Controllers
         {
             var userId   = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userName = User.FindFirstValue(ClaimTypes.Name);
+            var email    = User.FindFirstValue(ClaimTypes.Email);
             var roles    = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
-            return Ok(new { userId, userName, roles });
+            return Ok(new { userId, userName, email, roles });
         }
 
         [Authorize(Roles = nameof(UserRoles.Admin))]

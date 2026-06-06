@@ -26,6 +26,10 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb", "mongodb://localhost:27017");
     }
 
+    // Each factory instance gets its own isolated in-memory database so parallel
+    // test classes don't share role/user state and trigger duplicate-key errors.
+    private readonly string _dbName = $"GatewayE2ETestDb_{Guid.NewGuid():N}";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -36,7 +40,7 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase("GatewayE2ETestDb"));
+                options.UseInMemoryDatabase(_dbName));
         });
     }
 

@@ -1,11 +1,9 @@
 using System.Text.Json;
 using Lessley.Gateway.Api.Controllers;
 using Xunit;
-using Lessley.Gateway.Api.Hubs;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -14,96 +12,47 @@ namespace Lessley.Gateway.Tests;
 public class NotificationControllerTests
 {
     private readonly Mock<IConnectionManager> _connectionManager = new();
-    private readonly Mock<INotificationStore> _notificationStore = new();
-    // In ASP.NET Core 8, IHubClients.Client() returns ISingleClientProxy (extends IClientProxy),
-    // while Group() returns the base IClientProxy.
-    private readonly Mock<ISingleClientProxy> _singleClientProxy = new();
-    private readonly Mock<IClientProxy> _groupProxy = new();
-    private readonly Mock<IHubClients> _hubClients = new();
-    private readonly Mock<IHubContext<NotificationHub>> _hubContext = new();
+    private readonly Mock<ISendNotificationService> _sendNotificationService = new();
+    private readonly Mock<INotificationRepository> _notificationRepository = new();
     private readonly NotificationController _controller;
 
     public NotificationControllerTests()
     {
-        // SendAsync is an extension over SendCoreAsync — mock the core method.
-        _singleClientProxy
-            .Setup(p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-        _groupProxy
-            .Setup(p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _hubClients.Setup(c => c.Client(It.IsAny<string>())).Returns(_singleClientProxy.Object);
-        _hubClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_groupProxy.Object);
-        _hubContext.Setup(h => h.Clients).Returns(_hubClients.Object);
-
-        _notificationStore
-            .Setup(s => s.SaveAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
         _controller = new NotificationController(
-            _hubContext.Object,
             _connectionManager.Object,
-            _notificationStore.Object,
+            _sendNotificationService.Object,
+            _notificationRepository.Object,
             NullLogger<NotificationController>.Instance);
     }
 
     // ── SendToUser ─────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task SendToUser_UserHasConnections_SendsToEachConnectionAndReturns200()
+    public async Task SendToUser_UserHasConnections_DelegatesToServiceAndReturns200()
     {
-        _connectionManager
-            .Setup(m => m.GetConnections("user-1"))
-            .Returns(new[] { "conn-a", "conn-b" });
+        _connectionManager.Setup(m => m.HasConnections("user-1")).Returns(true);
+        _sendNotificationService
+            .Setup(s => s.SendToUserAsync("user-1", "Hello", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
 
         var result = await _controller.SendToUser("user-1", new SendNotificationDto("Hello"));
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        _hubClients.Verify(c => c.Client(It.IsAny<string>()), Times.Exactly(2));
-        _singleClientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
-        var json = JsonSerializer.Serialize(ok.Value);
-        var doc = JsonDocument.Parse(json);
+        _sendNotificationService.Verify(s => s.SendToUserAsync("user-1", "Hello", It.IsAny<CancellationToken>()), Times.Once);
+        var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
         Assert.Equal(2, doc.RootElement.GetProperty("recipientCount").GetInt32());
     }
 
     [Fact]
-    public async Task SendToUser_UserHasConnections_SavesNotificationToStore()
+    public async Task SendToUser_UserNotConnected_Returns404WithoutCallingService()
     {
-        _connectionManager
-            .Setup(m => m.GetConnections("user-1"))
-            .Returns(new[] { "conn-a" });
-
-        await _controller.SendToUser("user-1", new SendNotificationDto("Hello"));
-
-        _notificationStore.Verify(
-            s => s.SaveAsync(
-                It.Is<Notification>(n =>
-                    n.TargetId       == "user-1" &&
-                    n.TargetType     == "user"   &&
-                    n.Message        == "Hello"  &&
-                    n.RecipientCount == 1),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task SendToUser_UserNotConnected_Returns404WithoutSending()
-    {
-        _connectionManager
-            .Setup(m => m.GetConnections("user-1"))
-            .Returns(Array.Empty<string>());
+        _connectionManager.Setup(m => m.HasConnections("user-1")).Returns(false);
 
         var result = await _controller.SendToUser("user-1", new SendNotificationDto("Hello"));
 
         Assert.IsType<NotFoundObjectResult>(result);
-        _singleClientProxy.Verify(
-            p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        _notificationStore.Verify(
-            s => s.SaveAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()),
+        _sendNotificationService.Verify(
+            s => s.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -118,54 +67,31 @@ public class NotificationControllerTests
     }
 
     [Fact]
-    public async Task SendToUser_PayloadContainsCorrectEventMethod()
+    public async Task SendToUser_ServiceReturnsCount_CountReflectedInResponse()
     {
-        _connectionManager
-            .Setup(m => m.GetConnections("user-1"))
-            .Returns(new[] { "conn-a" });
+        _connectionManager.Setup(m => m.HasConnections("user-1")).Returns(true);
+        _sendNotificationService
+            .Setup(s => s.SendToUserAsync("user-1", "Test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
 
-        await _controller.SendToUser("user-1", new SendNotificationDto("Test"));
+        var result = await _controller.SendToUser("user-1", new SendNotificationDto("Test"));
 
-        // The method name sent to clients must match the client-side listener
-        _singleClientProxy.Verify(
-            p => p.SendCoreAsync(
-                "ReceiveNotification",
-                It.Is<object[]>(args => args.Length == 1),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+        var ok  = Assert.IsType<OkObjectResult>(result);
+        var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
+        Assert.Equal(3, doc.RootElement.GetProperty("recipientCount").GetInt32());
     }
 
     // ── SendToGroup ────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task SendToGroup_ValidTag_SendsToGroupAndReturns200()
+    public async Task SendToGroup_ValidTag_DelegatesToServiceAndReturns200()
     {
         var result = await _controller.SendToGroup("premium", new SendNotificationDto("Deal!"));
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        _hubClients.Verify(c => c.Group("premium"), Times.Once);
-        _groupProxy.Verify(
-            p => p.SendCoreAsync("ReceiveNotification", It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
-            Times.Once);
-        var json = JsonSerializer.Serialize(ok.Value);
-        var doc = JsonDocument.Parse(json);
+        _sendNotificationService.Verify(s => s.SendToGroupAsync("premium", "Deal!", It.IsAny<CancellationToken>()), Times.Once);
+        var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
         Assert.Equal("premium", doc.RootElement.GetProperty("group").GetString());
-    }
-
-    [Fact]
-    public async Task SendToGroup_ValidTag_SavesNotificationToStore()
-    {
-        await _controller.SendToGroup("premium", new SendNotificationDto("Deal!"));
-
-        _notificationStore.Verify(
-            s => s.SaveAsync(
-                It.Is<Notification>(n =>
-                    n.TargetId       == "premium" &&
-                    n.TargetType     == "group"   &&
-                    n.Message        == "Deal!"   &&
-                    n.RecipientCount == 0),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
     }
 
     [Theory]
@@ -183,7 +109,6 @@ public class NotificationControllerTests
     {
         await _controller.SendToGroup("some-group", new SendNotificationDto("msg"));
 
-        // Group broadcast goes straight to SignalR — connection manager is not involved
         _connectionManager.Verify(m => m.GetConnections(It.IsAny<string>()), Times.Never);
         _connectionManager.Verify(m => m.HasConnections(It.IsAny<string>()), Times.Never);
     }
@@ -198,9 +123,8 @@ public class NotificationControllerTests
 
         var result = _controller.GetUserConnectionStatus("user-1");
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var json = JsonSerializer.Serialize(ok.Value);
-        var doc = JsonDocument.Parse(json);
+        var ok  = Assert.IsType<OkObjectResult>(result);
+        var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
         Assert.True(doc.RootElement.GetProperty("isConnected").GetBoolean());
         Assert.Equal(1, doc.RootElement.GetProperty("connectionCount").GetInt32());
     }
@@ -213,9 +137,8 @@ public class NotificationControllerTests
 
         var result = _controller.GetUserConnectionStatus("user-1");
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var json = JsonSerializer.Serialize(ok.Value);
-        var doc = JsonDocument.Parse(json);
+        var ok  = Assert.IsType<OkObjectResult>(result);
+        var doc = JsonDocument.Parse(JsonSerializer.Serialize(ok.Value));
         Assert.False(doc.RootElement.GetProperty("isConnected").GetBoolean());
         Assert.Equal(0, doc.RootElement.GetProperty("connectionCount").GetInt32());
     }
@@ -226,6 +149,73 @@ public class NotificationControllerTests
     public void GetUserConnectionStatus_BlankUserId_Returns400(string userId)
     {
         var result = _controller.GetUserConnectionStatus(userId);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    // ── GetUserNotifications ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetUserNotifications_ReturnsListFromRepository()
+    {
+        var notifications = new List<Notification>
+        {
+            new() { TargetId = "user-1", TargetType = "user", Message = "Hello", IsRead = false },
+            new() { TargetId = "user-1", TargetType = "user", Message = "World", IsRead = true },
+        };
+        _notificationRepository.Setup(r => r.GetByUserAsync("user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(notifications);
+
+        var result = await _controller.GetUserNotifications("user-1");
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(notifications, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetUserNotifications_EmptyResult_ReturnsEmptyList()
+    {
+        _notificationRepository.Setup(r => r.GetByUserAsync("user-2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Notification>());
+
+        var result = await _controller.GetUserNotifications("user-2");
+
+        var ok   = Assert.IsType<OkObjectResult>(result);
+        var list = Assert.IsAssignableFrom<List<Notification>>(ok.Value);
+        Assert.Empty(list);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task GetUserNotifications_BlankUserId_Returns400(string userId)
+    {
+        var result = await _controller.GetUserNotifications(userId);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    // ── MarkUserNotificationsAsRead ────────────────────────────────────────────
+
+    [Fact]
+    public async Task MarkUserNotificationsAsRead_CallsRepositoryAndReturns200()
+    {
+        _notificationRepository
+            .Setup(r => r.MarkAllAsReadAsync("user-1", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _controller.MarkUserNotificationsAsRead("user-1");
+
+        Assert.IsType<OkObjectResult>(result);
+        _notificationRepository.Verify(r => r.MarkAllAsReadAsync("user-1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task MarkUserNotificationsAsRead_BlankUserId_Returns400(string userId)
+    {
+        var result = await _controller.MarkUserNotificationsAsRead(userId);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }

@@ -36,16 +36,19 @@ public class NotificationHub : Hub
         {
             _connectionManager.AddConnection(userId, connectionId);
 
-            // Rejoin all SignalR groups the user belongs to based on their stored tags
+            // Rejoin all non-muted SignalR groups the user belongs to based on their stored tags
             var user = await _userManager.FindByIdAsync(userId);
             if (user?.Tags is { Count: > 0 })
             {
-                foreach (var tag in user.Tags)
+                var mutedTags  = user.MutedTags ?? new List<string>();
+                var activeTags = user.Tags.Where(t => !mutedTags.Contains(t)).ToList();
+
+                foreach (var tag in activeTags)
                     await Groups.AddToGroupAsync(connectionId, tag);
 
                 _logger.LogInformation(
                     "User {UserId} added to {Count} group(s): {Tags}",
-                    userId, user.Tags.Count, string.Join(", ", user.Tags));
+                    userId, activeTags.Count, string.Join(", ", activeTags));
             }
         }
 

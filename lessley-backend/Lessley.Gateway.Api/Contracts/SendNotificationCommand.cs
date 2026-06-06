@@ -1,3 +1,3 @@
 namespace Lessley.Gateway.Api.Contracts;
 
-public record SendNotificationCommand(string GroupTag, string Message);
+public record SendGroupNotificationCommand(string GroupTag, string Message);

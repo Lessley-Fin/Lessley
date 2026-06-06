@@ -1,48 +1,30 @@
 using Lessley.Gateway.Api.Contracts;
-using Lessley.Gateway.Api.Hubs;
-using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using MassTransit;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Lessley.Gateway.Api.Consumers;
 
-public class SendNotificationCommandConsumer : IConsumer<SendNotificationCommand>
+public class SendNotificationCommandConsumer : IConsumer<SendGroupNotificationCommand>
 {
-    private readonly IHubContext<NotificationHub> _hubContext;
-    private readonly INotificationStore _notificationStore;
+    private readonly ISendNotificationService _sendNotificationService;
     private readonly ILogger<SendNotificationCommandConsumer> _logger;
 
     public SendNotificationCommandConsumer(
-        IHubContext<NotificationHub> hubContext,
-        INotificationStore notificationStore,
+        ISendNotificationService sendNotificationService,
         ILogger<SendNotificationCommandConsumer> logger)
     {
-        _hubContext        = hubContext;
-        _notificationStore = notificationStore;
-        _logger            = logger;
+        _sendNotificationService = sendNotificationService;
+        _logger                  = logger;
     }
 
-    public async Task Consume(ConsumeContext<SendNotificationCommand> context)
+    public async Task Consume(ConsumeContext<SendGroupNotificationCommand> context)
     {
         var (groupTag, message) = (context.Message.GroupTag, context.Message.Message);
 
-        var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, type = "group_notification", group = groupTag };
-
-        await _hubContext.Clients.Group(groupTag).SendAsync("ReceiveNotification", payload);
-
-        await _notificationStore.SaveAsync(new Notification
-        {
-            TargetId       = groupTag,
-            TargetType     = "group",
-            Message        = message,
-            SentAt         = sentAt,
-            RecipientCount = 0,
-        });
+        await _sendNotificationService.SendToGroupAsync(groupTag, message, context.CancellationToken);
 
         _logger.LogInformation(
-            "SendNotificationCommand consumed — broadcast to group '{Group}': {Message}",
+            "SendGroupNotificationCommand consumed — broadcast to group '{Group}': {Message}",
             groupTag, message);
     }
 }
