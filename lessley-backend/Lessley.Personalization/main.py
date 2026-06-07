@@ -15,14 +15,18 @@ import logging_loki
 from services.di_container import DIContainer
 from config.settings import settings
 from config.structured_logging import StructuredFormatter, ContextInjectingFilter
-from routers import open_finance_controller  # Import your new controller
-from routers import mcc_controller  # Import your new controller
-from routers import insights_controller  # Import your new controller
-from routers import recommendation_controller  # Import recommendation controller
-from routers import club_controller  # Import club controller
+from routers import open_finance_controller
+from routers import mcc_controller
+from routers import insights_controller
+from routers import recommendation_controller
+from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
-from services.rabbitmq_publisher import RabbitMQPublisher
+from services.publishers.rabbit_base import RabbitMQBase
+from services.publishers.rabbit_user_publisher import RabbitMQUserPublisher
+from services.publishers.rabbit_tag_publisher import RabbitMQTagPublisher
+from services.publishers.http_publisher import HttpPublisher
+from services.publisher_service import PublisherService
 import uuid
 
 # --- RabbitMQ Configuration ---
@@ -144,32 +148,45 @@ async def consume_rabbitmq():
 # --- FastAPI Lifespan Management ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Connect to MongoDB and fetch setup data
+    # Startup: Connect to MongoDB and load static data
     await init_db()
     await DIContainer.get_mcc_service().initialize()
     await DIContainer.get_recommendation_core_service().initialize()
 
-    if settings.RabbitMQ_Enabled:
-        # Start publisher so services can emit events to other Lessley services
-        publisher = await RabbitMQPublisher.create(settings.ConnectionStrings_Rabbit)
-        app.state.publisher = publisher
+    publisher_service: PublisherService | None = None
 
-        # Start consumer as a background task
-        task = asyncio.create_task(consume_rabbitmq())
-        yield
+    if settings.Publisher_Mode == "http":
+        # HTTP fallback: one HttpPublisher instance satisfies both user and tag roles
+        http_pub = HttpPublisher()
+        publisher_service = PublisherService(user_publisher=http_pub, tag_publisher=http_pub)
+        logger.info("Publisher: HTTP mode enabled")
 
-        # Shutdown
-        task.cancel()
-        await publisher.close()
-    else:
-        app.state.publisher = None
-        yield
+    elif settings.RabbitMQ_Enabled:
+        # RabbitMQ mode: shared connection, separate user/tag publisher classes
+        connection = await RabbitMQBase.connect(settings.ConnectionStrings_Rabbit)
+        user_pub = RabbitMQUserPublisher(connection)
+        tag_pub = RabbitMQTagPublisher(connection)
+        publisher_service = PublisherService(user_publisher=user_pub, tag_publisher=tag_pub)
+        logger.info("Publisher: RabbitMQ mode enabled")
+
+    DIContainer.set_publisher_service(publisher_service)
+
+    consumer_task: asyncio.Task | None = None
+    if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
+        consumer_task = asyncio.create_task(consume_rabbitmq())
+
+    yield
 
     # Shutdown
-    client = DIContainer.get_open_finance_client()
-    await client.close_client()  # Ensure the HTTP client is properly closed on shutdown
+    if consumer_task is not None:
+        consumer_task.cancel()
+    if publisher_service is not None:
+        await publisher_service.close()
+
+    gateway_client = DIContainer.get_open_finance_client()
+    await gateway_client.close_client()
     await close_db()
-    listener.stop()  # Gracefully stop the logging queue listener
+    listener.stop()
 
 
 # --- Rate Limiter Configuration ---

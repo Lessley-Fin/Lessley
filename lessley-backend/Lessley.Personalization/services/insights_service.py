@@ -16,16 +16,20 @@ class InsightsService:
         open_finance_service: OpenFinanceService,
         files_service: TransactionStashService,
         processing_core_service: ProcessingCoreService,
+        publisher_service=None,
     ):
         self.open_finance_service = open_finance_service
         self.files_service = files_service
         self.processing_core_service = processing_core_service
+        self.publisher_service = publisher_service
 
     async def calculate_user_categories_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
     ) -> list[Transaction]:
         """
-        Calculates user categories based on transactions.
+        Calculates user categories from spending transactions, then publishes the derived
+        tags to the Gateway via publisher_service so they are stored on the user profile
+        and become readable through UserRepository by other services (task 9).
         """
         logger.info(
             "Service method called",
@@ -42,6 +46,13 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
             categories = self.processing_core_service.get_top_spending_categories(transactions)
+
+            # Publish derived tags so Gateway persists them on the user profile.
+            # Other services read back via UserRepository instead of re-running this calculation.
+            if self.publisher_service and categories:
+                tags = [c.get("category") for c in categories if c.get("category") and c.get("category") != "N/A"]
+                if tags:
+                    await self.publisher_service.publish_user_tag_assigned(user_id, tags)
 
             logger.info(
                 "User categories calculated successfully",

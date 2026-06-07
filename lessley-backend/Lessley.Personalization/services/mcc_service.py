@@ -1,4 +1,6 @@
 import logging
+from typing import List
+
 from models.db.entities import MccCode
 
 logger = logging.getLogger(__name__)
@@ -38,3 +40,20 @@ class MccService:
         Returns the clean, human-readable description for an MCC.
         """
         return self._mcc_map.get(str(category_code), "N/A")
+
+    def get_mcc_codes_by_tag(self, tag: str) -> List[int]:
+        """
+        Reverse-lookup: return MCC codes whose description contains the tag string.
+        Used by RecommendationService to convert user category tags back to MCC codes
+        for club-matching without re-running the full spending analysis.
+        """
+        tag_upper = tag.strip().upper()
+        codes: List[int] = []
+        for mcc_code, description in self._mcc_map.items():
+            desc_upper = description.upper()
+            if tag_upper in desc_upper or desc_upper in tag_upper:
+                try:
+                    codes.append(int(mcc_code))
+                except ValueError:
+                    pass
+        return codes
