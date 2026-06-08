@@ -34,33 +34,51 @@ public class UserTagService : IUserTagService
             return;
         }
 
-        var previousTags = user.Tags ?? new List<string>();
-        var mutedTags    = user.MutedTags ?? new List<string>();
-        var newTags      = tags.ToList();
+        var previousTags = (user.Tags ?? new List<string>()).ToList();
+        user.Tags = tags.ToList();
 
-        user.Tags = newTags;
-        await _userManager.UpdateAsync(user);
-
-        var connections = _connectionManager.GetConnections(userId).ToList();
-        if (connections.Count == 0)
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
         {
-            _logger.LogInformation("Tags assigned to offline user {UserId}: {Tags}", userId, string.Join(", ", tags));
+            _logger.LogError(
+                "AssignTags: DB update failed for user {UserId}: {Errors}",
+                userId, string.Join("; ", result.Errors.Select(e => e.Description)));
             return;
         }
 
-        // Remove connections from all previous tag groups
-        foreach (var oldTag in previousTags)
-            foreach (var connectionId in connections)
-                await _hubContext.Groups.RemoveFromGroupAsync(connectionId, oldTag, ct);
+        await SyncGroupsAsync(userId, previousTags, ct);
+    }
 
-        // Add connections to new non-muted tag groups
-        var activeTags = newTags.Where(t => !mutedTags.Contains(t)).ToList();
+    public async Task SyncGroupsAsync(string userId, IReadOnlyList<string> previousTags, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            _logger.LogWarning("SyncGroups: user {UserId} not found", userId);
+            return;
+        }
+
+        var currentTags = user.Tags ?? new List<string>();
+        var mutedTags   = user.MutedTags ?? new List<string>();
+        var connections = _connectionManager.GetConnections(userId).ToList();
+
+        if (connections.Count == 0)
+        {
+            _logger.LogInformation("SyncGroups: user {UserId} has no active connections — skipping", userId);
+            return;
+        }
+
+        foreach (var tag in previousTags)
+            foreach (var connectionId in connections)
+                await _hubContext.Groups.RemoveFromGroupAsync(connectionId, tag, ct);
+
+        var activeTags = currentTags.Where(t => !mutedTags.Contains(t)).ToList();
         foreach (var tag in activeTags)
             foreach (var connectionId in connections)
                 await _hubContext.Groups.AddToGroupAsync(connectionId, tag, ct);
 
         _logger.LogInformation(
-            "Tags assigned to user {UserId} — {Count} connection(s) updated. Active groups: {Tags}",
+            "Groups synced for user {UserId} — {Count} connection(s). Active: {Tags}",
             userId, connections.Count, string.Join(", ", activeTags));
     }
 }

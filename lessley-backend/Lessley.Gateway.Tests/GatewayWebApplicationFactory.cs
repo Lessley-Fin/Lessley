@@ -16,24 +16,12 @@ namespace Lessley.Gateway.Tests;
 public sealed class FakePersonalizationService : IPersonalizationService
 {
     public int RecalculateCallCount;
-    public int ClubRecommendationCallCount;
 
     public Task RecalculateCategoriesAsync(string email, CancellationToken ct = default)
     {
         Interlocked.Increment(ref RecalculateCallCount);
         return Task.CompletedTask;
     }
-
-    public Task RequestClubRecommendationsAsync(string email, CancellationToken ct = default)
-    {
-        Interlocked.Increment(ref ClubRecommendationCallCount);
-        return Task.CompletedTask;
-    }
-
-    public Task<string> GetPreferredAccountsAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
-    public Task<string> GetPreferredStoresAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
-    public Task<string> GetAlternativeStoresAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
-    public Task<string> GetTransactionBreakdownByMccAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
 }
 
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>

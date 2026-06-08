@@ -5,6 +5,7 @@ using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -23,7 +24,11 @@ public class UserControllerTests
         _userManager = new Mock<UserManager<ApplicationUser>>(
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
-        _controller = new UserController(_userManager.Object, _userTagService.Object, _personalizationService.Object);
+        _controller = new UserController(
+            _userManager.Object,
+            _userTagService.Object,
+            _personalizationService.Object,
+            NullLogger<UserController>.Instance);
         SetCallerContext("admin@test.com", "Admin");
     }
 
@@ -128,7 +133,7 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task UpdateUser_MutedCategoriesChanged_TriggersRecalculation()
+    public async Task UpdateUser_MutedCategoriesChanged_SyncsGroupsAndTriggersRecalculation()
     {
         var user = new ApplicationUser { Id = "user-1", Email = "user-1", MutedTags = new List<string> { "5411" } };
         _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
@@ -137,6 +142,10 @@ public class UserControllerTests
         var result = await _controller.UpdateUser("user-1", new UpdateUserDto(new List<string> { "5812" }, null, null));
 
         Assert.IsType<OkObjectResult>(result);
+        // Muted-tag change must immediately re-sync SignalR groups
+        _userTagService.Verify(
+            s => s.SyncGroupsAsync("user-1", It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()), Times.Once);
+        // And must trigger Personalization recalculation
         _personalizationService.Verify(
             s => s.RecalculateCategoriesAsync("user-1", It.IsAny<CancellationToken>()), Times.Once);
     }

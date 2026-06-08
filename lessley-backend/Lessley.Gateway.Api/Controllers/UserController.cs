@@ -15,24 +15,29 @@ public class UserController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserTagService _userTagService;
     private readonly IPersonalizationService _personalizationService;
+    private readonly ILogger<UserController> _logger;
 
     public UserController(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
-        IPersonalizationService personalizationService)
+        IPersonalizationService personalizationService,
+        ILogger<UserController> logger)
     {
         _userManager            = userManager;
         _userTagService         = userTagService;
         _personalizationService = personalizationService;
+        _logger                 = logger;
     }
 
     /// <summary>
-    /// Process 3 — update user configuration (loyalty clubs, match level, muted categories).
+    /// Update user configuration (loyalty clubs, match level, muted categories).
     /// Admins may update any user; regular users may only update themselves.
-    /// The user is addressed by email (the system-wide primary identifier) and resolved
-    /// to their account here; internal services continue to key on user.Id.
-    /// If the match level or muted categories changed, Process 2 (category recalculation) is
-    /// triggered. Tags are managed separately via PUT /api/user/{email}/tags (Admin only).
+    ///
+    /// Step 1 — persist changes to DB.
+    /// Step 2 — if mutedTags changed, immediately re-sync SignalR group memberships so the user
+    ///           stops receiving notifications for newly muted categories without delay.
+    /// Step 3 — if matchingScore or mutedTags changed, trigger Personalization recalculation
+    ///           (Personalization posts back new tags → PUT /api/user/{email}/tags → SyncGroups).
     /// </summary>
     [HttpPatch("{email}")]
     public async Task<IActionResult> UpdateUser(string email, [FromBody] UpdateUserDto dto, CancellationToken ct = default)
@@ -55,14 +60,33 @@ public class UserController : ControllerBase
         if (dto.Clubs is not null)       user.Clubs         = dto.Clubs;
         if (dto.MatchingScore.HasValue)  user.MatchingScore = dto.MatchingScore.Value;
 
+        // Step 1: persist to DB
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
-        // Process 2: a changed match level or muted categories requires recalculating the
-        // preferred categories (Personalization writes the new tags back + regroups SignalR).
+        // Step 2: muted tags changed → re-sync SignalR groups immediately.
+        // previousTags == currentTags here (PATCH does not change Tags), so SyncGroupsAsync
+        // removes the user from all their tag groups then re-adds only the non-muted ones.
+        if (mutedChanged)
+            await _userTagService.SyncGroupsAsync(user.Id, user.Tags ?? new List<string>(), ct);
+
+        // Step 3: score or muted changed → trigger full category recalculation in Personalization.
+        // Personalization will post the new tag set back to PUT /api/user/{email}/tags which
+        // calls AssignTagsAsync → SyncGroupsAsync, completing the pipeline.
         if (matchChanged || mutedChanged)
-            await _personalizationService.RecalculateCategoriesAsync(email, ct);
+        {
+            try
+            {
+                await _personalizationService.RecalculateCategoriesAsync(email, ct);
+            }
+            catch (Exception ex)
+            {
+                // DB was saved and (if muted changed) groups were already synced.
+                // Log and continue — the client should not get a 500 for a background failure.
+                _logger.LogError(ex, "Category recalculation failed for {Email} — DB changes are saved", email);
+            }
+        }
 
         return Ok(new
         {
@@ -76,9 +100,9 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Process 2 — explicitly trigger recalculation of the user's preferred categories based on
-    /// their stored match level. Client → Gateway → Personalization; Personalization writes the
-    /// new categories back to the Gateway and SignalR groups are updated if they changed.
+    /// Explicitly trigger recalculation of the user's preferred categories.
+    /// Personalization computes new categories and posts them back to PUT /api/user/{email}/tags,
+    /// which persists the tags and re-syncs SignalR group memberships via SyncGroupsAsync.
     /// </summary>
     [HttpPost("{email}/recalculate")]
     public async Task<IActionResult> RecalculateCategories(string email, CancellationToken ct = default)
@@ -98,7 +122,7 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Assign tags to a user (addressed by email) and update their SignalR group memberships.
+    /// Assign tags to a user and update their SignalR group memberships.
     /// Admin only — tags drive deal category broadcasts and are not self-managed.
     /// </summary>
     [HttpPut("{email}/tags")]
