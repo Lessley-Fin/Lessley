@@ -113,10 +113,10 @@ namespace Lessley.Gateway.Api.Controllers
         }
 
         [Authorize(Roles = nameof(UserRoles.Admin))]
-        [HttpPut("role/{userId}/{newRole}")]
-        public async Task<IActionResult> ChangeUserRole([FromRoute] string userId, [FromRoute] UserRoles newRole)
+        [HttpPut("role/{email}/{newRole}")]
+        public async Task<IActionResult> ChangeUserRole([FromRoute] string email, [FromRoute] UserRoles newRole)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user == null) return NotFound("User not found");
 
             var userRoleIds = await _context.UserRoles
@@ -137,7 +137,14 @@ namespace Lessley.Gateway.Api.Controllers
 
         private async Task<IActionResult> CreateUser(RegisterDto model, UserRoles role)
         {
-            var user   = new ApplicationUser { UserName = model.UserName, Email = model.Email };
+            var user = new ApplicationUser
+            {
+                UserName      = model.UserName,
+                Email         = model.Email,
+                Clubs         = model.Clubs ?? new(),
+                MutedTags     = model.MutedCategories ?? new(),
+                MatchingScore = model.MatchLevel?.ToMatchingScore(),
+            };
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded) return BadRequest(result.Errors);

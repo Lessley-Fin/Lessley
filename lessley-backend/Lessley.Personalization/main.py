@@ -22,11 +22,6 @@ from routers import recommendation_controller
 from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
-from services.publishers.rabbit_base import RabbitMQBase
-from services.publishers.rabbit_user_publisher import RabbitMQUserPublisher
-from services.publishers.rabbit_tag_publisher import RabbitMQTagPublisher
-from services.publishers.http_publisher import HttpPublisher
-from services.publisher_service import PublisherService
 import uuid
 
 # --- RabbitMQ Configuration ---
@@ -153,33 +148,18 @@ async def lifespan(app: FastAPI):
     await DIContainer.get_mcc_service().initialize()
     await DIContainer.get_recommendation_core_service().initialize()
 
-    publisher_service: PublisherService | None = None
+    publisher_service = DIContainer.get_publisher_service()
+    await publisher_service.initialize()
 
-    if settings.Publisher_Mode == "http":
-        # HTTP fallback: one HttpPublisher instance satisfies both user and tag roles
-        http_pub = HttpPublisher()
-        publisher_service = PublisherService(user_publisher=http_pub, tag_publisher=http_pub)
-        logger.info("Publisher: HTTP mode enabled")
-
-    elif settings.RabbitMQ_Enabled:
-        # RabbitMQ mode: shared connection, separate user/tag publisher classes
-        connection = await RabbitMQBase.connect(settings.ConnectionStrings_Rabbit)
-        user_pub = RabbitMQUserPublisher(connection)
-        tag_pub = RabbitMQTagPublisher(connection)
-        publisher_service = PublisherService(user_publisher=user_pub, tag_publisher=tag_pub)
-        logger.info("Publisher: RabbitMQ mode enabled")
-
-    DIContainer.set_publisher_service(publisher_service)
-
-    consumer_task: asyncio.Task | None = None
-    if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
-        consumer_task = asyncio.create_task(consume_rabbitmq())
+    # consumer_task: asyncio.Task | None = None
+    # if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
+    #     consumer_task = asyncio.create_task(consume_rabbitmq())
 
     yield
 
     # Shutdown
-    if consumer_task is not None:
-        consumer_task.cancel()
+    # if consumer_task is not None:
+    #     consumer_task.cancel()
     if publisher_service is not None:
         await publisher_service.close()
 

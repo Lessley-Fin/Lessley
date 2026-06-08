@@ -27,15 +27,13 @@ public class SendNotificationService : ISendNotificationService
     public async Task<int> SendToUserAsync(string userId, string message, string? dealId = null, CancellationToken ct = default)
     {
         var connections = _connectionManager.GetConnections(userId).ToList();
-        if (connections.Count == 0)
-            return 0;
-
-        var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, dealId, type = "user" };
+        var sentAt      = DateTime.UtcNow;
+        var payload     = new { timestamp = sentAt, message, dealId, type = "user" };
 
         foreach (var connectionId in connections)
             await _hubContext.Clients.Client(connectionId).SendAsync("DealUserNotification", payload, ct);
 
+        // Always persist so offline users can read the notification later (Processes 8/9).
         await _notificationRepository.SaveAsync(new Notification
         {
             TargetId   = userId,
@@ -45,7 +43,7 @@ public class SendNotificationService : ISendNotificationService
             SentAt     = sentAt,
         }, ct);
 
-        _logger.LogInformation("DealUserNotification sent to user {UserId} ({Count} connections)", userId, connections.Count);
+        _logger.LogInformation("DealUserNotification sent to user {UserId} ({Count} live connections)", userId, connections.Count);
 
         return connections.Count;
     }

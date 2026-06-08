@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 Console.Title = "Lessley Mock Client";
 
-var baseUrl = args.Length > 0 ? args[0].TrimEnd('/') : "http://localhost:5001";
+var baseUrl = args.Length > 0 ? args[0].TrimEnd('/') : "http://localhost:8001";
 
 Banner($"Lessley Mock Client  |  {baseUrl}");
 
@@ -25,8 +25,9 @@ if (token is null)
     return;
 }
 
-var myUserId = ExtractUserIdFromJwt(token) ?? "unknown";
-Ok($"Authenticated as '{username}'  (userId: {myUserId})");
+// Email is the system-wide primary identifier — users are addressed by email everywhere.
+var myEmail = ExtractEmailFromJwt(token) ?? "unknown";
+Ok($"Authenticated as '{username}'  (email: {myEmail})");
 
 // ── Build SignalR connection ───────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ catch (Exception ex)
 }
 
 Ok($"Connected to hub  (connection: {hub.ConnectionId})");
-Console.WriteLine($"  Your userId : {myUserId}  ← use this in 'send user' from the other client");
+Console.WriteLine($"  Your email : {myEmail}  ← use this in 'send user' from the other client");
 PrintHelp();
 
 // ── Interactive loop ──────────────────────────────────────────────────────────
@@ -99,14 +100,14 @@ while (!cts.Token.IsCancellationRequested)
     if (input is "whoami")
     {
         Console.WriteLine($"  username : {username}");
-        Console.WriteLine($"  userId   : {myUserId}");
+        Console.WriteLine($"  email    : {myEmail}");
         continue;
     }
 
     if (input.StartsWith("send user ", StringComparison.OrdinalIgnoreCase))
     {
         var rest = input["send user ".Length..].Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-        if (rest.Length < 2) { Warn("Usage: send user <userId> <message>"); continue; }
+        if (rest.Length < 2) { Warn("Usage: send user <email> <message>"); continue; }
         await SendToUserAsync(http, rest[0], rest[1]);
         continue;
     }
@@ -121,8 +122,8 @@ while (!cts.Token.IsCancellationRequested)
 
     if (input.StartsWith("status ", StringComparison.OrdinalIgnoreCase))
     {
-        var userId = input["status ".Length..].Trim();
-        await GetStatusAsync(http, userId);
+        var email = input["status ".Length..].Trim();
+        await GetStatusAsync(http, email);
         continue;
     }
 
@@ -170,11 +171,11 @@ static async Task<string?> LoginAsync(string baseUrl, string username, string pa
     }
 }
 
-static async Task SendToUserAsync(HttpClient http, string userId, string message)
+static async Task SendToUserAsync(HttpClient http, string email, string message)
 {
     try
     {
-        var response = await http.PostAsJsonAsync($"api/notification/user/{userId}", new { message });
+        var response = await http.PostAsJsonAsync($"api/notification/user/{email}", new { message });
         var body = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode) Ok(body);
         else Error($"{(int)response.StatusCode} — {body}");
@@ -194,11 +195,11 @@ static async Task SendToGroupAsync(HttpClient http, string tag, string message)
     catch (Exception ex) { Error(ex.Message); }
 }
 
-static async Task GetStatusAsync(HttpClient http, string userId)
+static async Task GetStatusAsync(HttpClient http, string email)
 {
     try
     {
-        var response = await http.GetAsync($"api/notification/status/{userId}");
+        var response = await http.GetAsync($"api/notification/status/{email}");
         var body     = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode) Ok(body);
         else Error($"{(int)response.StatusCode} — {body}");
@@ -211,17 +212,18 @@ static async Task GetStatusAsync(HttpClient http, string userId)
 static void PrintHelp()
 {
     Console.WriteLine();
-    Console.WriteLine("  whoami                         — show your userId (needed by the other client)");
-    Console.WriteLine("  send user <userId> <message>   — send a notification to a user  (requires Admin role)");
+    Console.WriteLine("  whoami                         — show your email (needed by the other client)");
+    Console.WriteLine("  send user <email> <message>    — send a notification to a user  (requires Admin role)");
     Console.WriteLine("  send group <tag> <message>     — broadcast to a group            (requires Admin role)");
-    Console.WriteLine("  status <userId>                — check whether a user is connected");
+    Console.WriteLine("  status <email>                 — check whether a user is connected");
     Console.WriteLine("  help / ?                       — show this help");
     Console.WriteLine("  quit / q  or  Ctrl+C           — exit");
     Console.WriteLine();
 }
 
-// Decodes the JWT payload (no library needed — it's just base64url JSON)
-static string? ExtractUserIdFromJwt(string token)
+// Decodes the JWT payload (no library needed — it's just base64url JSON) and returns the
+// email claim, which is the system-wide primary identifier used to address users.
+static string? ExtractEmailFromJwt(string token)
 {
     try
     {
@@ -233,13 +235,12 @@ static string? ExtractUserIdFromJwt(string token)
         var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(payload));
         using var doc = JsonDocument.Parse(json);
 
-        // ASP.NET Core serialises ClaimTypes.NameIdentifier as "nameid" in short-form JWTs
+        // ASP.NET Core serialises ClaimTypes.Email as "email" in short-form JWTs
         // but sometimes as the full URI
         foreach (var key in new[]
         {
-            "nameid",
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
-            "sub"
+            "email",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
         })
         {
             if (doc.RootElement.TryGetProperty(key, out var v))

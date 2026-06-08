@@ -1,4 +1,5 @@
 using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -7,6 +8,33 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lessley.Gateway.Tests;
+
+/// <summary>
+/// No-op stand-in for the Personalization HTTP client so E2E tests don't require the
+/// FastAPI service to be running. Records how many times recalculation was requested.
+/// </summary>
+public sealed class FakePersonalizationService : IPersonalizationService
+{
+    public int RecalculateCallCount;
+    public int ClubRecommendationCallCount;
+
+    public Task RecalculateCategoriesAsync(string email, CancellationToken ct = default)
+    {
+        Interlocked.Increment(ref RecalculateCallCount);
+        return Task.CompletedTask;
+    }
+
+    public Task RequestClubRecommendationsAsync(string email, CancellationToken ct = default)
+    {
+        Interlocked.Increment(ref ClubRecommendationCallCount);
+        return Task.CompletedTask;
+    }
+
+    public Task<string> GetPreferredAccountsAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
+    public Task<string> GetPreferredStoresAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
+    public Task<string> GetAlternativeStoresAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
+    public Task<string> GetTransactionBreakdownByMccAsync(string email, CancellationToken ct = default) => Task.FromResult("[]");
+}
 
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -30,6 +58,9 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
     // test classes don't share role/user state and trigger duplicate-key errors.
     private readonly string _dbName = $"GatewayE2ETestDb_{Guid.NewGuid():N}";
 
+    // Shared fake so tests can assert how often category recalculation was triggered.
+    public readonly FakePersonalizationService PersonalizationService = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -41,6 +72,10 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseInMemoryDatabase(_dbName));
+
+            // Replace the HTTP Personalization client with an in-memory no-op.
+            services.RemoveAll<IPersonalizationService>();
+            services.AddSingleton<IPersonalizationService>(PersonalizationService);
         });
     }
 

@@ -19,8 +19,14 @@ public class NotificationService : INotificationService
 
     public async Task<List<Notification>> GetUserNotificationsAsync(string userId, CancellationToken ct = default)
     {
-        var user     = await _userManager.FindByIdAsync(userId);
-        var groupTags = user?.Tags?.ToArray() ?? Array.Empty<string>();
+        var user  = await _userManager.FindByIdAsync(userId);
+        var muted = user?.MutedTags ?? new List<string>();
+
+        // A muted category must never surface in a user's notifications, even in history.
+        var groupTags = (user?.Tags ?? new List<string>())
+            .Where(t => !muted.Contains(t))
+            .ToArray();
+
         return await _notificationRepository.GetByUserAsync(userId, groupTags, ct);
     }
 

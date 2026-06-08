@@ -7,6 +7,7 @@ using System.Text.Json;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Models;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +30,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task ConnectUser_AdminPostsNotification_UserReceivesMessageViaSignalR()
     {
-        const string userId = "e2e-user-001";
+        var (userId, email) = await CreateUserAsync();
         var message = $"E2E notification – {Guid.NewGuid()}";
 
         var userToken  = BuildJwt(userId, "Viewer");
@@ -48,7 +49,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             var response = await http.PostAsJsonAsync(
-                $"api/notification/user/{userId}",
+                $"api/notification/user/{email}",
                 new SendNotificationDto(message));
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -60,7 +61,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             Assert.Equal(message, payload.GetProperty("message").GetString());
             Assert.Equal("user",  payload.GetProperty("type").GetString());
 
-            // Notification should be persisted
+            // Notification should be persisted, keyed on the resolved user.Id
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var saved = await db.Notifications
@@ -111,7 +112,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task ConnectedUser_GetStatus_ReturnsConnectedTrue()
     {
-        var userId    = $"status-user-{Guid.NewGuid():N}";
+        var (userId, email) = await CreateUserAsync();
         var userToken = BuildJwt(userId, "Viewer");
 
         var hub = BuildHubConnection(userToken);
@@ -121,7 +122,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             using var http = _factory.CreateClient();
             http.DefaultRequestHeaders.Authorization = new("Bearer", userToken);
 
-            var response = await http.GetAsync($"api/notification/status/{userId}");
+            var response = await http.GetAsync($"api/notification/status/{email}");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -138,13 +139,14 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task DisconnectedUser_GetStatus_ReturnsConnectedFalse()
     {
-        var userId    = $"offline-user-{Guid.NewGuid():N}";
-        var userToken = BuildJwt(userId, "Viewer");
+        var (_, email) = await CreateUserAsync();
 
+        // Use any valid token; status is read-only and resolves the target by email.
+        var token = BuildJwt("status-reader", "Viewer");
         using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", userToken);
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
-        var response = await http.GetAsync($"api/notification/status/{userId}");
+        var response = await http.GetAsync($"api/notification/status/{email}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -157,7 +159,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task GetUserNotifications_AfterSendingNotification_ReturnsSavedNotification()
     {
-        var userId     = $"notif-user-{Guid.NewGuid():N}";
+        var (userId, email) = await CreateUserAsync();
         var message    = $"Test message – {Guid.NewGuid()}";
         var adminToken = BuildJwt("admin-get-notif", "Admin");
         var userToken  = BuildJwt(userId, "Viewer");
@@ -171,10 +173,10 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Send notification
-            await http.PostAsJsonAsync($"api/notification/user/{userId}", new SendNotificationDto(message));
+            await http.PostAsJsonAsync($"api/notification/user/{email}", new SendNotificationDto(message));
 
             // Retrieve user notifications
-            var getResponse = await http.GetAsync($"api/notification/user/{userId}");
+            var getResponse = await http.GetAsync($"api/notification/user/{email}");
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
             var notifications = JsonDocument.Parse(await getResponse.Content.ReadAsStringAsync());
@@ -195,13 +197,13 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task GetUserNotifications_NoNotifications_ReturnsEmptyArray()
     {
-        var userId     = $"empty-user-{Guid.NewGuid():N}";
+        var (_, email) = await CreateUserAsync();
         var adminToken = BuildJwt("admin-empty", "Admin");
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var response = await http.GetAsync($"api/notification/user/{userId}");
+        var response = await http.GetAsync($"api/notification/user/{email}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -214,7 +216,7 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task MarkAsRead_AfterSending_MarksAllNotificationsRead()
     {
-        var userId     = $"read-user-{Guid.NewGuid():N}";
+        var (userId, email) = await CreateUserAsync();
         var adminToken = BuildJwt("admin-mark-read", "Admin");
         var userToken  = BuildJwt(userId, "Viewer");
 
@@ -226,11 +228,11 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Send two notifications
-            await http.PostAsJsonAsync($"api/notification/user/{userId}", new SendNotificationDto("msg1"));
-            await http.PostAsJsonAsync($"api/notification/user/{userId}", new SendNotificationDto("msg2"));
+            await http.PostAsJsonAsync($"api/notification/user/{email}", new SendNotificationDto("msg1"));
+            await http.PostAsJsonAsync($"api/notification/user/{email}", new SendNotificationDto("msg2"));
 
             // Mark all as read
-            var markResponse = await http.PostAsync($"api/notification/read/{userId}", null);
+            var markResponse = await http.PostAsync($"api/notification/read/{email}", null);
             Assert.Equal(HttpStatusCode.OK, markResponse.StatusCode);
 
             // Verify they are now read in DB
@@ -252,14 +254,68 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
     [Fact]
     public async Task MarkAsRead_NoNotifications_Returns200()
     {
-        var userId     = $"no-notif-user-{Guid.NewGuid():N}";
+        var (_, email) = await CreateUserAsync();
         var adminToken = BuildJwt("admin-no-notif", "Admin");
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var response = await http.PostAsync($"api/notification/read/{userId}", null);
+        var response = await http.PostAsync($"api/notification/read/{email}", null);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // ── Muting guarantee ───────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task MutedUser_DoesNotSeeGroupNotification_WhileNonMutedUserDoes()
+    {
+        var tag = $"deal-tag-{Guid.NewGuid():N}";
+        var message = $"Deal for {tag}";
+
+        // Subscriber has the tag and has NOT muted it; muter has the tag but muted it.
+        var subscriberEmail = await CreateUserWithTagsAsync(tags: new[] { tag }, muted: Array.Empty<string>());
+        var muterEmail      = await CreateUserWithTagsAsync(tags: new[] { tag }, muted: new[] { tag });
+
+        var adminToken = BuildJwt("admin-mute-test", "Admin");
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
+
+        // Broadcast the deal to the category tag group (Process 8 style).
+        var send = await http.PostAsJsonAsync($"api/notification/group/{tag}", new SendNotificationDto(message));
+        Assert.Equal(HttpStatusCode.OK, send.StatusCode);
+
+        // The non-muted subscriber sees it in their history...
+        var subNotifs = await GetNotificationsAsync(http, subscriberEmail);
+        Assert.Contains(subNotifs, n => n.GetProperty("message").GetString() == message);
+
+        // ...the muted user must never see it.
+        var muterNotifs = await GetNotificationsAsync(http, muterEmail);
+        Assert.DoesNotContain(muterNotifs, n => n.GetProperty("message").GetString() == message);
+    }
+
+    private async Task<List<JsonElement>> GetNotificationsAsync(HttpClient http, string email)
+    {
+        var resp = await http.GetAsync($"api/notification/user/{email}");
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        return doc.RootElement.EnumerateArray().ToList();
+    }
+
+    private async Task<string> CreateUserWithTagsAsync(string[] tags, string[] muted)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var email = $"tagged-{Guid.NewGuid():N}@test.com";
+        var user  = new ApplicationUser
+        {
+            UserName  = email,
+            Email     = email,
+            Tags      = tags.ToList(),
+            MutedTags = muted.ToList(),
+        };
+        await userManager.CreateAsync(user, "Test1234!");
+        return email;
     }
 
     // ── Auth Required ──────────────────────────────────────────────────────────
@@ -280,6 +336,17 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    private async Task<(string Id, string Email)> CreateUserAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var email = $"notif-{Guid.NewGuid():N}@test.com";
+        var user  = new ApplicationUser { UserName = email, Email = email };
+        await userManager.CreateAsync(user, "Test1234!");
+        return (user.Id, email);
+    }
+
     private HubConnection BuildHubConnection(string token) =>
         new HubConnectionBuilder()
             .WithUrl(new Uri(_factory.Server.BaseAddress, "hubs/notifications"), options =>
@@ -290,17 +357,23 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             })
             .Build();
 
-    internal static string BuildJwt(string userId, string role)
+    // NameIdentifier carries user.Id (SignalR identity); email is a separate claim used by
+    // controllers that authorize self-service actions by email.
+    internal static string BuildJwt(string userId, string role, string? email = null)
     {
-        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GatewayWebApplicationFactory.JwtKey));
+        var key    = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GatewayWebApplicationFactory.JwtKey));
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId),
+            new(ClaimTypes.Role,           role),
+        };
+        if (email is not null)
+            claims.Add(new Claim(ClaimTypes.Email, email));
+
         var token = new JwtSecurityToken(
             issuer:   GatewayWebApplicationFactory.Issuer,
             audience: GatewayWebApplicationFactory.Audience,
-            claims:
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role,           role),
-            ],
+            claims:             claims,
             expires:            DateTime.UtcNow.AddHours(1),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 

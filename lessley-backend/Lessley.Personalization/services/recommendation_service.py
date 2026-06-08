@@ -1,21 +1,22 @@
 import logging
 from typing import Dict, List
 
+from fastapi import HTTPException
+
 from .recommendation_core_service import RecommendationCoreService
 from .user_repository import UserRepository
 from .publisher_service import PublisherService
 from .mcc_service import MccService
-from config.constants import LIMITS
 
 logger = logging.getLogger(__name__)
 
 
 class RecommendationService:
     """
-    Orchestrates club/deal recommendations and deal broadcast notifications.
+    Orchestrates club recommendations and deal broadcast notifications.
 
     Tags are read from UserRepository (pre-computed by InsightsService and stored via the
-    Gateway) instead of recalculating them on every call (task 10).
+    Gateway) instead of recalculating them on every call.
     """
 
     def __init__(
@@ -33,7 +34,7 @@ class RecommendationService:
     # ── Helpers ───────────────────────────────────────────────────────────────
 
     def _mcc_codes_from_tags(self, tags: List[str]) -> List[int]:
-        """Convert stored category tags back to MCC codes via reverse MCC lookup."""
+        """Convert stored category tags (MCC string labels) to MCC codes."""
         mcc_set: set[int] = set()
         for tag in tags:
             mcc_set.update(self.mcc_service.get_mcc_codes_by_tag(tag))
@@ -47,11 +48,10 @@ class RecommendationService:
 
         Fetches stored tags from UserRepository (raises 404 if user not registered),
         converts them to MCC codes, and scores every club against those codes.
-        No threshold parameter — uses the project default (LIMITS.HIT_THRESHOLD).
         """
         logger.info(
             "Club matching started",
-            extra={"reason": "Service method invoked", "extra_data": {"user_id": user_id}},
+            extra={"reason": "Service method invoked", "extra_data": {"email": user_id}},
         )
 
         try:
@@ -67,8 +67,9 @@ class RecommendationService:
                 extra={
                     "reason": "Service execution complete",
                     "extra_data": {
-                        "user_id": user_id,
+                        "email": user_id,
                         "tag_count": len(tags),
+                        "mcc_code_count": len(mcc_codes),
                         "recommendation_count": len(result.get("recommendations", [])),
                     },
                 },
@@ -81,117 +82,60 @@ class RecommendationService:
                 exc_info=e,
                 extra={
                     "reason": "Service execution failure",
-                    "extra_data": {"user_id": user_id, "error_type": type(e).__name__},
-                },
-            )
-            raise
-
-    # ── Deal recommendation ───────────────────────────────────────────────────
-
-    async def calculate_deal_recommendation_for_user(
-        self,
-        user_id: str,
-        club_id: str,
-        deal_id: str,
-        store_id: str,
-    ) -> Dict:
-        """
-        Determine whether a specific deal is recommended for user_id.
-
-        Reads pre-computed category tags from UserRepository (raises 404 if user not
-        registered), converts to MCC codes, and computes store fit score.
-        No threshold parameter — uses the project default (LIMITS.HIT_THRESHOLD).
-        """
-        logger.info(
-            "Deal recommendation started",
-            extra={
-                "reason": "Service method invoked",
-                "extra_data": {"user_id": user_id, "deal_id": deal_id},
-            },
-        )
-
-        try:
-            tags = await self.user_repository.get_user_tags(user_id)
-            user_mcc_codes = self._mcc_codes_from_tags(tags)
-
-            store_mcc_codes = self.recommendation_core_service.get_store_mcc_codes(club_id, store_id)
-
-            user_mcc_set = set(user_mcc_codes)
-            matching_codes = [code for code in store_mcc_codes if code in user_mcc_set]
-            fit_score = len(matching_codes) / len(store_mcc_codes) if store_mcc_codes else 0.0
-            is_recommended = fit_score >= LIMITS.HIT_THRESHOLD
-
-            result = {
-                "deal_id": deal_id,
-                "user_id": user_id,
-                "store_id": store_id,
-                "club_id": club_id,
-                "is_recommended": is_recommended,
-                "fit_score": fit_score,
-                "matching_mcc_codes": matching_codes,
-            }
-
-            logger.info(
-                "Deal recommendation completed",
-                extra={
-                    "reason": "Service execution complete",
-                    "extra_data": {
-                        "user_id": user_id,
-                        "deal_id": deal_id,
-                        "is_recommended": is_recommended,
-                    },
-                },
-            )
-            return result
-
-        except Exception as e:
-            logger.error(
-                f"Error: {str(e)}",
-                exc_info=e,
-                extra={
-                    "reason": "Service execution failure",
-                    "extra_data": {"user_id": user_id, "error_type": type(e).__name__},
+                    "extra_data": {"email": user_id, "error_type": type(e).__name__},
                 },
             )
             raise
 
     # ── Broadcast ─────────────────────────────────────────────────────────────
 
-    async def publish_broadcast_deal_by_category(
-        self, deal_category: str, deal_id: str, message: str
-    ) -> None:
+    async def publish_broadcast_deal(self, deal_id: str, message: str) -> List[str]:
         """
-        Broadcast a deal notification to every user that belongs to deal_category tag group.
-        Gateway routes the DealGroupNotification to all active SignalR connections in that group.
+        Broadcast a deal notification to the deal's category group(s).
+
+        The deal's category is read from the store the deal belongs to (its MCC codes); the
+        Gateway routes the DealGroupNotification to all active SignalR connections in each
+        category group. Raises 404 if the deal is unknown or has no resolvable category.
         """
         logger.info(
-            "Broadcasting deal to category group",
-            extra={
-                "reason": "Service method invoked",
-                "extra_data": {"deal_category": deal_category, "deal_id": deal_id},
-            },
+            "Broadcasting deal",
+            extra={"reason": "Service method invoked", "extra_data": {"deal_id": deal_id}},
         )
 
         try:
-            await self.publisher_service.publish_group_notification(
-                group_tag=deal_category,
-                message=message,
-                deal_id=deal_id,
-            )
+            categories = self.recommendation_core_service.get_deal_categories(deal_id)
+            if not categories:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Deal '{deal_id}' not found or has no resolvable category",
+                )
+
+            category_tags = [str(mcc) for mcc in categories]
+            for tag in category_tags:
+                await self.publisher_service.publish_group_notification(
+                    group_tag=tag,
+                    message=message,
+                    deal_id=deal_id,
+                )
+
             logger.info(
                 "Deal broadcast published",
                 extra={
                     "reason": "Service execution complete",
-                    "extra_data": {"deal_category": deal_category, "deal_id": deal_id},
+                    "extra_data": {"deal_id": deal_id, "categories": category_tags},
                 },
             )
+            return category_tags
+
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(
                 f"Error: {str(e)}",
                 exc_info=e,
                 extra={
                     "reason": "Service execution failure",
-                    "extra_data": {"deal_category": deal_category, "error_type": type(e).__name__},
+                    "extra_data": {"deal_id": deal_id, "error_type": type(e).__name__},
                 },
             )
             raise

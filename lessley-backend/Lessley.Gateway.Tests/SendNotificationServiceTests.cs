@@ -82,7 +82,7 @@ public class SendNotificationServiceTests
     }
 
     [Fact]
-    public async Task SendToUser_NoConnections_ReturnsZeroWithoutSending()
+    public async Task SendToUser_NoConnections_PersistsButDoesNotPushAndReturnsZero()
     {
         _connectionManager
             .Setup(m => m.GetConnections("user-1"))
@@ -91,12 +91,16 @@ public class SendNotificationServiceTests
         var count = await _service.SendToUserAsync("user-1", "Hello");
 
         Assert.Equal(0, count);
+        // No live push when offline...
         _singleClientProxy.Verify(
             p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        // ...but the notification is still persisted so the user can read it later.
         _notificationRepository.Verify(
-            s => s.SaveAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+            s => s.SaveAsync(
+                It.Is<Notification>(n => n.TargetId == "user-1" && n.TargetType == "user" && n.Message == "Hello"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

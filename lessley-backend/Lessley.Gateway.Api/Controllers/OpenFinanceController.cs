@@ -16,17 +16,19 @@ namespace Lessley.Gateway.Api.Controllers
             _openFinanceService = openFinanceService;
         }
 
-        [HttpPost("access-token/{userId}")]
-        public async Task<IActionResult> CreateAccessToken([FromRoute] string userId)
+        // Email is the system-wide primary identifier and is exactly what Open Finance
+        // expects as its userId, so it is passed straight through.
+        [HttpPost("access-token/{email}")]
+        public async Task<IActionResult> CreateAccessToken([FromRoute] string email)
         {
-            var accessToken = await _openFinanceService.CreateAccessToken(userId);
+            var accessToken = await _openFinanceService.CreateAccessToken(email);
             return Ok(accessToken);
         }
 
-        [HttpGet("connection/{userId}")]
-        public async Task<IActionResult> CreateNewConnection([FromRoute] string userId)
+        [HttpGet("connection/{email}")]
+        public async Task<IActionResult> CreateNewConnection([FromRoute] string email)
         {
-            var accessToken = await _openFinanceService.InitiateConnectionJourney(userId);
+            var accessToken = await _openFinanceService.InitiateConnectionJourney(email);
 
             // TODO: In a real application, we want the client to handle the redirection to the Connect URL, but for demonstration purposes, we will redirect directly from the API.
             return Redirect(accessToken.ConnectUrl);
@@ -34,10 +36,10 @@ namespace Lessley.Gateway.Api.Controllers
             //return Ok(accessToken);
         }
 
-        [HttpGet("transactions/{userId}")]
-        public async Task<IActionResult> GetTransactions([FromRoute] string userId)
+        [HttpGet("transactions/{email}")]
+        public async Task<IActionResult> GetTransactions([FromRoute] string email)
         {
-            var accessToken = await _openFinanceService.GetTransactions(userId);
+            var accessToken = await _openFinanceService.GetTransactions(email);
             return Ok(accessToken);
         }
     }

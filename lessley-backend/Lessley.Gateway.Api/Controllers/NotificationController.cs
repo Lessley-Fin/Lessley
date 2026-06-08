@@ -1,6 +1,7 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lessley.Gateway.Api.Controllers;
@@ -13,34 +14,40 @@ public class NotificationController : ControllerBase
     private readonly IConnectionManager _connectionManager;
     private readonly ISendNotificationService _sendNotificationService;
     private readonly INotificationService _notificationService;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<NotificationController> _logger;
 
     public NotificationController(
         IConnectionManager connectionManager,
         ISendNotificationService sendNotificationService,
         INotificationService notificationService,
+        UserManager<ApplicationUser> userManager,
         ILogger<NotificationController> logger)
     {
         _connectionManager       = connectionManager;
         _sendNotificationService = sendNotificationService;
         _notificationService     = notificationService;
+        _userManager             = userManager;
         _logger                  = logger;
     }
 
-    [HttpPost("user/{userId}")]
+    // Users are addressed by email (the system-wide primary identifier); SignalR connections
+    // and notification records are keyed on user.Id, so we resolve email -> user here.
+
+    [HttpPost("user/{email}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> SendToUser(string userId, [FromBody] SendNotificationDto dto)
+    public async Task<IActionResult> SendToUser(string email, [FromBody] SendNotificationDto dto)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest(new { error = "User ID is required" });
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "User email is required" });
 
-        if (!_connectionManager.HasConnections(userId))
-        {
-            _logger.LogWarning("No active connections for user {UserId}", userId);
-            return NotFound(new { error = $"User {userId} is not connected" });
-        }
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound(new { error = $"User {email} not found" });
 
-        var recipientCount = await _sendNotificationService.SendToUserAsync(userId, dto.Message, dto.DealId);
+        // Process 9: targeted delivery to a specific user regardless of category groups. The
+        // notification is persisted even if the user is currently offline (recipientCount = 0).
+        var recipientCount = await _sendNotificationService.SendToUserAsync(user.Id, dto.Message, dto.DealId);
         return Ok(new { message = "Notification sent successfully", recipientCount });
     }
 
@@ -55,41 +62,53 @@ public class NotificationController : ControllerBase
         return Ok(new { message = "Notification sent to group successfully", group = tag });
     }
 
-    [HttpGet("status/{userId}")]
-    public IActionResult GetUserConnectionStatus(string userId)
+    [HttpGet("status/{email}")]
+    public async Task<IActionResult> GetUserConnectionStatus(string email)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest(new { error = "User ID is required" });
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "User email is required" });
 
-        var isConnected = _connectionManager.HasConnections(userId);
-        var connections = _connectionManager.GetConnections(userId).ToList();
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound(new { error = $"User {email} not found" });
+
+        var isConnected = _connectionManager.HasConnections(user.Id);
+        var connections = _connectionManager.GetConnections(user.Id).ToList();
 
         return Ok(new
         {
-            userId,
+            email,
             isConnected,
             connectionCount = connections.Count,
             connectionIds   = connections,
         });
     }
 
-    [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserNotifications(string userId, CancellationToken ct)
+    [HttpGet("user/{email}")]
+    public async Task<IActionResult> GetUserNotifications(string email, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest(new { error = "User ID is required" });
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "User email is required" });
 
-        var notifications = await _notificationService.GetUserNotificationsAsync(userId, ct);
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound(new { error = $"User {email} not found" });
+
+        var notifications = await _notificationService.GetUserNotificationsAsync(user.Id, ct);
         return Ok(notifications);
     }
 
-    [HttpPost("read/{userId}")]
-    public async Task<IActionResult> MarkUserNotificationsAsRead(string userId, CancellationToken ct)
+    [HttpPost("read/{email}")]
+    public async Task<IActionResult> MarkUserNotificationsAsRead(string email, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest(new { error = "User ID is required" });
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "User email is required" });
 
-        await _notificationService.MarkUserNotificationsAsReadAsync(userId, ct);
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound(new { error = $"User {email} not found" });
+
+        await _notificationService.MarkUserNotificationsAsReadAsync(user.Id, ct);
         return Ok(new { message = "All notifications marked as read" });
     }
 }

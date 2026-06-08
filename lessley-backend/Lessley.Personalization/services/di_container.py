@@ -16,13 +16,11 @@ class DIContainer:
     _lock = threading.RLock()
 
     @staticmethod
-    def set_publisher_service(service: PublisherService | None) -> None:
-        """Called from main.py lifespan after async publisher setup completes."""
-        DIContainer._instances["publisher_service"] = service
-
-    @staticmethod
     def get_publisher_service() -> PublisherService | None:
-        return DIContainer._instances.get("publisher_service")
+        with DIContainer._lock:
+            if "publisher_service" not in DIContainer._instances:
+                DIContainer._instances["publisher_service"] = PublisherService()
+            return DIContainer._instances["publisher_service"]
 
     @staticmethod
     def get_transaction_stash_service() -> TransactionStashService:
@@ -56,6 +54,7 @@ class DIContainer:
                     files_service=DIContainer.get_transaction_stash_service(),
                     processing_core_service=DIContainer.get_processing_service(),
                     publisher_service=DIContainer.get_publisher_service(),
+                    user_repository=DIContainer.get_user_repository(),
                 )
             return DIContainer._instances["insights_service"]
 

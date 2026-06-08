@@ -24,7 +24,7 @@ async def get_user_access_token(
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -33,7 +33,7 @@ async def get_user_access_token(
 
     try:
         service = DIContainer.get_open_finance_service()
-        token = await service.get_access_token_async(req.user_id)
+        token = await service.get_access_token_async(req.email)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -42,7 +42,7 @@ async def get_user_access_token(
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
@@ -59,7 +59,7 @@ async def get_user_access_token(
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -83,7 +83,7 @@ async def get_user_accounts(
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -92,7 +92,7 @@ async def get_user_accounts(
 
     try:
         service = DIContainer.get_open_finance_service()
-        accounts = await service.get_user_accounts_async(req.user_id)
+        accounts = await service.get_user_accounts_async(req.email)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -101,7 +101,7 @@ async def get_user_accounts(
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
@@ -119,7 +119,7 @@ async def get_user_accounts(
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -140,7 +140,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "account_id": req.account_id,
                 "time_filter": req.time_filter,
                 "days": req.days,
@@ -153,7 +153,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
     try:
         service = DIContainer.get_open_finance_service()
         transactions = await service.get_user_transactions_by_account_async(
-            req.user_id, req.account_id, req.time_filter, req.days
+            req.email, req.account_id, req.time_filter, req.days
         )
 
         response_time_ms = (time.time() - start_time) * 1000
@@ -163,7 +163,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "account_id": req.account_id,
                     "time_filter": req.time_filter,
                     "days": req.days,
@@ -184,7 +184,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "account_id": req.account_id,
                     "method": request.method,
                     "endpoint": request.url.path,
@@ -206,7 +206,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "method": request.method,
@@ -217,7 +217,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
 
     try:
         service = DIContainer.get_open_finance_service()
-        transactions = await service.get_user_transactions_async(req.user_id, req.time_filter, req.days)
+        transactions = await service.get_user_transactions_async(req.email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -226,7 +226,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "method": request.method,
@@ -246,7 +246,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },

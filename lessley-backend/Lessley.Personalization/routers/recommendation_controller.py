@@ -2,9 +2,8 @@ import logging
 import time
 from fastapi import APIRouter, Request, Query
 from services.di_container import DIContainer
-from .responses import BasicResponse, ClubRecommendationResponseSchema, DealRecommendationResponseSchema
+from .responses import BasicResponse, ClubRecommendationResponseSchema
 from .schemas import (
-    DealRequest,
     RecommendationByCategoryRequestSchema,
     BroadcastDealRequest,
 )
@@ -30,7 +29,7 @@ async def calculate_matching_clubs(
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": payload.user_id,
+                "email": payload.email,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -39,7 +38,7 @@ async def calculate_matching_clubs(
 
     try:
         service = DIContainer.get_recommendation_service()
-        result = await service.calculate_matching_clubs(payload.user_id)
+        result = await service.calculate_matching_clubs(payload.email)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -48,7 +47,7 @@ async def calculate_matching_clubs(
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": payload.user_id,
+                    "email": payload.email,
                     "response_time_ms": response_time_ms,
                     "recommendation_count": len(result.get("recommendations", [])),
                     "method": request.method,
@@ -70,83 +69,7 @@ async def calculate_matching_clubs(
             extra={
                 "reason": "Service execution failed",
                 "extra_data": {
-                    "user_id": payload.user_id,
-                    "response_time_ms": response_time_ms,
-                    "error_type": type(e).__name__,
-                    "method": request.method,
-                    "endpoint": request.url.path,
-                },
-            },
-        )
-        raise
-
-
-@router.get("/calculate-deal-recommendation")
-async def calculate_deal_recommendation(request: Request, payload: DealRequest = Query()):
-    """
-    Determine whether a deal is recommended for a user based on their stored category tags.
-
-    Returns 404 if the user is not registered in Lessley.
-    """
-    start_time = time.time()
-
-    logger.info(
-        "Deal recommendation requested",
-        extra={
-            "reason": "Request received",
-            "extra_data": {
-                "user_id": payload.user_id,
-                "deal_id": payload.deal_id,
-                "store_id": payload.store_id,
-                "club_id": payload.club_id,
-                "method": request.method,
-                "endpoint": request.url.path,
-            },
-        },
-    )
-
-    try:
-        service = DIContainer.get_recommendation_service()
-        result = await service.calculate_deal_recommendation_for_user(
-            payload.user_id,
-            payload.club_id,
-            payload.deal_id,
-            payload.store_id,
-        )
-
-        response_time_ms = (time.time() - start_time) * 1000
-
-        logger.info(
-            "Deal recommendation completed",
-            extra={
-                "reason": "Request completed",
-                "extra_data": {
-                    "user_id": payload.user_id,
-                    "deal_id": payload.deal_id,
-                    "response_time_ms": response_time_ms,
-                    "is_recommended": result.get("is_recommended"),
-                    "fit_score": result.get("fit_score"),
-                    "method": request.method,
-                    "endpoint": request.url.path,
-                },
-            },
-        )
-
-        return BasicResponse(
-            status="success",
-            data=DealRecommendationResponseSchema(**result),
-        )
-
-    except Exception as e:
-        response_time_ms = (time.time() - start_time) * 1000
-        logger.error(
-            f"Error calculating deal recommendation: {str(e)}",
-            exc_info=e,
-            extra={
-                "reason": "Service execution failed",
-                "extra_data": {
-                    "user_id": payload.user_id,
-                    "deal_id": payload.deal_id,
+                    "email": payload.email,
                     "response_time_ms": response_time_ms,
                     "error_type": type(e).__name__,
                     "method": request.method,
@@ -158,12 +81,13 @@ async def calculate_deal_recommendation(request: Request, payload: DealRequest =
 
 
 @router.get("/broadcast-deal")
-async def broadcast_deal_by_category(request: Request, payload: BroadcastDealRequest = Query()):
+async def broadcast_deal(request: Request, payload: BroadcastDealRequest = Query()):
     """
-    Broadcast a deal notification to every user in the given category tag group.
+    Broadcast a deal notification to the deal's category group.
 
-    The Gateway forwards the message to all active SignalR connections that belong
-    to the deal_category group.
+    Only the deal_id and message are supplied: the deal's category is resolved from the
+    store the deal belongs to (the store's MCC code). The Gateway forwards the message to
+    all active SignalR connections in that category group. Returns 404 if the deal is unknown.
     """
     start_time = time.time()
 
@@ -172,7 +96,6 @@ async def broadcast_deal_by_category(request: Request, payload: BroadcastDealReq
         extra={
             "reason": "Request received",
             "extra_data": {
-                "deal_category": payload.deal_category,
                 "deal_id": payload.deal_id,
                 "method": request.method,
                 "endpoint": request.url.path,
@@ -182,8 +105,7 @@ async def broadcast_deal_by_category(request: Request, payload: BroadcastDealReq
 
     try:
         service = DIContainer.get_recommendation_service()
-        await service.publish_broadcast_deal_by_category(
-            deal_category=payload.deal_category,
+        categories = await service.publish_broadcast_deal(
             deal_id=payload.deal_id,
             message=payload.message,
         )
@@ -195,8 +117,8 @@ async def broadcast_deal_by_category(request: Request, payload: BroadcastDealReq
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "deal_category": payload.deal_category,
                     "deal_id": payload.deal_id,
+                    "categories": categories,
                     "response_time_ms": response_time_ms,
                     "method": request.method,
                     "endpoint": request.url.path,
@@ -204,7 +126,7 @@ async def broadcast_deal_by_category(request: Request, payload: BroadcastDealReq
             },
         )
 
-        return BasicResponse(status="success", data={"deal_category": payload.deal_category, "deal_id": payload.deal_id})
+        return BasicResponse(status="success", data={"deal_id": payload.deal_id, "categories": categories})
 
     except Exception as e:
         response_time_ms = (time.time() - start_time) * 1000
@@ -214,7 +136,6 @@ async def broadcast_deal_by_category(request: Request, payload: BroadcastDealReq
             extra={
                 "reason": "Service execution failed",
                 "extra_data": {
-                    "deal_category": payload.deal_category,
                     "deal_id": payload.deal_id,
                     "response_time_ms": response_time_ms,
                     "error_type": type(e).__name__,
