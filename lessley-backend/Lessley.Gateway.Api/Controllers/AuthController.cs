@@ -8,12 +8,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Net.Mime;
 using System.Security.Claims;
 
 namespace Lessley.Gateway.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces(MediaTypeNames.Application.Json)]
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -36,7 +38,13 @@ namespace Lessley.Gateway.Api.Controllers
             _isRotateRefresh = authConfig.Value.IsRotateRefresh;
         }
 
+        /// <summary>One-time admin bootstrap. Creates the initial admin user from app configuration.</summary>
+        /// <remarks>Fails if any users already exist, preventing repeated bootstrapping.</remarks>
+        /// <param name="key">Optional secret key configured in <c>Bootstrap:Key</c> — required when set.</param>
         [HttpPost("bootstrap")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Bootstrap([FromQuery] string? key = null)
         {
             var bootstrapKey = _configuration["Bootstrap:Key"];
@@ -57,11 +65,19 @@ namespace Lessley.Gateway.Api.Controllers
             return await CreateUser(new RegisterDto { UserName = username, Email = email, Password = password }, UserRoles.Admin);
         }
 
+        /// <summary>Registers a new user account with the Viewer role.</summary>
+        /// <param name="model">Registration details: username, email, password, and optional clubs/categories.</param>
         [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
             => await CreateUser(model, UserRoles.Viewer);
 
+        /// <summary>Authenticates a user and returns a JWT access token and a refresh token.</summary>
+        /// <param name="model">Login credentials (username and password).</param>
         [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
@@ -77,7 +93,12 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(new { accessToken, refreshToken = refreshToken.Token });
         }
 
+        /// <summary>Exchanges a valid refresh token for a new JWT access token.</summary>
+        /// <remarks>When refresh token rotation is enabled, a new refresh token is also issued and the old one is revoked.</remarks>
+        /// <param name="request">The current refresh token.</param>
         [HttpPost("refresh")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request)
         {
             var tokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(r => r.Token == request.RefreshToken);
@@ -100,8 +121,11 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken.Token });
         }
 
+        /// <summary>Returns the authenticated user's profile (ID, username, email, roles).</summary>
         [Authorize]
         [HttpGet("me")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetMyProfile()
         {
             var userId   = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -112,8 +136,15 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(new { userId, userName, email, roles });
         }
 
+        /// <summary>Changes a user's role. Admin only.</summary>
+        /// <param name="email">The email of the user whose role should change.</param>
+        /// <param name="newRole">The target role to assign (<c>Admin</c> or <c>Viewer</c>).</param>
         [Authorize(Roles = nameof(UserRoles.Admin))]
         [HttpPut("role/{email}/{newRole}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ChangeUserRole([FromRoute] string email, [FromRoute] UserRoles newRole)
         {
             var user = await _userManager.FindByEmailAsync(email);

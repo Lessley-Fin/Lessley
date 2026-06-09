@@ -3,12 +3,14 @@ using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
 
 namespace Lessley.Gateway.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Produces(MediaTypeNames.Application.Json)]
 public class NotificationController : ControllerBase
 {
     private readonly IConnectionManager _connectionManager;
@@ -34,8 +36,20 @@ public class NotificationController : ControllerBase
     // Users are addressed by email (the system-wide primary identifier); SignalR connections
     // and notification records are keyed on user.Id, so we resolve email -> user here.
 
+    /// <summary>Sends a direct notification to a specific user.</summary>
+    /// <remarks>
+    /// Admin only. The notification is persisted to MongoDB even if the user is currently offline,
+    /// so they will see it the next time they call <c>GET /api/notification/user/{email}</c>.
+    /// </remarks>
+    /// <param name="email">The recipient's email address.</param>
+    /// <param name="dto">The notification payload (message and optional deal ID).</param>
     [HttpPost("user/{email}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SendToUser(string email, [FromBody] SendNotificationDto dto)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -51,8 +65,20 @@ public class NotificationController : ControllerBase
         return Ok(new { message = "Notification sent successfully", recipientCount });
     }
 
+    /// <summary>Broadcasts a notification to all users subscribed to the given category tag.</summary>
+    /// <remarks>
+    /// Admin only. Delivers via SignalR to all online users in the group and persists
+    /// the notification so offline users retrieve it later. Muted users are excluded at
+    /// connection time (they are never added to the SignalR group for their muted categories).
+    /// </remarks>
+    /// <param name="tag">The category tag identifying the target group (e.g. <c>MCC_5411</c>).</param>
+    /// <param name="dto">The notification payload (message and optional deal ID).</param>
     [HttpPost("group/{tag}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SendToGroup(string tag, [FromBody] SendNotificationDto dto)
     {
         if (string.IsNullOrWhiteSpace(tag))
@@ -62,7 +88,13 @@ public class NotificationController : ControllerBase
         return Ok(new { message = "Notification sent to group successfully", group = tag });
     }
 
+    /// <summary>Returns the real-time SignalR connection status for a user.</summary>
+    /// <param name="email">The user's email address.</param>
     [HttpGet("status/{email}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserConnectionStatus(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -84,7 +116,17 @@ public class NotificationController : ControllerBase
         });
     }
 
+    /// <summary>Retrieves all notifications for a user (both read and unread).</summary>
+    /// <remarks>
+    /// Returns direct user notifications and group notifications for the user's active category tags.
+    /// Notifications for muted categories are automatically excluded from the result.
+    /// </remarks>
+    /// <param name="email">The user's email address.</param>
     [HttpGet("user/{email}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserNotifications(string email, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -98,7 +140,14 @@ public class NotificationController : ControllerBase
         return Ok(notifications);
     }
 
+    /// <summary>Marks all direct notifications for a user as read.</summary>
+    /// <remarks>Only direct (user-targeted) notifications are marked; group notifications have no per-user read state.</remarks>
+    /// <param name="email">The user's email address.</param>
     [HttpPost("read/{email}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkUserNotificationsAsRead(string email, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(email))

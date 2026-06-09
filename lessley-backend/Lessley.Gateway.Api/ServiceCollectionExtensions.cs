@@ -140,7 +140,14 @@ namespace Lessley.Gateway.Api.Extensions
         {
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Lessley Gateway API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title       = "Lessley Gateway API",
+                    Version     = "v1",
+                    Description = "Central gateway for the Lessley loyalty optimization platform. " +
+                                  "Handles authentication, user management, real-time notifications (SignalR), " +
+                                  "and Open Finance integration."
+                });
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -149,7 +156,7 @@ namespace Lessley.Gateway.Api.Extensions
                     Scheme       = "Bearer",
                     BearerFormat = "JWT",
                     In           = ParameterLocation.Header,
-                    Description  = "Enter JWT token with 'Bearer ' prefix"
+                    Description  = "Enter your JWT access token (without the 'Bearer ' prefix — Swagger adds it automatically)."
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -162,6 +169,11 @@ namespace Lessley.Gateway.Api.Extensions
                         Array.Empty<string>()
                     }
                 });
+
+                var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                if (File.Exists(xmlPath))
+                    c.IncludeXmlComments(xmlPath);
             });
 
             return services;

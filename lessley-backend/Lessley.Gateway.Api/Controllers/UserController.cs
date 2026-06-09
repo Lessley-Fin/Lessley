@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Net.Mime;
 
 namespace Lessley.Gateway.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Produces(MediaTypeNames.Application.Json)]
 public class UserController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -29,17 +31,21 @@ public class UserController : ControllerBase
         _logger                 = logger;
     }
 
-    /// <summary>
-    /// Update user configuration (loyalty clubs, match level, muted categories).
-    /// Admins may update any user; regular users may only update themselves.
-    ///
-    /// Step 1 — persist changes to DB.
-    /// Step 2 — if mutedTags changed, immediately re-sync SignalR group memberships so the user
-    ///           stops receiving notifications for newly muted categories without delay.
-    /// Step 3 — if matchingScore or mutedTags changed, trigger Personalization recalculation
-    ///           (Personalization posts back new tags → PUT /api/user/{email}/tags → SyncGroups).
-    /// </summary>
+    /// <summary>Updates user settings: loyalty clubs, match level, or muted categories.</summary>
+    /// <remarks>
+    /// Admins may update any user; regular users may only update themselves.<br/>
+    /// When muted categories change, SignalR group memberships are re-synced immediately.<br/>
+    /// When match level or muted categories change, a full Personalization recalculation is triggered
+    /// (Personalization posts new tags back to <c>PUT /api/user/{email}/tags</c>).
+    /// </remarks>
+    /// <param name="email">The email address of the user to update.</param>
+    /// <param name="dto">Fields to update — all properties are optional.</param>
     [HttpPatch("{email}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateUser(string email, [FromBody] UpdateUserDto dto, CancellationToken ct = default)
     {
         var callerEmail = User.FindFirstValue(ClaimTypes.Email);
@@ -99,34 +105,19 @@ public class UserController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Explicitly trigger recalculation of the user's preferred categories.
-    /// Personalization computes new categories and posts them back to PUT /api/user/{email}/tags,
-    /// which persists the tags and re-syncs SignalR group memberships via SyncGroupsAsync.
-    /// </summary>
-    [HttpPost("{email}/recalculate")]
-    public async Task<IActionResult> RecalculateCategories(string email, CancellationToken ct = default)
-    {
-        var callerEmail = User.FindFirstValue(ClaimTypes.Email);
-        var isAdmin     = User.IsInRole("Admin");
-
-        if (!isAdmin && !string.Equals(callerEmail, email, StringComparison.OrdinalIgnoreCase))
-            return Forbid();
-
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return NotFound(new { error = "User not found" });
-
-        await _personalizationService.RecalculateCategoriesAsync(email, ct);
-        return Accepted(new { email = user.Email, message = "Category recalculation triggered" });
-    }
-
-    /// <summary>
-    /// Assign tags to a user and update their SignalR group memberships.
-    /// Admin only — tags drive deal category broadcasts and are not self-managed.
-    /// </summary>
+    /// <summary>Assigns category tags to a user and syncs their SignalR group memberships.</summary>
+    /// <remarks>
+    /// Admin only. Called internally by the Personalization service after recalculation.<br/>
+    /// Tags control which deal-broadcast groups the user belongs to.
+    /// </remarks>
+    /// <param name="email">The email address of the user.</param>
+    /// <param name="tags">The complete new set of category tags (replaces existing tags).</param>
     [HttpPut("{email}/tags")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateUserTags(string email, [FromBody] string[] tags)
     {
         var user = await _userManager.FindByEmailAsync(email);
