@@ -105,6 +105,25 @@ public class UserController : ControllerBase
         });
     }
 
+    /// <summary>Triggers a full Personalization recalculation for a user's category tags.</summary>
+    /// <remarks>Admin only. Personalization will post the new tag set back via PUT /api/user/{email}/tags.</remarks>
+    /// <param name="email">The email address of the user.</param>
+    [HttpPost("{email}/recalculate")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RecalculateCategories(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound(new { error = "User not found" });
+
+        await _personalizationService.RecalculateCategoriesAsync(email, ct);
+        return Accepted();
+    }
+
     /// <summary>Assigns category tags to a user and syncs their SignalR group memberships.</summary>
     /// <remarks>
     /// Admin only. Called internally by the Personalization service after recalculation.<br/>

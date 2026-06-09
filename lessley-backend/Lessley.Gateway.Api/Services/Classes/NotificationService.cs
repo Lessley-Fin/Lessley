@@ -1,35 +1,42 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
+using MongoDB.Bson;
 
 namespace Lessley.Gateway.Api.Services.Classes;
 
 public class NotificationService : INotificationService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
     private readonly INotificationRepository _notificationRepository;
+    private readonly INotificationReadRepository _readRepository;
 
     public NotificationService(
-        UserManager<ApplicationUser> userManager,
-        INotificationRepository notificationRepository)
+        INotificationRepository notificationRepository,
+        INotificationReadRepository readRepository)
     {
-        _userManager            = userManager;
         _notificationRepository = notificationRepository;
+        _readRepository         = readRepository;
     }
 
-    public async Task<List<Notification>> GetUserNotificationsAsync(string userId, CancellationToken ct = default)
+    public async Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, CancellationToken ct = default)
     {
-        var user  = await _userManager.FindByIdAsync(userId);
-        var muted = user?.MutedTags ?? new List<string>();
+        var reads = await _readRepository.GetByUserAsync(userId, ct);
+        if (reads.Count == 0)
+            return [];
 
-        // A muted category must never surface in a user's notifications, even in history.
-        var groupTags = (user?.Tags ?? new List<string>())
-            .Where(t => !muted.Contains(t))
-            .ToArray();
+        var notificationIds = reads.Select(r => r.NotificationId);
+        var notifications   = await _notificationRepository.GetByIdsAsync(notificationIds, ct);
 
-        return await _notificationRepository.GetByUserAsync(userId, groupTags, ct);
+        var notifById = notifications.ToDictionary(n => n.Id);
+
+        return reads
+            .Where(r => notifById.ContainsKey(r.NotificationId))
+            .Select(r => NotificationDto.From(notifById[r.NotificationId], r))
+            .ToList();
     }
 
-    public Task MarkUserNotificationsAsReadAsync(string userId, CancellationToken ct = default)
-        => _notificationRepository.MarkAllAsReadAsync(userId, ct);
+    public Task MarkAllAsReadAsync(string userId, CancellationToken ct = default)
+        => _readRepository.MarkAllAsReadAsync(userId, ct);
+
+    public Task<bool> MarkAsReadAsync(ObjectId notificationId, string userId, CancellationToken ct = default)
+        => _readRepository.MarkAsReadAsync(notificationId, userId, ct);
 }

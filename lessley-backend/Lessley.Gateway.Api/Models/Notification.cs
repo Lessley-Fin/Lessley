@@ -10,5 +10,4 @@ public class Notification
     public string Message { get; set; } = string.Empty;
     public string? DealId { get; set; }
     public DateTime SentAt { get; set; }
-    public bool IsRead { get; set; }
 }

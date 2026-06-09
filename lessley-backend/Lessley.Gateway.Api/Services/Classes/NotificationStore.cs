@@ -2,6 +2,7 @@ using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
 
 namespace Lessley.Gateway.Api.Services.Classes;
 
@@ -17,26 +18,11 @@ public class NotificationRepository : INotificationRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<List<Notification>> GetByUserAsync(string userId, string[] groupTags, CancellationToken ct = default)
+    public Task<List<Notification>> GetByIdsAsync(IEnumerable<ObjectId> ids, CancellationToken ct = default)
     {
-        var tagList = groupTags.ToList();
-        return await _db.Notifications
-            .Where(n =>
-                (n.TargetId == userId  && n.TargetType == "user") ||
-                (n.TargetType == "group" && tagList.Contains(n.TargetId)))
-            .OrderByDescending(n => n.SentAt)
+        var idList = ids.ToList();
+        return _db.Notifications
+            .Where(n => idList.Contains(n.Id))
             .ToListAsync(ct);
-    }
-
-    public async Task MarkAllAsReadAsync(string userId, CancellationToken ct = default)
-    {
-        var notifications = await _db.Notifications
-            .Where(n => n.TargetId == userId && n.TargetType == "user" && !n.IsRead)
-            .ToListAsync(ct);
-
-        foreach (var n in notifications)
-            n.IsRead = true;
-
-        await _db.SaveChangesAsync(ct);
     }
 }

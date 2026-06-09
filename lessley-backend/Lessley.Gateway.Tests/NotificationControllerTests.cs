@@ -193,10 +193,10 @@ public class NotificationControllerTests
     [Fact]
     public async Task GetUserNotifications_ReturnsListFromService()
     {
-        var notifications = new List<Notification>
+        var notifications = new List<NotificationDto>
         {
-            new() { TargetId = "user-1", TargetType = "user", Message = "Hello", IsRead = false },
-            new() { TargetId = "user-1", TargetType = "user", Message = "World", IsRead = true },
+            new() { Message = "Hello", TargetType = "user", IsRead = false },
+            new() { Message = "World", TargetType = "user", IsRead = true },
         };
         _notificationService
             .Setup(s => s.GetUserNotificationsAsync("user-1", It.IsAny<CancellationToken>()))
@@ -213,12 +213,12 @@ public class NotificationControllerTests
     {
         _notificationService
             .Setup(s => s.GetUserNotificationsAsync("user-2", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Notification>());
+            .ReturnsAsync(new List<NotificationDto>());
 
         var result = await _controller.GetUserNotifications("user-2", CancellationToken.None);
 
         var ok   = Assert.IsType<OkObjectResult>(result);
-        var list = Assert.IsAssignableFrom<List<Notification>>(ok.Value);
+        var list = Assert.IsAssignableFrom<List<NotificationDto>>(ok.Value);
         Assert.Empty(list);
     }
 
@@ -232,29 +232,29 @@ public class NotificationControllerTests
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
-    // ── MarkUserNotificationsAsRead ────────────────────────────────────────────
+    // ── MarkAllAsRead ──────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task MarkUserNotificationsAsRead_CallsServiceAndReturns200()
+    public async Task MarkAllAsRead_CallsServiceAndReturns200()
     {
         _notificationService
-            .Setup(s => s.MarkUserNotificationsAsReadAsync("user-1", It.IsAny<CancellationToken>()))
+            .Setup(s => s.MarkAllAsReadAsync("user-1", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _controller.MarkUserNotificationsAsRead("user-1", CancellationToken.None);
+        var result = await _controller.MarkAllAsRead("user-1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         _notificationService.Verify(
-            s => s.MarkUserNotificationsAsReadAsync("user-1", It.IsAny<CancellationToken>()),
+            s => s.MarkAllAsReadAsync("user-1", It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task MarkUserNotificationsAsRead_BlankUserId_Returns400(string userId)
+    public async Task MarkAllAsRead_BlankUserId_Returns400(string userId)
     {
-        var result = await _controller.MarkUserNotificationsAsRead(userId, CancellationToken.None);
+        var result = await _controller.MarkAllAsRead(userId, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }

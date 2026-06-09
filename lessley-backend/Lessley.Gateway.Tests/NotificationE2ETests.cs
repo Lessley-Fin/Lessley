@@ -69,7 +69,6 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
             Assert.NotNull(saved);
             Assert.Equal("user", saved.TargetType);
-            Assert.False(saved.IsRead);
             Assert.True(saved.SentAt > DateTime.UtcNow.AddMinutes(-1));
         }
         finally
@@ -104,7 +103,6 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
         Assert.NotNull(saved);
         Assert.Equal("group", saved.TargetType);
-        Assert.False(saved.IsRead);
     }
 
     // ── Connection Status ──────────────────────────────────────────────────────
@@ -235,11 +233,11 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
             var markResponse = await http.PostAsync($"api/notification/read/{email}", null);
             Assert.Equal(HttpStatusCode.OK, markResponse.StatusCode);
 
-            // Verify they are now read in DB
+            // Verify all notification_read records for this user are now marked read
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var unread = await db.Notifications
-                .Where(n => n.TargetId == userId && !n.IsRead)
+            var unread = await db.NotificationReads
+                .Where(r => r.UserId == userId && !r.IsRead)
                 .CountAsync();
 
             Assert.Equal(0, unread);

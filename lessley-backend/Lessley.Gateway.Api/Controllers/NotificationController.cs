@@ -3,6 +3,7 @@ using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using System.Net.Mime;
 
 namespace Lessley.Gateway.Api.Controllers;
@@ -38,11 +39,9 @@ public class NotificationController : ControllerBase
 
     /// <summary>Sends a direct notification to a specific user.</summary>
     /// <remarks>
-    /// Admin only. The notification is persisted to MongoDB even if the user is currently offline,
-    /// so they will see it the next time they call <c>GET /api/notification/user/{email}</c>.
+    /// Admin only. Persisted to MongoDB even if the user is offline and creates a
+    /// notification_read record so the user will see it on next login.
     /// </remarks>
-    /// <param name="email">The recipient's email address.</param>
-    /// <param name="dto">The notification payload (message and optional deal ID).</param>
     [HttpPost("user/{email}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -59,20 +58,15 @@ public class NotificationController : ControllerBase
         if (user is null)
             return NotFound(new { error = $"User {email} not found" });
 
-        // Process 9: targeted delivery to a specific user regardless of category groups. The
-        // notification is persisted even if the user is currently offline (recipientCount = 0).
         var recipientCount = await _sendNotificationService.SendToUserAsync(user.Id, dto.Message, dto.DealId);
         return Ok(new { message = "Notification sent successfully", recipientCount });
     }
 
     /// <summary>Broadcasts a notification to all users subscribed to the given category tag.</summary>
     /// <remarks>
-    /// Admin only. Delivers via SignalR to all online users in the group and persists
-    /// the notification so offline users retrieve it later. Muted users are excluded at
-    /// connection time (they are never added to the SignalR group for their muted categories).
+    /// Admin only. Delivers via SignalR to online users and creates a notification_read record
+    /// for every user who currently has this tag (including offline users).
     /// </remarks>
-    /// <param name="tag">The category tag identifying the target group (e.g. <c>MCC_5411</c>).</param>
-    /// <param name="dto">The notification payload (message and optional deal ID).</param>
     [HttpPost("group/{tag}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -89,7 +83,6 @@ public class NotificationController : ControllerBase
     }
 
     /// <summary>Returns the real-time SignalR connection status for a user.</summary>
-    /// <param name="email">The user's email address.</param>
     [HttpGet("status/{email}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -116,12 +109,11 @@ public class NotificationController : ControllerBase
         });
     }
 
-    /// <summary>Retrieves all notifications for a user (both read and unread).</summary>
+    /// <summary>Retrieves all notifications for a user within the 90-day window.</summary>
     /// <remarks>
-    /// Returns direct user notifications and group notifications for the user's active category tags.
-    /// Notifications for muted categories are automatically excluded from the result.
+    /// Returns notifications the user received at send-time (based on their tags when each
+    /// notification was sent) plus any direct notifications. Preserves history across tag changes.
     /// </remarks>
-    /// <param name="email">The user's email address.</param>
     [HttpGet("user/{email}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -140,15 +132,13 @@ public class NotificationController : ControllerBase
         return Ok(notifications);
     }
 
-    /// <summary>Marks all direct notifications for a user as read.</summary>
-    /// <remarks>Only direct (user-targeted) notifications are marked; group notifications have no per-user read state.</remarks>
-    /// <param name="email">The user's email address.</param>
+    /// <summary>Marks all of a user's notifications as read.</summary>
     [HttpPost("read/{email}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> MarkUserNotificationsAsRead(string email, CancellationToken ct)
+    public async Task<IActionResult> MarkAllAsRead(string email, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(email))
             return BadRequest(new { error = "User email is required" });
@@ -157,7 +147,34 @@ public class NotificationController : ControllerBase
         if (user is null)
             return NotFound(new { error = $"User {email} not found" });
 
-        await _notificationService.MarkUserNotificationsAsReadAsync(user.Id, ct);
+        await _notificationService.MarkAllAsReadAsync(user.Id, ct);
         return Ok(new { message = "All notifications marked as read" });
+    }
+
+    /// <summary>Marks a single notification as read for the given user.</summary>
+    /// <param name="notificationId">The notification's ID (from the GET response).</param>
+    /// <param name="email">The user's email address.</param>
+    [HttpPost("{notificationId}/read/{email}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkAsRead(string notificationId, string email, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest(new { error = "User email is required" });
+
+        if (!ObjectId.TryParse(notificationId, out var objId))
+            return BadRequest(new { error = "Invalid notification ID" });
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound(new { error = $"User {email} not found" });
+
+        var found = await _notificationService.MarkAsReadAsync(objId, user.Id, ct);
+        if (!found)
+            return NotFound(new { error = "Notification not found for this user" });
+
+        return Ok(new { message = "Notification marked as read" });
     }
 }

@@ -2,6 +2,7 @@ using Lessley.Gateway.Api.Hubs;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -13,6 +14,8 @@ public class SendNotificationServiceTests
 {
     private readonly Mock<IConnectionManager> _connectionManager = new();
     private readonly Mock<INotificationRepository> _notificationRepository = new();
+    private readonly Mock<INotificationReadRepository> _readRepository = new();
+    private readonly Mock<UserManager<ApplicationUser>> _userManager;
     private readonly Mock<ISingleClientProxy> _singleClientProxy = new();
     private readonly Mock<IClientProxy> _groupProxy = new();
     private readonly Mock<IHubClients> _hubClients = new();
@@ -36,10 +39,27 @@ public class SendNotificationServiceTests
             .Setup(s => s.SaveAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        _readRepository
+            .Setup(s => s.SaveAsync(It.IsAny<NotificationRead>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _readRepository
+            .Setup(s => s.SaveManyAsync(It.IsAny<IEnumerable<NotificationRead>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        _userManager = new Mock<UserManager<ApplicationUser>>(
+            store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+
+        // Return an empty async-queryable so the fanout produces zero records without throwing.
+        _userManager.Setup(m => m.Users)
+            .Returns(Array.Empty<ApplicationUser>().AsAsyncQueryable());
+
         _service = new SendNotificationService(
             _hubContext.Object,
             _connectionManager.Object,
             _notificationRepository.Object,
+            _readRepository.Object,
+            _userManager.Object,
             NullLogger<SendNotificationService>.Instance);
     }
 
@@ -77,6 +97,22 @@ public class SendNotificationServiceTests
                     n.TargetType == "user"   &&
                     n.Message    == "Hello"  &&
                     n.DealId     == "deal-123"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task SendToUser_WithConnections_CreatesNotificationReadRecord()
+    {
+        _connectionManager
+            .Setup(m => m.GetConnections("user-1"))
+            .Returns(new[] { "conn-a" });
+
+        await _service.SendToUserAsync("user-1", "Hello");
+
+        _readRepository.Verify(
+            s => s.SaveAsync(
+                It.Is<NotificationRead>(r => r.UserId == "user-1" && !r.IsRead),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -153,13 +189,19 @@ public class SendNotificationServiceTests
     }
 
     [Fact]
-    public async Task SendToGroup_SavedNotification_IsUnreadByDefault()
+    public async Task SendToGroup_WithMatchingUsers_CreatesFanoutReadRecords()
     {
+        var userId = "user-abc";
+        _userManager.Setup(m => m.Users)
+            .Returns(new[] { new ApplicationUser { Id = userId, Tags = new List<string> { "tech" } } }
+                .AsAsyncQueryable());
+
         await _service.SendToGroupAsync("tech", "New deal!");
 
-        _notificationRepository.Verify(
-            s => s.SaveAsync(
-                It.Is<Notification>(n => !n.IsRead),
+        _readRepository.Verify(
+            s => s.SaveManyAsync(
+                It.Is<IEnumerable<NotificationRead>>(reads =>
+                    reads.Any(r => r.UserId == userId && !r.IsRead)),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

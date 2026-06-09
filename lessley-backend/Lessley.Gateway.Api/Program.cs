@@ -1,4 +1,5 @@
 using Lessley.Gateway.Api.Configuration;
+using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Extensions;
 using Lessley.Gateway.Api.Hubs;
 using Lessley.Gateway.Api.Middleware;
@@ -45,6 +46,7 @@ builder.Services.AddHttpClient<IPersonalizationService, PersonalizationService>(
 
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
 builder.Services.AddScoped<ISendNotificationService, SendNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUserTagService, UserTagService>();
@@ -67,6 +69,10 @@ using (var scope = app.Services.CreateScope())
     await RoleSeeder.SeedAsync(scope.ServiceProvider);
     await UserSeeder.SeedAsync(scope.ServiceProvider);
 }
+
+// ── MongoDB indexes (TTL + performance) ────────────────────────────────────────
+var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb")!;
+await MongoIndexInitializer.CreateIndexesAsync(mongoConnectionString, "lessley");
 
 // ── Middleware pipeline ────────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
