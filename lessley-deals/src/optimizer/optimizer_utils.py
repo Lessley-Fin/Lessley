@@ -68,8 +68,17 @@ def get_best_deals_for_store(file_path, target_store_id, cart_total, cart_quanti
         print(f"Error: '{file_path}' contains invalid JSON")
         return []
 
-    # 1. Filter deals strictly by the requested store_id
-    store_deals = [deal for deal in all_deals if deal.get("store_id") == target_store_id]
+    # 1. Filter deals by the requested store_id — either the deal's own store_id
+    #    or any member in group_member_stores (e.g. gift cards covering multiple stores).
+    def deal_matches_store(deal):
+        if deal.get("store_id") == target_store_id:
+            return True
+        for member in deal.get("group_member_stores", []):
+            if member == target_store_id:
+                return True
+        return False
+
+    store_deals = [deal for deal in all_deals if deal_matches_store(deal)]
 
     if not store_deals:
         print(f"No deals found for store_id: {target_store_id}")
