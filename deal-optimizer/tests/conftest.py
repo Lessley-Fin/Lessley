@@ -1,0 +1,67 @@
+"""Shared test helpers for building deal dicts in the lean target schema."""
+
+from __future__ import annotations
+
+from typing import Any
+
+_ALL_COMB_KEYS = (
+    "stackable_with_store_sale",
+    "stackable_with_member_discounts",
+    "stackable_with_coupons",
+    "stackable_with_payment_discounts",
+    "stackable_with_giftcards",
+    "stackable_with_cashback",
+)
+
+
+def mk_deal(
+    deal_id: str,
+    deal_type: str,
+    *,
+    reward_type: str = "percentage_off",
+    reward_value: float = 0.0,
+    cond_type: str = "min_spend",
+    cond_value: float = 0,
+    accepts_all: bool = False,
+    combinability: dict[str, str] | None = None,
+    max_uses_per_transaction: int | None = None,
+    max_uses_per_month: int | None = None,
+    minimum_purchase: float | None = None,
+    membership_required: str = "unknown",
+    club_id: str | None = None,
+    channels: dict[str, str] | None = None,
+    store_id: str = "store_default",
+    title: str = "",
+) -> dict[str, Any]:
+    comb = {k: ("yes" if accepts_all else "unknown") for k in _ALL_COMB_KEYS}
+    if combinability:
+        comb.update(combinability)
+
+    ch = {"website": "unknown", "mobile_app": "unknown", "physical_store": "unknown"}
+    if channels:
+        ch.update(channels)
+
+    return {
+        "id": deal_id,
+        "store_id": store_id,
+        "title": title or deal_id,
+        "deal_type": deal_type,
+        "discount_logic": {
+            "condition": {"type": cond_type, "value": cond_value},
+            "reward": {"type": reward_type, "value": reward_value},
+        },
+        "constraints": {
+            "combinability": comb,
+            "limits": {
+                "max_uses_per_transaction": max_uses_per_transaction,
+                "max_uses_per_month": max_uses_per_month,
+                "minimum_purchase": minimum_purchase,
+            },
+            "redemption_channels": ch,
+            "eligibility": {
+                "membership_required": membership_required,
+                "payment_method_required": None,
+            },
+        },
+        "club_id": club_id,
+    }
