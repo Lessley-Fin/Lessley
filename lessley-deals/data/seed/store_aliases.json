@@ -121073,5 +121073,535 @@
     },
     "source": "review",
     "created_at": "2026-04-24T12:00:00.000000+00:00"
+  },
+  {
+    "id": "019ec70caa7b_c07b637a0b9ba9c8",
+    "store_id": "019ec70ca9e5_e5f6c4f96beec6ea",
+    "alias": "L'OR לור אספרסו",
+    "alias_forms": {
+      "normalized": "l'or לור אספרסו",
+      "compact": "lorלוראספרסו",
+      "tokens": [
+        "l'or",
+        "אספרסו",
+        "לור"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:52:36.453763+00:00"
+  },
+  {
+    "id": "019ec70cc3c5_65031f87f7a70ed2",
+    "store_id": "019ec70cc324_6427ff2fea267c7c",
+    "alias": "מיה הוד רן",
+    "alias_forms": {
+      "normalized": "מיה הוד רנ",
+      "compact": "מיההודרנ",
+      "tokens": [
+        "הוד",
+        "מיה",
+        "רנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:52:42.915502+00:00"
+  },
+  {
+    "id": "019ec70ce23e_e222f6faa9b5730b",
+    "store_id": "019ec70ce199_d8c78b02338e1250",
+    "alias": "כל בו לחקלאי ולגינה",
+    "alias_forms": {
+      "normalized": "כל בו לחקלאי ולגינה",
+      "compact": "כלבולחקלאיולגינה",
+      "tokens": [
+        "בו",
+        "ולגינה",
+        "כל",
+        "לחקלאי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:52:50.713120+00:00"
+  },
+  {
+    "id": "019ec70d2597_0ddeada289da3929",
+    "store_id": "019ec70d2500_15f9e73d1e4a3eed",
+    "alias": "תבליני פרג",
+    "alias_forms": {
+      "normalized": "תבליני פרג",
+      "compact": "תבליניפרג",
+      "tokens": [
+        "פרג",
+        "תבליני"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:53:07.968024+00:00"
+  },
+  {
+    "id": "019ec70d7fed_753b289da79b28cc",
+    "store_id": "019ec70d7f55_643a2fc318d07178",
+    "alias": "TOP - טופ 94",
+    "alias_forms": {
+      "normalized": "top - טופ 94",
+      "compact": "topטופ94",
+      "tokens": [
+        "94",
+        "top",
+        "טופ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:53:31.093041+00:00"
+  },
+  {
+    "id": "019ec70d960c_4c1537500036dfa8",
+    "store_id": "019ec70d9577_08dc66987c085a25",
+    "alias": "ZAGA פינות אוכל",
+    "alias_forms": {
+      "normalized": "zaga פינות אוכל",
+      "compact": "zagaפינותאוכל",
+      "tokens": [
+        "zaga",
+        "אוכל",
+        "פינות"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:53:36.758199+00:00"
+  },
+  {
+    "id": "019ec70da295_69af8122a3c78d99",
+    "store_id": "019ec70da1fe_3a028c8fb2933cd6",
+    "alias": "קיפולים",
+    "alias_forms": {
+      "normalized": "קיפולימ",
+      "compact": "קיפולימ",
+      "tokens": [
+        "קיפולימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:53:39.965930+00:00"
+  },
+  {
+    "id": "019ec70dc37f_427467d634a362d5",
+    "store_id": "019dbe364648_e7aca9e972c7a587",
+    "alias": "הרלידן - HARLIDAN",
+    "alias_forms": {
+      "normalized": "הרלידנ - harlidan",
+      "compact": "הרלידנharlidan",
+      "tokens": [
+        "harlidan",
+        "הרלידנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:53:48.543228+00:00"
+  },
+  {
+    "id": "019ec70dd5e6_2fb85fab6a520bdd",
+    "store_id": "019dbe364648_d67282ef4a7b2870",
+    "alias": "קואליטה - KOALITA",
+    "alias_forms": {
+      "normalized": "קואליטה - koalita",
+      "compact": "קואליטהkoalita",
+      "tokens": [
+        "koalita",
+        "קואליטה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:53:53.253154+00:00"
+  },
+  {
+    "id": "019ec70e1fb7_cc8f7e94e18bd962",
+    "store_id": "019ec70e1f19_106322399ecef3af",
+    "alias": "G - BIKE",
+    "alias_forms": {
+      "normalized": "g - bike",
+      "compact": "gbike",
+      "tokens": [
+        "bike"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:54:11.992225+00:00"
+  },
+  {
+    "id": "019ec70e3e06_8953798dbdc57c85",
+    "store_id": "019ec70e3d6d_5644b796533d2f57",
+    "alias": "בי - יו לורד",
+    "alias_forms": {
+      "normalized": "בי - יו לורד",
+      "compact": "בייולורד",
+      "tokens": [
+        "בי",
+        "יו",
+        "לורד"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:54:19.757579+00:00"
+  },
+  {
+    "id": "019ec70e5e35_d5d03a6b5fe61d6f",
+    "store_id": "019d77cb9737_843e8982aa6a9bfd",
+    "alias": "דבי לו - Skin Therapist",
+    "alias_forms": {
+      "normalized": "דבי לו - skin therapist",
+      "compact": "דבילוskintherapist",
+      "tokens": [
+        "skin",
+        "therapist",
+        "דבי",
+        "לו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:54:28.149537+00:00"
+  },
+  {
+    "id": "019ec70e973e_8b10fbc52f4750e5",
+    "store_id": "019dbe364649_11f32b70d3270f21",
+    "alias": "הפיראט האדום - שילת מודיעין",
+    "alias_forms": {
+      "normalized": "הפיראט האדומ - שילת מודיעינ",
+      "compact": "הפיראטהאדומשילתמודיעינ",
+      "tokens": [
+        "האדומ",
+        "הפיראט",
+        "מודיעינ",
+        "שילת"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:54:42.750858+00:00"
+  },
+  {
+    "id": "019ec70ebb4b_77675913f217b22b",
+    "store_id": "019ec70ebaa5_2a51a054efdbd16b",
+    "alias": "מרכז וטרינרי - ד\"ר עמראן עיראקי",
+    "alias_forms": {
+      "normalized": "מרכז וטרינרי - ד\"ר עמראנ עיראקי",
+      "compact": "מרכזוטרינרידרעמראנעיראקי",
+      "tokens": [
+        "ד\"ר",
+        "וטרינרי",
+        "מרכז",
+        "עיראקי",
+        "עמראנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:54:51.813581+00:00"
+  },
+  {
+    "id": "019ec70ecb66_4e933e8115ad2075",
+    "store_id": "019dbe364649_3bc3509bbc9e9956",
+    "alias": "DMI - דיו",
+    "alias_forms": {
+      "normalized": "dmi - דיו",
+      "compact": "dmiדיו",
+      "tokens": [
+        "dmi",
+        "דיו"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:54:56.101802+00:00"
+  },
+  {
+    "id": "019ec70edc9f_ffdd46c4bba282c7",
+    "store_id": "019dbe36464a_cc9450f5ea045815",
+    "alias": "Moodan - מודן",
+    "alias_forms": {
+      "normalized": "moodan - מודנ",
+      "compact": "moodanמודנ",
+      "tokens": [
+        "moodan",
+        "מודנ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:00.511430+00:00"
+  },
+  {
+    "id": "019ec70f5cf5_99ff8eb6cdccfa52",
+    "store_id": "019dbe36464b_2cceeca4cfe76be0",
+    "alias": "Good Care - התחבושת הבריאה",
+    "alias_forms": {
+      "normalized": "good care - התחבושת הבריאה",
+      "compact": "goodcareהתחבושתהבריאה",
+      "tokens": [
+        "care",
+        "good",
+        "הבריאה",
+        "התחבושת"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:33.365754+00:00"
+  },
+  {
+    "id": "019ec70f6ffe_6657e3539c039bad",
+    "store_id": "019dbe36464b_601f04e0f45c50c7",
+    "alias": "פלאנט תכשיטים - PLANET",
+    "alias_forms": {
+      "normalized": "פלאנט תכשיטימ - planet",
+      "compact": "פלאנטתכשיטימplanet",
+      "tokens": [
+        "planet",
+        "פלאנט",
+        "תכשיטימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:38.238685+00:00"
+  },
+  {
+    "id": "019ec70f8256_ad5c1a3701231ea1",
+    "store_id": "019dbe36464c_557fee3fa845d1ed",
+    "alias": "יונייטד סיטס - UNITED SEATS",
+    "alias_forms": {
+      "normalized": "יונייטד סיטס - united seats",
+      "compact": "יונייטדסיטסunitedseats",
+      "tokens": [
+        "seats",
+        "united",
+        "יונייטד",
+        "סיטס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:42.933266+00:00"
+  },
+  {
+    "id": "019ec70f8e57_d4bf5d83d92ad62f",
+    "store_id": "019dbe36464c_82e7ad766b5bddd0",
+    "alias": "Fly Money - פליי מאני",
+    "alias_forms": {
+      "normalized": "fly money - פליי מאני",
+      "compact": "flymoneyפליימאני",
+      "tokens": [
+        "fly",
+        "money",
+        "מאני",
+        "פליי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:46.007985+00:00"
+  },
+  {
+    "id": "019ec70f9bae_4be59f407ab5d983",
+    "store_id": "019dbe36464d_10f75ab0f9a7779e",
+    "alias": "pyoor - יישור שיניים שקוף",
+    "alias_forms": {
+      "normalized": "pyoor - יישור שיניימ שקופ",
+      "compact": "pyoorיישורשיניימשקופ",
+      "tokens": [
+        "pyoor",
+        "יישור",
+        "שיניימ",
+        "שקופ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:49.422494+00:00"
+  },
+  {
+    "id": "019ec70fad3e_1b4a21ed32951d60",
+    "store_id": "019dbe36464d_c2c05239e3172491",
+    "alias": "סלמור - Selmor",
+    "alias_forms": {
+      "normalized": "סלמור - selmor",
+      "compact": "סלמורselmor",
+      "tokens": [
+        "selmor",
+        "סלמור"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:53.918950+00:00"
+  },
+  {
+    "id": "019ec70fc1dd_3085e320868ea022",
+    "store_id": "019dbe36464f_76c1f43c97c67284",
+    "alias": "הכל דבש - בית הטבע שלך",
+    "alias_forms": {
+      "normalized": "הכל דבש - בית הטבע שלכ",
+      "compact": "הכלדבשביתהטבעשלכ",
+      "tokens": [
+        "בית",
+        "דבש",
+        "הטבע",
+        "הכל",
+        "שלכ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:55:59.197678+00:00"
+  },
+  {
+    "id": "019ec70fd096_887f65edca04a4b7",
+    "store_id": "019dbe36464f_45a4941f57a7086d",
+    "alias": "SILKA - סילקה",
+    "alias_forms": {
+      "normalized": "silka - סילקה",
+      "compact": "silkaסילקה",
+      "tokens": [
+        "silka",
+        "סילקה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:02.965507+00:00"
+  },
+  {
+    "id": "019ec70fded6_512b14727a0c1956",
+    "store_id": "019dbe36464f_2bb9dd60e108e8bd",
+    "alias": "TALADA - טלדה",
+    "alias_forms": {
+      "normalized": "talada - טלדה",
+      "compact": "taladaטלדה",
+      "tokens": [
+        "talada",
+        "טלדה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:06.613801+00:00"
+  },
+  {
+    "id": "019ec70ff69f_33cfcd822da20fef",
+    "store_id": "019dbe364650_7fabc970cb9ca267",
+    "alias": "מוסך תאיה - B.M.W",
+    "alias_forms": {
+      "normalized": "מוסכ תאיה - b.m.w",
+      "compact": "מוסכתאיהbmw",
+      "tokens": [
+        "b.m.w",
+        "מוסכ",
+        "תאיה"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:12.703566+00:00"
+  },
+  {
+    "id": "019ec7100440_37409a802712835d",
+    "store_id": "019dbe364651_5fff181f33006aff",
+    "alias": "Bali - מועדון גלישה",
+    "alias_forms": {
+      "normalized": "bali - מועדונ גלישה",
+      "compact": "baliמועדונגלישה",
+      "tokens": [
+        "bali",
+        "גלישה",
+        "מועדונ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:16.191810+00:00"
+  },
+  {
+    "id": "019ec7100e87_a3dcbf992efe3f5b",
+    "store_id": "019dbe364651_8ecb9616726ca5ab",
+    "alias": "Gamingstop - גיימינסטופ",
+    "alias_forms": {
+      "normalized": "gamingstop - גיימינסטופ",
+      "compact": "gamingstopגיימינסטופ",
+      "tokens": [
+        "gamingstop",
+        "גיימינסטופ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:18.823618+00:00"
+  },
+  {
+    "id": "019ec7101e5e_8a6036bf5f0b3d71",
+    "store_id": "019dbe364652_7a809731ccf8a6a8",
+    "alias": "מורנה מעצבים - בגדי ים וחוף",
+    "alias_forms": {
+      "normalized": "מורנה מעצבימ - בגדי ימ וחופ",
+      "compact": "מורנהמעצבימבגדיימוחופ",
+      "tokens": [
+        "בגדי",
+        "וחופ",
+        "ימ",
+        "מורנה",
+        "מעצבימ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:22.878394+00:00"
+  },
+  {
+    "id": "019ec71032d2_f6e09281ad47c002",
+    "store_id": "019dbe364652_d95133c0bc844b2f",
+    "alias": "GET COMFY - היבואן הרשמי SIHOO",
+    "alias_forms": {
+      "normalized": "get comfy - היבואנ הרשמי sihoo",
+      "compact": "getcomfyהיבואנהרשמיsihoo",
+      "tokens": [
+        "comfy",
+        "get",
+        "sihoo",
+        "היבואנ",
+        "הרשמי"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:28.113163+00:00"
+  },
+  {
+    "id": "019ec7104e56_f32e67506c10a092",
+    "store_id": "019dbe364652_5ac8582c11ac614f",
+    "alias": "Sporter - ספורטר",
+    "alias_forms": {
+      "normalized": "sporter - ספורטר",
+      "compact": "sporterספורטר",
+      "tokens": [
+        "sporter",
+        "ספורטר"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:35.158765+00:00"
+  },
+  {
+    "id": "019ec7105bbe_e3259c7f8389cc77",
+    "store_id": "019dbe364653_9583615f8db27811",
+    "alias": "GLAM42 - גלאם 42",
+    "alias_forms": {
+      "normalized": "glam42 - גלאמ 42",
+      "compact": "glam42גלאמ42",
+      "tokens": [
+        "42",
+        "glam42",
+        "גלאמ"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:38.590327+00:00"
+  },
+  {
+    "id": "019ec7106ae7_d55da03da4c4af51",
+    "store_id": "019dbe364653_368013c3833f3392",
+    "alias": "האשם מוטורס - service car",
+    "alias_forms": {
+      "normalized": "האשמ מוטורס - service car",
+      "compact": "האשממוטורסservicecar",
+      "tokens": [
+        "car",
+        "service",
+        "האשמ",
+        "מוטורס"
+      ]
+    },
+    "source": "review",
+    "created_at": "2026-06-14T16:56:42.471759+00:00"
   }
 ]
