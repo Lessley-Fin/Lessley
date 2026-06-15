@@ -4,6 +4,14 @@ export default {
     content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['"Heebo"', 'system-ui', 'sans-serif'],
+  		},
+  		boxShadow: {
+  			fintech: '0 2px 8px hsl(250 95% 58% / 0.06), 0 12px 32px hsl(262 83% 58% / 0.08)',
+  			'fintech-lg': '0 8px 24px hsl(250 95% 58% / 0.12), 0 24px 48px hsl(262 83% 58% / 0.14)',
+  			'fintech-nav': '0 8px 32px hsl(262 83% 58% / 0.25)',
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

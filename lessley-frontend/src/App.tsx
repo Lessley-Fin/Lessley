@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { LoginPage } from "@/features/auth/LoginPage"
 import { InsightsRecommendationsPage } from "@/features/insights/InsightsRecommendationsPage"
+import { NotificationsPage } from "@/features/notifications/NotificationsPage"
+import { getUnreadCount } from "@/features/notifications/notificationsStore"
 import { OptimizerPage } from "@/features/optimizer/OptimizerPage"
+import { SettingsPage } from "@/features/settings/SettingsPage"
 import { MainShell, type MainTab } from "@/features/shell/MainShell"
 import { getMyProfile } from "@/lib/api"
 
@@ -38,6 +41,13 @@ function App() {
   const [userId, setUserId] = useState(() => localStorage.getItem("lessley_user_id") ?? "")
   const [email, setEmail] = useState(() => localStorage.getItem("lessley_user_email") ?? "")
   const [mainTab, setMainTab] = useState<MainTab>("optimizer")
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(() => getUnreadCount())
+
+  const refreshUnreadCount = useCallback(() => {
+    setUnreadCount(getUnreadCount())
+  }, [])
 
   useEffect(() => {
     if (!isAuthenticated || (userId && email)) return
@@ -89,6 +99,15 @@ function App() {
     setUserId("")
     setEmail("")
     setMainTab("optimizer")
+    setShowNotifications(false)
+    setShowSettings(false)
+    setUnreadCount(0)
+  }
+
+  const openMainTab = (tab: MainTab) => {
+    setMainTab(tab)
+    setShowNotifications(false)
+    setShowSettings(false)
   }
 
   if (!isAuthenticated) {
@@ -105,8 +124,32 @@ function App() {
   }
 
   return (
-    <MainShell username={username} activeTab={mainTab} onTabChange={setMainTab} onLogout={handleLogout}>
-      {mainTab === "optimizer" ? (
+    <MainShell
+      username={username}
+      activeTab={mainTab}
+      unreadCount={unreadCount}
+      onTabChange={openMainTab}
+      showNotifications={showNotifications}
+      showSettings={showSettings}
+      showBottomNav={!showNotifications && !showSettings}
+      onOpenNotifications={() => {
+        setShowNotifications(true)
+        setShowSettings(false)
+      }}
+      onOpenSettings={() => {
+        setShowSettings(true)
+        setShowNotifications(false)
+      }}
+      onLogout={handleLogout}
+    >
+      {showNotifications ? (
+        <NotificationsPage
+          onBack={() => setShowNotifications(false)}
+          onReadStateChange={refreshUnreadCount}
+        />
+      ) : showSettings ? (
+        <SettingsPage onBack={() => setShowSettings(false)} />
+      ) : mainTab === "optimizer" ? (
         <OptimizerPage />
       ) : (
         <InsightsRecommendationsPage username={username} userId={userId} email={email} />

@@ -44,6 +44,9 @@ class ClubRecommendationSchema(BaseModel):
     is_recommended: bool = Field(
         ..., description="Whether the club is recommended based on the fit score and threshold."
     )
+    is_member: bool = Field(
+        False, description="Whether the user is already a member of this club."
+    )
 
 
 class ClubRecommendationResponseSchema(BaseModel):

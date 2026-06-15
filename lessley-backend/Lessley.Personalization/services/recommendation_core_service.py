@@ -135,7 +135,11 @@ class RecommendationCoreService:
         return club_scores
 
     def get_club_recommendations_by_spending_analysis(
-        self, user_id: str, mcc_codes: List[int], threshold: float = 0.20
+        self,
+        user_id: str,
+        mcc_codes: List[int],
+        threshold: float = 0.20,
+        user_club_ids: List[str] | None = None,
     ) -> Dict:
         """
         Analyzes all clubs against user's spending categories and recommends those that exceed a fit threshold.
@@ -163,6 +167,7 @@ class RecommendationCoreService:
 
             # Use the helper method to get the base scores
             club_scores = self._calculate_club_scores(mcc_codes)
+            member_club_ids = set(user_club_ids or [])
 
             recommended_clubs = []
             for score in club_scores:
@@ -180,6 +185,7 @@ class RecommendationCoreService:
                         "total_stores": score["total_stores"],
                         "fit_score": fit_score,
                         "is_recommended": fit_score >= threshold,
+                        "is_member": score["club_id"] in member_club_ids,
                     }
                 )
 

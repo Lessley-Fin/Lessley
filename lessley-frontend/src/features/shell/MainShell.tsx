@@ -1,76 +1,222 @@
-import type { ReactNode } from "react"
-import { BarChart3, LogOut, ScanSearch } from "lucide-react"
+import { useState, type ReactNode } from "react"
 
-import { Button } from "@/components/ui/button"
+import { BarChart3, ScanSearch } from "lucide-react"
+
+
+
+import { AppMenu } from "@/features/shell/AppMenu"
+
+import { cn } from "@/lib/utils"
+
+
 
 export type MainTab = "optimizer" | "insights"
 
+
+
 interface MainShellProps {
+
   username: string
+
   activeTab: MainTab
+
+  unreadCount: number
+
+  showNotifications?: boolean
+
+  showSettings?: boolean
+
+  showBottomNav?: boolean
+
   onTabChange: (tab: MainTab) => void
+
+  onOpenNotifications: () => void
+
+  onOpenSettings: () => void
+
   onLogout: () => void
+
   children: ReactNode
+
 }
 
-export function MainShell({ username, activeTab, onTabChange, onLogout, children }: MainShellProps) {
+
+
+export function MainShell({
+
+  username,
+
+  activeTab,
+
+  unreadCount,
+
+  showNotifications = false,
+
+  showSettings = false,
+
+  showBottomNav = true,
+
+  onTabChange,
+
+  onOpenNotifications,
+
+  onOpenSettings,
+
+  onLogout,
+
+  children,
+
+}: MainShellProps) {
+
+  const [menuOpen, setMenuOpen] = useState(false)
+
+
+
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-md flex-col bg-slate-50">
-      <header className="sticky top-0 z-20 flex min-h-16 shrink-0 items-center justify-between bg-slate-50/95 px-6 pt-3 backdrop-blur">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Lessley</h1>
-          <p className="text-sm text-slate-500">Hi {username}</p>
+
+    <div className="fintech-shell">
+
+      <header className="sticky top-0 z-20 shrink-0 border-b border-violet-100/60 bg-white/80 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl sm:px-5">
+
+        <div className="flex min-h-14 items-center gap-3">
+
+          <AppMenu
+
+            username={username}
+
+            open={menuOpen}
+
+            unreadCount={unreadCount}
+
+            showNotifications={showNotifications}
+
+            showSettings={showSettings}
+
+            onOpenChange={setMenuOpen}
+
+            onOpenNotifications={onOpenNotifications}
+
+            onOpenSettings={onOpenSettings}
+
+            onLogout={onLogout}
+
+          />
+
+          <div className="min-w-0 flex-1">
+
+            <div className="flex items-center gap-2">
+
+              <span className="fintech-logo-mark" aria-hidden>
+
+                L
+
+              </span>
+
+              <div className="min-w-0">
+
+                <h1 className="text-lg font-bold tracking-tight text-slate-900">Lessley</h1>
+
+                <p className="truncate text-xs text-slate-500">
+
+                  Welcome back, <span className="font-medium text-slate-700">{username}</span>
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
-        <Button
-          className="min-h-11 min-w-11 rounded-xl border-0 bg-white px-3 text-slate-700 shadow-sm hover:bg-slate-100"
-          variant="ghost"
-          onClick={onLogout}
-          aria-label="Logout"
-        >
-          <LogOut className="size-4" />
-          Logout
-        </Button>
+
       </header>
 
-      <div className="min-h-0 flex-1 pb-24">{children}</div>
 
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/90 bg-white/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md"
-        aria-label="Main navigation"
-      >
-        <div className="mx-auto flex max-w-md gap-1 px-2 py-2">
-          <button
-            type="button"
-            onClick={() => onTabChange("optimizer")}
-            className={
-              activeTab === "optimizer"
-                ? "flex flex-1 flex-col items-center gap-1 rounded-xl bg-slate-900 py-2.5 text-white shadow-sm transition-colors"
-                : "flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
-            }
-            aria-current={activeTab === "optimizer" ? "page" : undefined}
-          >
-            <ScanSearch className="size-5" aria-hidden />
-            <span className="text-[11px] font-medium leading-tight">Optimizer</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onTabChange("insights")}
-            className={
-              activeTab === "insights"
-                ? "flex flex-1 flex-col items-center gap-1 rounded-xl bg-slate-900 py-2.5 text-white shadow-sm transition-colors"
-                : "flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
-            }
-            aria-current={activeTab === "insights" ? "page" : undefined}
-          >
-            <BarChart3 className="size-5" aria-hidden />
-            <span className="text-center text-[11px] font-medium leading-tight">
-              Insights &amp;
-              <br />
-              recommendations
-            </span>
-          </button>
-        </div>
-      </nav>
+
+      <div className={showBottomNav ? "min-h-0 flex-1 pb-[calc(6.25rem+env(safe-area-inset-bottom))]" : "min-h-0 flex-1"}>
+
+        {children}
+
+      </div>
+
+
+
+      {showBottomNav ? (
+
+        <nav
+
+          className="pointer-events-none fixed bottom-0 left-0 right-0 z-30 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+
+          aria-label="Main navigation"
+
+        >
+
+          <div className="fintech-nav-bar pointer-events-auto mx-auto max-w-md">
+
+            <button
+
+              type="button"
+
+              onClick={() => onTabChange("optimizer")}
+
+              className={cn(
+
+                "fintech-nav-pill",
+
+                activeTab === "optimizer" ? "fintech-nav-pill-active" : "fintech-nav-pill-inactive"
+
+              )}
+
+              aria-current={activeTab === "optimizer" ? "page" : undefined}
+
+            >
+
+              <ScanSearch className="size-5" aria-hidden />
+
+              <span>Optimizer</span>
+
+            </button>
+
+            <button
+
+              type="button"
+
+              onClick={() => onTabChange("insights")}
+
+              className={cn(
+
+                "fintech-nav-pill",
+
+                activeTab === "insights" ? "fintech-nav-pill-active" : "fintech-nav-pill-inactive"
+
+              )}
+
+              aria-current={activeTab === "insights" ? "page" : undefined}
+
+            >
+
+              <BarChart3 className="size-5" aria-hidden />
+
+              <span className="text-center leading-tight">
+
+                Insights
+
+                <span className="block text-[10px] font-normal opacity-80">&amp; clubs</span>
+
+              </span>
+
+            </button>
+
+          </div>
+
+        </nav>
+
+      ) : null}
+
     </div>
+
   )
+
 }
+
