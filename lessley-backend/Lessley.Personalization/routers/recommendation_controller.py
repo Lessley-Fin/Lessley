@@ -44,8 +44,17 @@ async def calculate_club_recommendation_by_category(
 
     try:
         service = DIContainer.get_recommendation_service()
+        user_club_ids = None
+        if payload.user_club_ids:
+            user_club_ids = [club_id.strip() for club_id in payload.user_club_ids.split(",") if club_id.strip()]
+
         result = await service.calculate_club_recommendation_by_category(
-            payload.user_id, payload.time_filter, payload.days, payload.use_mock, payload.threshold
+            payload.user_id,
+            payload.time_filter,
+            payload.days,
+            payload.use_mock,
+            payload.threshold,
+            user_club_ids,
         )
 
         response_time_ms = (time.time() - start_time) * 1000

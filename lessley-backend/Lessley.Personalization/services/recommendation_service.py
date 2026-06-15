@@ -57,6 +57,7 @@ class RecommendationService:
         days: int,
         use_mock: bool = False,
         threshold: LIMITS = LIMITS.HIT_THRESHOLD,
+        user_club_ids: List[str] | None = None,
     ) -> Dict:
         """
         Calculate club recommendations based on user spending patterns.
@@ -89,7 +90,7 @@ class RecommendationService:
 
             mcc_codes = self._extract_mcc_codes_from_categories(categories)
             result = self.recommendation_core_service.get_club_recommendations_by_spending_analysis(
-                user_id, mcc_codes, threshold
+                user_id, mcc_codes, threshold, user_club_ids
             )
 
             logger.info(

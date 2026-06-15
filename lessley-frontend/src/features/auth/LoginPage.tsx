@@ -1,11 +1,12 @@
 import { type FormEvent, useState } from "react"
-import { Loader2, Eye, EyeOff } from "lucide-react"
+import { Loader2, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { getMyProfile, loginWithGateway, registerWithGateway } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
 interface LoginPageProps {
   onSuccess: () => void
@@ -99,21 +100,38 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-slate-50 px-6 py-12">
-      <Card className="w-full max-w-sm rounded-3xl border-0 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-        <CardHeader className="px-7 pt-8">
-          <CardTitle className="text-center text-3xl font-semibold tracking-tight">Lessley</CardTitle>
+    <main className="flex min-h-svh flex-col items-center justify-center px-5 py-12">
+      <div className="mb-8 flex flex-col items-center gap-3 text-center">
+        <span className="fintech-logo-mark size-12 text-lg" aria-hidden>
+          L
+        </span>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Lessley</h1>
+          <p className="mt-1 text-sm text-slate-500">Personal finance, optimized for you</p>
+        </div>
+        <p className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+          <ShieldCheck className="size-3.5" aria-hidden />
+          Bank-grade security
+        </p>
+      </div>
+
+      <Card className="fintech-card w-full max-w-sm border-0 shadow-fintech-lg">
+        <CardHeader className="px-6 pb-2 pt-6">
+          <CardTitle className="text-center text-lg font-semibold text-slate-900">
+            {mode === "login" ? "Sign in to your account" : "Create your account"}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="px-7 pb-8">
-          <div className="mb-7 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1.5">
+        <CardContent className="px-6 pb-7">
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1">
             <Button
               type="button"
               variant="ghost"
-              className={
+              className={cn(
+                "min-h-11 rounded-xl border-0 text-sm font-semibold transition-all",
                 mode === "login"
-                  ? "min-h-11 rounded-xl border-0 bg-white text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.10)] hover:bg-white focus-visible:ring-2 focus-visible:ring-slate-300"
-                  : "min-h-11 rounded-xl border-0 bg-transparent text-slate-500 shadow-none hover:bg-slate-200/70 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-slate-300"
-              }
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "bg-transparent text-slate-500 hover:text-slate-700"
+              )}
               disabled={isLoading}
               onClick={() => setMode("login")}
             >
@@ -122,11 +140,12 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
             <Button
               type="button"
               variant="ghost"
-              className={
+              className={cn(
+                "min-h-11 rounded-xl border-0 text-sm font-semibold transition-all",
                 mode === "register"
-                  ? "min-h-11 rounded-xl border-0 bg-white text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.10)] hover:bg-white focus-visible:ring-2 focus-visible:ring-slate-300"
-                  : "min-h-11 rounded-xl border-0 bg-transparent text-slate-500 shadow-none hover:bg-slate-200/70 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-slate-300"
-              }
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "bg-transparent text-slate-500 hover:text-slate-700"
+              )}
               disabled={isLoading}
               onClick={() => setMode("register")}
             >
@@ -135,43 +154,44 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
                 type="text"
                 autoComplete="username"
                 required
-                className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
+                className="fintech-input"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 disabled={isLoading}
               />
             </div>
             {mode === "register" ? (
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   autoComplete="email"
                   required
-                  className="min-h-12 border-0 bg-slate-100 px-4 shadow-none focus-visible:ring-slate-300"
+                  className="fintech-input"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   disabled={isLoading}
                 />
               </div>
             ) : null}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
+                <Lock className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete={mode === "register" ? "new-password" : "current-password"}
                   required
-                  className="min-h-12 border-0 bg-slate-100 px-4 pr-12 shadow-none focus-visible:ring-slate-300"
+                  className="fintech-input pl-11 pr-12"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   disabled={isLoading}
@@ -180,7 +200,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
                   type="button"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none"
                   onClick={() => setShowPassword((s) => !s)}
                   disabled={isLoading}
                 >
@@ -189,14 +209,18 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
               </div>
             </div>
             {errorMessages.length ? (
-              <ul className="space-y-1 text-sm text-destructive">
+              <ul className="space-y-1 rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-sm text-red-700">
                 {errorMessages.map((item, index) => (
                   <li key={`${index}-${item}`}>{item}</li>
                 ))}
               </ul>
             ) : null}
-            {successMessage ? <p className="text-sm text-emerald-600">{successMessage}</p> : null}
-            <Button type="submit" className="min-h-12 w-full rounded-xl shadow-sm" disabled={isLoading}>
+            {successMessage ? (
+              <p className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-sm text-emerald-800">
+                {successMessage}
+              </p>
+            ) : null}
+            <Button type="submit" className="min-h-12 w-full" disabled={isLoading}>
               {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
               {isLoading
                 ? mode === "register"
@@ -209,6 +233,10 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           </form>
         </CardContent>
       </Card>
+
+      <p className="mt-8 max-w-xs text-center text-xs leading-relaxed text-slate-400">
+        Your credentials are encrypted in transit. We never store your banking passwords.
+      </p>
     </main>
   )
 }

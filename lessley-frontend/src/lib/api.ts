@@ -1,15 +1,17 @@
 import type {
+  ClubRecommendationResponse,
   FeedbackSubmission,
   PaginatedApiResponse,
   PersonalizationTransaction,
   SpendingCategoryInsight,
   TopAccountInsight,
+  TopStoreInsight,
 } from "@/lib/types"
 
 export const API_GATEWAY_URL =
   import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:5001"
 export const PERSONALIZATION_API_URL =
-  import.meta.env.VITE_PERSONALIZATION_API_URL ?? "http://localhost:5002"
+  import.meta.env.VITE_PERSONALIZATION_API_URL ?? "http://localhost:8001"
 
 export interface LoginRequest {
   userName: string
@@ -187,6 +189,28 @@ export async function hasOpenFinanceConnection(userId: string, accessToken?: str
   }
 }
 
+async function hasPersonalizationAccounts(userId: string, accessToken?: string) {
+  try {
+    const params = new URLSearchParams({ user_id: userId })
+    const response = await fetch(`${PERSONALIZATION_API_URL}/open-finance/accounts?${params.toString()}`, {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    })
+
+    const payload = await parseJsonResponse<PaginatedApiResponse<Record<string, unknown>>>(
+      response,
+      "Unable to load accounts."
+    )
+
+    return Array.isArray(payload.data) && payload.data.length > 0
+  } catch {
+    return false
+  }
+}
+
 export async function hasPersonalizationConnection(
   userId: string,
   accessToken?: string,
@@ -215,6 +239,37 @@ export async function hasPersonalizationConnection(
   } catch {
     return false
   }
+}
+
+/** Pick the lookup id used when connecting Open Banking (userId first). */
+export function getOpenBankingLookupCandidates(userId: string, email: string, username: string) {
+  return Array.from(new Set([userId, email, username].map((item) => item.trim()).filter(Boolean)))
+}
+
+/**
+ * True when Open Banking is linked for any candidate — transactions, accounts, or gateway data.
+ */
+export async function resolveOpenBankingLookupId(
+  candidates: string[],
+  accessToken?: string,
+  days: number = 365
+): Promise<string> {
+  for (const candidate of candidates) {
+    if (await hasPersonalizationConnection(candidate, accessToken, days)) {
+      return candidate
+    }
+  }
+  for (const candidate of candidates) {
+    if (await hasPersonalizationAccounts(candidate, accessToken)) {
+      return candidate
+    }
+  }
+  for (const candidate of candidates) {
+    if (await hasOpenFinanceConnection(candidate, accessToken)) {
+      return candidate
+    }
+  }
+  return ""
 }
 
 export async function getPersonalizationTransactions(
@@ -301,6 +356,73 @@ export async function getTopAccountInsights(
       "Unable to load account insights."
     )
     return Array.isArray(payload.data) ? payload.data : []
+  } catch (error) {
+    throw toNetworkError(error, "Personalization API", PERSONALIZATION_API_URL)
+  }
+}
+
+export async function getTopStoreInsights(
+  userId: string,
+  accessToken?: string,
+  days: number = 90
+): Promise<TopStoreInsight[]> {
+  try {
+    const params = new URLSearchParams({
+      user_id: userId,
+      time_filter: "true",
+      use_mock: "false",
+      days: String(days),
+    })
+    const response = await fetch(`${PERSONALIZATION_API_URL}/insights/top-stores?${params.toString()}`, {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    })
+
+    const payload = await parseJsonResponse<PaginatedApiResponse<TopStoreInsight>>(
+      response,
+      "Unable to load top stores."
+    )
+    return Array.isArray(payload.data) ? payload.data : []
+  } catch (error) {
+    throw toNetworkError(error, "Personalization API", PERSONALIZATION_API_URL)
+  }
+}
+
+export async function getClubRecommendations(
+  userId: string,
+  accessToken?: string,
+  days: number = 90,
+  userClubIds: string[] = []
+): Promise<ClubRecommendationResponse | null> {
+  try {
+    const params = new URLSearchParams({
+      user_id: userId,
+      time_filter: "true",
+      use_mock: "false",
+      days: String(days),
+    })
+    if (userClubIds.length > 0) {
+      params.set("user_club_ids", userClubIds.join(","))
+    }
+    const response = await fetch(
+      `${PERSONALIZATION_API_URL}/recommendations/club-by-category?${params.toString()}`,
+      {
+        headers: accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          : undefined,
+      }
+    )
+
+    const payload = await parseJsonResponse<{ status: string; data: ClubRecommendationResponse }>(
+      response,
+      "Unable to load club recommendations."
+    )
+    return payload.data ?? null
   } catch (error) {
     throw toNetworkError(error, "Personalization API", PERSONALIZATION_API_URL)
   }

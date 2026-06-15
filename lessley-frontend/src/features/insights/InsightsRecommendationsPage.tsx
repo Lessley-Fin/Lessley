@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ArrowRight, CalendarRange, CheckCircle2 } from "lucide-react"
+import { ArrowRight, CalendarRange, CheckCircle2, Landmark, Sparkles, Store, TrendingUp } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,15 +13,21 @@ import {
 } from "@/components/ui/select"
 import {
   getCategoryInsights,
+  getClubRecommendations,
+  getOpenBankingLookupCandidates,
   getOpenFinanceConnectionUrl,
   getPersonalizationTransactions,
   getTopAccountInsights,
-  hasPersonalizationConnection,
+  getTopStoreInsights,
+  resolveOpenBankingLookupId,
 } from "@/lib/api"
+import { fintech } from "@/lib/fintech-styles"
 import type {
+  ClubRecommendation,
   PersonalizationTransaction,
   SpendingCategoryInsight,
   TopAccountInsight,
+  TopStoreInsight,
 } from "@/lib/types"
 
 interface InsightsRecommendationsPageProps {
@@ -62,6 +68,22 @@ function formatDate(value: string | undefined) {
   return parsed.toLocaleDateString()
 }
 
+function formatFitPercent(fitScore: number) {
+  return `${Math.round(fitScore * 100)}%`
+}
+
+function getStoreLabel(store: TopStoreInsight) {
+  return store.normalized_merchantName ?? store.merchantName ?? "Unknown store"
+}
+
+function getStoreTransactionCount(store: TopStoreInsight) {
+  return store.transaction_count ?? store.total_count ?? 0
+}
+
+function getStoreTotalAmount(store: TopStoreInsight) {
+  return store.transaction_amount ?? store.total_amount ?? 0
+}
+
 export function InsightsRecommendationsPage({ username, userId, email }: InsightsRecommendationsPageProps) {
   const [timeRangeDays, setTimeRangeDays] = useState(90)
   const [checkingConnection, setCheckingConnection] = useState(true)
@@ -73,14 +95,15 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
   const [transactions, setTransactions] = useState<PersonalizationTransaction[]>([])
   const [categoryInsights, setCategoryInsights] = useState<SpendingCategoryInsight[]>([])
   const [topAccounts, setTopAccounts] = useState<TopAccountInsight[]>([])
+  const [topClubRecommendations, setTopClubRecommendations] = useState<ClubRecommendation[]>([])
+  const [hasClubAnalysis, setHasClubAnalysis] = useState(false)
+  const [topStores, setTopStores] = useState<TopStoreInsight[]>([])
 
   useEffect(() => {
     let isMounted = true
 
     const runCheck = async () => {
-      const candidates = Array.from(
-        new Set([email, userId, username].map((item) => item.trim()).filter(Boolean))
-      )
+      const candidates = getOpenBankingLookupCandidates(userId, email, username)
       if (candidates.length === 0) {
         if (isMounted) {
           setIsConnected(false)
@@ -91,14 +114,11 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       }
 
       const accessToken = localStorage.getItem("lessley_access_token") ?? undefined
-      let resolvedLookupId = ""
-      for (const candidate of candidates) {
-        const connected = await hasPersonalizationConnection(candidate, accessToken, CONNECTION_PROBE_DAYS)
-        if (connected) {
-          resolvedLookupId = candidate
-          break
-        }
-      }
+      const resolvedLookupId = await resolveOpenBankingLookupId(
+        candidates,
+        accessToken,
+        CONNECTION_PROBE_DAYS
+      )
 
       if (isMounted) {
         setIsConnected(Boolean(resolvedLookupId))
@@ -138,6 +158,9 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       setTransactions([])
       setCategoryInsights([])
       setTopAccounts([])
+      setTopClubRecommendations([])
+      setHasClubAnalysis(false)
+      setTopStores([])
       setPersonalizationError("")
       setIsLoadingPersonalization(false)
       return
@@ -152,15 +175,21 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       setIsLoadingPersonalization(true)
       setPersonalizationError("")
       try {
-        const [tx, categories, accounts] = await Promise.all([
+        const [tx, categories, accounts, stores, clubPayload] = await Promise.all([
           getPersonalizationTransactions(activeLookupId, accessToken, timeRangeDays),
           getCategoryInsights(activeLookupId, accessToken, timeRangeDays),
           getTopAccountInsights(activeLookupId, accessToken, timeRangeDays),
+          getTopStoreInsights(activeLookupId, accessToken, timeRangeDays),
+          getClubRecommendations(activeLookupId, accessToken, timeRangeDays),
         ])
         if (!isMounted) return
         setTransactions(tx)
         setCategoryInsights(categories)
         setTopAccounts(accounts)
+        setTopStores(stores.slice(0, 3))
+        const recommendations = clubPayload?.recommendations ?? []
+        setHasClubAnalysis(recommendations.length > 0)
+        setTopClubRecommendations(recommendations.slice(0, 3))
       } catch (error) {
         if (!isMounted) return
         setPersonalizationError(error instanceof Error ? error.message : "Unable to load personalization data.")
@@ -182,6 +211,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
   const topCategories = categoryInsights.slice(0, 3)
   const moreHotCategories = categoryInsights.slice(1, 4)
   const accountHighlights = topAccounts.slice(0, 3)
+  const topStoreTotalSpend = topStores.reduce((sum, store) => sum + getStoreTotalAmount(store), 0)
   const totalTransactionAmount = transactions.reduce((sum, tx) => {
     const amount = tx.amount?.chargedAmount?.amount ?? tx.amount?.originalAmount?.amount
     return sum + (typeof amount === "number" ? amount : 0)
@@ -189,32 +219,31 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
   const topCategory = topCategories[0]
 
   return (
-    <section className="space-y-4 px-6 pb-6 pt-4">
+    <section className={fintech.page}>
       {checkingConnection ? (
-        <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-          <CardContent className="pt-5 text-sm text-slate-500">Checking bank connection...</CardContent>
+        <Card className="fintech-card border-0">
+          <CardContent className="flex items-center gap-3 py-5">
+            <span className="size-4 animate-pulse rounded-full bg-blue-400/50" aria-hidden />
+            <p className="text-sm text-slate-500">Verifying bank connection…</p>
+          </CardContent>
         </Card>
       ) : isConnected ? (
         <>
-          <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-            <CardContent className="flex items-center gap-2 pt-5 text-sm text-emerald-700">
-              <CheckCircle2 className="size-4" />
+          <div className="flex justify-center">
+            <span className={fintech.statusConnected}>
+              <CheckCircle2 className="size-3.5" />
               Open Banking connected
-            </CardContent>
-          </Card>
+            </span>
+          </div>
 
-          <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-            <CardHeader className="pb-3 pt-5">
-              <div className="flex items-center gap-2">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                  <CalendarRange className="size-4" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Time range</CardTitle>
-                </div>
+          <Card className="fintech-card border-0">
+            <CardHeader className="flex-row items-center gap-3 space-y-0 px-5 pb-2 pt-5">
+              <div className={fintech.iconWrapBlue}>
+                <CalendarRange className="size-4" />
               </div>
+              <CardTitle className={fintech.sectionTitle}>Analysis period</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 pt-0">
+            <CardContent className="px-5 pb-5 pt-0">
               <Label htmlFor="insights-time-range" className="sr-only">
                 Time range
               </Label>
@@ -222,10 +251,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
                 value={String(timeRangeDays)}
                 onValueChange={(value) => setTimeRangeDays(Number(value))}
               >
-                <SelectTrigger
-                  id="insights-time-range"
-                  className="min-h-12 rounded-xl border-0 bg-slate-100 px-4 shadow-none focus:ring-slate-300"
-                >
+                <SelectTrigger id="insights-time-range" className={fintech.select}>
                   <SelectValue placeholder="Choose period" />
                 </SelectTrigger>
                 <SelectContent className="z-[100]">
@@ -239,53 +265,55 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-            <CardHeader className="pb-2 pt-5">
-              <CardTitle className="text-base">Overview</CardTitle>
+          <Card className="fintech-card border-0">
+            <CardHeader className="flex-row items-center gap-3 space-y-0 px-5 pb-2 pt-5">
+              <div className={fintech.iconWrapBlue}>
+                <TrendingUp className="size-4" />
+              </div>
+              <CardTitle className={fintech.sectionTitle}>Spending overview</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 pt-0 text-sm">
-              {isLoadingPersonalization ? <p className="text-slate-500">Loading insights...</p> : null}
-              {personalizationError ? <p className="text-destructive">{personalizationError}</p> : null}
+            <CardContent className="space-y-3 px-5 pb-5 pt-0 text-sm">
+              {isLoadingPersonalization ? (
+                <p className="text-slate-500">Loading insights…</p>
+              ) : null}
+              {personalizationError ? (
+                <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-destructive">
+                  {personalizationError}
+                </p>
+              ) : null}
               {!isLoadingPersonalization && !personalizationError ? (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Transactions</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-800">{transactions.length}</p>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className={fintech.metricBlue}>
+                      <p className={fintech.metricLabel}>Transactions</p>
+                      <p className={fintech.metricValue}>{transactions.length}</p>
                     </div>
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Total amount</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-800">
-                        {formatAmount(totalTransactionAmount)}
-                      </p>
+                    <div className={fintech.metricViolet}>
+                      <p className={fintech.metricLabel}>Total amount</p>
+                      <p className={fintech.metricValue}>{formatAmount(totalTransactionAmount)}</p>
                     </div>
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Top category</p>
-                      <p className="mt-1 line-clamp-1 text-sm font-semibold text-slate-800">
+                    <div className={fintech.metricAmber}>
+                      <p className={fintech.metricLabel}>Top category</p>
+                      <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-800">
                         {topCategory?.category ?? "-"}
                       </p>
                       <p className="text-xs text-slate-500">
                         {topCategory ? `${topCategory.total_count} tx` : "No category data"}
                       </p>
                     </div>
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Category spend</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-800">
-                        {formatAmount(topCategory?.total_amount)}
-                      </p>
+                    <div className={fintech.metricEmerald}>
+                      <p className={fintech.metricLabel}>Category spend</p>
+                      <p className={fintech.metricValue}>{formatAmount(topCategory?.total_amount)}</p>
                     </div>
                   </div>
                   {moreHotCategories.length ? (
                     <div className="space-y-2">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">More hot categories</p>
+                      <p className={fintech.sectionEyebrow}>Trending categories</p>
                       {moreHotCategories.map((item) => (
-                        <div
-                          key={item.category}
-                          className="flex items-center justify-between rounded-xl bg-slate-50 p-3"
-                        >
-                          <p className="text-slate-700">{item.category}</p>
-                          <p className="text-sm font-medium text-slate-800">
-                            {item.total_count} tx - {formatAmount(item.total_amount)}
+                        <div key={item.category} className={fintech.listRow}>
+                          <p className="font-medium text-slate-700">{item.category}</p>
+                          <p className={`${fintech.amount} text-sm`}>
+                            {item.total_count} tx · {formatAmount(item.total_amount)}
                           </p>
                         </div>
                       ))}
@@ -296,12 +324,84 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-            <CardHeader className="pb-2 pt-5">
-              <CardTitle className="text-base">Recent transactions</CardTitle>
+          {!isLoadingPersonalization && !personalizationError ? (
+            <Card className="fintech-card border-0">
+              <CardHeader className="flex-row items-center gap-3 space-y-0 px-5 pb-2 pt-5">
+                <div className={fintech.iconWrapViolet}>
+                  <Sparkles className="size-4" />
+                </div>
+                <div>
+                  <CardTitle className={fintech.sectionTitle}>Picked for you</CardTitle>
+                  <p className="text-xs text-slate-500">Club fit vs. where you already shop</p>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 px-5 pb-5 pt-0">
+                {!hasClubAnalysis ? (
+                  <p className="fintech-card-inset text-sm text-slate-600">
+                    We need more transaction history to analyze club fit. Try a longer time range or add more
+                    purchases through Open Banking.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <p className={fintech.sectionEyebrow}>Top 3 club matches</p>
+                    {topClubRecommendations.map((club, index) => (
+                      <div key={club.club_id} className={fintech.listRowAccent}>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-slate-800">
+                            {index + 1}. {club.club_name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {formatFitPercent(club.fit_score)} fit · {club.hit_count}/{club.total_stores} stores
+                            match
+                          </p>
+                        </div>
+                        <span className={fintech.fitBadge}>{formatFitPercent(club.fit_score)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={fintech.sectionEyebrow}>Top stores</p>
+                    {topStores.length ? (
+                      <p className={`${fintech.amount} text-xs`}>{formatAmount(topStoreTotalSpend)} total</p>
+                    ) : null}
+                  </div>
+                  {topStores.length ? (
+                    topStores.map((store, index) => (
+                      <div key={`${getStoreLabel(store)}-${index}`} className={fintech.listRow}>
+                        <span className={fintech.rankBadge}>{index + 1}</span>
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+                          <Store className="size-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-slate-800">{getStoreLabel(store)}</p>
+                          <p className="text-xs text-slate-500">
+                            {getStoreTransactionCount(store)} purchases
+                          </p>
+                        </div>
+                        <p className={`${fintech.amount} shrink-0 text-sm`}>
+                          {formatAmount(getStoreTotalAmount(store))}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="fintech-card-inset text-sm text-slate-600">
+                      No store patterns yet for this period.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          <Card className="fintech-card border-0">
+            <CardHeader className="px-5 pb-2 pt-5">
+              <CardTitle className={fintech.sectionTitle}>Recent transactions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 pt-0 text-sm">
-              {isLoadingPersonalization ? <p className="text-slate-500">Loading transactions...</p> : null}
+            <CardContent className="space-y-2 px-5 pb-5 pt-0 text-sm">
+              {isLoadingPersonalization ? <p className="text-slate-500">Loading transactions…</p> : null}
               {!isLoadingPersonalization && recentTransactions.length === 0 ? (
                 <p className="text-slate-500">No transactions found.</p>
               ) : null}
@@ -317,14 +417,14 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
                 const date =
                   tx.date?.transactionDate || tx.date?.bookingDate || tx.date?.valueDate || tx.createdAt || ""
                 return (
-                  <div key={tx.id ?? `${description}-${date}`} className="rounded-xl bg-slate-50 p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-slate-800">{description}</p>
-                        <p className="text-xs text-slate-500">{formatDate(date)}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-slate-700">{formatAmount(amount, currency)}</p>
+                  <div key={tx.id ?? `${description}-${date}`} className={fintech.listRow}>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800">{description}</p>
+                      <p className="text-xs text-slate-500">{formatDate(date)}</p>
                     </div>
+                    <p className={`${fintech.amount} shrink-0 text-sm`}>
+                      {formatAmount(amount, currency)}
+                    </p>
                   </div>
                 )
               })}
@@ -332,18 +432,19 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
           </Card>
 
           {accountHighlights.length ? (
-            <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-              <CardHeader className="pb-2 pt-5">
-                <CardTitle className="text-base">Most active accounts</CardTitle>
+            <Card className="fintech-card border-0">
+              <CardHeader className="flex-row items-center gap-2 space-y-0 px-5 pb-2 pt-5">
+                <Landmark className="size-4 text-slate-500" />
+                <CardTitle className={fintech.sectionTitle}>Most active accounts</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 pt-0 text-sm">
+              <CardContent className="space-y-2 px-5 pb-5 pt-0 text-sm">
                 {accountHighlights.map((item) => (
-                  <div key={item.accountId} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+                  <div key={item.accountId} className={fintech.listRow}>
                     <div>
                       <p className="font-medium text-slate-800">{item.accountNumber ?? item.accountId}</p>
                       <p className="text-xs text-slate-500">{item.total_count} transactions</p>
                     </div>
-                    <p className="font-semibold text-slate-700">{formatAmount(item.total_amount)}</p>
+                    <p className={fintech.amount}>{formatAmount(item.total_amount)}</p>
                   </div>
                 ))}
               </CardContent>
@@ -351,19 +452,25 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
           ) : null}
         </>
       ) : (
-        <Card className="rounded-2xl border-0 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)]">
-          <CardHeader className="pb-2 pt-5">
-            <CardTitle className="text-base">Connect your bank</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-0">
-            <p className="text-sm text-slate-500">
-              You are not connected to Open Banking yet. Connect now to sync transactions.
+        <Card className="fintech-card overflow-hidden border-0">
+          <div className={fintech.gradientBanner}>
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-white/20">
+              <Landmark className="size-5" />
+            </div>
+            <CardTitle className="mt-4 text-lg font-semibold text-white">Connect your bank</CardTitle>
+            <p className="mt-2 text-sm leading-relaxed text-blue-100">
+              Link Open Banking to sync transactions and unlock personalized insights.
             </p>
-            {connectionHint ? <p className="text-xs text-slate-500">{connectionHint}</p> : null}
-            <Button className="min-h-11 rounded-xl" onClick={handleConnectOpenBanking}>
+          </div>
+          <CardContent className="space-y-3 px-5 pb-5 pt-4">
+            {connectionHint ? <p className="text-xs text-amber-700">{connectionHint}</p> : null}
+            <Button className="min-h-12 w-full gap-2" onClick={handleConnectOpenBanking}>
               Connect Open Banking
               <ArrowRight className="size-4" />
             </Button>
+            <p className="text-center text-[11px] text-slate-400">
+              Regulated Open Banking · Read-only access · You stay in control
+            </p>
           </CardContent>
         </Card>
       )}

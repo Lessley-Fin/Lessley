@@ -56,6 +56,10 @@ class RecommendationByCategoryRequestSchema(BaseModel):
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
     threshold: float = Field(LIMITS.HIT_THRESHOLD, ge=0, le=1, description="Threshold for club recommendation")
+    user_club_ids: str | None = Field(
+        None,
+        description="Comma-separated club IDs the user is already a member of",
+    )
 
     @validator("user_id")
     def validate_user_id(cls, v):
