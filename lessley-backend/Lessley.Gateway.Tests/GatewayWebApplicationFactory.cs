@@ -10,18 +10,23 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Lessley.Gateway.Tests;
 
 /// <summary>
-/// No-op stand-in for the Personalization HTTP client so E2E tests don't require the
-/// FastAPI service to be running. Records how many times recalculation was requested.
+/// No-op stand-in for the Personalization MassTransit publisher so tests don't require RabbitMQ.
 /// </summary>
 public sealed class FakePersonalizationService : IPersonalizationService
 {
     public int RecalculateCallCount;
 
-    public Task RecalculateCategoriesAsync(string email, CancellationToken ct = default)
+    public Task RecalculateCategoriesAsync(string userId, CancellationToken ct = default)
     {
         Interlocked.Increment(ref RecalculateCallCount);
         return Task.CompletedTask;
     }
+
+    public Task TriggerCalculateTopAccountsAsync(string userId, CancellationToken ct = default)  => Task.CompletedTask;
+    public Task TriggerCalculateTopStoresAsync(string userId, CancellationToken ct = default)    => Task.CompletedTask;
+    public Task TriggerCalculateMissedSavingsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
+    public Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
+    public Task TriggerCalculateClubCategoriesAsync(string clubId, CancellationToken ct = default) => Task.CompletedTask;
 }
 
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
@@ -32,38 +37,32 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
 
     public GatewayWebApplicationFactory()
     {
-        // With the minimal hosting model, Program.Main configures services before
-        // WebApplicationFactory's ConfigureAppConfiguration runs. Environment variables
-        // are read during WebApplication.CreateBuilder(), so they arrive in time.
-        // ASP.NET Core maps JwtConfig__Key → JwtConfig:Key (double-underscore separator).
         Environment.SetEnvironmentVariable("JwtConfig__Key",     JwtKey);
         Environment.SetEnvironmentVariable("JwtConfig__Issuer",  Issuer);
         Environment.SetEnvironmentVariable("JwtConfig__Audience", Audience);
         Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb", "mongodb://localhost:27017");
     }
 
-    // Each factory instance gets its own isolated in-memory database so parallel
-    // test classes don't share role/user state and trigger duplicate-key errors.
     private readonly string _dbName = $"GatewayE2ETestDb_{Guid.NewGuid():N}";
 
-    // Shared fake so tests can assert how often category recalculation was triggered.
     public readonly FakePersonalizationService PersonalizationService = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
 
-        // Replace the MongoDB-backed DbContext with EF Core InMemory so the test
-        // process doesn't need a running MongoDB instance.
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseInMemoryDatabase(_dbName));
 
-            // Replace the HTTP Personalization client with an in-memory no-op.
             services.RemoveAll<IPersonalizationService>();
             services.AddSingleton<IPersonalizationService>(PersonalizationService);
+
+            // Provide a no-op IPublishEndpoint so SendNotificationService can resolve it.
+            services.RemoveAll<MassTransit.IPublishEndpoint>();
+            services.AddSingleton<MassTransit.IPublishEndpoint, NoOpPublishEndpoint>();
         });
     }
 

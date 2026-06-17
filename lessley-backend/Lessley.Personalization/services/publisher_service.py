@@ -18,9 +18,6 @@ class PublisherService:
     Holds one user_publisher (user-scoped events) and one tag_publisher (group broadcasts).
     For HTTP mode the same HttpPublisher instance satisfies both roles; for RabbitMQ mode they
     are separate classes sharing one connection.
-
-    Created with no arguments by DIContainer (lazy singleton) and wired by ``initialize()`` from
-    the application lifespan. HTTP is the default so the service works without RabbitMQ.
     """
 
     def __init__(self) -> None:
@@ -33,14 +30,12 @@ class PublisherService:
         if self._initialized:
             return
 
-        # RabbitMQ only when explicitly enabled and not overridden to HTTP.
         if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
             connection = await RabbitMQBase.connect(settings.ConnectionStrings_Rabbit)
             self._user_publisher = RabbitMQUserPublisher(connection)
             self._tag_publisher = RabbitMQTagPublisher(connection)
             logger.info("Publisher: RabbitMQ mode enabled")
         else:
-            # HTTP mode (default): one HttpPublisher satisfies both user and tag roles.
             http_pub = HttpPublisher()
             self._user_publisher = http_pub
             self._tag_publisher = http_pub
@@ -58,6 +53,8 @@ class PublisherService:
         if not self._initialized or self._user_publisher is None:
             raise RuntimeError("PublisherService.initialize() must be called before publishing")
 
+    # ── User tag assignment ──────────────────────────────────────────────────────
+
     async def publish_user_tag_assigned(self, user_id: str, tags: List[str]) -> None:
         self._ensure_initialized()
         await self._user_publisher.publish_user_tag_assigned(user_id, tags)
@@ -66,9 +63,39 @@ class PublisherService:
         self._ensure_initialized()
         await self._user_publisher.publish_user_notification(user_id, message, deal_id)
 
+    # ── Calc result events (task 6) ───────────────────────────────────────────────
+
+    async def publish_user_categories_calculated(self, user_id: str) -> None:
+        self._ensure_initialized()
+        await self._user_publisher.publish_user_categories_calculated(user_id)
+
+    async def publish_top_accounts_calculated(self, user_id: str) -> None:
+        self._ensure_initialized()
+        await self._tag_publisher.publish_top_accounts_calculated(user_id)
+
+    async def publish_top_stores_calculated(self, user_id: str) -> None:
+        self._ensure_initialized()
+        await self._tag_publisher.publish_top_stores_calculated(user_id)
+
+    async def publish_missed_savings_calculated(self, user_id: str) -> None:
+        self._ensure_initialized()
+        await self._tag_publisher.publish_missed_savings_calculated(user_id)
+
+    async def publish_matching_clubs_calculated(self, user_id: str) -> None:
+        self._ensure_initialized()
+        await self._tag_publisher.publish_matching_clubs_calculated(user_id)
+
+    # ── Deal broadcast (task 8) ───────────────────────────────────────────────────
+
     async def publish_group_notification(self, group_tag: str, message: str, deal_id: str) -> None:
+        """Legacy single-group broadcast — kept for backward compatibility."""
         self._ensure_initialized()
         await self._tag_publisher.publish_group_notification(group_tag, message, deal_id)
+
+    async def publish_deal_notification(self, deal_id: str, message: str, categories: List[str]) -> None:
+        """Consolidated deal broadcast: one message listing all categories."""
+        self._ensure_initialized()
+        await self._tag_publisher.publish_deal_notification(deal_id, message, categories)
 
     async def close(self) -> None:
         if self._user_publisher is not None:

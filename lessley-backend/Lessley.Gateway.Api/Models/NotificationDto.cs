@@ -12,11 +12,14 @@ public class NotificationDto
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
 
+    public List<string>? Categories { get; set; }
+
     public static NotificationDto From(Notification notification, NotificationRead read) => new()
     {
         Id         = notification.Id.ToString(),
         Message    = notification.Message,
         DealId     = notification.DealId,
+        Categories = notification.Categories,
         SentAt     = notification.SentAt,
         TargetType = notification.TargetType,
         IsRead     = read.IsRead,

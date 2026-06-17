@@ -37,13 +37,10 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
-builder.Services.AddHttpClient<IPersonalizationService, PersonalizationService>(client =>
-{
-    // HTTP-only proxy to the Personalization service (no RabbitMQ yet).
-    var baseUrl = builder.Configuration["PersonalizationConfig:BaseUrl"] ?? "http://localhost:8000";
-    client.BaseAddress = new Uri(baseUrl);
-});
+builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationReadRepository, NotificationReadRepository>();

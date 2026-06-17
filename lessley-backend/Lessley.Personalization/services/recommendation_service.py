@@ -62,6 +62,9 @@ class RecommendationService:
                 user_id, mcc_codes
             )
 
+            if self.publisher_service:
+                await self.publisher_service.publish_matching_clubs_calculated(user_id)
+
             logger.info(
                 "Club matching completed",
                 extra={
@@ -111,12 +114,11 @@ class RecommendationService:
                 )
 
             category_tags = [str(mcc) for mcc in categories]
-            for tag in category_tags:
-                await self.publisher_service.publish_group_notification(
-                    group_tag=tag,
-                    message=message,
-                    deal_id=deal_id,
-                )
+            await self.publisher_service.publish_deal_notification(
+                deal_id=deal_id,
+                message=message,
+                categories=category_tags,
+            )
 
             logger.info(
                 "Deal broadcast published",

@@ -61,3 +61,25 @@ class HttpPublisher:
             "HTTP: group notification sent",
             extra={"extra_data": {"group_tag": group_tag, "deal_id": deal_id}},
         )
+
+    async def publish_deal_notification(self, deal_id: str, message: str, categories: List[str]) -> None:
+        # HTTP fallback not implemented for consolidated deal notification; log warning.
+        logger.warning(
+            "HTTP: publish_deal_notification not supported in HTTP mode — use RabbitMQ mode",
+            extra={"extra_data": {"deal_id": deal_id}},
+        )
+
+    async def publish_user_categories_calculated(self, user_id: str) -> None:
+        logger.warning("HTTP: publish_user_categories_calculated not supported in HTTP mode")
+
+    async def publish_top_accounts_calculated(self, user_id: str) -> None:
+        logger.warning("HTTP: publish_top_accounts_calculated not supported in HTTP mode")
+
+    async def publish_top_stores_calculated(self, user_id: str) -> None:
+        logger.warning("HTTP: publish_top_stores_calculated not supported in HTTP mode")
+
+    async def publish_missed_savings_calculated(self, user_id: str) -> None:
+        logger.warning("HTTP: publish_missed_savings_calculated not supported in HTTP mode")
+
+    async def publish_matching_clubs_calculated(self, user_id: str) -> None:
+        logger.warning("HTTP: publish_matching_clubs_calculated not supported in HTTP mode")

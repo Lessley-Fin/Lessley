@@ -1,4 +1,5 @@
 using Lessley.Gateway.Api.Consumers;
+using Lessley.Gateway.Api.Contracts;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Models;
 using MassTransit;
@@ -90,7 +91,6 @@ namespace Lessley.Gateway.Api.Extensions
                     ValidAudience            = jwtAudience,
                     IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
                 };
-                // SignalR passes JWT as ?access_token= in query string
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -191,9 +191,19 @@ namespace Lessley.Gateway.Api.Extensions
 
             services.AddMassTransit(x =>
             {
+                // ── Consumers: Personalization → Gateway ───────────────────────
                 x.AddConsumer<UserTagAssignedEventConsumer>();
-                x.AddConsumer<DealTagNotificationConsumer>();
                 x.AddConsumer<DealUserNotificationConsumer>();
+
+                // ── Consumers: Personalization calc results → Gateway ──────────
+                x.AddConsumer<UserCategoriesCalculatedEventConsumer>();
+                x.AddConsumer<TopAccountsCalculatedEventConsumer>();
+                x.AddConsumer<TopStoresCalculatedEventConsumer>();
+                x.AddConsumer<MissedSavingsCalculatedEventConsumer>();
+                x.AddConsumer<MatchingClubsCalculatedEventConsumer>();
+
+                // ── Consumer: deal broadcast (consolidated, task 8) ────────────
+                x.AddConsumer<DealNotificationConsumer>();
 
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
@@ -201,6 +211,22 @@ namespace Lessley.Gateway.Api.Extensions
                         ?? "amqp://guest:guest@localhost/";
                     cfg.Host(new Uri(rabbit));
 
+                    // All Gateway→Personalization command publishes use raw JSON
+                    // so the Python consumer can parse them without a MassTransit envelope.
+                    cfg.UseRawJsonSerializer(RawSerializerOptions.AddTransportHeaders);
+
+                    // ── Publish topology for Gateway→Personalization commands ───
+                    ConfigureCommandPublish<CalculateUserCategoriesCommand>(cfg, "Gateway.calculate_user_categories");
+                    ConfigureCommandPublish<CalculateTopAccountsCommand>(cfg, "Gateway.calculate_top_accounts");
+                    ConfigureCommandPublish<CalculateTopStoresCommand>(cfg, "Gateway.calculate_top_stores");
+                    ConfigureCommandPublish<CalculateMissedSavingsCommand>(cfg, "Gateway.calculate_missed_savings");
+                    ConfigureCommandPublish<CalculateMatchingClubsCommand>(cfg, "Gateway.calculate_matching_clubs");
+                    ConfigureCommandPublish<CalculateClubCategoriesCommand>(cfg, "Gateway.calculate_club_categories");
+
+                    // NotificationDispatchedEvent — published by Gateway, consumed by E2E tests
+                    ConfigureCommandPublish<NotificationDispatchedEvent>(cfg, "Gateway.notification_dispatched");
+
+                    // ── Receive: user tag assignment ───────────────────────────
                     cfg.ReceiveEndpoint("gateway.user_tag_assigned", e =>
                     {
                         e.ConfigureConsumeTopology = false;
@@ -214,19 +240,7 @@ namespace Lessley.Gateway.Api.Extensions
                         e.ConfigureConsumer<UserTagAssignedEventConsumer>(ctx);
                     });
 
-                    cfg.ReceiveEndpoint("gateway.deal_group_notification", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.deal_group_notification";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<DealTagNotificationConsumer>(ctx);
-                    });
-
+                    // ── Receive: direct user notifications from Personalization ─
                     cfg.ReceiveEndpoint("gateway.deal_user_notification", e =>
                     {
                         e.ConfigureConsumeTopology = false;
@@ -239,10 +253,102 @@ namespace Lessley.Gateway.Api.Extensions
                         e.UseRawJsonDeserializer();
                         e.ConfigureConsumer<DealUserNotificationConsumer>(ctx);
                     });
+
+                    // ── Receive: consolidated deal notification (task 8) ───────
+                    cfg.ReceiveEndpoint("gateway.deal_notification", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.deal_notification";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<DealNotificationConsumer>(ctx);
+                    });
+
+                    // ── Receive: calc result events (task 6) ───────────────────
+                    cfg.ReceiveEndpoint("gateway.user_categories_calculated", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.user_categories_calculated";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<UserCategoriesCalculatedEventConsumer>(ctx);
+                    });
+
+                    cfg.ReceiveEndpoint("gateway.top_accounts_calculated", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.top_accounts_calculated";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<TopAccountsCalculatedEventConsumer>(ctx);
+                    });
+
+                    cfg.ReceiveEndpoint("gateway.top_stores_calculated", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.top_stores_calculated";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<TopStoresCalculatedEventConsumer>(ctx);
+                    });
+
+                    cfg.ReceiveEndpoint("gateway.missed_savings_calculated", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.missed_savings_calculated";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<MissedSavingsCalculatedEventConsumer>(ctx);
+                    });
+
+                    cfg.ReceiveEndpoint("gateway.matching_clubs_calculated", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.matching_clubs_calculated";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<MatchingClubsCalculatedEventConsumer>(ctx);
+                    });
                 });
             });
 
             return services;
+        }
+
+        private static void ConfigureCommandPublish<T>(IRabbitMqBusFactoryConfigurator cfg, string routingKey)
+            where T : class
+        {
+            cfg.Message<T>(m => m.SetEntityName("lessley_events"));
+            cfg.Publish<T>(p =>
+            {
+                p.ExchangeType = "topic";
+                p.Durable      = true;
+            });
+            cfg.Send<T>(s => s.UseRoutingKeyFormatter(_ => routingKey));
         }
     }
 }

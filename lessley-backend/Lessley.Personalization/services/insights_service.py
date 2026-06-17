@@ -106,9 +106,9 @@ class InsightsService:
             # updates the user's profile (and SignalR groups). Other services read them back via
             # UserRepository instead of re-running this calculation.
             mcc_tags = self._extract_mcc_tags(categories)
-            print(self.publisher_service, mcc_tags)
             if self.publisher_service and mcc_tags:
                 await self.publisher_service.publish_user_tag_assigned(user_id, mcc_tags)
+                await self.publisher_service.publish_user_categories_calculated(user_id)
 
             logger.info(
                 "User categories calculated successfully",
@@ -160,6 +160,9 @@ class InsightsService:
                 ascending=False,
             )
 
+            if self.publisher_service:
+                await self.publisher_service.publish_top_accounts_calculated(user_id)
+
             logger.info(
                 "Top accounts calculated successfully",
                 extra={
@@ -197,6 +200,9 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
             stores = self.processing_core_service.get_top_spending_stores(transactions)
+
+            if self.publisher_service:
+                await self.publisher_service.publish_top_stores_calculated(user_id)
 
             logger.info(
                 "Top stores calculated successfully",
@@ -245,6 +251,9 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
             insights = await self.processing_core_service.calculate_missed_savings_async(transactions)
+
+            if self.publisher_service:
+                await self.publisher_service.publish_missed_savings_calculated(user_id)
 
             logger.info(
                 "Missed savings calculated successfully",

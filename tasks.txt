@@ -1,36 +1,28 @@
 משימות PUSH NOTIFICATIONS
 
-# Roee
+1. UserController should not contain logic ! create a userService and move all logic their
+2. create a skill that explaining code architecture: repository = db connections and crud, service = should contain the logic, controler = should call the service and do not handle logic
+3. communicate between gateway&personalization should be: calculation processes - masstransit, get api - http:
 
-1. SendNotificationCommandConsumer -> is only for groups. split into 2 divided messages (different classes)
-2. UserTagAssignedEventConsumer -> is only for only users. we need to receive an array of tags. if user online we need to remove him from all the groups and add it to the new ones.
-3. what is the best practice to use for this use case.
-we have a lot of notifications:
-a. new deal from your category. "user.tags" is a list of "category" (broadcast "tag")
-b. new deal only for you (unicast "for you")
-c. your report for clubs recommendation is finished (unicast)
-d. your report for roi recommendation is finished (unicast)
-all this are need to be in the same db of notification and display similarly in the client.
-what is the best way to do that ? base dto and inheritance / different models ?
+http:
+get_mcc
+get_mcc_by_id
+get_user_access_token
+get_user_accounts
+get_user_transactions_by_account
+get_user_transactions
 
-4. bootstrap user should be created always in the beginning of the run (in init mode) and should not be deleted.
-5. "me" endpoint should return also email
 
-6. bad thing: we need to create a SendNotificationService which can be assigned from Consumer or HttpController !
+mass-transit:
+calculate_club_categories
+calculate_user_categories
+calculate_top_accounts
+calculate_top_stores
+calculate_missed_savings
+calculate_matching_clubs
 
-7. ApplicationUser should also have "mutedTags". if user have a "mutedTags" do not add it to the signalR groups, and do not get messages from this "tag"
-8. ApplicationUser should also contain a clubs list.
-9. ApplicationUser should also contain a threshold of "user fit to reduce noise". field name should be: "matchingScore"
-
-10. you can remove RecipientCount from "Notification".
-11. in program we do not want massive code -> Use extensions instead.
-
-12. every service that is using the db should be named: "{entityName}Repository". it means that: we will have "NotificationRepository", "DealsRepository", ...
-
-13. implement get api to update users (    Tags,MutedTags,Clubs,MatchingScore)
-14. for every notification in db add a boolean if already read or not.
-15. implement get api /api/Notification/user/{userId} - should return all user notification
-16. implement post api /api/Notification/read/{userId} - should make all user notification as read (update the boolean)
-
-17. move logic of consumers into services
-18. for every consumer create the corresponding HTTP method.
+4. personalization&gateway should publish finished messages like FinishHandlingEvent or something. so E2E tests can consume this messages and test finish message
+5. FinishHandlingEvent should contain: notificationId, type, RecipientCount, requestId, etc. masstransit should add requestId or traceId to understand which request is this. (so i can know which request is this)
+6. every calc should be a new event, and each event should be a different notification for a user in the db.
+7. i want to have a e2e tests that include a real socket connections, rabbitmq, and mongodb that tests each scenarios. happy and unhappy. i prefer a good 5-10 tests like this that test every flow end-to-end instead of a 50 behavioral tests.
+8. each notification needs to include a *list* of categories instead of: list of notification that each one referes to a specific category. user should get only one notification for each deal, even if it has 2 categories which he registered to.
