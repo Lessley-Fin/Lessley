@@ -1,0 +1,92 @@
+"""
+Tasks 1 & 5 — calc-categories stops if the user is unknown, and sends the recalculated
+categories (MCC codes) to the Gateway.
+"""
+
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from fastapi import HTTPException
+
+from services.insights_service import InsightsService
+
+
+def _service(user_repo, publisher, categories):
+    processing = MagicMock()
+    processing.get_top_spending_categories = MagicMock(return_value=categories)
+    files = MagicMock()
+    files.read_json = MagicMock(return_value=[{"fake": "tx"}])
+    open_finance = MagicMock()
+    open_finance.get_user_transactions_async = AsyncMock(return_value=[{"fake": "tx"}])
+    return InsightsService(
+        open_finance_service=open_finance,
+        files_service=files,
+        processing_core_service=processing,
+        publisher_service=publisher,
+        user_repository=user_repo,
+    )
+
+
+# ── Task 1: unknown user → stop ─────────────────────────────────────────────────
+
+async def test_calc_categories_unknown_user_raises_and_stops():
+    user_repo = MagicMock()
+    user_repo.get_user = AsyncMock(side_effect=HTTPException(status_code=404, detail="not registered"))
+
+    publisher = MagicMock()
+    publisher.publish_user_tag_assigned = AsyncMock()
+
+    service = _service(user_repo, publisher, categories=[{"category": "X", "mcc_codes": [5411]}])
+
+    with pytest.raises(HTTPException) as exc:
+        await service.calculate_user_categories_async("ghost@test.com", time_filter=True, use_mock=True)
+
+    assert exc.value.status_code == 404
+    # Must not continue: nothing published to the Gateway.
+    publisher.publish_user_tag_assigned.assert_not_awaited()
+    service.processing_core_service.get_top_spending_categories.assert_not_called()
+
+
+# ── Task 5: publish MCC-code categories to the Gateway ──────────────────────────
+
+async def test_calc_categories_publishes_mcc_codes_to_gateway():
+    user_repo = MagicMock()
+    user_repo.get_user = AsyncMock(return_value={"MatchingScore": None})  # no trim
+
+    publisher = MagicMock()
+    publisher.publish_user_tag_assigned = AsyncMock()
+
+    categories = [
+        {"category": "GROCERIES", "total_count": 5, "total_amount": 100, "mcc_codes": [5411]},
+        {"category": "RESTAURANTS", "total_count": 3, "total_amount": 50, "mcc_codes": [5812, 5411]},
+    ]
+    service = _service(user_repo, publisher, categories)
+
+    await service.calculate_user_categories_async("user@test.com", time_filter=True, use_mock=True)
+
+    publisher.publish_user_tag_assigned.assert_awaited_once()
+    args = publisher.publish_user_tag_assigned.await_args.args
+    assert args[0] == "user@test.com"
+    assert args[1] == ["5411", "5812"]  # de-duplicated MCC codes as strings
+
+
+async def test_calc_categories_trims_by_match_level_before_publishing():
+    user_repo = MagicMock()
+    user_repo.get_user = AsyncMock(return_value={"MatchingScore": 0.75})  # keep top 25%
+
+    publisher = MagicMock()
+    publisher.publish_user_tag_assigned = AsyncMock()
+
+    categories = [
+        {"category": "C1", "mcc_codes": [1111]},
+        {"category": "C2", "mcc_codes": [2222]},
+        {"category": "C3", "mcc_codes": [3333]},
+        {"category": "C4", "mcc_codes": [4444]},
+    ]
+    service = _service(user_repo, publisher, categories)
+
+    await service.calculate_user_categories_async("user@test.com", time_filter=True, use_mock=True)
+
+    # 4 categories, score 0.75 -> keep round(4 * 0.25) = 1 -> only the top category's MCC code.
+    args = publisher.publish_user_tag_assigned.await_args.args
+    assert args[1] == ["1111"]

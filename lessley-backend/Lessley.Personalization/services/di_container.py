@@ -7,11 +7,20 @@ from .processing_core_service import ProcessingCoreService
 from .mcc_service import MccService
 from .recommendation_service import RecommendationService
 from .recommendation_core_service import RecommendationCoreService
+from .user_repository import UserRepository
+from .publisher_service import PublisherService
 
 
 class DIContainer:
     _instances = {}
     _lock = threading.RLock()
+
+    @staticmethod
+    def get_publisher_service() -> PublisherService | None:
+        with DIContainer._lock:
+            if "publisher_service" not in DIContainer._instances:
+                DIContainer._instances["publisher_service"] = PublisherService()
+            return DIContainer._instances["publisher_service"]
 
     @staticmethod
     def get_transaction_stash_service() -> TransactionStashService:
@@ -44,6 +53,8 @@ class DIContainer:
                     open_finance_service=DIContainer.get_open_finance_service(),
                     files_service=DIContainer.get_transaction_stash_service(),
                     processing_core_service=DIContainer.get_processing_service(),
+                    publisher_service=DIContainer.get_publisher_service(),
+                    user_repository=DIContainer.get_user_repository(),
                 )
             return DIContainer._instances["insights_service"]
 
@@ -64,12 +75,21 @@ class DIContainer:
             return DIContainer._instances["open_finance_service"]
 
     @staticmethod
+    def get_user_repository() -> UserRepository:
+        with DIContainer._lock:
+            if "user_repository" not in DIContainer._instances:
+                DIContainer._instances["user_repository"] = UserRepository()
+            return DIContainer._instances["user_repository"]
+
+    @staticmethod
     def get_recommendation_service() -> RecommendationService:
         with DIContainer._lock:
             if "recommendation_service" not in DIContainer._instances:
                 DIContainer._instances["recommendation_service"] = RecommendationService(
                     recommendation_core_service=DIContainer.get_recommendation_core_service(),
-                    insights_service=DIContainer.get_insights_service(),
+                    user_repository=DIContainer.get_user_repository(),
+                    publisher_service=DIContainer.get_publisher_service(),
+                    mcc_service=DIContainer.get_mcc_service(),
                 )
             return DIContainer._instances["recommendation_service"]
 

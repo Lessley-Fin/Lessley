@@ -1,4 +1,4 @@
-﻿using Lessley.Gateway.Api.Models;
+using Lessley.Gateway.Api.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -6,11 +6,13 @@ using MongoDB.EntityFrameworkCore.Extensions;
 
 namespace Lessley.Gateway.Api.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationRead> NotificationReads { get; set; }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) 
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
         }
@@ -19,15 +21,15 @@ namespace Lessley.Gateway.Api.Data
         {
             base.OnModelCreating(builder);
 
-            // Optional but recommended: Rename the default Identity collections 
-            // from things like "AspNetUsers" to cleaner MongoDB collection names.
-            builder.Entity<IdentityUser>().ToCollection("users");
+            builder.Entity<ApplicationUser>().ToCollection("users");
             builder.Entity<IdentityRole>().ToCollection("roles");
             builder.Entity<IdentityUserRole<string>>().ToCollection("user_roles");
             builder.Entity<IdentityUserClaim<string>>().ToCollection("user_claims");
             builder.Entity<IdentityUserLogin<string>>().ToCollection("user_logins");
             builder.Entity<IdentityRoleClaim<string>>().ToCollection("role_claims");
             builder.Entity<IdentityUserToken<string>>().ToCollection("user_tokens");
+            builder.Entity<Notification>().ToCollection("notifications");
+            builder.Entity<NotificationRead>().ToCollection("notification_reads");
         }
     }
 }

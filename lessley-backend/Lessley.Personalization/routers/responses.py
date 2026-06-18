@@ -49,20 +49,8 @@ class ClubRecommendationSchema(BaseModel):
 class ClubRecommendationResponseSchema(BaseModel):
     """Schema for the club recommendation by spending analysis response."""
 
-    user_id: str
+    email: str
     recommendations: list[ClubRecommendationSchema]
-
-
-class DealRecommendationResponseSchema(BaseModel):
-    """Schema for a single deal recommendation response."""
-
-    deal_id: str
-    user_id: str
-    store_id: str
-    club_id: str
-    is_recommended: bool
-    fit_score: float
-    matching_mcc_codes: list[int]
 
 
 class MissedStoreSchema(BaseModel):

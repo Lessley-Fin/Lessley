@@ -1,0 +1,23 @@
+[
+    {
+        "message": "פיצה אנגל - הנחה בפיצה אנגל",
+        "time": "31/05/2024 12:00:00",
+        "category": "RESTAURANT",
+        "deal_id": "019dc1b5b46c_1ea4c4990e2918f0",
+        "is_read": false
+    },
+    {
+        "message": "פיצה פינו - הנחה בפיצה אנגל",
+        "time": "28/05/2024 12:00:00",
+        "category": "RESTAURANT",
+        "deal_id": "019dc1b5b46c_1ea4c4990e2918f1",
+        "is_read": false
+    },
+    {
+        "message": "פיצה פצה - הנחה בפיצה אנגל",
+        "time": "07/05/2024 12:00:00",
+        "category": "RESTAURANT",
+        "deal_id": "019dc1b5b46c_1ea4c4990e2918f2",
+        "is_read": false
+    }
+]

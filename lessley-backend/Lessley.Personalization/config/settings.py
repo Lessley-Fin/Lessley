@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     OpenFinanceConfig_BaseUrl: str | None = None  # Optional setting
     Loki_Url: str | None = None  # Optional setting for Loki logging
 
+    # Publisher protocol: "http" (default behaviour) or "rabbitmq". Optional — when unset the
+    # PublisherService falls back to HTTP.
+    Publisher_Mode: str | None = None
+    # Required when Publisher_Mode=http: base URL of the Gateway API
+    Gateway_BaseUrl: str | None = None
+    # Admin JWT used by the HTTP publisher to call Gateway endpoints
+    Gateway_ServiceToken: str | None = None
+
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
