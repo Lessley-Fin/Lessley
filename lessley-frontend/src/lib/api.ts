@@ -9,9 +9,9 @@ import type {
 } from "@/lib/types"
 
 export const API_GATEWAY_URL =
-  import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:5001"
+  import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:8001"
 export const PERSONALIZATION_API_URL =
-  import.meta.env.VITE_PERSONALIZATION_API_URL ?? "http://localhost:8001"
+  import.meta.env.VITE_PERSONALIZATION_API_URL ?? "/personalization"
 
 export interface LoginRequest {
   userName: string
@@ -22,6 +22,9 @@ export interface RegisterRequest {
   userName: string
   email: string
   password: string
+  clubs?: string[]
+  matchLevel?: "Low" | "Medium" | "High"
+  mutedCategories?: string[]
 }
 
 export interface LoginResponse {
@@ -191,7 +194,7 @@ export async function hasOpenFinanceConnection(userId: string, accessToken?: str
 
 async function hasPersonalizationAccounts(userId: string, accessToken?: string) {
   try {
-    const params = new URLSearchParams({ user_id: userId })
+    const params = new URLSearchParams({ email: userId })
     const response = await fetch(`${PERSONALIZATION_API_URL}/open-finance/accounts?${params.toString()}`, {
       headers: accessToken
         ? {
@@ -218,7 +221,7 @@ export async function hasPersonalizationConnection(
 ) {
   try {
     const params = new URLSearchParams({
-      user_id: userId,
+      email: userId,
       time_filter: "true",
       days: String(days),
     })
@@ -241,9 +244,9 @@ export async function hasPersonalizationConnection(
   }
 }
 
-/** Pick the lookup id used when connecting Open Banking (userId first). */
+/** Pick the lookup id used when connecting Open Banking (email first — Personalization API requires email). */
 export function getOpenBankingLookupCandidates(userId: string, email: string, username: string) {
-  return Array.from(new Set([userId, email, username].map((item) => item.trim()).filter(Boolean)))
+  return Array.from(new Set([email, userId, username].map((item) => item.trim()).filter(Boolean)))
 }
 
 /**
@@ -279,7 +282,7 @@ export async function getPersonalizationTransactions(
 ): Promise<PersonalizationTransaction[]> {
   try {
     const params = new URLSearchParams({
-      user_id: userId,
+      email: userId,
       time_filter: "true",
       days: String(days),
     })
@@ -308,7 +311,7 @@ export async function getCategoryInsights(
 ): Promise<SpendingCategoryInsight[]> {
   try {
     const params = new URLSearchParams({
-      user_id: userId,
+      email: userId,
       time_filter: "true",
       use_mock: "false",
       days: String(days),
@@ -338,7 +341,7 @@ export async function getTopAccountInsights(
 ): Promise<TopAccountInsight[]> {
   try {
     const params = new URLSearchParams({
-      user_id: userId,
+      email: userId,
       time_filter: "true",
       use_mock: "false",
       days: String(days),
@@ -368,7 +371,7 @@ export async function getTopStoreInsights(
 ): Promise<TopStoreInsight[]> {
   try {
     const params = new URLSearchParams({
-      user_id: userId,
+      email: userId,
       time_filter: "true",
       use_mock: "false",
       days: String(days),
@@ -392,23 +395,13 @@ export async function getTopStoreInsights(
 }
 
 export async function getClubRecommendations(
-  userId: string,
+  email: string,
   accessToken?: string,
-  days: number = 90,
-  userClubIds: string[] = []
 ): Promise<ClubRecommendationResponse | null> {
   try {
-    const params = new URLSearchParams({
-      user_id: userId,
-      time_filter: "true",
-      use_mock: "false",
-      days: String(days),
-    })
-    if (userClubIds.length > 0) {
-      params.set("user_club_ids", userClubIds.join(","))
-    }
+    const params = new URLSearchParams({ email })
     const response = await fetch(
-      `${PERSONALIZATION_API_URL}/recommendations/club-by-category?${params.toString()}`,
+      `${PERSONALIZATION_API_URL}/recommendations/matching-clubs?${params.toString()}`,
       {
         headers: accessToken
           ? {

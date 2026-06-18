@@ -91,7 +91,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
   const [connectionHint, setConnectionHint] = useState("")
   const [isLoadingPersonalization, setIsLoadingPersonalization] = useState(false)
   const [personalizationError, setPersonalizationError] = useState("")
-  const [activeLookupId, setActiveLookupId] = useState("")
+  const [, setActiveLookupId] = useState("")
   const [transactions, setTransactions] = useState<PersonalizationTransaction[]>([])
   const [categoryInsights, setCategoryInsights] = useState<SpendingCategoryInsight[]>([])
   const [topAccounts, setTopAccounts] = useState<TopAccountInsight[]>([])
@@ -166,7 +166,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       return
     }
 
-    if (!activeLookupId) return
+    if (!email) return
 
     let isMounted = true
     const accessToken = localStorage.getItem("lessley_access_token") ?? undefined
@@ -175,21 +175,32 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       setIsLoadingPersonalization(true)
       setPersonalizationError("")
       try {
-        const [tx, categories, accounts, stores, clubPayload] = await Promise.all([
-          getPersonalizationTransactions(activeLookupId, accessToken, timeRangeDays),
-          getCategoryInsights(activeLookupId, accessToken, timeRangeDays),
-          getTopAccountInsights(activeLookupId, accessToken, timeRangeDays),
-          getTopStoreInsights(activeLookupId, accessToken, timeRangeDays),
-          getClubRecommendations(activeLookupId, accessToken, timeRangeDays),
+        const results = await Promise.allSettled([
+          getPersonalizationTransactions(email, accessToken, timeRangeDays),
+          getCategoryInsights(email, accessToken, timeRangeDays),
+          getTopAccountInsights(email, accessToken, timeRangeDays),
+          getTopStoreInsights(email, accessToken, timeRangeDays),
+          getClubRecommendations(email, accessToken),
         ])
         if (!isMounted) return
-        setTransactions(tx)
-        setCategoryInsights(categories)
-        setTopAccounts(accounts)
-        setTopStores(stores.slice(0, 3))
-        const recommendations = clubPayload?.recommendations ?? []
+
+        const [txResult, categoriesResult, accountsResult, storesResult, clubResult] = results
+        setTransactions(txResult.status === "fulfilled" ? txResult.value : [])
+        setCategoryInsights(categoriesResult.status === "fulfilled" ? categoriesResult.value : [])
+        setTopAccounts(accountsResult.status === "fulfilled" ? accountsResult.value : [])
+        setTopStores(storesResult.status === "fulfilled" ? storesResult.value.slice(0, 3) : [])
+        const recommendations =
+          clubResult.status === "fulfilled" ? (clubResult.value?.recommendations ?? []) : []
         setHasClubAnalysis(recommendations.length > 0)
         setTopClubRecommendations(recommendations.slice(0, 3))
+
+        const firstError = results.find((r) => r.status === "rejected") as
+          | PromiseRejectedResult
+          | undefined
+        if (firstError) {
+          const msg = firstError.reason instanceof Error ? firstError.reason.message : ""
+          setPersonalizationError(msg || "Some insights could not be loaded.")
+        }
       } catch (error) {
         if (!isMounted) return
         setPersonalizationError(error instanceof Error ? error.message : "Unable to load personalization data.")
@@ -205,7 +216,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
     return () => {
       isMounted = false
     }
-  }, [isConnected, activeLookupId, timeRangeDays])
+  }, [isConnected, email, timeRangeDays])
 
   const recentTransactions = transactions.slice(0, 5)
   const topCategories = categoryInsights.slice(0, 3)

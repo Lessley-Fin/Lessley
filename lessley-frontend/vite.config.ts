@@ -10,4 +10,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/personalization': {
+        target: process.env.VITE_PERSONALIZATION_PROXY_TARGET ?? 'http://localhost:8002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/personalization/, ''),
+      },
+    },
+  },
 })

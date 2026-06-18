@@ -16,14 +16,23 @@ export interface PaginatedApiResponse<T> {
   status: string
   data: T[]
   count: number
+  timestamp?: string
 }
 
 export interface PersonalizationTransaction {
   id?: string
-  merchantName?: string
-  accountNumber?: string
+  userId?: string
+  providerId?: string
   accountId?: string
+  accountNumber?: string
+  status?: string
   categoryCode?: string
+  type?: string
+  merchantName?: string
+  merchantAddress?: {
+    country?: string
+    townName?: string
+  }
   amount?: {
     chargedAmount?: {
       amount?: number
@@ -38,6 +47,11 @@ export interface PersonalizationTransaction {
     description?: string
     fixedText?: string
     initialClean?: string
+  }
+  category?: {
+    categorizedBy?: string
+    sub?: string
+    main?: string
   }
   date?: {
     transactionDate?: string
@@ -56,6 +70,8 @@ export interface SpendingCategoryInsight {
 export interface TopAccountInsight {
   accountId: string
   accountNumber?: string
+  providerId?: string
+  type?: string
   total_count: number
   total_amount: number
 }
@@ -67,17 +83,11 @@ export interface ClubRecommendation {
   total_stores: number
   fit_score: number
   is_recommended: boolean
-  is_member?: boolean
-}
-
-export interface ClubRecommendationBuckets {
-  inAndFit: ClubRecommendation[]
-  inNotFit: ClubRecommendation[]
-  fitNotIn: ClubRecommendation[]
+  is_member: boolean
 }
 
 export interface ClubRecommendationResponse {
-  user_id: string
+  email: string
   recommendations: ClubRecommendation[]
 }
 
@@ -90,7 +100,7 @@ export interface TopStoreInsight {
   total_amount?: number
   spend_by_account?: Array<{
     accountNumber?: string
-    account_total_count?: number
-    account_total_amount?: number
+    transaction_count?: number
+    transaction_amount?: number
   }>
 }
