@@ -34,8 +34,10 @@ _TITLE_SPLIT_RE = re.compile(
     r"[.]|\s+(?:תקף|תקפה|המבצע|ההטבה|כולל כפל|לא כולל|בלעדי)"
 )
 
-# Regex that matches the new per-deal wrapper divs: <div id="teaser2-XXXX">
-_TEASER_ID_RE = re.compile(r"^teaser2-.+$")
+# Regex matching the per-deal wrapper divs: <div id="teaser-<hex>">.
+# Mastercard renamed these from the older "teaser2-XXXX" form; both are matched.
+# The trailing-hex anchor excludes child elements like "teaser-<hex>-image".
+_TEASER_ID_RE = re.compile(r"^teaser2?-[0-9a-f]+$")
 
 # Discount patterns.
 _SPEND_SAVE_RE = re.compile(

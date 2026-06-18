@@ -1,8 +1,18 @@
 from __future__ import annotations
 
 import pytest
-from lessley_deals.scraping.sources.mastercard import MastercardAdapter
+from lessley_deals.scraping.sources.mastercard import _TEASER_ID_RE, MastercardAdapter
 from lessley_deals.scraping.base import SourceConfig
+
+
+class TestTeaserIdRegex:
+    def test_matches_current_teaser_wrapper_id(self) -> None:
+        # Mastercard's current per-deal wrapper divs: <div id="teaser-<hex>">
+        assert _TEASER_ID_RE.match("teaser-6008b2906c")
+
+    def test_does_not_match_child_image_id(self) -> None:
+        # Child elements like <div id="teaser-<hex>-image"> are not deal wrappers.
+        assert _TEASER_ID_RE.match("teaser-dcaa103fe5-image") is None
 
 
 class TestMastercardAdapter:
