@@ -94,6 +94,15 @@ The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json`
 
 Existing sources: `hot.py`, `mastercard.py`, `behatsdaa.py`, `isracard_topcash.py`.
 
+### Adding an AI-scraped site (no code)
+For sites without a clean API, use the generic AI scraper engine instead of a
+hand-coded adapter. Add an entry to `data/seed/llm_sources.json` with `site_id`,
+`url`, and `instructions`, then run `python -m deals scrape --source <site_id>`.
+The `LlmScraperAdapter` (`scraping/sources/llm_scraper.py`) renders the page with
+Selenium (`scraping/engine/llm_scraper.py`), cleans the DOM, chunks it, and uses
+the LLM client (`enrichment/llm_client.py::extract_deals_from_content`) to extract
+deals into the normal `RawStore`/`RawScrapedRecord` pipeline.
+
 ## Key Design Decisions
 
 - **Conservative matching**: uncertain cases go to human review; false negatives preferred over false positives (silent mismatches)
@@ -110,6 +119,8 @@ Existing sources: `hot.py`, `mastercard.py`, `behatsdaa.py`, `isracard_topcash.p
 | `DEALS_AUTO_MATCH_THRESHOLD` | `0.90` | Auto-accept threshold |
 | `DEALS_REVIEW_THRESHOLD` | `0.50` | Send-to-review threshold |
 | `DEALS_LOG_LEVEL` | `INFO` | Log verbosity |
+| `LLM_SCRAPER_REMOTE_URL` | — | Optional remote Selenium/CDP endpoint (e.g. Bright Data scraping browser) for the AI scraper engine; local Chrome if unset |
+| `LLM_SCRAPER_VERBOSE` | — | When set (any value), the AI scraper logs the cleaned DOM preview and each extracted deal at INFO. The engine also logs a WARNING when a page looks blocked (captcha/empty/anti-bot markers) |
 | `MONGO_URI` | — | MongoDB connection string |
 | `MONGO_DB_NAME` | — | MongoDB database name |
 

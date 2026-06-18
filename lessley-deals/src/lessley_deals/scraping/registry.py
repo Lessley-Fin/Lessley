@@ -1,11 +1,42 @@
 from __future__ import annotations
 
+import json
 import logging
+from pathlib import Path
 from typing import Type
 
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
 
 logger = logging.getLogger(__name__)
+
+
+def _default_llm_sources_path() -> Path:
+    # registry.py is at src/lessley_deals/scraping/registry.py
+    return Path(__file__).resolve().parents[3] / "data" / "seed" / "llm_sources.json"
+
+
+def load_llm_site_configs(path: Path | None = None) -> list[dict[str, str]]:
+    """Load per-site LLM scraper configs. Returns [] if the file is absent."""
+    cfg_path = path or _default_llm_sources_path()
+    if not cfg_path.exists():
+        return []
+    with cfg_path.open(encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, list):
+        logger.error("llm_sources.json must be a list, got %s", type(data).__name__)
+        return []
+    return [c for c in data if {"site_id", "url", "instructions"} <= c.keys()]
+
+
+def _coerce_max_len(value: object, default: int = 6000) -> int:
+    """Return a positive int chunk size, falling back to *default*."""
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        return default
+    try:
+        n = int(value)
+    except ValueError:
+        return default
+    return n if n > 0 else default
 
 
 class SourceRegistry:
@@ -52,6 +83,24 @@ class SourceRegistry:
         """Return a sorted list of all registered source ids."""
         return sorted(self._adapters)
 
+    def register_llm_sites(self, path: Path | None = None) -> None:
+        """Register an LlmScraperAdapter per entry in llm_sources.json."""
+        from lessley_deals.scraping.sources.llm_scraper import LlmScraperAdapter
+
+        for cfg in load_llm_site_configs(path):
+            try:
+                instance = LlmScraperAdapter(
+                    SourceConfig(base_url=cfg["url"]),
+                    site_id=cfg["site_id"],
+                    url=cfg["url"],
+                    instructions=cfg["instructions"],
+                    max_len=_coerce_max_len(cfg.get("max_len")),
+                )
+                self._adapters[instance.source_id] = instance
+                logger.info("Registered LLM source adapter: %s", instance.source_id)
+            except ValueError:
+                pass
+
     def register_defaults(self) -> None:
         """Register the built-in source adapters."""
         from lessley_deals.scraping.sources.behatsdaa import BehatsdaaAdapter
@@ -72,3 +121,5 @@ class SourceRegistry:
                 self.register(cls, SourceConfig(base_url=url))
             except ValueError:
                 pass  # already registered
+
+        self.register_llm_sites()

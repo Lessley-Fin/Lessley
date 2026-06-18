@@ -104,3 +104,44 @@ def get_store_category(store_name: str, store_url: str | None = None) -> StoreCa
     )
 
     return completion.choices[0].message.parsed
+
+
+class ExtractedDeal(BaseModel):
+    store_name: str
+    deal_description: str
+    price_text: str = ""
+    url: str | None = None
+
+
+class ExtractedDeals(BaseModel):
+    deals: list[ExtractedDeal]
+
+
+def extract_deals_from_content(content: str, instructions: str) -> ExtractedDeals:
+    """Extract retail deals from one cleaned DOM chunk per the user's instructions."""
+    client, model = _get_client()
+    completion = client.beta.chat.completions.parse(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You extract retail deals/promotions from messy web page text. "
+                    "Return ONLY deals that are clearly supported by the content; if none, "
+                    "return an empty list. Each deal needs a store_name and a deal_description; "
+                    "include price_text (price, percent, or '') and url when present. "
+                    "Follow the user's extraction instructions."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Instructions: {instructions}\n\nPage content:\n{content}",
+            },
+        ],
+        response_format=ExtractedDeals,
+        temperature=0.0,
+        seed=42,
+        max_tokens=8192,  # dense pages list many deals; avoid truncating the JSON array
+    )
+    parsed = completion.choices[0].message.parsed
+    return parsed if parsed is not None else ExtractedDeals(deals=[])
