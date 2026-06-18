@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from lessley_deals.enrichment.llm_client import ExtractedDeal, ExtractedDeals
+from lessley_deals.enrichment.llm_client import DealDetail, ExtractedDeal, ExtractedDeals
 from lessley_deals.scraping.engine.llm_scraper import (
     LlmScrapeEngine,
     clean_dom,
@@ -78,6 +78,19 @@ def test_clean_dom_no_body_returns_empty() -> None:
     assert clean_dom("<html></html>") == ""
 
 
+def test_clean_dom_keep_links_inlines_urls() -> None:
+    html = '<html><body><p>Buy <a href="/store/5">Nike</a> now</p></body></html>'
+    out = clean_dom(html, keep_links=True)
+    assert "Nike (/store/5)" in out
+
+
+def test_clean_dom_default_drops_link_urls() -> None:
+    html = '<html><body><p>Buy <a href="/store/5">Nike</a> now</p></body></html>'
+    out = clean_dom(html)
+    assert "Nike" in out
+    assert "/store/5" not in out
+
+
 def test_split_content_chunks_by_max_len() -> None:
     text = "x" * 13000
     chunks = split_content(text, max_len=6000)
@@ -147,3 +160,63 @@ async def test_run_pipes_fetch_clean_split_extract() -> None:
     ):
         deals = await engine.run("https://x.test", "Extract")
     assert deals[0].store_name == "Nike"
+
+
+async def test_fetch_html_fast_falls_back_to_selenium_on_error() -> None:
+    engine = LlmScrapeEngine()
+    with patch.object(engine, "_fetch_fast_sync", side_effect=RuntimeError("boom")), patch.object(
+        engine, "fetch_html", return_value="<html><body>selenium content</body></html>"
+    ):
+        html = await engine.fetch_html_fast("https://x.test")
+    assert "selenium content" in html
+
+
+async def test_fetch_html_fast_falls_back_when_blocked() -> None:
+    engine = LlmScrapeEngine()
+    with patch.object(
+        engine, "_fetch_fast_sync", return_value="<html><body>Access Denied</body></html>"
+    ), patch.object(
+        engine, "fetch_html", return_value="<html><body>real store content here and more</body></html>"
+    ):
+        html = await engine.fetch_html_fast("https://x.test")
+    assert "real store content" in html
+
+
+async def test_run_with_details_two_phase_pairs_listing_and_detail() -> None:
+    engine = LlmScrapeEngine()
+    deal = ExtractedDeal(store_name="Nike", deal_description="3%", detail_url="/store/5")
+    with patch.object(engine, "fetch_html", return_value="<html><body>list</body></html>"), patch.object(
+        engine, "fetch_html_fast", return_value="<html><body>blurb</body></html>"
+    ), patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
+        return_value=ExtractedDeals(deals=[deal]),
+    ), patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_detail",
+        return_value=DealDetail(deal_description="store blurb", terms_and_conditions="rules"),
+    ):
+        pairs = await engine.run_with_details("https://x.test/list", "list", "detail")
+    assert len(pairs) == 1
+    d, detail = pairs[0]
+    assert d.store_name == "Nike"
+    assert detail is not None and detail.deal_description == "store blurb"
+
+
+async def test_run_with_details_respects_sample_limit() -> None:
+    engine = LlmScrapeEngine()
+    deals = [
+        ExtractedDeal(store_name=f"S{i}", deal_description="3%", detail_url=f"/s/{i}")
+        for i in range(10)
+    ]
+    with patch.object(engine, "fetch_html", return_value="<html><body>list</body></html>"), patch.object(
+        engine, "fetch_html_fast", return_value="<html><body>b</body></html>"
+    ), patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
+        return_value=ExtractedDeals(deals=deals),
+    ), patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_detail",
+        return_value=DealDetail(deal_description="b"),
+    ):
+        pairs = await engine.run_with_details(
+            "https://x.test/list", "list", "detail", sample_limit=3
+        )
+    assert len(pairs) == 3

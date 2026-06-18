@@ -3,22 +3,44 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from lessley_deals.enrichment.llm_client import ExtractedDeal, extract_deals_from_content
+from lessley_deals.enrichment.llm_client import (
+    DealDetail,
+    ExtractedDeal,
+    extract_deals_from_content,
+    extract_detail,
+)
 
 logger = logging.getLogger(__name__)
 
+_FAST_FETCH_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
 
-def clean_dom(html: str) -> str:
-    """Extract body text, drop <script>/<style>, collapse blank lines."""
+
+def clean_dom(html: str, keep_links: bool = False) -> str:
+    """Extract body text, drop <script>/<style>, collapse blank lines.
+
+    When ``keep_links`` is True, each ``<a href>`` is rendered inline as
+    ``text (href)`` so the LLM can pair a row with its link (needed for
+    detail-page crawling). Default drops links entirely.
+    """
     soup = BeautifulSoup(html, "html.parser")
     body = soup.body
     if body is None:
         return ""
     for tag in body(["script", "style"]):
         tag.extract()
+    if keep_links:
+        for a in body.find_all("a"):
+            href = a.get("href")
+            text = a.get_text(" ").strip()
+            if href and text:
+                a.replace_with(f"{text} ({href})")
     text = body.get_text(separator="\n")
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     return "\n".join(lines)
@@ -151,6 +173,89 @@ class LlmScrapeEngine:
                 continue
             deals.extend(result.deals)
         return deals
+
+    def _fetch_fast_sync(self, url: str) -> str:
+        """Plain httpx GET for server-rendered pages (no browser)."""
+        import httpx
+
+        resp = httpx.get(
+            url,
+            headers={"User-Agent": _FAST_FETCH_UA},
+            follow_redirects=True,
+            timeout=self._timeout_seconds,
+        )
+        resp.raise_for_status()
+        return resp.text
+
+    async def fetch_html_fast(self, url: str) -> str:
+        """Fetch via httpx; fall back to Selenium if it errors or looks blocked."""
+        try:
+            html = await asyncio.to_thread(self._fetch_fast_sync, url)
+        except Exception:
+            logger.info("Fast fetch failed for %s; falling back to Selenium", url)
+            return await self.fetch_html(url)
+        if detect_block(clean_dom(html), html):
+            logger.info("Fast fetch blocked for %s; falling back to Selenium", url)
+            return await self.fetch_html(url)
+        return html
+
+    async def _extract_one_detail(
+        self, content: str, instructions: str, *, retries: int = 2
+    ) -> DealDetail | None:
+        for attempt in range(retries + 1):
+            try:
+                return await asyncio.to_thread(extract_detail, content, instructions)
+            except Exception:
+                if attempt < retries:
+                    logger.info("Detail LLM extract failed; retrying (%d)", attempt + 1)
+                    continue
+                logger.exception("Detail LLM extract failed after retries")
+                return None
+        return None
+
+    async def run_with_details(
+        self,
+        list_url: str,
+        list_instructions: str,
+        detail_instructions: str,
+        *,
+        sample_limit: int | None = None,
+        concurrency: int = 5,
+    ) -> list[tuple[ExtractedDeal, DealDetail | None]]:
+        """Two-phase crawl: extract a listing, then enrich each row from its
+        detail page.
+
+        Phase 1 renders ``list_url`` with links preserved and LLM-extracts rows
+        (each ideally carrying a ``detail_url``). Phase 2 fetches each detail
+        page (httpx-fast, Selenium fallback) and LLM-extracts rich fields,
+        concurrently. Returns ``(listing_deal, detail_or_None)`` pairs.
+        """
+        html = await self.fetch_html(list_url)
+        cleaned = clean_dom(html, keep_links=True)
+        chunks = split_content(cleaned, max_len=self._max_len)
+        deals = await self.extract(chunks, list_instructions)
+        if sample_limit is not None:
+            deals = deals[:sample_limit]
+        logger.info("run_with_details: %d listing rows; crawling details", len(deals))
+
+        semaphore = asyncio.Semaphore(concurrency)
+
+        async def enrich(deal: ExtractedDeal) -> tuple[ExtractedDeal, DealDetail | None]:
+            if not deal.detail_url:
+                return deal, None
+            url = urljoin(list_url, deal.detail_url)
+            async with semaphore:
+                try:
+                    dhtml = await self.fetch_html_fast(url)
+                except Exception:
+                    logger.exception("Detail fetch failed for %s", url)
+                    return deal, None
+            detail = await self._extract_one_detail(
+                clean_dom(dhtml), detail_instructions
+            )
+            return deal, detail
+
+        return list(await asyncio.gather(*[enrich(d) for d in deals]))
 
     async def run(self, url: str, instructions: str) -> list[ExtractedDeal]:
         html = await self.fetch_html(url)

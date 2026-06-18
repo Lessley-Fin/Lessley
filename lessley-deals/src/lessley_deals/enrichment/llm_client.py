@@ -111,10 +111,19 @@ class ExtractedDeal(BaseModel):
     deal_description: str
     price_text: str = ""
     url: str | None = None
+    detail_url: str | None = None
 
 
 class ExtractedDeals(BaseModel):
     deals: list[ExtractedDeal]
+
+
+class DealDetail(BaseModel):
+    """Rich fields extracted from a single deal's detail page."""
+
+    deal_description: str = ""
+    terms_and_conditions: str = ""
+    coupon_code: str | None = None
 
 
 def extract_deals_from_content(content: str, instructions: str) -> ExtractedDeals:
@@ -145,3 +154,32 @@ def extract_deals_from_content(content: str, instructions: str) -> ExtractedDeal
     )
     parsed = completion.choices[0].message.parsed
     return parsed if parsed is not None else ExtractedDeals(deals=[])
+
+
+def extract_detail(content: str, instructions: str) -> DealDetail:
+    """Extract rich fields (description, terms, coupon) from one detail page."""
+    client, model = _get_client()
+    completion = client.beta.chat.completions.parse(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You extract structured fields from a single retail deal's detail page. "
+                    "Return the store's descriptive blurb, the full terms/conditions text, and a "
+                    "coupon code if one is shown. Use the page's own language; leave a field empty "
+                    "if it is not present. Follow the user's extraction instructions."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Instructions: {instructions}\n\nPage content:\n{content}",
+            },
+        ],
+        response_format=DealDetail,
+        temperature=0.0,
+        seed=42,
+        max_tokens=8192,
+    )
+    parsed = completion.choices[0].message.parsed
+    return parsed if parsed is not None else DealDetail()

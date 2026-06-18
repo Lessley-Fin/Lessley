@@ -89,12 +89,24 @@ class SourceRegistry:
 
         for cfg in load_llm_site_configs(path):
             try:
+                sample_raw = cfg.get("sample_limit")
+                sample_limit = (
+                    _coerce_max_len(sample_raw, default=0) or None
+                    if sample_raw is not None
+                    else None
+                )
                 instance = LlmScraperAdapter(
                     SourceConfig(base_url=cfg["url"]),
                     site_id=cfg["site_id"],
                     url=cfg["url"],
                     instructions=cfg["instructions"],
                     max_len=_coerce_max_len(cfg.get("max_len")),
+                    crawl_details=bool(cfg.get("crawl_details", False)),
+                    detail_instructions=str(cfg.get("detail_instructions", "")),
+                    sample_limit=sample_limit,
+                    detail_concurrency=_coerce_max_len(
+                        cfg.get("detail_concurrency"), default=3
+                    ),
                 )
                 self._adapters[instance.source_id] = instance
                 logger.info("Registered LLM source adapter: %s", instance.source_id)
