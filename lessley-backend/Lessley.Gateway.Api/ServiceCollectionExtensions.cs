@@ -194,6 +194,7 @@ namespace Lessley.Gateway.Api.Extensions
                 // ── Consumers: Personalization → Gateway ───────────────────────
                 x.AddConsumer<UserTagAssignedEventConsumer>();
                 x.AddConsumer<DealUserNotificationConsumer>();
+                x.AddConsumer<DealTagNotificationConsumer>();
 
                 // ── Consumers: Personalization calc results → Gateway ──────────
                 x.AddConsumer<UserCategoriesCalculatedEventConsumer>();
@@ -252,6 +253,20 @@ namespace Lessley.Gateway.Api.Extensions
                         });
                         e.UseRawJsonDeserializer();
                         e.ConfigureConsumer<DealUserNotificationConsumer>(ctx);
+                    });
+
+                    // ── Receive: group (tag) notifications from Personalization ─
+                    cfg.ReceiveEndpoint("gateway.deal_group_notification", e =>
+                    {
+                        e.ConfigureConsumeTopology = false;
+                        e.Bind("lessley_events", b =>
+                        {
+                            b.ExchangeType = "topic";
+                            b.Durable      = true;
+                            b.RoutingKey   = "Personalize.deal_group_notification";
+                        });
+                        e.UseRawJsonDeserializer();
+                        e.ConfigureConsumer<DealTagNotificationConsumer>(ctx);
                     });
 
                     // ── Receive: consolidated deal notification (task 8) ───────

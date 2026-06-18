@@ -202,7 +202,7 @@ async def lifespan(app: FastAPI):
     await publisher_service.initialize()
 
     consumer_task: asyncio.Task | None = None
-    if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
+    if settings.RabbitMQ_Enabled:
         consumer_task = asyncio.create_task(consume_gateway_commands())
 
     yield

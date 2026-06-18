@@ -1,5 +1,3 @@
-using MongoDB.Bson;
-
 namespace Lessley.Gateway.Api.Models;
 
 public class NotificationDto
@@ -8,21 +6,20 @@ public class NotificationDto
     public string Message { get; set; } = string.Empty;
     public string? DealId { get; set; }
     public DateTime SentAt { get; set; }
-    public string TargetType { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
-
     public List<string>? Categories { get; set; }
 
-    public static NotificationDto From(Notification notification, NotificationRead read) => new()
+    public static NotificationDto From(Notification n) => new()
     {
-        Id         = notification.Id.ToString(),
-        Message    = notification.Message,
-        DealId     = notification.DealId,
-        Categories = notification.Categories,
-        SentAt     = notification.SentAt,
-        TargetType = notification.TargetType,
-        IsRead     = read.IsRead,
-        ReadAt     = read.ReadAt,
+        Id         = n.Id.ToString(),
+        Message    = n.Message,
+        DealId     = n.DealId,
+        Categories = n.Categories,
+        SentAt     = n.SentAt,
+        Type       = n.Type,
+        IsRead     = n.IsRead,
+        ReadAt     = n.ReadAt,
     };
 }

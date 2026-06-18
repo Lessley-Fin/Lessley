@@ -14,7 +14,6 @@ public class SendNotificationService : ISendNotificationService
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IConnectionManager _connectionManager;
     private readonly INotificationRepository _notificationRepository;
-    private readonly INotificationReadRepository _readRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IPublishEndpoint _bus;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -24,7 +23,6 @@ public class SendNotificationService : ISendNotificationService
         IHubContext<NotificationHub> hubContext,
         IConnectionManager connectionManager,
         INotificationRepository notificationRepository,
-        INotificationReadRepository readRepository,
         UserManager<ApplicationUser> userManager,
         IPublishEndpoint bus,
         IHttpContextAccessor httpContextAccessor,
@@ -33,7 +31,6 @@ public class SendNotificationService : ISendNotificationService
         _hubContext             = hubContext;
         _connectionManager      = connectionManager;
         _notificationRepository = notificationRepository;
-        _readRepository         = readRepository;
         _userManager            = userManager;
         _bus                    = bus;
         _httpContextAccessor    = httpContextAccessor;
@@ -42,35 +39,24 @@ public class SendNotificationService : ISendNotificationService
 
     public async Task<int> SendToUserAsync(string userId, string message, string? dealId = null, CancellationToken ct = default)
     {
-        var connections = _connectionManager.GetConnections(userId).ToList();
-        var sentAt      = DateTime.UtcNow;
-        var payload     = new { timestamp = sentAt, message, dealId, type = "user" };
+        var sentAt  = DateTime.UtcNow;
+        var payload = new { timestamp = sentAt, message, dealId, type = "user" };
 
+        var connections = _connectionManager.GetConnections(userId).ToList();
         foreach (var connectionId in connections)
             await _hubContext.Clients.Client(connectionId).SendAsync("DealUserNotification", payload, ct);
 
-        var notification = new Notification
+        await _notificationRepository.SaveAsync(new Notification
         {
-            TargetId   = userId,
-            TargetType = "user",
-            Message    = message,
-            DealId     = dealId,
-            SentAt     = sentAt,
-        };
-        await _notificationRepository.SaveAsync(notification, ct);
-
-        await _readRepository.SaveAsync(new NotificationRead
-        {
-            NotificationId = notification.Id,
-            UserId         = userId,
-            IsRead         = false,
-            CreatedAt      = sentAt,
+            UserId  = userId,
+            Message = message,
+            DealId  = dealId,
+            Type    = "user",
+            SentAt  = sentAt,
         }, ct);
 
         _logger.LogInformation("DealUserNotification sent to user {UserId} ({Count} live connections)", userId, connections.Count);
-
-        await PublishDispatchedEventAsync(notification.Id.ToString(), "user", connections.Count, sentAt, ct);
-
+        await PublishDispatchedEventAsync("user:" + userId, "user", connections.Count, sentAt, ct);
         return connections.Count;
     }
 
@@ -81,16 +67,6 @@ public class SendNotificationService : ISendNotificationService
 
         await _hubContext.Clients.Group(groupTag).SendAsync("DealGroupNotification", payload, ct);
 
-        var notification = new Notification
-        {
-            TargetId   = groupTag,
-            TargetType = "group",
-            Message    = message,
-            DealId     = dealId,
-            SentAt     = sentAt,
-        };
-        await _notificationRepository.SaveAsync(notification, ct);
-
         var userIds = await _userManager.Users
             .Where(u => u.Tags != null && u.Tags.Contains(groupTag) &&
                         (u.MutedTags == null || !u.MutedTags.Contains(groupTag)))
@@ -99,28 +75,27 @@ public class SendNotificationService : ISendNotificationService
 
         if (userIds.Count > 0)
         {
-            var reads = userIds.Select(uid => new NotificationRead
+            var notifications = userIds.Select(uid => new Notification
             {
-                NotificationId = notification.Id,
-                UserId         = uid,
-                IsRead         = false,
-                CreatedAt      = sentAt,
+                UserId  = uid,
+                Message = message,
+                DealId  = dealId,
+                Type    = "group",
+                SentAt  = sentAt,
             });
-            await _readRepository.SaveManyAsync(reads, ct);
+            await _notificationRepository.SaveManyAsync(notifications, ct);
         }
 
         _logger.LogInformation(
-            "DealGroupNotification sent to group '{Group}' — {Count} notification_read record(s) created",
+            "DealGroupNotification sent to group '{Group}' — {Count} notification(s) created",
             groupTag, userIds.Count);
-
-        await PublishDispatchedEventAsync(notification.Id.ToString(), "group", userIds.Count, sentAt, ct);
+        await PublishDispatchedEventAsync("group:" + groupTag, "group", userIds.Count, sentAt, ct);
     }
 
     public async Task SendDealNotificationAsync(string dealId, string message, string[] categories, CancellationToken ct = default)
     {
-        var sentAt  = DateTime.UtcNow;
+        var sentAt = DateTime.UtcNow;
 
-        // Find all users subscribed to ANY of the deal's categories without muting them all.
         var userIds = await _userManager.Users
             .Where(u => u.Tags != null &&
                         u.Tags.Any(t => categories.Contains(t)) &&
@@ -129,18 +104,8 @@ public class SendNotificationService : ISendNotificationService
             .Distinct()
             .ToListAsync(ct);
 
-        var notification = new Notification
-        {
-            TargetId   = dealId,
-            TargetType = "deal",
-            Message    = message,
-            DealId     = dealId,
-            Categories = categories.ToList(),
-            SentAt     = sentAt,
-        };
-        await _notificationRepository.SaveAsync(notification, ct);
-
-        var payload = new { timestamp = sentAt, message, dealId, categories, type = "deal" };
+        var payload       = new { timestamp = sentAt, message, dealId, categories, type = "deal" };
+        var notifications = new List<Notification>(userIds.Count);
 
         foreach (var userId in userIds)
         {
@@ -148,20 +113,24 @@ public class SendNotificationService : ISendNotificationService
             foreach (var conn in connections)
                 await _hubContext.Clients.Client(conn).SendAsync("DealGroupNotification", payload, ct);
 
-            await _readRepository.SaveAsync(new NotificationRead
+            notifications.Add(new Notification
             {
-                NotificationId = notification.Id,
-                UserId         = userId,
-                IsRead         = false,
-                CreatedAt      = sentAt,
-            }, ct);
+                UserId     = userId,
+                Message    = message,
+                DealId     = dealId,
+                Categories = categories.ToList(),
+                Type       = "deal",
+                SentAt     = sentAt,
+            });
         }
+
+        if (notifications.Count > 0)
+            await _notificationRepository.SaveManyAsync(notifications, ct);
 
         _logger.LogInformation(
             "DealNotification sent for deal '{DealId}' — {Count} recipients across categories: {Categories}",
             dealId, userIds.Count, string.Join(", ", categories));
-
-        await PublishDispatchedEventAsync(notification.Id.ToString(), "deal", userIds.Count, sentAt, ct);
+        await PublishDispatchedEventAsync("deal:" + dealId, "deal", userIds.Count, sentAt, ct);
     }
 
     private async Task PublishDispatchedEventAsync(string notificationId, string type, int recipientCount, DateTime sentAt, CancellationToken ct)
@@ -173,7 +142,7 @@ public class SendNotificationService : ISendNotificationService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to publish NotificationDispatchedEvent for notification {Id}", notificationId);
+            _logger.LogWarning(ex, "Failed to publish NotificationDispatchedEvent for {NotificationId}", notificationId);
         }
     }
 }
