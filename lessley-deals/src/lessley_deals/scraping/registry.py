@@ -28,6 +28,17 @@ def load_llm_site_configs(path: Path | None = None) -> list[dict[str, str]]:
     return [c for c in data if {"site_id", "url", "instructions"} <= c.keys()]
 
 
+def _coerce_float(value: object, default: float = 0.0) -> float:
+    """Return a non-negative float, falling back to *default*."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return default
+    try:
+        n = float(value)
+    except ValueError:
+        return default
+    return n if n >= 0 else default
+
+
 def _coerce_max_len(value: object, default: int = 6000) -> int:
     """Return a positive int chunk size, falling back to *default*."""
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -106,6 +117,12 @@ class SourceRegistry:
                     sample_limit=sample_limit,
                     detail_concurrency=_coerce_max_len(
                         cfg.get("detail_concurrency"), default=3
+                    ),
+                    render_wait_seconds=_coerce_float(cfg.get("render_wait_seconds")),
+                    wait_selector=(
+                        str(cfg["wait_selector"])
+                        if cfg.get("wait_selector")
+                        else None
                     ),
                 )
                 self._adapters[instance.source_id] = instance

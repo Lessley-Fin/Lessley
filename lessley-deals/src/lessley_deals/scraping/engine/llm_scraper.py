@@ -123,6 +123,8 @@ class LlmScrapeEngine:
         timeout_seconds: float = 30.0,
         max_len: int = 6000,
         verbose: bool | None = None,
+        render_wait_seconds: float = 0.0,
+        wait_selector: str | None = None,
     ) -> None:
         self._remote_url = (
             remote_url
@@ -136,6 +138,8 @@ class LlmScrapeEngine:
             if verbose is not None
             else bool(os.environ.get("LLM_SCRAPER_VERBOSE"))
         )
+        self._render_wait_seconds = render_wait_seconds
+        self._wait_selector = wait_selector
 
     def _fetch_html_sync(self, url: str) -> str:
         from selenium import webdriver
@@ -153,9 +157,32 @@ class LlmScrapeEngine:
         try:
             driver.set_page_load_timeout(self._timeout_seconds)
             driver.get(url)
+            self._await_render(driver)
             return str(driver.page_source)
         finally:
             driver.quit()
+
+    def _await_render(self, driver: object) -> None:
+        """Give a JS SPA time to hydrate before reading page_source.
+
+        Waits for an optional CSS selector to appear, then an optional fixed
+        settle delay. No-op when neither is configured (server-rendered sites).
+        """
+        import time
+
+        if self._wait_selector:
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support import expected_conditions as ec
+            from selenium.webdriver.support.ui import WebDriverWait
+
+            try:
+                WebDriverWait(driver, self._timeout_seconds).until(
+                    ec.presence_of_element_located((By.CSS_SELECTOR, self._wait_selector))
+                )
+            except Exception:
+                logger.info("wait_selector %r not found before timeout", self._wait_selector)
+        if self._render_wait_seconds > 0:
+            time.sleep(self._render_wait_seconds)
 
     async def fetch_html(self, url: str) -> str:
         """Fetch rendered HTML via Selenium, off the event loop thread."""

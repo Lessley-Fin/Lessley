@@ -68,6 +68,8 @@ class LlmScraperAdapter(BaseSourceAdapter):
         detail_instructions: str = "",
         sample_limit: int | None = None,
         detail_concurrency: int = 3,
+        render_wait_seconds: float = 0.0,
+        wait_selector: str | None = None,
         engine: LlmScrapeEngine | None = None,
     ) -> None:
         super().__init__(config)
@@ -79,7 +81,10 @@ class LlmScraperAdapter(BaseSourceAdapter):
         self._sample_limit = sample_limit
         self._detail_concurrency = detail_concurrency
         self._engine = engine or LlmScrapeEngine(
-            timeout_seconds=config.timeout_seconds, max_len=max_len
+            timeout_seconds=config.timeout_seconds,
+            max_len=max_len,
+            render_wait_seconds=render_wait_seconds,
+            wait_selector=wait_selector,
         )
 
     @property
