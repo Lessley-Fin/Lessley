@@ -1,28 +1,46 @@
-משימות PUSH NOTIFICATIONS
+PUSH NOTIFICATIONS tasks
 
-1. UserController should not contain logic ! create a userService and move all logic their
-2. create a skill that explaining code architecture: repository = db connections and crud, service = should contain the logic, controler = should call the service and do not handle logic
-3. communicate between gateway&personalization should be: calculation processes - masstransit, get api - http:
+i want you to act as a senior full stack developer and a security expert.
+i want to create a proxy so the UI can never reach the other services like personalization.
+i want you to add a proxy layer in the gateway, while updating the controllers order, requests, etc.
+do not change the business logic at all.
+you can add validation in controllers but services should not be touched.
 
-http:
-get_mcc
-get_mcc_by_id
-get_user_access_token
-get_user_accounts
-get_user_transactions_by_account
-get_user_transactions
+1. gateway should be able to serve as a proxy to the personalization for actions that are not mass-transit (the pure http)
+2. create an admin only controller that takes all the requests that they are admin only.
+3. make sure that the controllers names and requests are in the correct controller logically.
+4. make sure that "development only" that should not be on prod or an "admin only" are well protected with the bootstrap user only and admin creds or something.
+5. update the corresponding behavior and security policy changes in the personalization either. make is production ready without touching the business layer at all !
+i suggest the following controllers:
 
+1. authcontroller (no admin roles controller):
+Register
+Login
+Refresh
+GetMyProfile
 
-mass-transit:
-calculate_club_categories
-calculate_user_categories
-calculate_top_accounts
-calculate_top_stores
-calculate_missed_savings
-calculate_matching_clubs
+2. notificationcontroller (should not get a specific role, but should use the bearer to fetch the email):
+MarkAsRead
+MarkAllAsRead
+GetUserNotifications
+GetUserConnectionStatus
+GetUserGroups (new one - i want to get the groups that taken from signalR)
 
-4. personalization&gateway should publish finished messages like FinishHandlingEvent or something. so E2E tests can consume this messages and test finish message
-5. FinishHandlingEvent should contain: notificationId, type, RecipientCount, requestId, etc. masstransit should add requestId or traceId to understand which request is this. (so i can know which request is this)
-6. every calc should be a new event, and each event should be a different notification for a user in the db.
-7. i want to have a e2e tests that include a real socket connections, rabbitmq, and mongodb that tests each scenarios. happy and unhappy. i prefer a good 5-10 tests like this that test every flow end-to-end instead of a 50 behavioral tests.
-8. each notification needs to include a *list* of categories instead of: list of notification that each one referes to a specific category. user should get only one notification for each deal, even if it has 2 categories which he registered to.
+3. usercontroller (should not get a specific role, but should use the bearer to fetch the email):
+CreateNewOpenFinanceConnection (should be named /init)
+RecalculateCategories
+GetCategories (fetch from db)
+GetTransactions (calls http personalization)
+GetTransactionByAccount (calls http personalization)
+GetAccounts (calls http personalization)
+UpdateUser
+
+4. openfonance controller:
+should be deleted and `CreateNewOpenFinanceConnection` should move to usercontroller as mentioned
+
+5. admin only controller:
+Bootstrap
+ChangeUserRole
+UpdateUserTags
+SendNotificationToGroup
+SendNotificationToUser
