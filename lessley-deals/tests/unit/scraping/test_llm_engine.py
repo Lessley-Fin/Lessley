@@ -135,18 +135,40 @@ async def test_extract_aggregates_deals_across_chunks() -> None:
     assert [d.store_name for d in deals] == ["A", "B"]
 
 
-async def test_extract_skips_failing_chunk() -> None:
+async def test_extract_skips_chunk_that_always_fails() -> None:
     engine = LlmScrapeEngine()
-    side = [
-        RuntimeError("llm down"),
-        ExtractedDeals(deals=[ExtractedDeal(store_name="B", deal_description="d2")]),
-    ]
+
+    def fake(chunk: str, instructions: str) -> ExtractedDeals:
+        if chunk == "bad":
+            raise RuntimeError("llm down")
+        return ExtractedDeals(deals=[ExtractedDeal(store_name="B", deal_description="d2")])
+
     with patch(
         "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
-        side_effect=side,
+        side_effect=fake,
     ):
-        deals = await engine.extract(["bad", "good"], "Extract")
+        # retries=0 so the bad chunk is dropped without consuming extra calls
+        deals = await engine.extract(["bad", "good"], "Extract", retries=0)
     assert [d.store_name for d in deals] == ["B"]
+
+
+async def test_extract_retries_transient_failure() -> None:
+    engine = LlmScrapeEngine()
+    calls = {"n": 0}
+
+    def flaky(chunk: str, instructions: str) -> ExtractedDeals:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("transient")
+        return ExtractedDeals(deals=[ExtractedDeal(store_name="A", deal_description="d")])
+
+    with patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
+        side_effect=flaky,
+    ):
+        deals = await engine.extract(["chunk"], "Extract", retries=2)
+    assert [d.store_name for d in deals] == ["A"]
+    assert calls["n"] == 2  # failed once, succeeded on retry
 
 
 async def test_run_pipes_fetch_clean_split_extract() -> None:

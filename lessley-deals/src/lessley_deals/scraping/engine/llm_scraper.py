@@ -161,17 +161,41 @@ class LlmScrapeEngine:
         """Fetch rendered HTML via Selenium, off the event loop thread."""
         return await asyncio.to_thread(self._fetch_html_sync, url)
 
-    async def extract(self, chunks: list[str], instructions: str) -> list[ExtractedDeal]:
+    async def extract(
+        self, chunks: list[str], instructions: str, *, retries: int = 2
+    ) -> list[ExtractedDeal]:
         deals: list[ExtractedDeal] = []
+        failed = 0
         for i, chunk in enumerate(chunks, start=1):
-            try:
-                result = await asyncio.to_thread(
-                    extract_deals_from_content, chunk, instructions
-                )
-            except Exception:
-                logger.exception("LLM extract failed on chunk %d/%d", i, len(chunks))
+            result = None
+            for attempt in range(retries + 1):
+                try:
+                    result = await asyncio.to_thread(
+                        extract_deals_from_content, chunk, instructions
+                    )
+                    break
+                except Exception:
+                    if attempt < retries:
+                        logger.info(
+                            "LLM extract failed on chunk %d/%d; retrying (%d)",
+                            i,
+                            len(chunks),
+                            attempt + 1,
+                        )
+                        continue
+                    logger.exception(
+                        "LLM extract failed on chunk %d/%d after retries", i, len(chunks)
+                    )
+            if result is None:
+                failed += 1
                 continue
             deals.extend(result.deals)
+        if failed:
+            logger.warning(
+                "extract: %d/%d chunks failed after retries — some rows were dropped",
+                failed,
+                len(chunks),
+            )
         return deals
 
     def _fetch_fast_sync(self, url: str) -> str:
