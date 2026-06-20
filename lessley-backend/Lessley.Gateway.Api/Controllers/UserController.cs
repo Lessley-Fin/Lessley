@@ -60,11 +60,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetTransactions(
-        [FromQuery] bool? timeFilter = null,
         [FromQuery] int?  days       = null,
         CancellationToken ct = default)
     {
-        var response = await _personalizationProxy.GetTransactionsAsync(CallerEmail(), timeFilter, days, ct);
+        var response = await _personalizationProxy.GetTransactionsAsync(CallerEmail(), days, ct);
         return await ProxyResponse(response, ct);
     }
 
@@ -75,14 +74,13 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetTransactionsByAccount(
         [FromQuery] string accountId,
-        [FromQuery] bool?  timeFilter = null,
         [FromQuery] int?   days       = null,
         CancellationToken  ct         = default)
     {
         if (string.IsNullOrWhiteSpace(accountId))
             return BadRequest(new { error = "accountId is required" });
 
-        var response = await _personalizationProxy.GetTransactionsByAccountAsync(CallerEmail(), accountId, timeFilter, days, ct);
+        var response = await _personalizationProxy.GetTransactionsByAccountAsync(CallerEmail(), accountId, days, ct);
         return await ProxyResponse(response, ct);
     }
 

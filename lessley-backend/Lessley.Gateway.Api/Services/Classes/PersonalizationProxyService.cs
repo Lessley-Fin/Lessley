@@ -18,19 +18,17 @@ public class PersonalizationProxyService : IPersonalizationProxyService
         => _httpClient.GetAsync($"open-finance/accounts?email={Uri.EscapeDataString(email)}", ct);
 
     public Task<HttpResponseMessage> GetTransactionsAsync(
-        string email, bool? timeFilter = null, int? days = null, CancellationToken ct = default)
+        string email, int? days = null, CancellationToken ct = default)
     {
-        var url = $"open-finance/transactions?email={Uri.EscapeDataString(email)}";
-        if (timeFilter.HasValue) url += $"&time_filter={timeFilter.Value.ToString().ToLower()}";
+        var url = $"open-finance/transactions?email={Uri.EscapeDataString(email)}&time_filter={TimeFilter.ToString().ToLower()}";
         if (days.HasValue)       url += $"&days={days.Value}";
         return _httpClient.GetAsync(url, ct);
     }
 
     public Task<HttpResponseMessage> GetTransactionsByAccountAsync(
-        string email, string accountId, bool? timeFilter = null, int? days = null, CancellationToken ct = default)
+        string email, string accountId, int? days = null, CancellationToken ct = default)
     {
-        var url = $"open-finance/transactions/by-account?email={Uri.EscapeDataString(email)}&account_id={Uri.EscapeDataString(accountId)}";
-        if (timeFilter.HasValue) url += $"&time_filter={timeFilter.Value.ToString().ToLower()}";
+        var url = $"open-finance/transactions/by-account?email={Uri.EscapeDataString(email)}&account_id={Uri.EscapeDataString(accountId)}&time_filter={TimeFilter.ToString().ToLower()}";
         if (days.HasValue)       url += $"&days={days.Value}";
         return _httpClient.GetAsync(url, ct);
     }
