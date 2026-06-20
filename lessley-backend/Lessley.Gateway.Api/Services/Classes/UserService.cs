@@ -1,3 +1,4 @@
+using Lessley.Gateway.Api.Enums;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -89,22 +90,28 @@ public class UserService : IUserService
         return UserOperationResult.Ok(new { email = user.Email, tags });
     }
 
-    public async Task<UserOperationResult> GetCategoriesAsync(string email, CancellationToken ct = default)
-    {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return UserOperationResult.NotFound();
-
-        return UserOperationResult.Ok(new
-        {
-            email      = user.Email,
-            categories = user.Tags ?? new List<string>(),
-        });
-    }
-
     public async Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default)
     {
         var user = await _userManager.FindByEmailAsync(email);
         return user?.Tags;
+    }
+
+    public async Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null) return UserOperationResult.NotFound();
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return UserOperationResult.Ok(new
+        {
+            email      = user.Email,
+            userName   = user.UserName,
+            roles,
+            clubs      = user.Clubs    ?? new List<string>(),
+            tags       = user.Tags     ?? new List<string>(),
+            mutedTags  = user.MutedTags ?? new List<string>(),
+            matchLevel = user.MatchingScore.ToMatchLevel(),
+        });
     }
 }

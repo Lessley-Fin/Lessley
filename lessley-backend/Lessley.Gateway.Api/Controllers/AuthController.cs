@@ -104,19 +104,5 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken.Token });
         }
 
-        /// <summary>Returns the authenticated user's profile (ID, username, email, roles).</summary>
-        [Authorize]
-        [HttpGet("me")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public IActionResult GetMyProfile()
-        {
-            var userId   = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userName = User.FindFirstValue(ClaimTypes.Name);
-            var email    = User.FindFirstValue(ClaimTypes.Email);
-            var roles    = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
-
-            return Ok(new { userId, userName, email, roles });
-        }
     }
 }

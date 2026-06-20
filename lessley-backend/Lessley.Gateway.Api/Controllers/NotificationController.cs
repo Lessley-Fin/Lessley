@@ -68,21 +68,6 @@ public class NotificationController : ControllerBase
         });
     }
 
-    /// <summary>Returns the SignalR notification groups the authenticated user is subscribed to.</summary>
-    /// <remarks>Groups are derived from the user's category tags excluding any muted tags.</remarks>
-    [HttpGet("groups")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserGroups()
-    {
-        var user = await ResolveUserAsync();
-        if (user is null) return NotFound(new { error = "User not found" });
-
-        var activeTags = (user.Tags ?? new()).Except(user.MutedTags ?? new()).ToList();
-        return Ok(new { groups = activeTags });
-    }
-
     /// <summary>Marks all of the authenticated user's notifications as read.</summary>
     [HttpPost("read-all")]
     [ProducesResponseType(StatusCodes.Status200OK)]
