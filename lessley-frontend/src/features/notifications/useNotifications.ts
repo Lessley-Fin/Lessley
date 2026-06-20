@@ -9,6 +9,8 @@ import type { NotificationDto, SignalRNotificationPayload } from "./notification
 import { API_GATEWAY_URL } from "@/lib/api"
 import { getValidAccessToken } from "@/lib/auth"
 
+const POLL_INTERVAL_MS = 15_000
+
 interface UseNotificationsOptions {
   email: string
   enabled: boolean
@@ -19,6 +21,7 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const connectionRef = useRef<HubConnection | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -30,7 +33,7 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
       if (!token) return
 
       const response = await fetch(
-        `${API_GATEWAY_URL}/api/Notification/user/${encodeURIComponent(email)}`,
+        `${API_GATEWAY_URL}/api/Notification`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -52,7 +55,7 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
       if (!token) return
 
       const response = await fetch(
-        `${API_GATEWAY_URL}/api/Notification/read/${encodeURIComponent(email)}`,
+        `${API_GATEWAY_URL}/api/Notification/read-all`,
         { method: "POST", headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -74,7 +77,7 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
         if (!token) return
 
         const response = await fetch(
-          `${API_GATEWAY_URL}/api/Notification/${notificationId}/read/${encodeURIComponent(email)}`,
+          `${API_GATEWAY_URL}/api/Notification/${notificationId}/read`,
           { method: "POST", headers: { Authorization: `Bearer ${token}` } }
         )
 
@@ -96,19 +99,28 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
     const newNotification: NotificationDto = {
       id: crypto.randomUUID(),
       message: payload.message,
-      dealId: payload.dealId,
+      dealId: payload.dealId ?? null,
       sentAt: payload.timestamp,
-      targetType: payload.type,
+      type: payload.type,
+      calcType: null,
+      data: null,
       isRead: false,
       readAt: null,
+      categories: null,
     }
     setNotifications((prev) => [newNotification, ...prev])
   }, [])
 
+  // SignalR connection + polling fallback
   useEffect(() => {
     if (!enabled || !email) return
 
     void fetchNotifications()
+
+    // Periodic polling ensures notifications appear even if SignalR misses an event
+    pollRef.current = setInterval(() => {
+      void fetchNotifications()
+    }, POLL_INTERVAL_MS)
 
     const connection = new HubConnectionBuilder()
       .withUrl(`${API_GATEWAY_URL}/hubs/notifications`, {
@@ -122,6 +134,7 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
 
     connection.on("DealUserNotification", handleIncoming)
     connection.on("DealGroupNotification", handleIncoming)
+    connection.on("CalcNotification", handleIncoming)
 
     connection.onreconnected(() => {
       setIsConnected(true)
@@ -133,8 +146,13 @@ export function useNotifications({ email, enabled }: UseNotificationsOptions) {
     void connection.start().then(() => setIsConnected(true)).catch(() => setIsConnected(false))
 
     return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
       connection.off("DealUserNotification")
       connection.off("DealGroupNotification")
+      connection.off("CalcNotification")
       if (connection.state !== HubConnectionState.Disconnected) {
         void connection.stop()
       }

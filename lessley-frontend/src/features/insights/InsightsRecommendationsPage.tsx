@@ -12,18 +12,18 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  checkHasConnection,
   getCategoryInsights,
-  getClubRecommendations,
-  getOpenBankingLookupCandidates,
-  getOpenFinanceConnectionUrl,
-  getPersonalizationTransactions,
+  getRecommendations,
   getTopAccountInsights,
   getTopStoreInsights,
-  resolveOpenBankingLookupId,
+  getTransactions,
+  initOpenFinanceConnection,
 } from "@/lib/api"
 import { fintech } from "@/lib/fintech-styles"
 import type {
   ClubRecommendation,
+  ClubRecommendationResponse,
   PersonalizationTransaction,
   SpendingCategoryInsight,
   TopAccountInsight,
@@ -35,9 +35,6 @@ interface InsightsRecommendationsPageProps {
   userId: string
   email: string
 }
-
-/** Long window so short filters (e.g. 1 week) do not look “disconnected” when older data exists. */
-const CONNECTION_PROBE_DAYS = 365
 
 const TIME_RANGE_OPTIONS = [
   { label: "1 week", days: 7 },
@@ -91,7 +88,6 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
   const [connectionHint, setConnectionHint] = useState("")
   const [isLoadingPersonalization, setIsLoadingPersonalization] = useState(false)
   const [personalizationError, setPersonalizationError] = useState("")
-  const [, setActiveLookupId] = useState("")
   const [transactions, setTransactions] = useState<PersonalizationTransaction[]>([])
   const [categoryInsights, setCategoryInsights] = useState<SpendingCategoryInsight[]>([])
   const [topAccounts, setTopAccounts] = useState<TopAccountInsight[]>([])
@@ -103,28 +99,21 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
     let isMounted = true
 
     const runCheck = async () => {
-      const candidates = getOpenBankingLookupCandidates(userId, email, username)
-      if (candidates.length === 0) {
+      const accessToken = localStorage.getItem("lessley_access_token") ?? undefined
+      if (!accessToken) {
         if (isMounted) {
           setIsConnected(false)
-          setActiveLookupId("")
           setCheckingConnection(false)
         }
         return
       }
 
-      const accessToken = localStorage.getItem("lessley_access_token") ?? undefined
-      const resolvedLookupId = await resolveOpenBankingLookupId(
-        candidates,
-        accessToken,
-        CONNECTION_PROBE_DAYS
-      )
+      const connected = await checkHasConnection(accessToken)
 
       if (isMounted) {
-        setIsConnected(Boolean(resolvedLookupId))
-        setActiveLookupId(resolvedLookupId)
+        setIsConnected(connected)
         setCheckingConnection(false)
-        if (resolvedLookupId) {
+        if (connected) {
           setConnectionHint("")
         }
       }
@@ -143,14 +132,19 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
     }
   }, [userId, email, username])
 
-  const handleConnectOpenBanking = () => {
-    const openFinanceLookupId = userId || email
-    if (!openFinanceLookupId) {
-      setConnectionHint("We are still loading your account details. Please try again in a second.")
+  const handleConnectOpenBanking = async () => {
+    const accessToken = localStorage.getItem("lessley_access_token")
+    if (!accessToken) {
+      setConnectionHint("You need to be logged in to connect your bank account.")
       return
     }
-    const returnUrl = window.location.href
-    window.location.assign(getOpenFinanceConnectionUrl(openFinanceLookupId, returnUrl))
+
+    try {
+      const connection = await initOpenFinanceConnection(accessToken)
+      window.location.assign(connection.connectUrl)
+    } catch {
+      setConnectionHint("Unable to start bank connection. Please try again.")
+    }
   }
 
   useEffect(() => {
@@ -166,31 +160,34 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
       return
     }
 
-    if (!email) return
+    const accessToken = localStorage.getItem("lessley_access_token")
+    if (!accessToken) return
 
     let isMounted = true
-    const accessToken = localStorage.getItem("lessley_access_token") ?? undefined
 
     const loadPersonalizationData = async () => {
       setIsLoadingPersonalization(true)
       setPersonalizationError("")
       try {
         const results = await Promise.allSettled([
-          getPersonalizationTransactions(email, accessToken, timeRangeDays),
-          getCategoryInsights(email, accessToken, timeRangeDays),
-          getTopAccountInsights(email, accessToken, timeRangeDays),
-          getTopStoreInsights(email, accessToken, timeRangeDays),
-          getClubRecommendations(email, accessToken),
+          getTransactions(accessToken, timeRangeDays),
+          getCategoryInsights(accessToken, timeRangeDays),
+          getTopAccountInsights(accessToken, timeRangeDays),
+          getTopStoreInsights(accessToken, timeRangeDays),
+          getRecommendations(accessToken),
         ])
         if (!isMounted) return
 
-        const [txResult, categoriesResult, accountsResult, storesResult, clubResult] = results
+        const [txResult, categoriesResult, accountsResult, storesResult, recsResult] = results
         setTransactions(txResult.status === "fulfilled" ? txResult.value : [])
         setCategoryInsights(categoriesResult.status === "fulfilled" ? categoriesResult.value : [])
         setTopAccounts(accountsResult.status === "fulfilled" ? accountsResult.value : [])
         setTopStores(storesResult.status === "fulfilled" ? storesResult.value.slice(0, 3) : [])
-        const recommendations =
-          clubResult.status === "fulfilled" ? (clubResult.value?.recommendations ?? []) : []
+
+        const clubData = recsResult.status === "fulfilled"
+          ? (recsResult.value.matchingClubs?.data as ClubRecommendationResponse | null)
+          : null
+        const recommendations = clubData?.recommendations ?? []
         setHasClubAnalysis(recommendations.length > 0)
         setTopClubRecommendations(recommendations.slice(0, 3))
 
@@ -216,7 +213,7 @@ export function InsightsRecommendationsPage({ username, userId, email }: Insight
     return () => {
       isMounted = false
     }
-  }, [isConnected, email, timeRangeDays])
+  }, [isConnected, timeRangeDays])
 
   const recentTransactions = transactions.slice(0, 5)
   const topCategories = categoryInsights.slice(0, 3)

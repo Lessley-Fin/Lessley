@@ -73,13 +73,13 @@ function App() {
     void getMyProfile(accessToken)
       .then((profile) => {
         if (!isMounted) return
-        setUserId(profile.userId)
         setUsername(profile.userName)
         if (profile.email) {
+          setUserId(profile.email)
           setEmail(profile.email)
           localStorage.setItem(SESSION_KEYS.email, profile.email)
+          localStorage.setItem(SESSION_KEYS.userId, profile.email)
         }
-        localStorage.setItem(SESSION_KEYS.userId, profile.userId)
         localStorage.setItem(SESSION_KEYS.username, profile.userName)
       })
       .catch(() => {

@@ -37,8 +37,8 @@ function formatTime(isoDate: string) {
   }
 }
 
-function targetAccent(targetType: string) {
-  return targetType === "group"
+function typeAccent(type: string) {
+  return type === "group"
     ? "border-violet-200/80 bg-violet-50 text-violet-800"
     : "border-sky-200/80 bg-sky-50 text-sky-800"
 }
@@ -62,10 +62,10 @@ function NotificationRow({ item }: { item: NotificationDto }) {
             <span
               className={cn(
                 "inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                targetAccent(item.targetType)
+                typeAccent(item.type)
               )}
             >
-              {item.targetType === "group" ? "Group" : "Direct"}
+              {item.type === "group" ? "Group" : "Direct"}
             </span>
             <span className="text-xs text-slate-400 tabular-nums">{formatTime(item.sentAt)}</span>
           </div>

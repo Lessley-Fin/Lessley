@@ -91,6 +91,16 @@ export interface ClubRecommendationResponse {
   recommendations: ClubRecommendation[]
 }
 
+export interface CalcResult<T = unknown> {
+  data: T | null
+  calculatedAt: string
+}
+
+export interface RecommendationsResponse {
+  missedSavings: CalcResult | null
+  matchingClubs: CalcResult<ClubRecommendationResponse> | null
+}
+
 export interface TopStoreInsight {
   normalized_merchantName?: string
   merchantName?: string

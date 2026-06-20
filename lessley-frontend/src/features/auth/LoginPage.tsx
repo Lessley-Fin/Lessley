@@ -93,12 +93,13 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     try {
       const data = await loginWithGateway({ userName: values.userName, password: values.password })
       const profile = await getMyProfile(data.accessToken).catch(() => null)
+      const resolvedEmail = profile?.email?.trim().toLowerCase() ?? getEmailFromToken(data.accessToken)
       storeSession({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
         username: profile?.userName ?? values.userName,
-        userId: profile?.userId,
-        email: profile?.email?.trim().toLowerCase() ?? getEmailFromToken(data.accessToken),
+        userId: resolvedEmail,
+        email: resolvedEmail,
       })
       onSuccess()
     } catch (error) {
@@ -120,12 +121,13 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       })
       const data = await loginWithGateway({ userName: values.userName, password: values.password })
       const profile = await getMyProfile(data.accessToken).catch(() => null)
+      const resolvedEmail = profile?.email?.trim().toLowerCase() ?? values.email
       storeSession({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
         username: profile?.userName ?? values.userName,
-        userId: profile?.userId,
-        email: profile?.email?.trim().toLowerCase() ?? values.email,
+        userId: resolvedEmail,
+        email: resolvedEmail,
       })
       onSuccess()
     } catch (error) {
