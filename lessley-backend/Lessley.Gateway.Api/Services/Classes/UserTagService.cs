@@ -25,12 +25,12 @@ public class UserTagService : IUserTagService
         _logger            = logger;
     }
 
-    public async Task AssignTagsAsync(string userId, string[] tags, CancellationToken ct = default)
+    public async Task AssignTagsAsync(string email, string[] tags, CancellationToken ct = default)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
         {
-            _logger.LogWarning("AssignTags: user {UserId} not found — skipping", userId);
+            _logger.LogWarning("AssignTags: user {Email} not found — skipping", email);
             return;
         }
 
@@ -41,30 +41,30 @@ public class UserTagService : IUserTagService
         if (!result.Succeeded)
         {
             _logger.LogError(
-                "AssignTags: DB update failed for user {UserId}: {Errors}",
-                userId, string.Join("; ", result.Errors.Select(e => e.Description)));
+                "AssignTags: DB update failed for user {Email}: {Errors}",
+                email, string.Join("; ", result.Errors.Select(e => e.Description)));
             return;
         }
 
-        await SyncGroupsAsync(userId, previousTags, ct);
+        await SyncGroupsAsync(email, previousTags, ct);
     }
 
-    public async Task SyncGroupsAsync(string userId, IReadOnlyList<string> previousTags, CancellationToken ct = default)
+    public async Task SyncGroupsAsync(string email, IReadOnlyList<string> previousTags, CancellationToken ct = default)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
         {
-            _logger.LogWarning("SyncGroups: user {UserId} not found", userId);
+            _logger.LogWarning("SyncGroups: user {Email} not found", email);
             return;
         }
 
         var currentTags = user.Tags ?? new List<string>();
         var mutedTags   = user.MutedTags ?? new List<string>();
-        var connections = _connectionManager.GetConnections(userId).ToList();
+        var connections = _connectionManager.GetConnections(email).ToList();
 
         if (connections.Count == 0)
         {
-            _logger.LogInformation("SyncGroups: user {UserId} has no active connections — skipping", userId);
+            _logger.LogInformation("SyncGroups: user {Email} has no active connections — skipping", email);
             return;
         }
 
@@ -78,7 +78,7 @@ public class UserTagService : IUserTagService
                 await _hubContext.Groups.AddToGroupAsync(connectionId, tag, ct);
 
         _logger.LogInformation(
-            "Groups synced for user {UserId} — {Count} connection(s). Active: {Tags}",
-            userId, connections.Count, string.Join(", ", activeTags));
+            "Groups synced for user {Email} — {Count} connection(s). Active: {Tags}",
+            email, connections.Count, string.Join(", ", activeTags));
     }
 }

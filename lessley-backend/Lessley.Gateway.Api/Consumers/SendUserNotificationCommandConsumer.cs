@@ -34,10 +34,10 @@ public class DealUserNotificationConsumer : IConsumer<DealUserNotification>
         }
 
         await _sendNotificationService.SendToUserAsync(
-            user.Id, context.Message.Message, context.Message.DealId, context.CancellationToken);
+            email, context.Message.Message, context.Message.DealId, context.CancellationToken);
 
         _logger.LogInformation(
-            "DealUserNotification consumed — user {UserId} ({Email}), deal '{DealId}'",
-            user.Id, email, context.Message.DealId);
+            "DealUserNotification consumed — user {Email}, deal '{DealId}'",
+            email, context.Message.DealId);
     }
 }

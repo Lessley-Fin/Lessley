@@ -49,7 +49,7 @@ public class UserService : IUserService
             return UserOperationResult.BadRequest(result.Errors);
 
         if (mutedChanged)
-            await _userTagService.SyncGroupsAsync(user.Id, user.Tags ?? new List<string>(), ct);
+            await _userTagService.SyncGroupsAsync(email, user.Tags ?? new List<string>(), ct);
 
         if (matchChanged || mutedChanged)
         {
@@ -64,11 +64,14 @@ public class UserService : IUserService
             }
         }
 
+        var allTags   = user.Tags     ?? new List<string>();
+        var mutedTags = user.MutedTags ?? new List<string>();
+
         return UserOperationResult.Ok(new
         {
             email         = user.Email,
-            tags          = user.Tags,
-            mutedTags     = user.MutedTags,
+            tags          = allTags.Where(t => !mutedTags.Contains(t)).ToList(),
+            mutedTags,
             clubs         = user.Clubs,
             matchingScore = user.MatchingScore,
             recalculated  = matchChanged || mutedChanged,
@@ -91,7 +94,7 @@ public class UserService : IUserService
         if (user is null)
             return UserOperationResult.NotFound();
 
-        await _userTagService.AssignTagsAsync(user.Id, tags, ct);
+        await _userTagService.AssignTagsAsync(email, tags, ct);
         return UserOperationResult.Ok(new { email = user.Email, tags });
     }
 
@@ -116,14 +119,17 @@ public class UserService : IUserService
             .Select(r => r.Name!)
             .ToListAsync(ct);
 
+        var allTags   = user.Tags     ?? new List<string>();
+        var mutedTags = user.MutedTags ?? new List<string>();
+
         return UserOperationResult.Ok(new
         {
             email      = user.Email,
             userName   = user.UserName,
             roles,
-            clubs      = user.Clubs    ?? new List<string>(),
-            tags       = user.Tags     ?? new List<string>(),
-            mutedTags  = user.MutedTags ?? new List<string>(),
+            clubs      = user.Clubs ?? new List<string>(),
+            tags       = allTags.Where(t => !mutedTags.Contains(t)).ToList(),
+            mutedTags,
             matchLevel = user.MatchingScore.ToMatchLevel(),
         });
     }

@@ -33,10 +33,10 @@ public class UserTagAssignedEventConsumer : IConsumer<UserTagAssignedEvent>
             return;
         }
 
-        await _userTagService.AssignTagsAsync(user.Id, context.Message.Tags, context.CancellationToken);
+        await _userTagService.AssignTagsAsync(email, context.Message.Tags, context.CancellationToken);
 
         _logger.LogInformation(
-            "UserTagAssignedEvent consumed — tags assigned to user {UserId} ({Email}): {Tags}",
-            user.Id, email, string.Join(", ", context.Message.Tags));
+            "UserTagAssignedEvent consumed — tags assigned to {Email}: {Tags}",
+            email, string.Join(", ", context.Message.Tags));
     }
 }

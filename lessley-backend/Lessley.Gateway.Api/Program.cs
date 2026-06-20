@@ -8,6 +8,7 @@ using Lessley.Gateway.Api.Seeders;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using Serilog;
 
@@ -65,6 +66,7 @@ builder.Services.AddControllers()
         // Accept/emit enum values (e.g. MatchLevel) as their string names ("High"/"Medium"/"Low").
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, EmailUserIdProvider>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCustomSwagger();
 

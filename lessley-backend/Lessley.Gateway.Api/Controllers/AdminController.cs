@@ -132,7 +132,7 @@ public class AdminController : ControllerBase
         if (user is null)
             return NotFound(new { error = $"User {email} not found" });
 
-        var recipientCount = await _sendNotificationService.SendToUserAsync(user.Id, dto.Message, dto.DealId);
+        var recipientCount = await _sendNotificationService.SendToUserAsync(email, dto.Message, dto.DealId);
         return Ok(new { message = "Notification sent successfully", recipientCount });
     }
 

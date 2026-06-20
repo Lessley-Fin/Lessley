@@ -67,17 +67,17 @@ public class SendNotificationService : ISendNotificationService
 
         await _hubContext.Clients.Group(groupTag).SendAsync("DealGroupNotification", payload, ct);
 
-        var userIds = await _userManager.Users
+        var userEmails = await _userManager.Users
             .Where(u => u.Tags != null && u.Tags.Contains(groupTag) &&
                         (u.MutedTags == null || !u.MutedTags.Contains(groupTag)))
-            .Select(u => u.Id)
+            .Select(u => u.Email!)
             .ToListAsync(ct);
 
-        if (userIds.Count > 0)
+        if (userEmails.Count > 0)
         {
-            var notifications = userIds.Select(uid => new Notification
+            var notifications = userEmails.Select(email => new Notification
             {
-                UserId  = uid,
+                UserId  = email,
                 Message = message,
                 DealId  = dealId,
                 Type    = "group",
@@ -88,34 +88,34 @@ public class SendNotificationService : ISendNotificationService
 
         _logger.LogInformation(
             "DealGroupNotification sent to group '{Group}' — {Count} notification(s) created",
-            groupTag, userIds.Count);
-        await PublishDispatchedEventAsync("group:" + groupTag, "group", userIds.Count, sentAt, ct);
+            groupTag, userEmails.Count);
+        await PublishDispatchedEventAsync("group:" + groupTag, "group", userEmails.Count, sentAt, ct);
     }
 
     public async Task SendDealNotificationAsync(string dealId, string message, string[] categories, CancellationToken ct = default)
     {
         var sentAt = DateTime.UtcNow;
 
-        var userIds = await _userManager.Users
+        var userEmails = await _userManager.Users
             .Where(u => u.Tags != null &&
                         u.Tags.Any(t => categories.Contains(t)) &&
                         (u.MutedTags == null || !categories.All(c => u.MutedTags.Contains(c))))
-            .Select(u => u.Id)
+            .Select(u => u.Email!)
             .Distinct()
             .ToListAsync(ct);
 
         var payload       = new { timestamp = sentAt, message, dealId, categories, type = "deal" };
-        var notifications = new List<Notification>(userIds.Count);
+        var notifications = new List<Notification>(userEmails.Count);
 
-        foreach (var userId in userIds)
+        foreach (var email in userEmails)
         {
-            var connections = _connectionManager.GetConnections(userId).ToList();
+            var connections = _connectionManager.GetConnections(email).ToList();
             foreach (var conn in connections)
                 await _hubContext.Clients.Client(conn).SendAsync("DealGroupNotification", payload, ct);
 
             notifications.Add(new Notification
             {
-                UserId     = userId,
+                UserId     = email,
                 Message    = message,
                 DealId     = dealId,
                 Categories = categories.ToList(),
@@ -129,8 +129,8 @@ public class SendNotificationService : ISendNotificationService
 
         _logger.LogInformation(
             "DealNotification sent for deal '{DealId}' — {Count} recipients across categories: {Categories}",
-            dealId, userIds.Count, string.Join(", ", categories));
-        await PublishDispatchedEventAsync("deal:" + dealId, "deal", userIds.Count, sentAt, ct);
+            dealId, userEmails.Count, string.Join(", ", categories));
+        await PublishDispatchedEventAsync("deal:" + dealId, "deal", userEmails.Count, sentAt, ct);
     }
 
     public async Task<int> SendCalcNotificationAsync(string userId, string calcType, string message, string? data = null, CancellationToken ct = default)

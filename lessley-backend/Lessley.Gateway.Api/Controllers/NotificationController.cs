@@ -1,7 +1,5 @@
-using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using System.Net.Mime;
@@ -17,18 +15,15 @@ public class NotificationController : ControllerBase
 {
     private readonly IConnectionManager _connectionManager;
     private readonly INotificationService _notificationService;
-    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<NotificationController> _logger;
 
     public NotificationController(
         IConnectionManager connectionManager,
         INotificationService notificationService,
-        UserManager<ApplicationUser> userManager,
         ILogger<NotificationController> logger)
     {
         _connectionManager   = connectionManager;
         _notificationService = notificationService;
-        _userManager         = userManager;
         _logger              = logger;
     }
 
@@ -46,18 +41,15 @@ public class NotificationController : ControllerBase
     [HttpGet("connection")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUserConnectionStatus()
+    public IActionResult GetUserConnectionStatus()
     {
-        var user = await ResolveUserAsync();
-        if (user is null) return NotFound(new { error = "User not found" });
-
-        var isConnected = _connectionManager.HasConnections(user.Id);
-        var connections = _connectionManager.GetConnections(user.Id).ToList();
+        var email       = CallerEmail();
+        var isConnected = _connectionManager.HasConnections(email);
+        var connections = _connectionManager.GetConnections(email).ToList();
 
         return Ok(new
         {
-            email           = user.Email,
+            email,
             isConnected,
             connectionCount = connections.Count,
             connectionIds   = connections,
@@ -91,13 +83,6 @@ public class NotificationController : ControllerBase
             return NotFound(new { error = "Notification not found for this user" });
 
         return Ok(new { message = "Notification marked as read" });
-    }
-
-    // Resolves the authenticated user from the JWT email claim.
-    private Task<ApplicationUser?> ResolveUserAsync()
-    {
-        var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
-        return _userManager.FindByEmailAsync(email);
     }
 
     private string CallerEmail() => User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
