@@ -1,0 +1,136 @@
+using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Enums;
+using Lessley.Gateway.Api.Models;
+using Lessley.Gateway.Api.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace Lessley.Gateway.Api.Services.Classes;
+
+public class UserService : IUserService
+{
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserTagService _userTagService;
+    private readonly IPersonalizationService _personalizationService;
+    private readonly ApplicationDbContext _db;
+    private readonly ILogger<UserService> _logger;
+
+    public UserService(
+        UserManager<ApplicationUser> userManager,
+        IUserTagService userTagService,
+        IPersonalizationService personalizationService,
+        ApplicationDbContext db,
+        ILogger<UserService> logger)
+    {
+        _userManager            = userManager;
+        _userTagService         = userTagService;
+        _personalizationService = personalizationService;
+        _db                     = db;
+        _logger                 = logger;
+    }
+
+    public async Task<UserOperationResult> UpdateAsync(
+        string email, UpdateUserDto dto, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return UserOperationResult.NotFound();
+
+        var matchChanged = dto.MatchingScore.HasValue && dto.MatchingScore != user.MatchingScore;
+        var mutedChanged = dto.MutedTags is not null &&
+            !(user.MutedTags ?? new()).OrderBy(t => t).SequenceEqual(dto.MutedTags.OrderBy(t => t));
+
+        if (dto.MutedTags is not null)   user.MutedTags     = dto.MutedTags;
+        if (dto.Clubs is not null)       user.Clubs         = dto.Clubs;
+        if (dto.MatchingScore.HasValue)  user.MatchingScore = dto.MatchingScore.Value;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return UserOperationResult.BadRequest(result.Errors);
+
+        if (mutedChanged)
+            await _userTagService.SyncGroupsAsync(email, user.Tags ?? new List<string>(), ct);
+
+        if (matchChanged || mutedChanged)
+        {
+            try
+            {
+                await _personalizationService.RecalculateCategoriesAsync(email, ct);
+            }
+            catch (Exception ex)
+            {
+                // DB was saved and groups were already synced — log and continue.
+                _logger.LogError(ex, "Category recalculation failed for {Email} — DB changes are saved", email);
+            }
+        }
+
+        var allTags   = user.Tags     ?? new List<string>();
+        var mutedTags = user.MutedTags ?? new List<string>();
+
+        return UserOperationResult.Ok(new
+        {
+            email         = user.Email,
+            tags          = allTags.Where(t => !mutedTags.Contains(t)).ToList(),
+            mutedTags,
+            clubs         = user.Clubs,
+            matchingScore = user.MatchingScore,
+            recalculated  = matchChanged || mutedChanged,
+        });
+    }
+
+    public async Task<UserOperationResult> RecalculateCategoriesAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return UserOperationResult.NotFound();
+
+        await _personalizationService.RecalculateCategoriesAsync(email, ct);
+        return UserOperationResult.Ok(new { });
+    }
+
+    public async Task<UserOperationResult> AssignTagsAsync(string email, string[] tags, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return UserOperationResult.NotFound();
+
+        await _userTagService.AssignTagsAsync(email, tags, ct);
+        return UserOperationResult.Ok(new { email = user.Email, tags });
+    }
+
+    public async Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        return user?.Tags;
+    }
+
+    public async Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null) return UserOperationResult.NotFound();
+
+        var userRoleIds = await _db.UserRoles
+            .Where(ur => ur.UserId == user.Id)
+            .Select(ur => ur.RoleId)
+            .ToListAsync(ct);
+
+        var roles = await _db.Roles
+            .Where(r => userRoleIds.Contains(r.Id) && r.Name != null)
+            .Select(r => r.Name!)
+            .ToListAsync(ct);
+
+        var allTags   = user.Tags     ?? new List<string>();
+        var mutedTags = user.MutedTags ?? new List<string>();
+
+        return UserOperationResult.Ok(new
+        {
+            email      = user.Email,
+            userName   = user.UserName,
+            roles,
+            clubs      = user.Clubs ?? new List<string>(),
+            tags       = allTags.Where(t => !mutedTags.Contains(t)).ToList(),
+            mutedTags,
+            matchLevel = user.MatchingScore.ToMatchLevel(),
+        });
+    }
+}

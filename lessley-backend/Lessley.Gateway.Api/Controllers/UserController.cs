@@ -1,10 +1,10 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Net.Mime;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace Lessley.Gateway.Api.Controllers;
 
@@ -14,137 +14,228 @@ namespace Lessley.Gateway.Api.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 public class UserController : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IUserTagService _userTagService;
+    private readonly IUserService _userService;
+    private readonly IOpenFinanceService _openFinanceService;
     private readonly IPersonalizationService _personalizationService;
-    private readonly ILogger<UserController> _logger;
+    private readonly IPersonalizationProxyService _personalizationProxy;
+    private readonly INotificationService _notificationService;
 
     public UserController(
-        UserManager<ApplicationUser> userManager,
-        IUserTagService userTagService,
+        IUserService userService,
+        IOpenFinanceService openFinanceService,
         IPersonalizationService personalizationService,
-        ILogger<UserController> logger)
+        IPersonalizationProxyService personalizationProxy,
+        INotificationService notificationService)
     {
-        _userManager            = userManager;
-        _userTagService         = userTagService;
+        _userService            = userService;
+        _openFinanceService     = openFinanceService;
         _personalizationService = personalizationService;
-        _logger                 = logger;
+        _personalizationProxy   = personalizationProxy;
+        _notificationService    = notificationService;
     }
 
-    /// <summary>Updates user settings: loyalty clubs, match level, or muted categories.</summary>
-    /// <remarks>
-    /// Admins may update any user; regular users may only update themselves.<br/>
-    /// When muted categories change, SignalR group memberships are re-synced immediately.<br/>
-    /// When match level or muted categories change, a full Personalization recalculation is triggered
-    /// (Personalization posts new tags back to <c>PUT /api/user/{email}/tags</c>).
-    /// </remarks>
-    /// <param name="email">The email address of the user to update.</param>
-    /// <param name="dto">Fields to update — all properties are optional.</param>
-    [HttpPatch("{email}")]
+    /// <summary>Returns the full configuration for the authenticated user.</summary>
+    [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyConfig(CancellationToken ct)
+    {
+        var result = await _userService.GetMyConfigAsync(CallerEmail(), ct);
+        return MapResult(result);
+    }
+
+    /// <summary>Returns the authenticated user's bank accounts from Personalization.</summary>
+    [HttpGet("me/accounts")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAccounts(CancellationToken ct)
+    {
+        var response = await _personalizationProxy.GetAccountsAsync(CallerEmail(), ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Returns the authenticated user's financial transactions from Personalization.</summary>
+    [HttpGet("me/transactions")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetTransactions(
+        [FromQuery] int?  days       = null,
+        CancellationToken ct = default)
+    {
+        var response = await _personalizationProxy.GetTransactionsAsync(CallerEmail(), days, ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Returns the authenticated user's transactions for a specific bank account from Personalization.</summary>
+    [HttpGet("me/transactions/by-account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateUser(string email, [FromBody] UpdateUserDto dto, CancellationToken ct = default)
+    public async Task<IActionResult> GetTransactionsByAccount(
+        [FromQuery] string accountId,
+        [FromQuery] int?   days       = null,
+        CancellationToken  ct         = default)
     {
-        var callerEmail = User.FindFirstValue(ClaimTypes.Email);
-        var isAdmin     = User.IsInRole("Admin");
+        if (string.IsNullOrWhiteSpace(accountId))
+            return BadRequest(new { error = "accountId is required" });
 
-        if (!isAdmin && !string.Equals(callerEmail, email, StringComparison.OrdinalIgnoreCase))
-            return Forbid();
-
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return NotFound(new { error = "User not found" });
-
-        var matchChanged = dto.MatchingScore.HasValue && dto.MatchingScore != user.MatchingScore;
-        var mutedChanged = dto.MutedTags is not null &&
-            !(user.MutedTags ?? new()).OrderBy(t => t).SequenceEqual(dto.MutedTags.OrderBy(t => t));
-
-        if (dto.MutedTags is not null)   user.MutedTags     = dto.MutedTags;
-        if (dto.Clubs is not null)       user.Clubs         = dto.Clubs;
-        if (dto.MatchingScore.HasValue)  user.MatchingScore = dto.MatchingScore.Value;
-
-        // Step 1: persist to DB
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
-
-        // Step 2: muted tags changed → re-sync SignalR groups immediately.
-        // previousTags == currentTags here (PATCH does not change Tags), so SyncGroupsAsync
-        // removes the user from all their tag groups then re-adds only the non-muted ones.
-        if (mutedChanged)
-            await _userTagService.SyncGroupsAsync(user.Id, user.Tags ?? new List<string>(), ct);
-
-        // Step 3: score or muted changed → trigger full category recalculation in Personalization.
-        // Personalization will post the new tag set back to PUT /api/user/{email}/tags which
-        // calls AssignTagsAsync → SyncGroupsAsync, completing the pipeline.
-        if (matchChanged || mutedChanged)
-        {
-            try
-            {
-                await _personalizationService.RecalculateCategoriesAsync(email, ct);
-            }
-            catch (Exception ex)
-            {
-                // DB was saved and (if muted changed) groups were already synced.
-                // Log and continue — the client should not get a 500 for a background failure.
-                _logger.LogError(ex, "Category recalculation failed for {Email} — DB changes are saved", email);
-            }
-        }
-
-        return Ok(new
-        {
-            email         = user.Email,
-            tags          = user.Tags,
-            mutedTags     = user.MutedTags,
-            clubs         = user.Clubs,
-            matchingScore = user.MatchingScore,
-            recalculated  = matchChanged || mutedChanged,
-        });
+        var response = await _personalizationProxy.GetTransactionsByAccountAsync(CallerEmail(), accountId, days, ct);
+        return await ProxyResponse(response, ct);
     }
 
-    /// <summary>Triggers a full Personalization recalculation for a user's category tags.</summary>
-    /// <remarks>Admin only. Personalization will post the new tag set back via PUT /api/user/{email}/tags.</remarks>
-    /// <param name="email">The email address of the user.</param>
-    [HttpPost("{email}/recalculate")]
-    [Authorize(Roles = "Admin")]
+    /// <summary>Calculates and returns the authenticated user's spending categories via Personalization.</summary>
+    [HttpGet("insights/categories")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInsightsCategories(
+        [FromQuery] int? days = null,
+        CancellationToken ct = default)
+    {
+        if (days.HasValue && (days.Value < 1 || days.Value > 365))
+            return BadRequest(new { error = "days must be between 1 and 365" });
+
+        var response = await _personalizationProxy.GetInsightsCategoriesAsync(CallerEmail(), days, ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Calculates and returns the authenticated user's top spending accounts via Personalization.</summary>
+    [HttpGet("insights/top-accounts")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInsightsTopAccounts(
+        [FromQuery] int? days = null,
+        CancellationToken ct = default)
+    {
+        if (days.HasValue && (days.Value < 1 || days.Value > 365))
+            return BadRequest(new { error = "days must be between 1 and 365" });
+
+        var response = await _personalizationProxy.GetInsightsTopAccountsAsync(CallerEmail(), days, ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Calculates and returns the authenticated user's top spending stores via Personalization.</summary>
+    [HttpGet("insights/top-stores")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInsightsTopStores(
+        [FromQuery] int? days = null,
+        CancellationToken ct = default)
+    {
+        if (days.HasValue && (days.Value < 1 || days.Value > 365))
+            return BadRequest(new { error = "days must be between 1 and 365" });
+
+        var response = await _personalizationProxy.GetInsightsTopStoresAsync(CallerEmail(), days, ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Triggers a missed-savings analysis via Personalization (async — result stored in notifications).</summary>
+    [HttpPost("recommendations/missed-savings")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RecalculateCategories(string email, CancellationToken ct = default)
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> TriggerMissedSavings(CancellationToken ct)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return NotFound(new { error = "User not found" });
-
-        await _personalizationService.RecalculateCategoriesAsync(email, ct);
+        var check = await CheckUserHasCategories(ct);
+        if (check is not null) return check;
+        await _personalizationService.TriggerCalculateMissedSavingsAsync(CallerEmail(), ct);
         return Accepted();
     }
 
-    /// <summary>Assigns category tags to a user and syncs their SignalR group memberships.</summary>
-    /// <remarks>
-    /// Admin only. Called internally by the Personalization service after recalculation.<br/>
-    /// Tags control which deal-broadcast groups the user belongs to.
-    /// </remarks>
-    /// <param name="email">The email address of the user.</param>
-    /// <param name="tags">The complete new set of category tags (replaces existing tags).</param>
-    [HttpPut("{email}/tags")]
-    [Authorize(Roles = "Admin")]
+    /// <summary>Triggers a matching-clubs analysis via Personalization (async — result stored in notifications).</summary>
+    [HttpPost("recommendations/matching-clubs")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> TriggerMatchingClubs(CancellationToken ct)
+    {
+        var check = await CheckUserHasCategories(ct);
+        if (check is not null) return check;
+        await _personalizationService.TriggerCalculateMatchingClubsAsync(CallerEmail(), ct);
+        return Accepted();
+    }
+
+    /// <summary>Returns the latest stored result for every recommendation type (null if not yet computed).</summary>
+    [HttpGet("recommendations")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateUserTags(string email, [FromBody] string[] tags)
+    public async Task<IActionResult> GetRecommendations(CancellationToken ct)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return NotFound(new { error = "User not found" });
+        var calcByType = await _notificationService.GetLatestCalcGroupedAsync(CallerEmail(), ct);
 
-        await _userTagService.AssignTagsAsync(user.Id, tags);
+        static object? ToCalcResult(Notification? n) => n is null ? null : new
+        {
+            data         = n.Data is not null ? JsonSerializer.Deserialize<JsonElement>(n.Data) : (JsonElement?)null,
+            calculatedAt = n.SentAt,
+        };
 
-        return Ok(new { email = user.Email, tags });
+        calcByType.TryGetValue("missed-savings", out var missedSavings);
+        calcByType.TryGetValue("matching-clubs", out var matchingClubs);
+
+        return Ok(new
+        {
+            missedSavings = ToCalcResult(missedSavings),
+            matchingClubs = ToCalcResult(matchingClubs),
+        });
     }
+
+    /// <summary>Initiates the Open Finance bank-connection journey for the authenticated user.</summary>
+    /// <remarks>Returns the Connect URL the client should redirect the user to.</remarks>
+    [HttpPost("init")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CreateNewOpenFinanceConnection()
+    {
+        var connection = await _openFinanceService.InitiateConnectionJourney(CallerEmail());
+        return Ok(connection);
+    }
+
+    /// <summary>Updates the authenticated user's settings: loyalty clubs, match level, or muted categories.</summary>
+    [HttpPatch("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto, CancellationToken ct = default)
+    {
+        var result = await _userService.UpdateAsync(CallerEmail(), dto, ct);
+        return MapResult(result);
+    }
+
+    private string CallerEmail() => User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+
+    // Returns a non-null error result if the user is missing or has no categories; null means proceed.
+    private async Task<IActionResult?> CheckUserHasCategories(CancellationToken ct)
+    {
+        var tags = await _userService.GetUserTagsAsync(CallerEmail(), ct);
+        if (tags is null)
+            return NotFound(new { error = "User not found" });
+        if (tags.Count == 0)
+            return UnprocessableEntity(new { error = "User has no categories yet. Call GET /api/user/insights/categories first." });
+        return null;
+    }
+
+    private async Task<IActionResult> ProxyResponse(HttpResponseMessage response, CancellationToken ct)
+    {
+        var content = await response.Content.ReadAsStringAsync(ct);
+        var json    = JsonSerializer.Deserialize<JsonElement>(content);
+        return StatusCode((int)response.StatusCode, json);
+    }
+
+    private IActionResult MapResult(UserOperationResult result) => result switch
+    {
+        UserOperationResult.NotFoundResult      => NotFound(new { error = "User not found" }),
+        UserOperationResult.ForbiddenResult     => Forbid(),
+        UserOperationResult.BadRequestResult  e => BadRequest(e.Payload),
+        UserOperationResult.Success           s => Ok(s.Payload),
+        _                                       => throw new InvalidOperationException("Unknown result"),
+    };
 }

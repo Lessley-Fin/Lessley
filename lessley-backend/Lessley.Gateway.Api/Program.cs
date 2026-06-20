@@ -8,6 +8,7 @@ using Lessley.Gateway.Api.Seeders;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using Serilog;
 
@@ -37,16 +38,24 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
-builder.Services.AddHttpClient<IPersonalizationService, PersonalizationService>(client =>
+builder.Services.AddHttpClient<IPersonalizationProxyService, PersonalizationProxyService>(client =>
 {
-    // HTTP-only proxy to the Personalization service (no RabbitMQ yet).
-    var baseUrl = builder.Configuration["PersonalizationConfig:BaseUrl"] ?? "http://localhost:8000";
-    client.BaseAddress = new Uri(baseUrl);
+    var section = builder.Configuration.GetSection("PersonalizationConfig");
+    var baseUrl = section["BaseUrl"]
+        ?? throw new InvalidOperationException("Personalization BaseUrl must be configured");
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    var apiKey = section["GatewayApiKey"];
+    if (!string.IsNullOrEmpty(apiKey))
+        client.DefaultRequestHeaders.Add("X-Gateway-Key", apiKey);
 });
 
+builder.Services.Configure<PersonalizationConfig>(builder.Configuration.GetSection("PersonalizationConfig"));
+builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
 builder.Services.AddScoped<ISendNotificationService, SendNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUserTagService, UserTagService>();
@@ -57,6 +66,7 @@ builder.Services.AddControllers()
         // Accept/emit enum values (e.g. MatchLevel) as their string names ("High"/"Medium"/"Low").
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, EmailUserIdProvider>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCustomSwagger();
 

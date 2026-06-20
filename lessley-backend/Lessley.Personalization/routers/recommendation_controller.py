@@ -1,21 +1,67 @@
 import logging
 import time
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, Request
 from services.di_container import DIContainer
-from .responses import BasicResponse, ClubRecommendationResponseSchema
-from .schemas import (
-    RecommendationByCategoryRequestSchema,
-    BroadcastDealRequest,
-)
+from .responses import BasicResponse, ClubRecommendationResponseSchema, PaginatedResponse
+from .schemas import RecommendationByCategoryRequestSchema
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/matching-clubs")
-async def calculate_matching_clubs(
-    request: Request, payload: RecommendationByCategoryRequestSchema = Query()
-):
+@router.post("/missed-savings")
+async def calculate_missed_savings(request: Request, req: RecommendationByCategoryRequestSchema):
+    """
+    Triggers async missed-savings analysis for the user.
+    Result is published back to Gateway via RabbitMQ and stored in the notifications DB.
+    """
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {"email": req.email, "method": request.method, "endpoint": request.url.path},
+        },
+    )
+
+    try:
+        service = DIContainer.get_insights_service()
+        missed_savings = await service.calculate_missed_savings_async(
+            req.email, time_filter=True, days=90, use_mock=False
+        )
+
+        response_time_ms = (time.time() - start_time) * 1000
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "email": req.email,
+                    "response_time_ms": response_time_ms,
+                    "record_count": len(missed_savings),
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
+            },
+        )
+
+        return PaginatedResponse(status="success", data=missed_savings, count=len(missed_savings))
+
+    except Exception as e:
+        logger.error(
+            f"Error calculating missed savings: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {"email": req.email, "method": request.method, "endpoint": request.url.path},
+            },
+        )
+        raise
+
+
+@router.post("/matching-clubs")
+async def calculate_matching_clubs(request: Request, payload: RecommendationByCategoryRequestSchema):
     """
     Return club recommendations for a user based on their stored category tags.
 
@@ -70,73 +116,6 @@ async def calculate_matching_clubs(
                 "reason": "Service execution failed",
                 "extra_data": {
                     "email": payload.email,
-                    "response_time_ms": response_time_ms,
-                    "error_type": type(e).__name__,
-                    "method": request.method,
-                    "endpoint": request.url.path,
-                },
-            },
-        )
-        raise
-
-
-@router.get("/broadcast-deal")
-async def broadcast_deal(request: Request, payload: BroadcastDealRequest = Query()):
-    """
-    Broadcast a deal notification to the deal's category group.
-
-    Only the deal_id and message are supplied: the deal's category is resolved from the
-    store the deal belongs to (the store's MCC code). The Gateway forwards the message to
-    all active SignalR connections in that category group. Returns 404 if the deal is unknown.
-    """
-    start_time = time.time()
-
-    logger.info(
-        "Deal broadcast requested",
-        extra={
-            "reason": "Request received",
-            "extra_data": {
-                "deal_id": payload.deal_id,
-                "method": request.method,
-                "endpoint": request.url.path,
-            },
-        },
-    )
-
-    try:
-        service = DIContainer.get_recommendation_service()
-        categories = await service.publish_broadcast_deal(
-            deal_id=payload.deal_id,
-            message=payload.message,
-        )
-
-        response_time_ms = (time.time() - start_time) * 1000
-
-        logger.info(
-            "Deal broadcast published",
-            extra={
-                "reason": "Request completed",
-                "extra_data": {
-                    "deal_id": payload.deal_id,
-                    "categories": categories,
-                    "response_time_ms": response_time_ms,
-                    "method": request.method,
-                    "endpoint": request.url.path,
-                },
-            },
-        )
-
-        return BasicResponse(status="success", data={"deal_id": payload.deal_id, "categories": categories})
-
-    except Exception as e:
-        response_time_ms = (time.time() - start_time) * 1000
-        logger.error(
-            f"Error broadcasting deal: {str(e)}",
-            exc_info=e,
-            extra={
-                "reason": "Service execution failed",
-                "extra_data": {
-                    "deal_id": payload.deal_id,
                     "response_time_ms": response_time_ms,
                     "error_type": type(e).__name__,
                     "method": request.method,

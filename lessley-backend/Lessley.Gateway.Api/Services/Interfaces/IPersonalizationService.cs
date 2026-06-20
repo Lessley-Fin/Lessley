@@ -2,10 +2,12 @@ namespace Lessley.Gateway.Api.Services.Interfaces;
 
 public interface IPersonalizationService
 {
-    /// <summary>
-    /// Triggers recalculation of the user's preferred categories in Personalization.
-    /// Personalization computes, trims by match level, and posts the new tags back to the Gateway
-    /// (PUT /api/user/{email}/tags), which updates the DB and re-syncs SignalR groups.
-    /// </summary>
-    Task RecalculateCategoriesAsync(string email, CancellationToken ct = default);
+    /// <summary>Recalculates user categories via HTTP call to the Personalization service.</summary>
+    Task RecalculateCategoriesAsync(string userId, CancellationToken ct = default);
+
+    /// <summary>Publishes a missed-savings recommendation command via RabbitMQ.</summary>
+    Task TriggerCalculateMissedSavingsAsync(string userId, CancellationToken ct = default);
+
+    /// <summary>Publishes a matching-clubs recommendation command via RabbitMQ.</summary>
+    Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default);
 }

@@ -25,19 +25,18 @@ public class NotificationHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var userId       = Context.UserIdentifier;
+        var email        = Context.UserIdentifier;
         var connectionId = Context.ConnectionId;
 
         _logger.LogInformation(
-            "Client connected. ConnectionId: {ConnectionId}, UserId: {UserId}",
-            connectionId, userId);
+            "Client connected. ConnectionId: {ConnectionId}, Email: {Email}",
+            connectionId, email);
 
-        if (!string.IsNullOrWhiteSpace(userId))
+        if (!string.IsNullOrWhiteSpace(email))
         {
-            _connectionManager.AddConnection(userId, connectionId);
+            _connectionManager.AddConnection(email, connectionId);
 
-            // Rejoin all non-muted SignalR groups the user belongs to based on their stored tags
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user?.Tags is { Count: > 0 })
             {
                 var mutedTags  = user.MutedTags ?? new List<string>();
@@ -47,8 +46,8 @@ public class NotificationHub : Hub
                     await Groups.AddToGroupAsync(connectionId, tag);
 
                 _logger.LogInformation(
-                    "User {UserId} added to {Count} group(s): {Tags}",
-                    userId, activeTags.Count, string.Join(", ", activeTags));
+                    "User {Email} added to {Count} group(s): {Tags}",
+                    email, activeTags.Count, string.Join(", ", activeTags));
             }
         }
 
@@ -57,16 +56,16 @@ public class NotificationHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var userId       = Context.UserIdentifier;
+        var email        = Context.UserIdentifier;
         var connectionId = Context.ConnectionId;
 
         _logger.LogInformation(
             exception,
-            "Client disconnected. ConnectionId: {ConnectionId}, UserId: {UserId}",
-            connectionId, userId);
+            "Client disconnected. ConnectionId: {ConnectionId}, Email: {Email}",
+            connectionId, email);
 
-        if (!string.IsNullOrWhiteSpace(userId))
-            _connectionManager.RemoveConnection(userId, connectionId);
+        if (!string.IsNullOrWhiteSpace(email))
+            _connectionManager.RemoveConnection(email, connectionId);
 
         // SignalR automatically removes the connection from all groups on disconnect
         await base.OnDisconnectedAsync(exception);

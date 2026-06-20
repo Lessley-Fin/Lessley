@@ -22,11 +22,12 @@ from routers import recommendation_controller
 from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
+from middleware.gateway_auth_middleware import GatewayAuthMiddleware
 import uuid
 
 # --- RabbitMQ Configuration ---
-QUEUE_NAME = "personalize_calc_history_queue"
-ROUTING_KEY = "Personalize.calc_history"
+GATEWAY_COMMANDS_QUEUE  = "personalization.gateway_commands"
+GATEWAY_COMMANDS_PATTERN = "Gateway.*"
 
 # --- Logging Configuration ---
 # Create a structured formatter
@@ -91,53 +92,80 @@ logging.getLogger("uvicorn.access").disabled = True
 logger = logging.getLogger(__name__)
 
 
-async def process_calc_history_message(message: aio_pika.abc.AbstractIncomingMessage):
-    """
-    This function is triggered every time a message hits the queue.
-    """
+async def _handle_gateway_command(routing_key: str, data: dict) -> None:
+    """Dispatch an incoming Gateway command to the matching service method."""
+    user_id = data.get("UserId") or data.get("userId") or data.get("user_id")
+    club_id = data.get("ClubId") or data.get("clubId") or data.get("club_id")
+
+    if routing_key == "Gateway.calculate_missed_savings":
+        service = DIContainer.get_insights_service()
+        await service.calculate_missed_savings_async(
+            user_id,
+            time_filter=True,
+            days=90,
+            use_mock=False,
+        )
+    elif routing_key == "Gateway.calculate_matching_clubs":
+        service = DIContainer.get_recommendation_service()
+        await service.calculate_matching_clubs(user_id)
+    else:
+        logger.warning("Unhandled Gateway command routing key: %s", routing_key)
+
+
+async def process_gateway_command(message: aio_pika.abc.AbstractIncomingMessage) -> None:
+    """Process a single Gateway→Personalization command message."""
     async with message.process():
+        routing_key = message.routing_key or ""
         body = message.body.decode()
         data = json.loads(body)
-        user_id = data.get("user_id")
 
-        # Set context variables for background RabbitMQ task logs
+        # Unwrap MassTransit envelope if present
+        if "message" in data and isinstance(data["message"], dict):
+            data = data["message"]
+
+        user_id = data.get("UserId") or data.get("userId") or data.get("user_id") or "unknown"
         request_id_var.set(str(uuid.uuid4()))
-        username_var.set(user_id or "anonymous")
+        username_var.set(user_id)
 
         logger.info(
-            "Calculation request received",
+            "Gateway command received",
             extra={
-                "reason": "RabbitMQ message processed",
-                "extra_data": {"user_id": user_id, "message_type": "calc_history"},
+                "reason": "RabbitMQ command consumed",
+                "extra_data": {"routing_key": routing_key, "user_id": user_id},
             },
         )
-        # TODO: 1. Fetch Open Finance Data for this user
-        # TODO: 2. Run Gap Analysis & Logic Check via Optimizer
-        # TODO: 3. Publish personalize.money_calc or personalize.suggestion
+
+        try:
+            await _handle_gateway_command(routing_key, data)
+        except Exception as e:
+            logger.error(
+                f"Error processing Gateway command '{routing_key}': {e}",
+                exc_info=e,
+                extra={"reason": "Command handler failure", "extra_data": {"routing_key": routing_key}},
+            )
+            raise
 
 
-async def consume_rabbitmq():
-    """
-    Background task to maintain the RabbitMQ connection and listen for events.
-    """
+async def consume_gateway_commands() -> None:
+    """Background task: consume Gateway recommendation commands from RabbitMQ."""
     try:
         connection = await aio_pika.connect_robust(settings.ConnectionStrings_Rabbit)
-        channel = await connection.channel()
+        channel    = await connection.channel()
+        await channel.set_qos(prefetch_count=10)
 
-        # Declare the exchange and queue to ensure they exist
         exchange = await channel.declare_exchange("lessley_events", aio_pika.ExchangeType.TOPIC, durable=True)
-        queue = await channel.declare_queue(QUEUE_NAME, durable=True)
+        queue    = await channel.declare_queue(GATEWAY_COMMANDS_QUEUE, durable=True)
+        await queue.bind(exchange, routing_key=GATEWAY_COMMANDS_PATTERN)
 
-        # Bind the queue to the specific event topic
-        await queue.bind(exchange, routing_key=ROUTING_KEY)
-
-        logger.info(f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C")
-        await queue.consume(process_calc_history_message)
-
-        # Keep the connection open indefinitely
+        logger.info(
+            "Listening for Gateway commands on '%s'",
+            GATEWAY_COMMANDS_PATTERN,
+            extra={"reason": "Consumer started", "extra_data": {"queue": GATEWAY_COMMANDS_QUEUE}},
+        )
+        await queue.consume(process_gateway_command)
         await asyncio.Future()
     except Exception as e:
-        logger.error(f"RabbitMQ connection failed: {e}")
+        logger.error(f"Gateway command consumer failed: {e}")
 
 
 # --- FastAPI Lifespan Management ---
@@ -151,15 +179,15 @@ async def lifespan(app: FastAPI):
     publisher_service = DIContainer.get_publisher_service()
     await publisher_service.initialize()
 
-    # consumer_task: asyncio.Task | None = None
-    # if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
-    #     consumer_task = asyncio.create_task(consume_rabbitmq())
+    consumer_task: asyncio.Task | None = None
+    if settings.RabbitMQ_Enabled:
+        consumer_task = asyncio.create_task(consume_gateway_commands())
 
     yield
 
     # Shutdown
-    # if consumer_task is not None:
-    #     consumer_task.cancel()
+    if consumer_task is not None:
+        consumer_task.cancel()
     if publisher_service is not None:
         await publisher_service.close()
 
@@ -173,11 +201,15 @@ async def lifespan(app: FastAPI):
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 # --- Application Initialization ---
+_is_dev = settings.Environment.lower() == "development"
 app = FastAPI(
     title="Lessley Personalization Engine",
     description="AI-driven financial gap analysis and recommendations",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs"        if _is_dev else None,
+    redoc_url="/redoc"      if _is_dev else None,
+    openapi_url="/openapi.json" if _is_dev else None,
 )
 
 
@@ -280,6 +312,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
+app.add_middleware(GatewayAuthMiddleware)     # Enforce gateway-only access
 app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging context
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)

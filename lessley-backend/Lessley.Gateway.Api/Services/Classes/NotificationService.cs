@@ -7,36 +7,33 @@ namespace Lessley.Gateway.Api.Services.Classes;
 public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _notificationRepository;
-    private readonly INotificationReadRepository _readRepository;
 
-    public NotificationService(
-        INotificationRepository notificationRepository,
-        INotificationReadRepository readRepository)
+    public NotificationService(INotificationRepository notificationRepository)
     {
         _notificationRepository = notificationRepository;
-        _readRepository         = readRepository;
     }
 
     public async Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, CancellationToken ct = default)
     {
-        var reads = await _readRepository.GetByUserAsync(userId, ct);
-        if (reads.Count == 0)
-            return [];
-
-        var notificationIds = reads.Select(r => r.NotificationId);
-        var notifications   = await _notificationRepository.GetByIdsAsync(notificationIds, ct);
-
-        var notifById = notifications.ToDictionary(n => n.Id);
-
-        return reads
-            .Where(r => notifById.ContainsKey(r.NotificationId))
-            .Select(r => NotificationDto.From(notifById[r.NotificationId], r))
-            .ToList();
+        var notifications = await _notificationRepository.GetByUserAsync(userId, ct);
+        return notifications.Select(NotificationDto.From).ToList();
     }
 
     public Task MarkAllAsReadAsync(string userId, CancellationToken ct = default)
-        => _readRepository.MarkAllAsReadAsync(userId, ct);
+        => _notificationRepository.MarkAllAsReadAsync(userId, ct);
 
     public Task<bool> MarkAsReadAsync(ObjectId notificationId, string userId, CancellationToken ct = default)
-        => _readRepository.MarkAsReadAsync(notificationId, userId, ct);
+        => _notificationRepository.MarkAsReadAsync(notificationId, userId, ct);
+
+    public Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default)
+        => _notificationRepository.GetLatestCalcAsync(userId, calcType, ct);
+
+    public async Task<Dictionary<string, Notification>> GetLatestCalcGroupedAsync(string userId, CancellationToken ct = default)
+    {
+        var all = await _notificationRepository.GetAllCalcAsync(userId, ct);
+        return all
+            .GroupBy(n => n.CalcType ?? "")
+            .Where(g => g.Key != "")
+            .ToDictionary(g => g.Key, g => g.First());
+    }
 }

@@ -21,4 +21,12 @@ public static class MatchLevelExtensions
         MatchLevel.Low    => 0.25,
         _                 => 0.25,
     };
+
+    public static MatchLevel? ToMatchLevel(this double? score) => score switch
+    {
+        0.75 => MatchLevel.High,
+        0.50 => MatchLevel.Medium,
+        0.25 => MatchLevel.Low,
+        _    => null,
+    };
 }

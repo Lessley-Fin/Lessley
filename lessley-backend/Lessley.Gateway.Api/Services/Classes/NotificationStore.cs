@@ -18,11 +18,59 @@ public class NotificationRepository : INotificationRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public Task<List<Notification>> GetByIdsAsync(IEnumerable<ObjectId> ids, CancellationToken ct = default)
+    public async Task SaveManyAsync(IEnumerable<Notification> notifications, CancellationToken ct = default)
     {
-        var idList = ids.ToList();
-        return _db.Notifications
-            .Where(n => idList.Contains(n.Id))
-            .ToListAsync(ct);
+        _db.Notifications.AddRange(notifications);
+        await _db.SaveChangesAsync(ct);
     }
+
+    public Task<List<Notification>> GetByUserAsync(string userId, CancellationToken ct = default)
+        => _db.Notifications
+              .Where(n => n.UserId == userId)
+              .OrderByDescending(n => n.SentAt)
+              .ToListAsync(ct);
+
+    public async Task<bool> MarkAsReadAsync(ObjectId id, string userId, CancellationToken ct = default)
+    {
+        var notification = await _db.Notifications
+            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId, ct);
+
+        if (notification is null || notification.IsRead)
+            return notification is not null;
+
+        notification.IsRead = true;
+        notification.ReadAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task MarkAllAsReadAsync(string userId, CancellationToken ct = default)
+    {
+        var unread = await _db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ToListAsync(ct);
+
+        if (unread.Count == 0) return;
+
+        var now = DateTime.UtcNow;
+        foreach (var n in unread)
+        {
+            n.IsRead = true;
+            n.ReadAt = now;
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default)
+        => _db.Notifications
+              .Where(n => n.UserId == userId && n.Type == "calc" && n.CalcType == calcType)
+              .OrderByDescending(n => n.SentAt)
+              .FirstOrDefaultAsync(ct);
+
+    public Task<List<Notification>> GetAllCalcAsync(string userId, CancellationToken ct = default)
+        => _db.Notifications
+              .Where(n => n.UserId == userId && n.Type == "calc")
+              .OrderByDescending(n => n.SentAt)
+              .ToListAsync(ct);
 }

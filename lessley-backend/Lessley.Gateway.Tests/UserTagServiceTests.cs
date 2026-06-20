@@ -42,7 +42,7 @@ public class UserTagServiceTests
     [Fact]
     public async Task AssignTags_UserNotFound_DoesNotUpdateOrAddGroups()
     {
-        _userManager.Setup(m => m.FindByIdAsync("ghost")).ReturnsAsync((ApplicationUser?)null);
+        _userManager.Setup(m => m.FindByEmailAsync("ghost")).ReturnsAsync((ApplicationUser?)null);
 
         await _service.AssignTagsAsync("ghost", new[] { "tech" });
 
@@ -54,7 +54,7 @@ public class UserTagServiceTests
     public async Task AssignTags_UserOffline_PersistsTagsWithoutSignalR()
     {
         var user = new ApplicationUser { Id = "user-1", Tags = new List<string>() };
-        _userManager.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
         _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
             .ReturnsAsync(IdentityResult.Success);
         _connectionManager.Setup(m => m.GetConnections("user-1")).Returns(Array.Empty<string>());
@@ -75,7 +75,7 @@ public class UserTagServiceTests
             Tags     = new List<string> { "old-tag" },
             MutedTags = new List<string>()
         };
-        _userManager.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
         _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
             .ReturnsAsync(IdentityResult.Success);
         _connectionManager.Setup(m => m.GetConnections("user-1"))
@@ -96,7 +96,7 @@ public class UserTagServiceTests
             Tags      = new List<string>(),
             MutedTags = new List<string> { "muted-tag" }
         };
-        _userManager.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
         _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
             .ReturnsAsync(IdentityResult.Success);
         _connectionManager.Setup(m => m.GetConnections("user-1"))
@@ -117,7 +117,7 @@ public class UserTagServiceTests
             Tags     = new List<string>(),
             MutedTags = new List<string>()
         };
-        _userManager.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
         _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
             .ReturnsAsync(IdentityResult.Success);
         _connectionManager.Setup(m => m.GetConnections("user-1"))
@@ -138,7 +138,7 @@ public class UserTagServiceTests
             Tags     = new List<string> { "tech", "sports" },
             MutedTags = new List<string>()
         };
-        _userManager.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
         _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
             .ReturnsAsync(IdentityResult.Success);
         _connectionManager.Setup(m => m.GetConnections("user-1"))
