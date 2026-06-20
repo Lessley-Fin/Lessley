@@ -63,7 +63,7 @@ class RecommendationService:
             )
 
             if self.publisher_service:
-                await self.publisher_service.publish_matching_clubs_calculated(user_id)
+                await self.publisher_service.publish_matching_clubs_calculated(user_id, result)
 
             logger.info(
                 "Club matching completed",

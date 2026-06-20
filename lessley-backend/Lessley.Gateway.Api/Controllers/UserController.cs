@@ -1,6 +1,7 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -18,17 +19,23 @@ public class UserController : ControllerBase
     private readonly IOpenFinanceService _openFinanceService;
     private readonly IPersonalizationService _personalizationService;
     private readonly IPersonalizationProxyService _personalizationProxy;
+    private readonly INotificationService _notificationService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public UserController(
         IUserService userService,
         IOpenFinanceService openFinanceService,
         IPersonalizationService personalizationService,
-        IPersonalizationProxyService personalizationProxy)
+        IPersonalizationProxyService personalizationProxy,
+        INotificationService notificationService,
+        UserManager<ApplicationUser> userManager)
     {
         _userService            = userService;
         _openFinanceService     = openFinanceService;
         _personalizationService = personalizationService;
         _personalizationProxy   = personalizationProxy;
+        _notificationService    = notificationService;
+        _userManager            = userManager;
     }
 
     /// <summary>Returns the full configuration for the authenticated user.</summary>
@@ -83,52 +90,58 @@ public class UserController : ControllerBase
         return await ProxyResponse(response, ct);
     }
 
-    /// <summary>Triggers a user-categories calculation via Personalization.</summary>
-    [HttpPost("insights/categories")]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    /// <summary>Calculates and returns the authenticated user's spending categories via Personalization.</summary>
+    [HttpGet("insights/categories")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CalcCategories(CancellationToken ct)
+    public async Task<IActionResult> GetInsightsCategories(
+        [FromQuery] bool? timeFilter = null,
+        [FromQuery] int?  days       = null,
+        [FromQuery] bool? useMock    = null,
+        CancellationToken ct = default)
     {
-        var result = await _userService.RecalculateCategoriesAsync(CallerEmail(), ct);
-        return result is UserOperationResult.NotFoundResult ? NotFound(new { error = "User not found" }) : Accepted();
+        var response = await _personalizationProxy.GetInsightsCategoriesAsync(CallerEmail(), timeFilter, days, useMock, ct);
+        return await ProxyResponse(response, ct);
     }
 
-    /// <summary>Triggers a top-accounts calculation via Personalization.</summary>
-    [HttpPost("insights/top-accounts")]
+    /// <summary>Calculates and returns the authenticated user's top spending accounts via Personalization.</summary>
+    [HttpGet("insights/top-accounts")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInsightsTopAccounts(
+        [FromQuery] bool? timeFilter = null,
+        [FromQuery] int?  days       = null,
+        [FromQuery] bool? useMock    = null,
+        CancellationToken ct = default)
+    {
+        var response = await _personalizationProxy.GetInsightsTopAccountsAsync(CallerEmail(), timeFilter, days, useMock, ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Calculates and returns the authenticated user's top spending stores via Personalization.</summary>
+    [HttpGet("insights/top-stores")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInsightsTopStores(
+        [FromQuery] bool? timeFilter = null,
+        [FromQuery] int?  days       = null,
+        [FromQuery] bool? useMock    = null,
+        CancellationToken ct = default)
+    {
+        var response = await _personalizationProxy.GetInsightsTopStoresAsync(CallerEmail(), timeFilter, days, useMock, ct);
+        return await ProxyResponse(response, ct);
+    }
+
+    /// <summary>Triggers a missed-savings analysis via Personalization (async — result stored in notifications).</summary>
+    [HttpPost("recommendations/missed-savings")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> CalcTopAccounts(CancellationToken ct)
-    {
-        var check = await CheckUserHasCategories(ct);
-        if (check is not null) return check;
-        await _personalizationService.TriggerCalculateTopAccountsAsync(CallerEmail(), ct);
-        return Accepted();
-    }
-
-    /// <summary>Triggers a top-stores calculation via Personalization.</summary>
-    [HttpPost("insights/top-stores")]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> CalcTopStores(CancellationToken ct)
-    {
-        var check = await CheckUserHasCategories(ct);
-        if (check is not null) return check;
-        await _personalizationService.TriggerCalculateTopStoresAsync(CallerEmail(), ct);
-        return Accepted();
-    }
-
-    /// <summary>Triggers a missed-savings calculation via Personalization.</summary>
-    [HttpPost("insights/missed-savings")]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> CalcMissedSavings(CancellationToken ct)
+    public async Task<IActionResult> TriggerMissedSavings(CancellationToken ct)
     {
         var check = await CheckUserHasCategories(ct);
         if (check is not null) return check;
@@ -136,18 +149,62 @@ public class UserController : ControllerBase
         return Accepted();
     }
 
-    /// <summary>Triggers a matching-clubs calculation via Personalization.</summary>
+    /// <summary>Returns the latest missed-savings result for the authenticated user.</summary>
+    [HttpGet("recommendations/missed-savings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMissedSavings(CancellationToken ct)
+    {
+        var user = await _userManager.FindByEmailAsync(CallerEmail());
+        if (user is null) return NotFound(new { error = "User not found" });
+
+        var notification = await _notificationService.GetLatestCalcAsync(user.Id, "missed-savings", ct);
+        if (notification is null)
+            return NotFound(new { error = "No result yet. Call POST /api/user/recommendations/missed-savings first." });
+
+        return Ok(new
+        {
+            calcType     = notification.CalcType,
+            data         = notification.Data is not null ? JsonSerializer.Deserialize<JsonElement>(notification.Data) : (JsonElement?)null,
+            calculatedAt = notification.SentAt,
+        });
+    }
+
+    /// <summary>Triggers a matching-clubs analysis via Personalization (async — result stored in notifications).</summary>
     [HttpPost("recommendations/matching-clubs")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> CalcMatchingClubs(CancellationToken ct)
+    public async Task<IActionResult> TriggerMatchingClubs(CancellationToken ct)
     {
         var check = await CheckUserHasCategories(ct);
         if (check is not null) return check;
         await _personalizationService.TriggerCalculateMatchingClubsAsync(CallerEmail(), ct);
         return Accepted();
+    }
+
+    /// <summary>Returns the latest matching-clubs result for the authenticated user.</summary>
+    [HttpGet("recommendations/matching-clubs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMatchingClubs(CancellationToken ct)
+    {
+        var user = await _userManager.FindByEmailAsync(CallerEmail());
+        if (user is null) return NotFound(new { error = "User not found" });
+
+        var notification = await _notificationService.GetLatestCalcAsync(user.Id, "matching-clubs", ct);
+        if (notification is null)
+            return NotFound(new { error = "No result yet. Call POST /api/user/recommendations/matching-clubs first." });
+
+        return Ok(new
+        {
+            calcType     = notification.CalcType,
+            data         = notification.Data is not null ? JsonSerializer.Deserialize<JsonElement>(notification.Data) : (JsonElement?)null,
+            calculatedAt = notification.SentAt,
+        });
     }
 
     /// <summary>Initiates the Open Finance bank-connection journey for the authenticated user.</summary>
@@ -182,7 +239,7 @@ public class UserController : ControllerBase
         if (tags is null)
             return NotFound(new { error = "User not found" });
         if (tags.Count == 0)
-            return UnprocessableEntity(new { error = "User has no categories yet. Call POST /api/user/insights/categories first." });
+            return UnprocessableEntity(new { error = "User has no categories yet. Call GET /api/user/insights/categories first." });
         return null;
     }
 

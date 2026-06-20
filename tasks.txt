@@ -3,20 +3,9 @@ PUSH NOTIFICATIONS tasks
 Instructions:
 Assume nothing, ask if you have questions.
 Act as a senior full stack developer and a security expert.
-do not change the business logic at all.
-you can add validation in controllers and create new services and functions but logic functions should not be touched.
 
 Tasks:
-1. usercontroller in gateway should include the following personalization requests:
-CalcCategories (should be /insights/categories)
-CalcTopAcounts (should be /insights/top-acounts)
-CalcTopStores (should be /insights/top-stores)
-CalcMissedSavings (should be /insights/missed-savings)
-CalcMatchingClubs (should be /recommendations/matching-clubs)
+1. I want that the only notifications that a user receives are: "CalcMissedSavings" and "CalcMatchingClubs".
+it means that remove publishing all the other "calc" methods like top store, too acounts, etc..
 
-2. UpdateUser should not have logic of admin or something. get the email from the jwt and update the user itself. admin dont need permission to change other users. 
-3. create a designated clubController that now has only:
-GetClubCategories (should be /clubs/categories)
-
-4. match personalization methods to be correct. i thing that calculatation (like insights & recommendation) should be post or something
-5. delete /recommendation/broadcast-deal since its not needed anymore
+2. remove the IInsightsService in gateway. add the data json inside the notification in the db.

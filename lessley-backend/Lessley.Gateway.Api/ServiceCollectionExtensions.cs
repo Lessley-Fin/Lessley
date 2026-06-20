@@ -197,9 +197,6 @@ namespace Lessley.Gateway.Api.Extensions
                 x.AddConsumer<DealTagNotificationConsumer>();
 
                 // ── Consumers: Personalization calc results → Gateway ──────────
-                x.AddConsumer<UserCategoriesCalculatedEventConsumer>();
-                x.AddConsumer<TopAccountsCalculatedEventConsumer>();
-                x.AddConsumer<TopStoresCalculatedEventConsumer>();
                 x.AddConsumer<MissedSavingsCalculatedEventConsumer>();
                 x.AddConsumer<MatchingClubsCalculatedEventConsumer>();
 
@@ -283,46 +280,7 @@ namespace Lessley.Gateway.Api.Extensions
                         e.ConfigureConsumer<DealNotificationConsumer>(ctx);
                     });
 
-                    // ── Receive: calc result events (task 6) ───────────────────
-                    cfg.ReceiveEndpoint("gateway.user_categories_calculated", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.user_categories_calculated";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<UserCategoriesCalculatedEventConsumer>(ctx);
-                    });
-
-                    cfg.ReceiveEndpoint("gateway.top_accounts_calculated", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.top_accounts_calculated";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<TopAccountsCalculatedEventConsumer>(ctx);
-                    });
-
-                    cfg.ReceiveEndpoint("gateway.top_stores_calculated", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.top_stores_calculated";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<TopStoresCalculatedEventConsumer>(ctx);
-                    });
-
+                    // ── Receive: calc result events ────────────────────────────
                     cfg.ReceiveEndpoint("gateway.missed_savings_calculated", e =>
                     {
                         e.ConfigureConsumeTopology = false;

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from services.di_container import DIContainer
 from .schemas import InsightsCalcRequests
 from .responses import PaginatedResponse
@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/insights", tags=["Insights"])
 
 
-@router.post("/categories")
-async def calculate_user_categories(request: Request, req: InsightsCalcRequests):
+@router.get("/categories")
+async def calculate_user_categories(request: Request, req: InsightsCalcRequests = Depends()):
     """
     Triggers the calculation of optimal categories based on Open Finance data.
     """
@@ -73,8 +73,8 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests)
         raise
 
 
-@router.post("/top-accounts")
-async def calculate_top_accounts(request: Request, req: InsightsCalcRequests):
+@router.get("/top-accounts")
+async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Depends()):
     """
     Triggers the calculation of top accounts based on Open Finance data.
     """
@@ -136,8 +136,8 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests):
         raise
 
 
-@router.post("/top-stores")
-async def calculate_top_stores(request: Request, req: InsightsCalcRequests):
+@router.get("/top-stores")
+async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Depends()):
     """
     Triggers the calculation of top stores based on Open Finance data.
     """

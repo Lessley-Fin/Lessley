@@ -34,4 +34,25 @@ public class PersonalizationProxyService : IPersonalizationProxyService
 
     public Task<HttpResponseMessage> GetClubCategoriesAsync(string clubId, CancellationToken ct = default)
         => _httpClient.PostAsJsonAsync("clubs/categories", new { club_id = clubId }, ct);
+
+    public Task<HttpResponseMessage> GetInsightsCategoriesAsync(
+        string email, bool? timeFilter = null, int? days = null, bool? useMock = null, CancellationToken ct = default)
+        => _httpClient.GetAsync(BuildInsightsUrl("insights/categories", email, timeFilter, days, useMock), ct);
+
+    public Task<HttpResponseMessage> GetInsightsTopAccountsAsync(
+        string email, bool? timeFilter = null, int? days = null, bool? useMock = null, CancellationToken ct = default)
+        => _httpClient.GetAsync(BuildInsightsUrl("insights/top-accounts", email, timeFilter, days, useMock), ct);
+
+    public Task<HttpResponseMessage> GetInsightsTopStoresAsync(
+        string email, bool? timeFilter = null, int? days = null, bool? useMock = null, CancellationToken ct = default)
+        => _httpClient.GetAsync(BuildInsightsUrl("insights/top-stores", email, timeFilter, days, useMock), ct);
+
+    private static string BuildInsightsUrl(string path, string email, bool? timeFilter, int? days, bool? useMock)
+    {
+        var url = $"{path}?email={Uri.EscapeDataString(email)}";
+        if (timeFilter.HasValue) url += $"&time_filter={timeFilter.Value.ToString().ToLower()}";
+        if (days.HasValue)       url += $"&days={days.Value}";
+        if (useMock.HasValue)    url += $"&use_mock={useMock.Value.ToString().ToLower()}";
+        return url;
+    }
 }

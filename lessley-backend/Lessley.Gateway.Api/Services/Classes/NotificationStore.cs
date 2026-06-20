@@ -61,4 +61,10 @@ public class NotificationRepository : INotificationRepository
 
         await _db.SaveChangesAsync(ct);
     }
+
+    public Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default)
+        => _db.Notifications
+              .Where(n => n.UserId == userId && n.Type == "calc" && n.CalcType == calcType)
+              .OrderByDescending(n => n.SentAt)
+              .FirstOrDefaultAsync(ct);
 }

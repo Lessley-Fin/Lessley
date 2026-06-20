@@ -133,6 +133,30 @@ public class SendNotificationService : ISendNotificationService
         await PublishDispatchedEventAsync("deal:" + dealId, "deal", userIds.Count, sentAt, ct);
     }
 
+    public async Task<int> SendCalcNotificationAsync(string userId, string calcType, string message, string? data = null, CancellationToken ct = default)
+    {
+        var sentAt  = DateTime.UtcNow;
+        var payload = new { timestamp = sentAt, message, calcType, type = "calc" };
+
+        var connections = _connectionManager.GetConnections(userId).ToList();
+        foreach (var connectionId in connections)
+            await _hubContext.Clients.Client(connectionId).SendAsync("CalcNotification", payload, ct);
+
+        await _notificationRepository.SaveAsync(new Notification
+        {
+            UserId   = userId,
+            Message  = message,
+            Type     = "calc",
+            CalcType = calcType,
+            Data     = data,
+            SentAt   = sentAt,
+        }, ct);
+
+        _logger.LogInformation("CalcNotification ({CalcType}) stored for user {UserId} ({Count} live connections)", calcType, userId, connections.Count);
+        await PublishDispatchedEventAsync("calc:" + calcType + ":" + userId, "calc", connections.Count, sentAt, ct);
+        return connections.Count;
+    }
+
     private async Task PublishDispatchedEventAsync(string notificationId, string type, int recipientCount, DateTime sentAt, CancellationToken ct)
     {
         var requestId = _httpContextAccessor.HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();

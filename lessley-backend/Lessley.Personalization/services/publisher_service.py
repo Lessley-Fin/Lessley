@@ -55,13 +55,13 @@ class PublisherService:
         self._ensure_initialized()
         await self._tag_publisher.publish_top_stores_calculated(user_id)
 
-    async def publish_missed_savings_calculated(self, user_id: str) -> None:
+    async def publish_missed_savings_calculated(self, user_id: str, data) -> None:
         self._ensure_initialized()
-        await self._tag_publisher.publish_missed_savings_calculated(user_id)
+        await self._tag_publisher.publish_missed_savings_calculated(user_id, data)
 
-    async def publish_matching_clubs_calculated(self, user_id: str) -> None:
+    async def publish_matching_clubs_calculated(self, user_id: str, data) -> None:
         self._ensure_initialized()
-        await self._tag_publisher.publish_matching_clubs_calculated(user_id)
+        await self._tag_publisher.publish_matching_clubs_calculated(user_id, data)
 
     # ── Deal broadcast ───────────────────────────────────────────────────────────
 

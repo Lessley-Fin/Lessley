@@ -56,14 +56,14 @@ class RabbitMQTagPublisher(RabbitMQBase):
             payload={"userId": user_id, "calculatedAt": _now()},
         )
 
-    async def publish_missed_savings_calculated(self, user_id: str) -> None:
+    async def publish_missed_savings_calculated(self, user_id: str, data) -> None:
         await self._publish_with_retry(
             routing_key="Personalize.missed_savings_calculated",
-            payload={"userId": user_id, "calculatedAt": _now()},
+            payload={"userId": user_id, "calculatedAt": _now(), "data": data},
         )
 
-    async def publish_matching_clubs_calculated(self, user_id: str) -> None:
+    async def publish_matching_clubs_calculated(self, user_id: str, data) -> None:
         await self._publish_with_retry(
             routing_key="Personalize.matching_clubs_calculated",
-            payload={"userId": user_id, "calculatedAt": _now()},
+            payload={"userId": user_id, "calculatedAt": _now(), "data": data},
         )
