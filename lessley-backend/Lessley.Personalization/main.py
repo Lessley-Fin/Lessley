@@ -101,30 +101,33 @@ async def _handle_gateway_command(routing_key: str, data: dict) -> None:
         service = DIContainer.get_insights_service()
         await service.calculate_user_categories_async(
             user_id,
-            time_filter=data.get("TimeFilter", data.get("timeFilter", False)),
-            days=data.get("Days", data.get("days", 90)),
-            use_mock=data.get("UseMock", data.get("useMock", False)),
+            time_filter=True,
+            days=90,
+            use_mock=False,
         )
     elif routing_key == "Gateway.calculate_top_accounts":
         service = DIContainer.get_insights_service()
         await service.calculate_top_accounts_async(
             user_id,
-            time_filter=data.get("TimeFilter", data.get("timeFilter", False)),
-            days=data.get("Days", data.get("days", 90)),
+            time_filter=True,
+            days=90,
+            use_mock=False,
         )
     elif routing_key == "Gateway.calculate_top_stores":
         service = DIContainer.get_insights_service()
         await service.calculate_top_stores_async(
             user_id,
-            time_filter=data.get("TimeFilter", data.get("timeFilter", False)),
-            days=data.get("Days", data.get("days", 90)),
+            time_filter=True,
+            days=90,
+            use_mock=False,
         )
     elif routing_key == "Gateway.calculate_missed_savings":
         service = DIContainer.get_insights_service()
         await service.calculate_missed_savings_async(
             user_id,
-            time_filter=data.get("TimeFilter", data.get("timeFilter", False)),
-            days=data.get("Days", data.get("days", 90)),
+            time_filter=True,
+            days=90,
+            use_mock=False,
         )
     elif routing_key == "Gateway.calculate_matching_clubs":
         service = DIContainer.get_recommendation_service()
@@ -167,6 +170,7 @@ async def process_gateway_command(message: aio_pika.abc.AbstractIncomingMessage)
                 exc_info=e,
                 extra={"reason": "Command handler failure", "extra_data": {"routing_key": routing_key}},
             )
+            raise
 
 
 async def consume_gateway_commands() -> None:

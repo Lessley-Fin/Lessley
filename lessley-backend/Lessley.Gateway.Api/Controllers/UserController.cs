@@ -1,7 +1,6 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using System.Security.Claims;
@@ -20,22 +19,19 @@ public class UserController : ControllerBase
     private readonly IPersonalizationService _personalizationService;
     private readonly IPersonalizationProxyService _personalizationProxy;
     private readonly INotificationService _notificationService;
-    private readonly UserManager<ApplicationUser> _userManager;
 
     public UserController(
         IUserService userService,
         IOpenFinanceService openFinanceService,
         IPersonalizationService personalizationService,
         IPersonalizationProxyService personalizationProxy,
-        INotificationService notificationService,
-        UserManager<ApplicationUser> userManager)
+        INotificationService notificationService)
     {
         _userService            = userService;
         _openFinanceService     = openFinanceService;
         _personalizationService = personalizationService;
         _personalizationProxy   = personalizationProxy;
         _notificationService    = notificationService;
-        _userManager            = userManager;
     }
 
     /// <summary>Returns the full configuration for the authenticated user.</summary>
@@ -149,28 +145,6 @@ public class UserController : ControllerBase
         return Accepted();
     }
 
-    /// <summary>Returns the latest missed-savings result for the authenticated user.</summary>
-    [HttpGet("recommendations/missed-savings")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMissedSavings(CancellationToken ct)
-    {
-        var user = await _userManager.FindByEmailAsync(CallerEmail());
-        if (user is null) return NotFound(new { error = "User not found" });
-
-        var notification = await _notificationService.GetLatestCalcAsync(user.Id, "missed-savings", ct);
-        if (notification is null)
-            return NotFound(new { error = "No result yet. Call POST /api/user/recommendations/missed-savings first." });
-
-        return Ok(new
-        {
-            calcType     = notification.CalcType,
-            data         = notification.Data is not null ? JsonSerializer.Deserialize<JsonElement>(notification.Data) : (JsonElement?)null,
-            calculatedAt = notification.SentAt,
-        });
-    }
-
     /// <summary>Triggers a matching-clubs analysis via Personalization (async — result stored in notifications).</summary>
     [HttpPost("recommendations/matching-clubs")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
@@ -185,25 +159,27 @@ public class UserController : ControllerBase
         return Accepted();
     }
 
-    /// <summary>Returns the latest matching-clubs result for the authenticated user.</summary>
-    [HttpGet("recommendations/matching-clubs")]
+    /// <summary>Returns the latest stored result for every recommendation type (null if not yet computed).</summary>
+    [HttpGet("recommendations")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMatchingClubs(CancellationToken ct)
+    public async Task<IActionResult> GetRecommendations(CancellationToken ct)
     {
-        var user = await _userManager.FindByEmailAsync(CallerEmail());
-        if (user is null) return NotFound(new { error = "User not found" });
+        var calcByType = await _notificationService.GetLatestCalcGroupedAsync(CallerEmail(), ct);
 
-        var notification = await _notificationService.GetLatestCalcAsync(user.Id, "matching-clubs", ct);
-        if (notification is null)
-            return NotFound(new { error = "No result yet. Call POST /api/user/recommendations/matching-clubs first." });
+        static object? ToCalcResult(Notification? n) => n is null ? null : new
+        {
+            data         = n.Data is not null ? JsonSerializer.Deserialize<JsonElement>(n.Data) : (JsonElement?)null,
+            calculatedAt = n.SentAt,
+        };
+
+        calcByType.TryGetValue("missed-savings", out var missedSavings);
+        calcByType.TryGetValue("matching-clubs", out var matchingClubs);
 
         return Ok(new
         {
-            calcType     = notification.CalcType,
-            data         = notification.Data is not null ? JsonSerializer.Deserialize<JsonElement>(notification.Data) : (JsonElement?)null,
-            calculatedAt = notification.SentAt,
+            missedSavings = ToCalcResult(missedSavings),
+            matchingClubs = ToCalcResult(matchingClubs),
         });
     }
 

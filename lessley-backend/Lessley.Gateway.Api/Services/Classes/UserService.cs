@@ -1,7 +1,9 @@
+using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Enums;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lessley.Gateway.Api.Services.Classes;
 
@@ -10,17 +12,20 @@ public class UserService : IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserTagService _userTagService;
     private readonly IPersonalizationService _personalizationService;
+    private readonly ApplicationDbContext _db;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
         IPersonalizationService personalizationService,
+        ApplicationDbContext db,
         ILogger<UserService> logger)
     {
         _userManager            = userManager;
         _userTagService         = userTagService;
         _personalizationService = personalizationService;
+        _db                     = db;
         _logger                 = logger;
     }
 
@@ -101,7 +106,15 @@ public class UserService : IUserService
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null) return UserOperationResult.NotFound();
 
-        var roles = await _userManager.GetRolesAsync(user);
+        var userRoleIds = await _db.UserRoles
+            .Where(ur => ur.UserId == user.Id)
+            .Select(ur => ur.RoleId)
+            .ToListAsync(ct);
+
+        var roles = await _db.Roles
+            .Where(r => userRoleIds.Contains(r.Id) && r.Name != null)
+            .Select(r => r.Name!)
+            .ToListAsync(ct);
 
         return UserOperationResult.Ok(new
         {

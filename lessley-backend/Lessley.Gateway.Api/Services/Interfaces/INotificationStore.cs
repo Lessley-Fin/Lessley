@@ -11,4 +11,5 @@ public interface INotificationRepository
     Task<bool> MarkAsReadAsync(ObjectId id, string userId, CancellationToken ct = default);
     Task MarkAllAsReadAsync(string userId, CancellationToken ct = default);
     Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default);
+    Task<List<Notification>> GetAllCalcAsync(string userId, CancellationToken ct = default);
 }

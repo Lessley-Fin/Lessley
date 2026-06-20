@@ -67,4 +67,10 @@ public class NotificationRepository : INotificationRepository
               .Where(n => n.UserId == userId && n.Type == "calc" && n.CalcType == calcType)
               .OrderByDescending(n => n.SentAt)
               .FirstOrDefaultAsync(ct);
+
+    public Task<List<Notification>> GetAllCalcAsync(string userId, CancellationToken ct = default)
+        => _db.Notifications
+              .Where(n => n.UserId == userId && n.Type == "calc")
+              .OrderByDescending(n => n.SentAt)
+              .ToListAsync(ct);
 }

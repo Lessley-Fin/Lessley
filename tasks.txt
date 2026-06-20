@@ -5,7 +5,7 @@ Assume nothing, ask if you have questions.
 Act as a senior full stack developer and a security expert.
 
 Tasks:
-1. I want that the only notifications that a user receives are: "CalcMissedSavings" and "CalcMatchingClubs".
-it means that remove publishing all the other "calc" methods like top store, too acounts, etc..
-
-2. remove the IInsightsService in gateway. add the data json inside the notification in the db.
+1. do not expect to get timeFilter and mockUser. always do: timeFilter=true mockUser=false.
+2. get auth me is not working.
+3. userId in notification should always be email and not mongo.
+4. in gateway GetRecommendations should fetch from db only "calc" and not the specific calcType. you can group it by calcType if you want.

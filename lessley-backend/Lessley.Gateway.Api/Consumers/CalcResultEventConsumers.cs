@@ -39,9 +39,9 @@ public class MissedSavingsCalculatedEventConsumer : IConsumer<MissedSavingsCalcu
             : null;
 
         await _sendNotificationService.SendCalcNotificationAsync(
-            user.Id, "missed-savings", "Missed savings opportunities have been identified.", data, context.CancellationToken);
+            email, "missed-savings", "Missed savings opportunities have been identified.", data, context.CancellationToken);
 
-        _logger.LogInformation("MissedSavingsCalculated stored for {UserId} ({Email})", user.Id, email);
+        _logger.LogInformation("MissedSavingsCalculated stored for {Email}", email);
     }
 }
 
@@ -77,8 +77,8 @@ public class MatchingClubsCalculatedEventConsumer : IConsumer<MatchingClubsCalcu
             : null;
 
         await _sendNotificationService.SendCalcNotificationAsync(
-            user.Id, "matching-clubs", "Your matching loyalty clubs have been updated.", data, context.CancellationToken);
+            email, "matching-clubs", "Your matching loyalty clubs have been updated.", data, context.CancellationToken);
 
-        _logger.LogInformation("MatchingClubsCalculated stored for {UserId} ({Email})", user.Id, email);
+        _logger.LogInformation("MatchingClubsCalculated stored for {Email}", email);
     }
 }

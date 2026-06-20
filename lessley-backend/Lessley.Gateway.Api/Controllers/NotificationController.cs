@@ -36,13 +36,9 @@ public class NotificationController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserNotifications(CancellationToken ct)
     {
-        var user = await ResolveUserAsync();
-        if (user is null) return NotFound(new { error = "User not found" });
-
-        var notifications = await _notificationService.GetUserNotificationsAsync(user.Id, ct);
+        var notifications = await _notificationService.GetUserNotificationsAsync(CallerEmail(), ct);
         return Ok(notifications);
     }
 
@@ -72,13 +68,9 @@ public class NotificationController : ControllerBase
     [HttpPost("read-all")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkAllAsRead(CancellationToken ct)
     {
-        var user = await ResolveUserAsync();
-        if (user is null) return NotFound(new { error = "User not found" });
-
-        await _notificationService.MarkAllAsReadAsync(user.Id, ct);
+        await _notificationService.MarkAllAsReadAsync(CallerEmail(), ct);
         return Ok(new { message = "All notifications marked as read" });
     }
 
@@ -94,10 +86,7 @@ public class NotificationController : ControllerBase
         if (!ObjectId.TryParse(notificationId, out var objId))
             return BadRequest(new { error = "Invalid notification ID" });
 
-        var user = await ResolveUserAsync();
-        if (user is null) return NotFound(new { error = "User not found" });
-
-        var found = await _notificationService.MarkAsReadAsync(objId, user.Id, ct);
+        var found = await _notificationService.MarkAsReadAsync(objId, CallerEmail(), ct);
         if (!found)
             return NotFound(new { error = "Notification not found for this user" });
 
@@ -110,4 +99,6 @@ public class NotificationController : ControllerBase
         var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
         return _userManager.FindByEmailAsync(email);
     }
+
+    private string CallerEmail() => User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
 }
