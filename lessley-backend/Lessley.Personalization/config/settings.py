@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     OpenFinanceConfig_ClientSecret: str | None = None
     OpenFinanceConfig_BaseUrl: str | None = None
     Loki_Url: str | None = None
+    Gateway_ApiKey: str | None = None
 
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

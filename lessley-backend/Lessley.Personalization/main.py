@@ -22,6 +22,7 @@ from routers import recommendation_controller
 from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
+from middleware.gateway_auth_middleware import GatewayAuthMiddleware
 import uuid
 
 # --- RabbitMQ Configuration ---
@@ -223,11 +224,15 @@ async def lifespan(app: FastAPI):
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 # --- Application Initialization ---
+_is_dev = settings.Environment.lower() == "development"
 app = FastAPI(
     title="Lessley Personalization Engine",
     description="AI-driven financial gap analysis and recommendations",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs"        if _is_dev else None,
+    redoc_url="/redoc"      if _is_dev else None,
+    openapi_url="/openapi.json" if _is_dev else None,
 )
 
 
@@ -330,6 +335,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
+app.add_middleware(GatewayAuthMiddleware)     # Enforce gateway-only access
 app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging context
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)

@@ -1,46 +1,22 @@
 PUSH NOTIFICATIONS tasks
 
-i want you to act as a senior full stack developer and a security expert.
-i want to create a proxy so the UI can never reach the other services like personalization.
-i want you to add a proxy layer in the gateway, while updating the controllers order, requests, etc.
+Instructions:
+Assume nothing, ask if you have questions.
+Act as a senior full stack developer and a security expert.
 do not change the business logic at all.
-you can add validation in controllers but services should not be touched.
+you can add validation in controllers and create new services and functions but logic functions should not be touched.
 
-1. gateway should be able to serve as a proxy to the personalization for actions that are not mass-transit (the pure http)
-2. create an admin only controller that takes all the requests that they are admin only.
-3. make sure that the controllers names and requests are in the correct controller logically.
-4. make sure that "development only" that should not be on prod or an "admin only" are well protected with the bootstrap user only and admin creds or something.
-5. update the corresponding behavior and security policy changes in the personalization either. make is production ready without touching the business layer at all !
-i suggest the following controllers:
+Tasks:
+1. usercontroller in gateway should include the following personalization requests:
+CalcCategories (should be /insights/categories)
+CalcTopAcounts (should be /insights/top-acounts)
+CalcTopStores (should be /insights/top-stores)
+CalcMissedSavings (should be /insights/missed-savings)
+CalcMatchingClubs (should be /recommendations/matching-clubs)
 
-1. authcontroller (no admin roles controller):
-Register
-Login
-Refresh
-GetMyProfile
+2. UpdateUser should not have logic of admin or something. get the email from the jwt and update the user itself. admin dont need permission to change other users. 
+3. create a designated clubController that now has only:
+GetClubCategories (should be /clubs/categories)
 
-2. notificationcontroller (should not get a specific role, but should use the bearer to fetch the email):
-MarkAsRead
-MarkAllAsRead
-GetUserNotifications
-GetUserConnectionStatus
-GetUserGroups (new one - i want to get the groups that taken from signalR)
-
-3. usercontroller (should not get a specific role, but should use the bearer to fetch the email):
-CreateNewOpenFinanceConnection (should be named /init)
-RecalculateCategories
-GetCategories (fetch from db)
-GetTransactions (calls http personalization)
-GetTransactionByAccount (calls http personalization)
-GetAccounts (calls http personalization)
-UpdateUser
-
-4. openfonance controller:
-should be deleted and `CreateNewOpenFinanceConnection` should move to usercontroller as mentioned
-
-5. admin only controller:
-Bootstrap
-ChangeUserRole
-UpdateUserTags
-SendNotificationToGroup
-SendNotificationToUser
+4. match personalization methods to be correct. i thing that calculatation (like insights & recommendation) should be post or something
+5. delete /recommendation/broadcast-deal since its not needed anymore

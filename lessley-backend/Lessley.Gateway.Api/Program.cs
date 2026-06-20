@@ -37,6 +37,18 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
+builder.Services.AddHttpClient<IPersonalizationProxyService, PersonalizationProxyService>(client =>
+{
+    var section = builder.Configuration.GetSection("PersonalizationConfig");
+    var baseUrl = section["BaseUrl"]
+        ?? throw new InvalidOperationException("Personalization BaseUrl must be configured");
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    var apiKey = section["GatewayApiKey"];
+    if (!string.IsNullOrEmpty(apiKey))
+        client.DefaultRequestHeaders.Add("X-Gateway-Key", apiKey);
+});
+
+builder.Services.Configure<PersonalizationConfig>(builder.Configuration.GetSection("PersonalizationConfig"));
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 
 builder.Services.AddHttpContextAccessor();

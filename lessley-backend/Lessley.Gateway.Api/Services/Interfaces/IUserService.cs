@@ -19,7 +19,10 @@ public abstract record UserOperationResult
 
 public interface IUserService
 {
-    Task<UserOperationResult> UpdateAsync(string email, UpdateUserDto dto, ClaimsPrincipal caller, CancellationToken ct = default);
+    Task<UserOperationResult> UpdateAsync(string email, UpdateUserDto dto, CancellationToken ct = default);
     Task<UserOperationResult> RecalculateCategoriesAsync(string email, CancellationToken ct = default);
     Task<UserOperationResult> AssignTagsAsync(string email, string[] tags, CancellationToken ct = default);
+    Task<UserOperationResult> GetCategoriesAsync(string email, CancellationToken ct = default);
+    /// <summary>Returns the user's tags from the DB, or null if the user does not exist.</summary>
+    Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default);
 }

@@ -1,6 +1,6 @@
 import logging
 import time
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, Request
 from services.di_container import DIContainer
 from .schemas import ClubCalcRequests
 from .responses import BasicResponse, ClubMccDistributionResponseSchema
@@ -10,19 +10,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/clubs", tags=["Clubs"])
 
 
-@router.get("/categories")
-async def calculate_club_categories(request: Request, req: ClubCalcRequests = Query()):
+@router.post("/categories")
+async def calculate_club_categories(request: Request, req: ClubCalcRequests):
     """
     Calculate MCC distribution for a specific club.
 
     Analyzes all stores in the specified club and returns a distribution of
     MCC codes sorted by the number of stores they appear in.
-
-    Args:
-        req: Request containing club_id
-
-    Returns:
-        BasicResponse with ClubMccDistributionResponseSchema
     """
     start_time = time.time()
 

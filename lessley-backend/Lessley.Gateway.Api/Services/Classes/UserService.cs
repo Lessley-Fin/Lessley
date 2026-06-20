@@ -1,7 +1,6 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
 
 namespace Lessley.Gateway.Api.Services.Classes;
 
@@ -25,14 +24,8 @@ public class UserService : IUserService
     }
 
     public async Task<UserOperationResult> UpdateAsync(
-        string email, UpdateUserDto dto, ClaimsPrincipal caller, CancellationToken ct = default)
+        string email, UpdateUserDto dto, CancellationToken ct = default)
     {
-        var callerEmail = caller.FindFirstValue(ClaimTypes.Email);
-        var isAdmin     = caller.IsInRole("Admin");
-
-        if (!isAdmin && !string.Equals(callerEmail, email, StringComparison.OrdinalIgnoreCase))
-            return UserOperationResult.Forbidden();
-
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
             return UserOperationResult.NotFound();
@@ -94,5 +87,24 @@ public class UserService : IUserService
 
         await _userTagService.AssignTagsAsync(user.Id, tags, ct);
         return UserOperationResult.Ok(new { email = user.Email, tags });
+    }
+
+    public async Task<UserOperationResult> GetCategoriesAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return UserOperationResult.NotFound();
+
+        return UserOperationResult.Ok(new
+        {
+            email      = user.Email,
+            categories = user.Tags ?? new List<string>(),
+        });
+    }
+
+    public async Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        return user?.Tags;
     }
 }

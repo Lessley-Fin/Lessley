@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Request
 from services.di_container import DIContainer
 from .schemas import InsightsCalcRequests
 from .responses import PaginatedResponse
@@ -10,14 +10,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/insights", tags=["Insights"])
 
 
-@router.get("/categories")
-async def calculate_user_categories(request: Request, req: InsightsCalcRequests = Query()):
+@router.post("/categories")
+async def calculate_user_categories(request: Request, req: InsightsCalcRequests):
     """
     Triggers the calculation of optimal categories based on Open Finance data.
     """
     start_time = time.time()
 
-    # Log API request
     logger.info(
         f"API request: {request.method} {request.url}",
         extra={
@@ -34,13 +33,11 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
     )
 
     try:
-        # Await the async service call
         service = DIContainer.get_insights_service()
         categories = await service.calculate_user_categories_async(req.email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
-        # Log successful response
         logger.info(
             "API response: 200",
             extra={
@@ -76,11 +73,8 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
         raise
 
 
-# logger("info", "Received request for top accounts calculation", extra={"email": req.email, "time_filter": req.time_filter, "days": req.days})
-
-
-@router.get("/top-accounts")
-async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Query()):
+@router.post("/top-accounts")
+async def calculate_top_accounts(request: Request, req: InsightsCalcRequests):
     """
     Triggers the calculation of top accounts based on Open Finance data.
     """
@@ -102,7 +96,6 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
     )
 
     try:
-        # Await the async service call
         service = DIContainer.get_insights_service()
         accounts = await service.calculate_top_accounts_async(req.email, req.time_filter, req.days, req.use_mock)
 
@@ -143,8 +136,8 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
         raise
 
 
-@router.get("/top-stores")
-async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Query()):
+@router.post("/top-stores")
+async def calculate_top_stores(request: Request, req: InsightsCalcRequests):
     """
     Triggers the calculation of top stores based on Open Finance data.
     """
@@ -166,7 +159,6 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
     )
 
     try:
-        # Await the async service call
         service = DIContainer.get_insights_service()
         stores = await service.calculate_top_stores_async(req.email, req.time_filter, req.days, req.use_mock)
 
@@ -207,11 +199,10 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
         raise
 
 
-@router.get("/missed-savings")
-async def calculate_missed_savings(request: Request, req: InsightsCalcRequests = Query()):
+@router.post("/missed-savings")
+async def calculate_missed_savings(request: Request, req: InsightsCalcRequests):
     """
     Triggers the calculation of missed savings opportunities based on user transactions and available deals.
-    Analyzes if the user could have received better discounts at alternative stores.
     """
     start_time = time.time()
 
@@ -231,7 +222,6 @@ async def calculate_missed_savings(request: Request, req: InsightsCalcRequests =
     )
 
     try:
-        # Await the async service call
         service = DIContainer.get_insights_service()
         missed_savings = await service.calculate_missed_savings_async(
             req.email, req.time_filter, req.days, req.use_mock
