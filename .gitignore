@@ -31,3 +31,5 @@ __pycache__/
 # Logs
 *.log
 logs/
+
+.claude/settings.json

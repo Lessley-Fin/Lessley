@@ -117,6 +117,7 @@ app.UseSerilogRequestLogging(options =>
     };
 });
 
+app.UseRouting();
 app.UseCors("DefaultCorsPolicy");
 app.UseAuthentication();
 app.UseMiddleware<LogContextMiddleware>();
