@@ -19,7 +19,7 @@
     "url": "https://www.topcash.co.il/all-stores",
     "max_len": 1500,
     "crawl_details": true,
-    "sample_limit": 5,
+    "detail_concurrency": 2,
     "instructions": "The page is a list of store rows. Each store-name line has the form 'EngName | HebName (URL)' followed by a cashback line. Extract EVERY store row VERBATIM. For each: store_name = the store-name text exactly as shown including both languages and the '|', WITHOUT the URL (e.g. 'Soltam | סולתם', 'AliExpress | אליאקספרס'); price_text = the cashback text exactly as shown (e.g. '3% קאשבק', 'עד 11% קאשבק'); deal_description = the same cashback text; detail_url = the URL in parentheses on the store-name line (e.g. '/store/Aliexpress/1786'). Ignore the 'לפרטים נוספים' and 'לקנייה' lines.",
     "detail_instructions": "This is a single store's TopCash page. Extract: deal_description = the store's descriptive blurb paragraph (what the store is/sells), in Hebrew as shown; terms_and_conditions = the full cashback terms text under 'תנאים לקבלת קאשבק'; coupon_code = a coupon code if one is shown (after 'קוד קופון'), else null."
   }
