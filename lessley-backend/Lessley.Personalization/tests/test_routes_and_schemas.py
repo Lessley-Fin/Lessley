@@ -12,10 +12,10 @@ def test_deal_recommendation_route_removed():
     assert "/recommendations/calculate-deal-recommendation" not in _paths()
 
 
-def test_matching_clubs_and_broadcast_routes_present():
+def test_recommendation_routes_present():
     paths = _paths()
     assert "/recommendations/matching-clubs" in paths
-    assert "/recommendations/broadcast-deal" in paths
+    assert "/recommendations/missed-savings" in paths
 
 
 def test_broadcast_request_only_needs_deal_id_and_message():

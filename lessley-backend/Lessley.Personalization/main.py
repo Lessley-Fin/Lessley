@@ -97,31 +97,7 @@ async def _handle_gateway_command(routing_key: str, data: dict) -> None:
     user_id = data.get("UserId") or data.get("userId") or data.get("user_id")
     club_id = data.get("ClubId") or data.get("clubId") or data.get("club_id")
 
-    if routing_key == "Gateway.calculate_user_categories":
-        service = DIContainer.get_insights_service()
-        await service.calculate_user_categories_async(
-            user_id,
-            time_filter=True,
-            days=90,
-            use_mock=False,
-        )
-    elif routing_key == "Gateway.calculate_top_accounts":
-        service = DIContainer.get_insights_service()
-        await service.calculate_top_accounts_async(
-            user_id,
-            time_filter=True,
-            days=90,
-            use_mock=False,
-        )
-    elif routing_key == "Gateway.calculate_top_stores":
-        service = DIContainer.get_insights_service()
-        await service.calculate_top_stores_async(
-            user_id,
-            time_filter=True,
-            days=90,
-            use_mock=False,
-        )
-    elif routing_key == "Gateway.calculate_missed_savings":
+    if routing_key == "Gateway.calculate_missed_savings":
         service = DIContainer.get_insights_service()
         await service.calculate_missed_savings_async(
             user_id,
@@ -132,9 +108,6 @@ async def _handle_gateway_command(routing_key: str, data: dict) -> None:
     elif routing_key == "Gateway.calculate_matching_clubs":
         service = DIContainer.get_recommendation_service()
         await service.calculate_matching_clubs(user_id)
-    elif routing_key == "Gateway.calculate_club_categories":
-        core = DIContainer.get_recommendation_core_service()
-        core.get_club_mcc_distribution(club_id)
     else:
         logger.warning("Unhandled Gateway command routing key: %s", routing_key)
 
@@ -174,7 +147,7 @@ async def process_gateway_command(message: aio_pika.abc.AbstractIncomingMessage)
 
 
 async def consume_gateway_commands() -> None:
-    """Background task: consume Gateway calculation commands from RabbitMQ."""
+    """Background task: consume Gateway recommendation commands from RabbitMQ."""
     try:
         connection = await aio_pika.connect_robust(settings.ConnectionStrings_Rabbit)
         channel    = await connection.channel()

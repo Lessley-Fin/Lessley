@@ -26,6 +26,15 @@ public sealed class NoOpPublishEndpoint : IPublishEndpoint
     public Task Publish(object message, Type messageType, IPipe<PublishContext> publishPipe, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
 
+    public Task Publish<T>(object values, CancellationToken cancellationToken = default) where T : class
+        => Task.CompletedTask;
+
+    public Task Publish<T>(object values, IPipe<PublishContext<T>> publishPipe, CancellationToken cancellationToken = default) where T : class
+        => Task.CompletedTask;
+
+    public Task Publish<T>(object values, IPipe<PublishContext> publishPipe, CancellationToken cancellationToken = default) where T : class
+        => Task.CompletedTask;
+
     public ConnectHandle ConnectPublishObserver(IPublishObserver observer) => new NoOpHandle();
 
     private sealed class NoOpHandle : ConnectHandle

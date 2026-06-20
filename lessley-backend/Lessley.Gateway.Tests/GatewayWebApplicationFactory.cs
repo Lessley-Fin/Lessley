@@ -22,11 +22,8 @@ public sealed class FakePersonalizationService : IPersonalizationService
         return Task.CompletedTask;
     }
 
-    public Task TriggerCalculateTopAccountsAsync(string userId, CancellationToken ct = default)  => Task.CompletedTask;
-    public Task TriggerCalculateTopStoresAsync(string userId, CancellationToken ct = default)    => Task.CompletedTask;
     public Task TriggerCalculateMissedSavingsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
     public Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
-    public Task TriggerCalculateClubCategoriesAsync(string clubId, CancellationToken ct = default) => Task.CompletedTask;
 }
 
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
@@ -41,6 +38,7 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("JwtConfig__Issuer",  Issuer);
         Environment.SetEnvironmentVariable("JwtConfig__Audience", Audience);
         Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb", "mongodb://localhost:27017");
+        Environment.SetEnvironmentVariable("PersonalizationConfig__BaseUrl", "http://localhost:8001");
     }
 
     private readonly string _dbName = $"GatewayE2ETestDb_{Guid.NewGuid():N}";
@@ -72,6 +70,7 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("JwtConfig__Issuer",  null);
         Environment.SetEnvironmentVariable("JwtConfig__Audience", null);
         Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb", null);
+        Environment.SetEnvironmentVariable("PersonalizationConfig__BaseUrl", null);
         base.Dispose(disposing);
     }
 }

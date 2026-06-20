@@ -14,7 +14,7 @@ def _now() -> str:
 
 
 class RabbitMQTagPublisher(RabbitMQBase):
-    """Publishes group/deal broadcast events and calc-result notifications."""
+    """Publishes group/deal broadcast events and recommendation result notifications."""
 
     def __init__(self, connection: aio_pika.abc.AbstractRobustConnection) -> None:
         super().__init__(connection)
@@ -42,18 +42,6 @@ class RabbitMQTagPublisher(RabbitMQBase):
         logger.info(
             "Published DealNotification",
             extra={"extra_data": {"deal_id": deal_id, "categories": categories}},
-        )
-
-    async def publish_top_accounts_calculated(self, user_id: str) -> None:
-        await self._publish_with_retry(
-            routing_key="Personalize.top_accounts_calculated",
-            payload={"userId": user_id, "calculatedAt": _now()},
-        )
-
-    async def publish_top_stores_calculated(self, user_id: str) -> None:
-        await self._publish_with_retry(
-            routing_key="Personalize.top_stores_calculated",
-            payload={"userId": user_id, "calculatedAt": _now()},
         )
 
     async def publish_missed_savings_calculated(self, user_id: str, data) -> None:

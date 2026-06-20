@@ -213,13 +213,9 @@ namespace Lessley.Gateway.Api.Extensions
                     // so the Python consumer can parse them without a MassTransit envelope.
                     cfg.UseRawJsonSerializer(RawSerializerOptions.AddTransportHeaders);
 
-                    // ── Publish topology for Gateway→Personalization commands ───
-                    ConfigureCommandPublish<CalculateUserCategoriesCommand>(cfg, "Gateway.calculate_user_categories");
-                    ConfigureCommandPublish<CalculateTopAccountsCommand>(cfg, "Gateway.calculate_top_accounts");
-                    ConfigureCommandPublish<CalculateTopStoresCommand>(cfg, "Gateway.calculate_top_stores");
+                    // ── Publish topology for Gateway→Personalization recommendation commands ─
                     ConfigureCommandPublish<CalculateMissedSavingsCommand>(cfg, "Gateway.calculate_missed_savings");
                     ConfigureCommandPublish<CalculateMatchingClubsCommand>(cfg, "Gateway.calculate_matching_clubs");
-                    ConfigureCommandPublish<CalculateClubCategoriesCommand>(cfg, "Gateway.calculate_club_categories");
 
                     // NotificationDispatchedEvent — published by Gateway, consumed by E2E tests
                     ConfigureCommandPublish<NotificationDispatchedEvent>(cfg, "Gateway.notification_dispatched");
@@ -280,7 +276,7 @@ namespace Lessley.Gateway.Api.Extensions
                         e.ConfigureConsumer<DealNotificationConsumer>(ctx);
                     });
 
-                    // ── Receive: calc result events ────────────────────────────
+                    // ── Receive: recommendation result events ────────────────────
                     cfg.ReceiveEndpoint("gateway.missed_savings_calculated", e =>
                     {
                         e.ConfigureConsumeTopology = false;

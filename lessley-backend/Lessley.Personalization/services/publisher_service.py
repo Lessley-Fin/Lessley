@@ -41,19 +41,7 @@ class PublisherService:
         self._ensure_initialized()
         await self._user_publisher.publish_user_notification(user_id, message, deal_id)
 
-    # ── Calc result events ───────────────────────────────────────────────────────
-
-    async def publish_user_categories_calculated(self, user_id: str) -> None:
-        self._ensure_initialized()
-        await self._user_publisher.publish_user_categories_calculated(user_id)
-
-    async def publish_top_accounts_calculated(self, user_id: str) -> None:
-        self._ensure_initialized()
-        await self._tag_publisher.publish_top_accounts_calculated(user_id)
-
-    async def publish_top_stores_calculated(self, user_id: str) -> None:
-        self._ensure_initialized()
-        await self._tag_publisher.publish_top_stores_calculated(user_id)
+    # ── Recommendation result events ────────────────────────────────────────────
 
     async def publish_missed_savings_calculated(self, user_id: str, data) -> None:
         self._ensure_initialized()

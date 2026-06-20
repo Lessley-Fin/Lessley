@@ -89,45 +89,51 @@ public class UserController : ControllerBase
     /// <summary>Calculates and returns the authenticated user's spending categories via Personalization.</summary>
     [HttpGet("insights/categories")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetInsightsCategories(
-        [FromQuery] bool? timeFilter = null,
-        [FromQuery] int?  days       = null,
-        [FromQuery] bool? useMock    = null,
+        [FromQuery] int? days = null,
         CancellationToken ct = default)
     {
-        var response = await _personalizationProxy.GetInsightsCategoriesAsync(CallerEmail(), timeFilter, days, useMock, ct);
+        if (days.HasValue && (days.Value < 1 || days.Value > 365))
+            return BadRequest(new { error = "days must be between 1 and 365" });
+
+        var response = await _personalizationProxy.GetInsightsCategoriesAsync(CallerEmail(), days, ct);
         return await ProxyResponse(response, ct);
     }
 
     /// <summary>Calculates and returns the authenticated user's top spending accounts via Personalization.</summary>
     [HttpGet("insights/top-accounts")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetInsightsTopAccounts(
-        [FromQuery] bool? timeFilter = null,
-        [FromQuery] int?  days       = null,
-        [FromQuery] bool? useMock    = null,
+        [FromQuery] int? days = null,
         CancellationToken ct = default)
     {
-        var response = await _personalizationProxy.GetInsightsTopAccountsAsync(CallerEmail(), timeFilter, days, useMock, ct);
+        if (days.HasValue && (days.Value < 1 || days.Value > 365))
+            return BadRequest(new { error = "days must be between 1 and 365" });
+
+        var response = await _personalizationProxy.GetInsightsTopAccountsAsync(CallerEmail(), days, ct);
         return await ProxyResponse(response, ct);
     }
 
     /// <summary>Calculates and returns the authenticated user's top spending stores via Personalization.</summary>
     [HttpGet("insights/top-stores")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetInsightsTopStores(
-        [FromQuery] bool? timeFilter = null,
-        [FromQuery] int?  days       = null,
-        [FromQuery] bool? useMock    = null,
+        [FromQuery] int? days = null,
         CancellationToken ct = default)
     {
-        var response = await _personalizationProxy.GetInsightsTopStoresAsync(CallerEmail(), timeFilter, days, useMock, ct);
+        if (days.HasValue && (days.Value < 1 || days.Value > 365))
+            return BadRequest(new { error = "days must be between 1 and 365" });
+
+        var response = await _personalizationProxy.GetInsightsTopStoresAsync(CallerEmail(), days, ct);
         return await ProxyResponse(response, ct);
     }
 

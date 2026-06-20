@@ -64,8 +64,7 @@ public class PipelineRealInfraE2ETests : IClassFixture<RealInfraWebApplicationFa
         if (!InfraAvailable || _rabbitChannel is null) return;
 
         var (userId, email) = await CreateUserAsync();
-        var tags    = new[] { $"mcc-{Guid.NewGuid():N}" };
-        var adminToken = BuildJwt("admin-tag", "Admin");
+        var tags = new[] { $"mcc-{Guid.NewGuid():N}" };
 
         PublishRaw("Personalize.user_tag_assigned", new { userId, tags });
 
@@ -91,11 +90,6 @@ public class PipelineRealInfraE2ETests : IClassFixture<RealInfraWebApplicationFa
         var email = await CreateUserWithTagsAsync(new[] { cat1, cat2 }, Array.Empty<string>());
         var dealId = Guid.NewGuid().ToString("N");
 
-        using var scope = _factory.Services.CreateScope();
-        var um   = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var user = await um.FindByEmailAsync(email);
-        Assert.NotNull(user);
-
         PublishRaw("Personalize.deal_notification", new
         {
             dealId,
@@ -105,9 +99,10 @@ public class PipelineRealInfraE2ETests : IClassFixture<RealInfraWebApplicationFa
 
         await Task.Delay(TimeSpan.FromSeconds(3));
 
+        using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var notifCount = await db.Notifications
-            .CountAsync(n => n.DealId == dealId && n.TargetType == "deal");
+            .CountAsync(n => n.DealId == dealId && n.Type == "deal");
 
         Assert.Equal(1, notifCount);
     }
@@ -166,11 +161,6 @@ public class PipelineRealInfraE2ETests : IClassFixture<RealInfraWebApplicationFa
         var email = await CreateUserWithTagsAsync(new[] { cat }, new[] { cat });
         var dealId = Guid.NewGuid().ToString("N");
 
-        using var scope = _factory.Services.CreateScope();
-        var um   = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var user = await um.FindByEmailAsync(email);
-        Assert.NotNull(user);
-
         PublishRaw("Personalize.deal_notification", new
         {
             dealId,
@@ -180,81 +170,36 @@ public class PipelineRealInfraE2ETests : IClassFixture<RealInfraWebApplicationFa
 
         await Task.Delay(TimeSpan.FromSeconds(3));
 
+        using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var hasRead = await db.NotificationReads.AnyAsync(r => r.UserId == user.Id);
-        Assert.False(hasRead);
+        var notifCount = await db.Notifications
+            .CountAsync(n => n.DealId == dealId && n.UserId == email);
+
+        Assert.Equal(0, notifCount);
     }
 
-    // ── Test 5: CalcResult events → notification rows created in MongoDB ──────────
+    // ── Test 5: Recommendation result events → notification rows created ─────────
 
     [Fact]
-    public async Task RabbitMq_UserCategoriesCalculatedEvent_CreatesNotificationInDb()
+    public async Task RabbitMq_RecommendationResultEvents_CreateNotificationsInDb()
     {
         if (!InfraAvailable || _rabbitChannel is null) return;
 
         var (userId, email) = await CreateUserAsync();
 
-        PublishRaw("Personalize.user_categories_calculated", new
-        {
-            userId,
-            calculatedAt = DateTime.UtcNow,
-        });
-
-        await Task.Delay(TimeSpan.FromSeconds(3));
-
-        using var scope = _factory.Services.CreateScope();
-        var db    = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var notif = await db.Notifications.FirstOrDefaultAsync(n => n.TargetId == userId && n.Message.Contains("category"));
-
-        Assert.NotNull(notif);
-    }
-
-    // ── Test 6: Each calc event produces a DIFFERENT notification row ─────────────
-
-    [Fact]
-    public async Task RabbitMq_FiveCalcEvents_FiveSeparateNotificationsInDb()
-    {
-        if (!InfraAvailable || _rabbitChannel is null) return;
-
-        var (userId, _) = await CreateUserAsync();
-
-        PublishRaw("Personalize.user_categories_calculated",  new { userId, calculatedAt = DateTime.UtcNow });
-        PublishRaw("Personalize.top_accounts_calculated",     new { userId, calculatedAt = DateTime.UtcNow });
-        PublishRaw("Personalize.top_stores_calculated",       new { userId, calculatedAt = DateTime.UtcNow });
-        PublishRaw("Personalize.missed_savings_calculated",   new { userId, calculatedAt = DateTime.UtcNow });
-        PublishRaw("Personalize.matching_clubs_calculated",   new { userId, calculatedAt = DateTime.UtcNow });
+        PublishRaw("Personalize.missed_savings_calculated", new { userId = email, calculatedAt = DateTime.UtcNow, data = new { items = new[] { "item1" } } });
+        PublishRaw("Personalize.matching_clubs_calculated", new { userId = email, calculatedAt = DateTime.UtcNow, data = new { clubs = new[] { "club1" } } });
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
         using var scope = _factory.Services.CreateScope();
         var db    = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var count = await db.NotificationReads.CountAsync(r => r.UserId == userId);
+        var count = await db.Notifications.CountAsync(n => n.UserId == email && n.Type == "calc");
 
-        Assert.Equal(5, count);
+        Assert.Equal(2, count);
     }
 
-    // ── Test 7: NotificationDispatchedEvent published after group send ────────────
-
-    [Fact]
-    public async Task HttpPost_GroupNotification_PublishesNotificationDispatchedEvent()
-    {
-        if (!InfraAvailable || _rabbitChannel is null) return;
-
-        var tag        = $"tag-{Guid.NewGuid():N}";
-        var adminToken = BuildJwt("admin-dispatch", "Admin");
-        var received   = WaitForRabbitMessage("Gateway.notification_dispatched");
-
-        using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
-        var resp = await http.PostAsJsonAsync($"api/notification/group/{tag}", new { message = "dispatch test" });
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
-
-        var arrived = await received;
-        Assert.NotNull(arrived);
-        Assert.Equal("group", arrived?.GetProperty("Type").GetString());
-    }
-
-    // ── Test 8: Unhappy path — unknown user tag assignment is silently ignored ────
+    // ── Test 6: Unhappy path — unknown user tag assignment is silently ignored ────
 
     [Fact]
     public async Task RabbitMq_UserTagAssignedEvent_UnknownUser_DoesNotThrow()
@@ -269,7 +214,6 @@ public class PipelineRealInfraE2ETests : IClassFixture<RealInfraWebApplicationFa
         });
 
         await Task.Delay(TimeSpan.FromSeconds(3));
-        // No exception → test passes; the consumer should handle gracefully.
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
