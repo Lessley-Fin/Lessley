@@ -1,4 +1,3 @@
-import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Bell } from "lucide-react"
 
@@ -7,18 +6,16 @@ import { LoadingCard } from "@/components/shared/LoadingCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { fintech } from "@/lib/fintech-styles"
 import { NotificationRow } from "./components/NotificationRow"
-import { useNotificationsQuery, useMarkAllRead } from "./hooks"
+import { useNotificationsQuery, useMarkRead } from "./hooks"
 
 export function NotificationsPage() {
   const navigate = useNavigate()
   const { data: notifications = [], isLoading } = useNotificationsQuery()
-  const markAllRead = useMarkAllRead()
+  const markRead = useMarkRead()
 
-  useEffect(() => {
-    return () => {
-      markAllRead.mutate()
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const handleRead = (id: string) => {
+    markRead.mutate(id)
+  }
 
   const unread = notifications.filter((n) => !n.isRead)
   const read = notifications.filter((n) => n.isRead)
@@ -49,7 +46,7 @@ export function NotificationsPage() {
             <h3 className={fintech.sectionEyebrow}>Unread</h3>
             <div className="space-y-2">
               {unread.map((item) => (
-                <NotificationRow key={item.id} item={item} />
+                <NotificationRow key={item.id} item={item} onRead={handleRead} />
               ))}
             </div>
           </section>

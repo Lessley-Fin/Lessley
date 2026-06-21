@@ -63,6 +63,17 @@
   }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @layer components {
   .fintech-shell {
     @apply relative mx-auto flex min-h-svh w-full max-w-md flex-col;

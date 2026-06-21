@@ -23,9 +23,11 @@ builder.Services.AddCustomRateLimiting();
 builder.Services.AddMassTransitWithRabbitMq(builder.Configuration, builder.Environment);
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
+var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>()
+    ?? ["http://localhost:8000"];
 builder.Services.AddCors(options =>
     options.AddPolicy("DefaultCorsPolicy", policy =>
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+        policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 // ── Application services ───────────────────────────────────────────────────────
 builder.Services.Configure<AuthConfig>(builder.Configuration.GetSection(nameof(AuthConfig)));

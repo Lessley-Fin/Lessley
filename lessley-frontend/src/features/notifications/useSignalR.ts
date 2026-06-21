@@ -1,20 +1,25 @@
-import { useEffect } from "react"
+import { createElement, useEffect } from "react"
 import {
   HubConnectionBuilder,
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr"
 import { useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
 
 import { useAuthStore } from "@/features/auth/store"
 import { API_GATEWAY_URL } from "@/lib/api-client"
 import { getValidAccessToken } from "@/lib/auth"
 import { queryKeys } from "@/lib/query-keys"
+import { ROUTES } from "@/lib/routes"
+import { NotificationToast } from "./components/NotificationToast"
 import type { NotificationDto, SignalRNotificationPayload } from "./notificationTypes"
 
 export function useSignalR() {
   const queryClient = useQueryClient()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -45,6 +50,23 @@ export function useSignalR() {
         queryKeys.notifications.list(),
         (old) => [newNotification, ...(old ?? [])],
       )
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.notifications.all,
+      })
+
+      toast.custom((id) =>
+        createElement(NotificationToast, {
+          type: payload.type,
+          message: payload.message,
+          dealId: payload.dealId ?? null,
+          onView: () => {
+            toast.dismiss(id)
+            navigate(ROUTES.NOTIFICATIONS)
+          },
+          onDismiss: () => toast.dismiss(id),
+        }),
+        { duration: 5000 },
+      )
     }
 
     connection.on("DealUserNotification", handleIncoming)
@@ -69,5 +91,5 @@ export function useSignalR() {
         void connection.stop()
       }
     }
-  }, [isAuthenticated, queryClient])
+  }, [isAuthenticated, queryClient, navigate])
 }
