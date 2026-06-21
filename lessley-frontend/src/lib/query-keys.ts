@@ -1,0 +1,28 @@
+export const queryKeys = {
+  user: {
+    all: ["user"] as const,
+    profile: () => [...queryKeys.user.all, "profile"] as const,
+    accounts: () => [...queryKeys.user.all, "accounts"] as const,
+  },
+  transactions: {
+    all: ["transactions"] as const,
+    list: (days: number) => [...queryKeys.transactions.all, "list", days] as const,
+  },
+  insights: {
+    all: ["insights"] as const,
+    categories: (days: number) => [...queryKeys.insights.all, "categories", days] as const,
+    topAccounts: (days: number) => [...queryKeys.insights.all, "top-accounts", days] as const,
+    topStores: (days: number) => [...queryKeys.insights.all, "top-stores", days] as const,
+  },
+  recommendations: {
+    all: ["recommendations"] as const,
+    list: () => [...queryKeys.recommendations.all, "list"] as const,
+  },
+  notifications: {
+    all: ["notifications"] as const,
+    list: () => [...queryKeys.notifications.all, "list"] as const,
+  },
+  connection: {
+    status: () => ["connection", "status"] as const,
+  },
+}
