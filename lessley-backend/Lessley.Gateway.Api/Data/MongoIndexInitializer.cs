@@ -14,6 +14,7 @@ public static class MongoIndexInitializer
 
         await CreateNotificationIndexesAsync(db);
         await CreateUserTagIndexAsync(db);
+        await CreateDealFinderIndexesAsync(db);
     }
 
     private static async Task CreateNotificationIndexesAsync(IMongoDatabase db)
@@ -47,6 +48,36 @@ public static class MongoIndexInitializer
         await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
             Builders<BsonDocument>.IndexKeys.Ascending("Tags"),
             new CreateIndexOptions { Name = "idx_tags" }
+        ));
+    }
+
+    private static async Task CreateDealFinderIndexesAsync(IMongoDatabase db)
+    {
+        var stores = db.GetCollection<BsonDocument>("store_list");
+        var deals  = db.GetCollection<BsonDocument>("deal_list");
+
+        // store_list: MCC $in filter on array field
+        await stores.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("metadata.mcc_codes"),
+            new CreateIndexOptions { Name = "idx_store_mcc_codes" }
+        ));
+
+        // store_list: store name for sort / projection alongside $regex
+        await stores.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("name"),
+            new CreateIndexOptions { Name = "idx_store_name" }
+        ));
+
+        // deal_list: join key for the $in lookup from matching store IDs
+        await deals.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("store_id"),
+            new CreateIndexOptions { Name = "idx_deal_store_id" }
+        ));
+
+        // deal_list: title for $regex deal-text search
+        await deals.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("title"),
+            new CreateIndexOptions { Name = "idx_deal_title" }
         ));
     }
 }

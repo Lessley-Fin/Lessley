@@ -9,6 +9,7 @@ using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using MongoDB.Driver;
 using System.Security.Claims;
 using Serilog;
 
@@ -59,6 +60,11 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISendNotificationService, SendNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUserTagService, UserTagService>();
+
+builder.Services.AddSingleton<IMongoClient>(_ =>
+    new MongoClient(builder.Configuration.GetConnectionString("MongoDb")));
+builder.Services.AddScoped<IDealFinderRepository, DealFinderRepository>();
+builder.Services.AddScoped<IDealFinderService, DealFinderService>();
 
 // ── Framework ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllers()
