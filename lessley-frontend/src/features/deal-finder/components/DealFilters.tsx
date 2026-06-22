@@ -5,16 +5,19 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MCC_CATEGORIES, formatCategoryLabel } from "@/lib/constants"
+import { formatCategoryLabel } from "@/lib/constants"
+import type { MccCategoryDto } from "@/lib/types"
 import { cn, toggleArrayValue } from "@/lib/utils"
 import type { DealSearchFilters } from "../api"
 
 interface DealFiltersProps {
   onSearch: (filters: DealSearchFilters) => void
   isLoading?: boolean
+  mccCategories: MccCategoryDto[]
+  isLoadingCategories?: boolean
 }
 
-export function DealFilters({ onSearch, isLoading }: DealFiltersProps) {
+export function DealFilters({ onSearch, isLoading, mccCategories, isLoadingCategories }: DealFiltersProps) {
   const [categories, setCategories] = useState<string[]>([])
   const [storeText, setStoreText] = useState("")
   const [dealText, setDealText] = useState("")
@@ -86,25 +89,34 @@ export function DealFilters({ onSearch, isLoading }: DealFiltersProps) {
             ) : null}
           </Label>
           <div className="max-h-40 space-y-0.5 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/70 p-2">
-            {MCC_CATEGORIES.map((cat) => (
-              <label
-                key={cat}
-                className={cn(
-                  "flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
-                  categories.includes(cat)
-                    ? "bg-violet-50 text-violet-800"
-                    : "text-slate-600 hover:bg-white"
-                )}
-              >
-                <input
-                  type="checkbox"
-                  className="size-3.5 rounded accent-violet-600"
-                  checked={categories.includes(cat)}
-                  onChange={() => setCategories(toggleArrayValue(categories, cat))}
-                />
-                {formatCategoryLabel(cat)}
-              </label>
-            ))}
+            {isLoadingCategories ? (
+              <div className="flex items-center justify-center py-4">
+                <span className="text-xs text-slate-400">Loading categories…</span>
+              </div>
+            ) : (
+              mccCategories.map((mc) => {
+                const cat = mc.category
+                return (
+                  <label
+                    key={cat}
+                    className={cn(
+                      "flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                      categories.includes(cat)
+                        ? "bg-violet-50 text-violet-800"
+                        : "text-slate-600 hover:bg-white",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-3.5 rounded accent-violet-600"
+                      checked={categories.includes(cat)}
+                      onChange={() => setCategories(toggleArrayValue(categories, cat))}
+                    />
+                    {formatCategoryLabel(cat)}
+                  </label>
+                )
+              })
+            )}
           </div>
         </div>
 

@@ -65,6 +65,7 @@ builder.Services.AddSingleton<IMongoClient>(_ =>
     new MongoClient(builder.Configuration.GetConnectionString("MongoDb")));
 builder.Services.AddScoped<IDealFinderRepository, DealFinderRepository>();
 builder.Services.AddScoped<IDealFinderService, DealFinderService>();
+builder.Services.AddScoped<IMccRepository, MccRepository>();
 
 // ── Framework ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllers()
