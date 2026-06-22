@@ -25,4 +25,9 @@ export const queryKeys = {
   connection: {
     status: () => ["connection", "status"] as const,
   },
+  dealFinder: {
+    all: ["dealFinder"] as const,
+    categories: () => ["dealFinder", "categories"] as const,
+    search: (params: object) => ["dealFinder", "search", params] as const,
+  },
 }

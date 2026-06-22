@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     Gateway_ApiKey: str | None = None
 
     Loki_Url: str | None = None  # Optional setting for Loki logging  
-    Cors_AllowOrigins: str = "http://localhost:5173,http://localhost:8000,http://127.0.0.1:8000"  # Comma-separated origins
+    Cors_AllowOrigins: str = "http://localhost:8000,http://127.0.0.1:8000"  # Comma-separated origins
     Loki_Url: str | None = None  # Optional setting for Loki logging
 
     # Tell Pydantic to read from the .env file

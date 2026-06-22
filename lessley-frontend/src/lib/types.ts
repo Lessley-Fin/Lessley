@@ -87,6 +87,49 @@ export interface RecommendationsResponse {
   matchingClubs: CalcResult<ClubRecommendationResponse> | null
 }
 
+export interface MccCategoryDto {
+  category: string
+  codes: number[]
+}
+
+export interface DealDocument {
+  dealId: string
+  storeId: string
+  title: string
+  description?: string
+  clubId: string
+  scrapedAt: string
+  resolvedAt?: string
+  benefitUrl?: string
+  url?: string
+  redeemChannels: string[]
+  couponCode?: string
+}
+
+export interface StoreMetadata {
+  mccCodes: number[]
+  storeUrl?: string
+  imageUrls: string[]
+}
+
+export interface StoreDocument {
+  storeId: string
+  name: string
+  metadata: StoreMetadata
+}
+
+export interface DealSearchResultItem {
+  deal: DealDocument
+  store: StoreDocument
+}
+
+export interface PagedDealSearchResult {
+  items: DealSearchResultItem[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 export interface TopStoreInsight {
   normalized_merchantName?: string
   merchantName?: string
