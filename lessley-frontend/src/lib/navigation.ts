@@ -1,4 +1,4 @@
-import { BarChart3, ScanSearch } from "lucide-react"
+import { BarChart3, ScanSearch, Tag } from "lucide-react"
 import { ROUTES } from "./routes"
 
 export const MAIN_TABS = [
@@ -10,6 +10,7 @@ export const MAIN_TABS = [
     icon: BarChart3,
     path: ROUTES.INSIGHTS,
   },
+  { id: "deal-finder", label: "Deal", subtitle: "Finder", icon: Tag, path: ROUTES.DEAL_FINDER },
 ] as const
 
 export const OVERLAY_ROUTES = [ROUTES.NOTIFICATIONS, ROUTES.SETTINGS] as const
