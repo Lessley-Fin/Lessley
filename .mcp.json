@@ -1,0 +1,31 @@
+{
+	"mcpServers": {
+		"mongodb": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+                "-y",
+				"mongodb-mcp-server",
+				"mongodb://guest:guest@localhost:27017/?authSource=admin"
+            ]
+		},
+		"rabbitmq": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+                "tool",
+				"run",
+				"--with",
+				"fastmcp<2.14.0",
+				"amq-mcp-server-rabbitmq@latest",
+				"--allow-mutative-tools"
+            ],
+			"env": {
+                "RABBITMQ_URL": "http://localhost:15672",
+                "RABBITMQ_USER": "guest",
+                "RABBITMQ_PASSWORD": "guest"
+            }
+		}
+	},
+	"inputs": []
+}

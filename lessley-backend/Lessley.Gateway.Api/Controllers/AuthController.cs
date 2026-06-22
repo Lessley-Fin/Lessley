@@ -1,4 +1,4 @@
-﻿using Lessley.Gateway.Api.Configuration;
+using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Enums;
 using Lessley.Gateway.Api.Models;
@@ -8,35 +8,43 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Net.Mime;
 using System.Security.Claims;
 
 namespace Lessley.Gateway.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces(MediaTypeNames.Application.Json)]
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJwtService _jwtService;
         private readonly IConfiguration _configuration;
-        private readonly bool isRotateRefresh;
+        private readonly bool _isRotateRefresh;
 
         public AuthController(
             ApplicationDbContext context,
-            UserManager<IdentityUser> userManager,
-            IJwtService jwtTokenService,
+            UserManager<ApplicationUser> userManager,
+            IJwtService jwtService,
             IConfiguration config,
-            IOptions<AuthConfig> configuration)
+            IOptions<AuthConfig> authConfig)
         {
-            _context = context;
-            _userManager = userManager;
-            _jwtService = jwtTokenService;
-            isRotateRefresh = configuration.Value.IsRotateRefresh;
-            _configuration = config;
+            _context         = context;
+            _userManager     = userManager;
+            _jwtService      = jwtService;
+            _configuration   = config;
+            _isRotateRefresh = authConfig.Value.IsRotateRefresh;
         }
 
+        /// <summary>One-time admin bootstrap. Creates the initial admin user from app configuration.</summary>
+        /// <remarks>Fails if any users already exist, preventing repeated bootstrapping.</remarks>
+        /// <param name="key">Optional secret key configured in <c>Bootstrap:Key</c> — required when set.</param>
         [HttpPost("bootstrap")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Bootstrap([FromQuery] string? key = null)
         {
             var bootstrapKey = _configuration["Bootstrap:Key"];
@@ -49,44 +57,34 @@ namespace Lessley.Gateway.Api.Controllers
 
             var username = _configuration["Bootstrap:Username"] ?? "";
             var password = _configuration["Bootstrap:Password"] ?? "";
-            var email = _configuration["Bootstrap:Email"] ?? "";
+            var email    = _configuration["Bootstrap:Email"]    ?? "";
 
             if (username == "" || password == "" || email == "")
-                return BadRequest("Bootstrap failed");
+                return BadRequest("Bootstrap configuration is incomplete.");
 
-            var register = new RegisterDto() { UserName = username, Email = email, Password = password };
-            return await CreateUser(register, UserRoles.Admin);
+            return await CreateUser(new RegisterDto { UserName = username, Email = email, Password = password }, UserRoles.Admin);
         }
 
+        /// <summary>Registers a new user account with the Viewer role.</summary>
+        /// <param name="model">Registration details: username, email, password, and optional clubs/categories.</param>
         [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
-        {
-            return await CreateUser(model, UserRoles.Viewer);
-        }
+            => await CreateUser(model, UserRoles.Viewer);
 
-        private async Task<IActionResult> CreateUser(RegisterDto model, UserRoles roles)
-        {
-            var user = new IdentityUser { UserName = model.UserName, Email = model.Email };
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            result = await _userManager.AddToRoleAsync(user, roles.ToString());
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok();
-        }
-
+        /// <summary>Authenticates a user and returns a JWT access token and a refresh token.</summary>
+        /// <param name="model">Login credentials (username and password).</param>
         [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
                 return Unauthorized("Invalid credentials");
 
-            var accessToken = await _jwtService.GenerateAccessToken(user);
+            var accessToken  = await _jwtService.GenerateAccessToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken(user.Id);
 
             _context.RefreshTokens.Add(refreshToken);
@@ -95,7 +93,12 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(new { accessToken, refreshToken = refreshToken.Token });
         }
 
+        /// <summary>Exchanges a valid refresh token for a new JWT access token.</summary>
+        /// <remarks>When refresh token rotation is enabled, a new refresh token is also issued and the old one is revoked.</remarks>
+        /// <param name="request">The current refresh token.</param>
         [HttpPost("refresh")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request)
         {
             var tokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(r => r.Token == request.RefreshToken);
@@ -106,10 +109,8 @@ namespace Lessley.Gateway.Api.Controllers
             if (user == null) return Unauthorized();
 
             var newAccessToken = await _jwtService.GenerateAccessToken(user);
-            if (!isRotateRefresh)
-            {
+            if (!_isRotateRefresh)
                 return Ok(new { accessToken = newAccessToken, refreshToken = tokenEntity.Token });
-            }
 
             tokenEntity.Revoked = DateTime.UtcNow;
             var newRefreshToken = _jwtService.GenerateRefreshToken(tokenEntity.UserId);
@@ -120,23 +121,33 @@ namespace Lessley.Gateway.Api.Controllers
             return Ok(new { accessToken = newAccessToken, refreshToken = newRefreshToken.Token });
         }
 
+        /// <summary>Returns the authenticated user's profile (ID, username, email, roles).</summary>
         [Authorize]
         [HttpGet("me")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetMyProfile()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId   = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userName = User.FindFirstValue(ClaimTypes.Name);
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            var roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+            var email    = User.FindFirstValue(ClaimTypes.Email);
+            var roles    = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
-            return Ok(new { userId, userName, roles });
+            return Ok(new { userId, userName, email, roles });
         }
 
+        /// <summary>Changes a user's role. Admin only.</summary>
+        /// <param name="email">The email of the user whose role should change.</param>
+        /// <param name="newRole">The target role to assign (<c>Admin</c> or <c>Viewer</c>).</param>
         [Authorize(Roles = nameof(UserRoles.Admin))]
-        [HttpPut("role/{userId}/{newRole}")]
-        public async Task<IActionResult> ChangeUserRole([FromRoute] string userId, [FromRoute] UserRoles newRole)
+        [HttpPut("role/{email}/{newRole}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ChangeUserRole([FromRoute] string email, [FromRoute] UserRoles newRole)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user == null) return NotFound("User not found");
 
             var userRoleIds = await _context.UserRoles
@@ -146,27 +157,33 @@ namespace Lessley.Gateway.Api.Controllers
 
             var currentRoles = await _context.Roles
                 .Where(r => userRoleIds.Contains(r.Id))
-                .Select(r => r.Name)
+                .Select(r => r.Name!)
                 .ToListAsync();
 
-            await _userManager.RemoveFromRolesAsync(user, currentRoles); // remove all old roles
-            await _userManager.AddToRoleAsync(user, newRole.ToString()); // add new role
+            await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            await _userManager.AddToRoleAsync(user, newRole.ToString());
 
             return Ok($"User role changed to {newRole}");
         }
 
-        [Authorize(Roles = nameof(UserRoles.Admin))]
-        [HttpGet("admin-data")]
-        public IActionResult GetAdminData()
+        private async Task<IActionResult> CreateUser(RegisterDto model, UserRoles role)
         {
-            return Ok("admin-data");
-        }
+            var user = new ApplicationUser
+            {
+                UserName      = model.UserName,
+                Email         = model.Email,
+                Clubs         = model.Clubs ?? new(),
+                MutedTags     = model.MutedCategories ?? new(),
+                MatchingScore = model.MatchLevel?.ToMatchingScore(),
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
 
-        [Authorize(Roles = nameof(UserRoles.Admin) + "," + nameof(UserRoles.Operator))]
-        [HttpGet("operator-admin-action")]
-        public IActionResult OperatorAdminAction()
-        {
-            return Ok("This endpoint is for Operators and Admins only.");
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            result = await _userManager.AddToRoleAsync(user, role.ToString());
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            return Ok();
         }
     }
 }

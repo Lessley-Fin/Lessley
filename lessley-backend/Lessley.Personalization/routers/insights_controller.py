@@ -23,7 +23,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "use_mock": req.use_mock,
@@ -36,7 +36,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
     try:
         # Await the async service call
         service = DIContainer.get_insights_service()
-        categories = await service.calculate_user_categories_async(req.user_id, req.time_filter, req.days, req.use_mock)
+        categories = await service.calculate_user_categories_async(req.email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -46,7 +46,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "use_mock": req.use_mock,
@@ -67,7 +67,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -76,7 +76,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
         raise
 
 
-# logger("info", "Received request for top accounts calculation", extra={"user_id": req.user_id, "time_filter": req.time_filter, "days": req.days})
+# logger("info", "Received request for top accounts calculation", extra={"email": req.email, "time_filter": req.time_filter, "days": req.days})
 
 
 @router.get("/top-accounts")
@@ -91,7 +91,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "use_mock": req.use_mock,
@@ -104,7 +104,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
     try:
         # Await the async service call
         service = DIContainer.get_insights_service()
-        accounts = await service.calculate_top_accounts_async(req.user_id, req.time_filter, req.days, req.use_mock)
+        accounts = await service.calculate_top_accounts_async(req.email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -113,7 +113,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "use_mock": req.use_mock,
@@ -134,7 +134,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Q
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -155,7 +155,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": req.user_id,
+                "email": req.email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "use_mock": req.use_mock,
@@ -168,7 +168,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
     try:
         # Await the async service call
         service = DIContainer.get_insights_service()
-        stores = await service.calculate_top_stores_async(req.user_id, req.time_filter, req.days, req.use_mock)
+        stores = await service.calculate_top_stores_async(req.email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -177,7 +177,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "use_mock": req.use_mock,
@@ -198,7 +198,74 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Que
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "user_id": req.user_id,
+                    "email": req.email,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
+            },
+        )
+        raise
+
+
+@router.get("/missed-savings")
+async def calculate_missed_savings(request: Request, req: InsightsCalcRequests = Query()):
+    """
+    Triggers the calculation of missed savings opportunities based on user transactions and available deals.
+    Analyzes if the user could have received better discounts at alternative stores.
+    """
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {
+                "email": req.email,
+                "time_filter": req.time_filter,
+                "days": req.days,
+                "use_mock": req.use_mock,
+                "method": request.method,
+                "endpoint": request.url.path,
+            },
+        },
+    )
+
+    try:
+        # Await the async service call
+        service = DIContainer.get_insights_service()
+        missed_savings = await service.calculate_missed_savings_async(
+            req.email, req.time_filter, req.days, req.use_mock
+        )
+
+        response_time_ms = (time.time() - start_time) * 1000
+
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "email": req.email,
+                    "time_filter": req.time_filter,
+                    "days": req.days,
+                    "use_mock": req.use_mock,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "record_count": len(missed_savings),
+                },
+            },
+        )
+
+        return PaginatedResponse(status="success", data=missed_savings, count=len(missed_savings))
+
+    except Exception as e:
+        logger.error(
+            f"Error calculating missed savings: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {
+                    "email": req.email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },

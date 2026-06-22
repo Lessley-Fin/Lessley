@@ -109,10 +109,14 @@ services:
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
 
-      # 4. Logging Configuration
+      # 4. RabbitMQ Connection
+      - ConnectionStrings__RabbitMq=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+
+      # 5. Logging Configuration
       - Loki__Url=${LOKI_URL}
     depends_on:
-      - mongodb   
+      - mongodb
+      - rabbitmq
       - loki
 
   

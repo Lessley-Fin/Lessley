@@ -15,11 +15,11 @@ import logging_loki
 from services.di_container import DIContainer
 from config.settings import settings
 from config.structured_logging import StructuredFormatter, ContextInjectingFilter
-from routers import open_finance_controller  # Import your new controller
-from routers import mcc_controller  # Import your new controller
-from routers import insights_controller  # Import your new controller
-from routers import recommendation_controller  # Import recommendation controller
-from routers import club_controller  # Import club controller
+from routers import open_finance_controller
+from routers import mcc_controller
+from routers import insights_controller
+from routers import recommendation_controller
+from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 import uuid
@@ -143,25 +143,30 @@ async def consume_rabbitmq():
 # --- FastAPI Lifespan Management ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Connect to MongoDB and fetch setup data
+    # Startup: Connect to MongoDB and load static data
     await init_db()
     await DIContainer.get_mcc_service().initialize()
     await DIContainer.get_recommendation_core_service().initialize()
 
-    if settings.RabbitMQ_Enabled:
-        # Startup: Launch the RabbitMQ consumer as a background task
-        task = asyncio.create_task(consume_rabbitmq())
-        yield
-        # Shutdown: Clean up tasks when the server stops
-        task.cancel()
-    else:
-        yield
+    publisher_service = DIContainer.get_publisher_service()
+    await publisher_service.initialize()
+
+    # consumer_task: asyncio.Task | None = None
+    # if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
+    #     consumer_task = asyncio.create_task(consume_rabbitmq())
+
+    yield
 
     # Shutdown
-    client = DIContainer.get_open_finance_client()
-    await client.close_client()  # Ensure the HTTP client is properly closed on shutdown
+    # if consumer_task is not None:
+    #     consumer_task.cancel()
+    if publisher_service is not None:
+        await publisher_service.close()
+
+    gateway_client = DIContainer.get_open_finance_client()
+    await gateway_client.close_client()
     await close_db()
-    listener.stop()  # Gracefully stop the logging queue listener
+    listener.stop()
 
 
 # --- Rate Limiter Configuration ---

@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, List
-from models.db.entities import Club, Store
+from models.db.entities import Club, Store, Deal
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class RecommendationCoreService:
         )
         self._clubs_dict: Dict[str, Club] = {}  # {club_id: club_data}
         self._stores_dict: Dict[str, Store] = {}  # {store_id: store_data}
+        self._deals_dict: Dict[str, Deal] = {}  # {deal_id: deal_data}
 
     async def initialize(self):
         """Load clubs and stores data from MongoDB into dictionaries."""
@@ -46,6 +47,17 @@ class RecommendationCoreService:
                 extra={
                     "reason": "Data loading",
                     "extra_data": {"count": len(self._stores_dict)},
+                },
+            )
+
+            # Load deals (used to resolve a deal's category from its store for broadcasts)
+            deals_list = await Deal.find_all().to_list()
+            self._deals_dict = {deal.deal_id: deal for deal in deals_list}
+            logger.info(
+                "Deals data loaded successfully from MongoDB",
+                extra={
+                    "reason": "Data loading",
+                    "extra_data": {"count": len(self._deals_dict)},
                 },
             )
         except Exception as e:
@@ -183,93 +195,46 @@ class RecommendationCoreService:
         sorted_recommendations = sorted(recommended_clubs, key=lambda x: x["fit_score"], reverse=True)
 
         return {
-            "user_id": user_id,
+            "email": user_id,
             "recommendations": sorted_recommendations,
         }
 
-    def get_store_mcc_codes(self, club_id: str, store_id: str) -> List[int]:
+    def get_deal_categories(self, deal_id: str) -> List[int]:
         """
-        Retrieve MCC codes for a specific store in a club using direct dictionary lookups.
+        Resolve a deal's categories from the store it belongs to.
 
-        Args:
-            club_id: The club ID
-            store_id: The store ID
-
-        Returns:
-            List of MCC codes for the store, or empty list if not found
+        Looks up the deal → its store → the store's MCC codes. Those MCC codes are the deal's
+        categories, used to broadcast the deal to the matching category groups. Returns an empty
+        list if the deal or its store is unknown.
         """
-        logger.debug(
-            "Retrieving store MCC codes",
-            extra={
-                "reason": "Store data lookup",
-                "extra_data": {"club_id": club_id, "store_id": store_id},
-            },
-        )
-
-        try:
-            # Verify club exists and store is in its stores list
-            club = self._clubs_dict.get(club_id)
-            if not club:
-                logger.warning(
-                    "Club not found",
-                    extra={
-                        "reason": "Club lookup failed",
-                        "extra_data": {"club_id": club_id},
-                    },
-                )
-                return []
-
-            store_ids = club.stores
-            if store_id not in store_ids:
-                logger.warning(
-                    "Store not in club",
-                    extra={
-                        "reason": "Store validation failed",
-                        "extra_data": {"club_id": club_id, "store_id": store_id},
-                    },
-                )
-                return []
-
-            # Direct lookup in stores dictionary
-            store = self._stores_dict.get(store_id)
-            if not store:
-                logger.warning(
-                    "Store not found in stores dictionary",
-                    extra={
-                        "reason": "Store lookup failed",
-                        "extra_data": {"store_id": store_id},
-                    },
-                )
-                return []
-
-            mcc_codes = self._get_store_mcc_codes_from_store(store)
-            logger.debug(
-                "Store MCC codes retrieved",
-                extra={
-                    "reason": "Data lookup complete",
-                    "extra_data": {
-                        "club_id": club_id,
-                        "store_id": store_id,
-                        "mcc_count": len(mcc_codes),
-                    },
-                },
+        deal = self._deals_dict.get(deal_id)
+        if not deal:
+            logger.warning(
+                "Deal not found",
+                extra={"reason": "Deal lookup failed", "extra_data": {"deal_id": deal_id}},
             )
-            return mcc_codes
+            return []
 
-        except Exception as e:
-            logger.error(
-                f"Error retrieving store MCC codes: {str(e)}",
-                exc_info=e,
+        store = self._stores_dict.get(deal.store_id)
+        if not store:
+            logger.warning(
+                "Store for deal not found",
                 extra={
                     "reason": "Store lookup failed",
-                    "extra_data": {
-                        "club_id": club_id,
-                        "store_id": store_id,
-                        "error_type": type(e).__name__,
-                    },
+                    "extra_data": {"deal_id": deal_id, "store_id": deal.store_id},
                 },
             )
             return []
+
+        mcc_codes = self._get_store_mcc_codes_from_store(store)
+        logger.debug(
+            "Deal categories resolved",
+            extra={
+                "reason": "Data lookup complete",
+                "extra_data": {"deal_id": deal_id, "store_id": deal.store_id, "mcc_count": len(mcc_codes)},
+            },
+        )
+        return mcc_codes
 
     def get_club_mcc_distribution(self, club_id: str) -> Dict:
         """

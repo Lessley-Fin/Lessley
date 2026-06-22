@@ -1,0 +1,77 @@
+import logging
+from typing import List
+
+from config.settings import settings
+
+from services.publishers.rabbit_base import RabbitMQBase
+from services.publishers.rabbit_user_publisher import RabbitMQUserPublisher
+from services.publishers.rabbit_tag_publisher import RabbitMQTagPublisher
+from services.publishers.http_publisher import HttpPublisher
+
+logger = logging.getLogger(__name__)
+
+
+class PublisherService:
+    """
+    Protocol-agnostic publisher selected via RabbitMQ_Enabled / Publisher_Mode.
+
+    Holds one user_publisher (user-scoped events) and one tag_publisher (group broadcasts).
+    For HTTP mode the same HttpPublisher instance satisfies both roles; for RabbitMQ mode they
+    are separate classes sharing one connection.
+
+    Created with no arguments by DIContainer (lazy singleton) and wired by ``initialize()`` from
+    the application lifespan. HTTP is the default so the service works without RabbitMQ.
+    """
+
+    def __init__(self) -> None:
+        self._user_publisher = None
+        self._tag_publisher = None
+        self._initialized = False
+
+    async def initialize(self) -> None:
+        """Wire up the concrete publishers. Idempotent; safe to call once at startup."""
+        if self._initialized:
+            return
+
+        # RabbitMQ only when explicitly enabled and not overridden to HTTP.
+        if settings.RabbitMQ_Enabled and settings.Publisher_Mode != "http":
+            connection = await RabbitMQBase.connect(settings.ConnectionStrings_Rabbit)
+            self._user_publisher = RabbitMQUserPublisher(connection)
+            self._tag_publisher = RabbitMQTagPublisher(connection)
+            logger.info("Publisher: RabbitMQ mode enabled")
+        else:
+            # HTTP mode (default): one HttpPublisher satisfies both user and tag roles.
+            http_pub = HttpPublisher()
+            self._user_publisher = http_pub
+            self._tag_publisher = http_pub
+            if not settings.Gateway_BaseUrl:
+                logger.warning(
+                    "Publisher: HTTP mode enabled but Gateway_BaseUrl is not configured — "
+                    "tag updates and notifications will not reach the Gateway."
+                )
+            else:
+                logger.info("Publisher: HTTP mode enabled (Gateway=%s)", settings.Gateway_BaseUrl)
+
+        self._initialized = True
+
+    def _ensure_initialized(self) -> None:
+        if not self._initialized or self._user_publisher is None:
+            raise RuntimeError("PublisherService.initialize() must be called before publishing")
+
+    async def publish_user_tag_assigned(self, user_id: str, tags: List[str]) -> None:
+        self._ensure_initialized()
+        await self._user_publisher.publish_user_tag_assigned(user_id, tags)
+
+    async def publish_user_notification(self, user_id: str, message: str, deal_id: str) -> None:
+        self._ensure_initialized()
+        await self._user_publisher.publish_user_notification(user_id, message, deal_id)
+
+    async def publish_group_notification(self, group_tag: str, message: str, deal_id: str) -> None:
+        self._ensure_initialized()
+        await self._tag_publisher.publish_group_notification(group_tag, message, deal_id)
+
+    async def close(self) -> None:
+        if self._user_publisher is not None:
+            await self._user_publisher.close()
+        if self._tag_publisher is not None and self._tag_publisher is not self._user_publisher:
+            await self._tag_publisher.close()

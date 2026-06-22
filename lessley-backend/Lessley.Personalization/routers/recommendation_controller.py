@@ -2,40 +2,34 @@ import logging
 import time
 from fastapi import APIRouter, Request, Query
 from services.di_container import DIContainer
-from .responses import BasicResponse, ClubRecommendationResponseSchema, DealRecommendationResponseSchema
+from .responses import BasicResponse, ClubRecommendationResponseSchema
 from .schemas import (
-    DealRequest,
     RecommendationByCategoryRequestSchema,
+    BroadcastDealRequest,
 )
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/club-by-category")
-async def calculate_club_recommendation_by_category(
+@router.get("/matching-clubs")
+async def calculate_matching_clubs(
     request: Request, payload: RecommendationByCategoryRequestSchema = Query()
 ):
     """
-    Calculate club recommendations for a user based on their spending habits.
+    Return club recommendations for a user based on their stored category tags.
 
-    Analyzes user spending patterns and recommends clubs where the user's
-    spending categories match a significant percentage of the club's stores.
-
-    Args:
-        payload: Request containing user_id, time_filter, days, use_mock, and threshold
-
-    Returns:
-        BasicResponse with ClubRecommendationResponseSchema
+    Tags are pre-computed by InsightsService and persisted via the Gateway.
+    Returns 404 if the user is not registered in Lessley.
     """
     start_time = time.time()
 
     logger.info(
-        "Club recommendation calculation requested",
+        "Club matching requested",
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": payload.user_id,
+                "email": payload.email,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -44,18 +38,16 @@ async def calculate_club_recommendation_by_category(
 
     try:
         service = DIContainer.get_recommendation_service()
-        result = await service.calculate_club_recommendation_by_category(
-            payload.user_id, payload.time_filter, payload.days, payload.use_mock, payload.threshold
-        )
+        result = await service.calculate_matching_clubs(payload.email)
 
         response_time_ms = (time.time() - start_time) * 1000
 
         logger.info(
-            "Club recommendation calculation completed",
+            "Club matching completed",
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": payload.user_id,
+                    "email": payload.email,
                     "response_time_ms": response_time_ms,
                     "recommendation_count": len(result.get("recommendations", [])),
                     "method": request.method,
@@ -72,12 +64,12 @@ async def calculate_club_recommendation_by_category(
     except Exception as e:
         response_time_ms = (time.time() - start_time) * 1000
         logger.error(
-            f"Error calculating club recommendations: {str(e)}",
+            f"Error calculating club matches: {str(e)}",
             exc_info=e,
             extra={
                 "reason": "Service execution failed",
                 "extra_data": {
-                    "user_id": payload.user_id,
+                    "email": payload.email,
                     "response_time_ms": response_time_ms,
                     "error_type": type(e).__name__,
                     "method": request.method,
@@ -88,34 +80,23 @@ async def calculate_club_recommendation_by_category(
         raise
 
 
-@router.get("/calculate-deal-recommendation")
-async def calculate_deal_recommendation(request: Request, payload: DealRequest = Query()):
+@router.get("/broadcast-deal")
+async def broadcast_deal(request: Request, payload: BroadcastDealRequest = Query()):
     """
-    Calculate deal recommendation for a user based on store category fit.
+    Broadcast a deal notification to the deal's category group.
 
-    Determines if a specific deal is recommended by analyzing the store's MCC
-    codes against the user's spending patterns.
-
-    Args:
-        payload: Request containing user_id, club_id, deal_id, and store_id
-
-    Returns:
-        BasicResponse with DealRecommendationResponseSchema
+    Only the deal_id and message are supplied: the deal's category is resolved from the
+    store the deal belongs to (the store's MCC code). The Gateway forwards the message to
+    all active SignalR connections in that category group. Returns 404 if the deal is unknown.
     """
     start_time = time.time()
 
     logger.info(
-        "Deal recommendation calculation requested",
+        "Deal broadcast requested",
         extra={
             "reason": "Request received",
             "extra_data": {
-                "user_id": payload.user_id,
                 "deal_id": payload.deal_id,
-                "store_id": payload.store_id,
-                "club_id": payload.club_id,
-                "use_mock": payload.use_mock,
-                "time_filter": payload.time_filter,
-                "days": payload.days,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -124,49 +105,37 @@ async def calculate_deal_recommendation(request: Request, payload: DealRequest =
 
     try:
         service = DIContainer.get_recommendation_service()
-        result = await service.calculate_deal_recommendation_for_user(
-            payload.user_id,
-            payload.club_id,
-            payload.deal_id,
-            payload.store_id,
-            payload.use_mock,
-            payload.time_filter,
-            payload.days,
-            payload.threshold,
+        categories = await service.publish_broadcast_deal(
+            deal_id=payload.deal_id,
+            message=payload.message,
         )
 
         response_time_ms = (time.time() - start_time) * 1000
 
         logger.info(
-            "Deal recommendation calculation completed",
+            "Deal broadcast published",
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "user_id": payload.user_id,
                     "deal_id": payload.deal_id,
+                    "categories": categories,
                     "response_time_ms": response_time_ms,
-                    "is_recommended": result.get("is_recommended"),
-                    "fit_score": result.get("fit_score"),
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
             },
         )
 
-        return BasicResponse(
-            status="success",
-            data=DealRecommendationResponseSchema(**result),
-        )
+        return BasicResponse(status="success", data={"deal_id": payload.deal_id, "categories": categories})
 
     except Exception as e:
         response_time_ms = (time.time() - start_time) * 1000
         logger.error(
-            f"Error calculating deal recommendation: {str(e)}",
+            f"Error broadcasting deal: {str(e)}",
             exc_info=e,
             extra={
                 "reason": "Service execution failed",
                 "extra_data": {
-                    "user_id": payload.user_id,
                     "deal_id": payload.deal_id,
                     "response_time_ms": response_time_ms,
                     "error_type": type(e).__name__,
