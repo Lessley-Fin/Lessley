@@ -8,12 +8,26 @@ function typeAccent(type: string) {
     : "border-sky-200/80 bg-sky-50 text-sky-800"
 }
 
-export function NotificationRow({ item }: { item: NotificationDto }) {
+interface NotificationRowProps {
+  item: NotificationDto
+  onRead?: (id: string) => void
+}
+
+export function NotificationRow({ item, onRead }: NotificationRowProps) {
+  const canMarkRead = !item.isRead && onRead
+
   return (
     <div
+      role={canMarkRead ? "button" : undefined}
+      tabIndex={canMarkRead ? 0 : undefined}
+      onClick={canMarkRead ? () => onRead(item.id) : undefined}
+      onKeyDown={canMarkRead ? (e) => { if (e.key === "Enter" || e.key === " ") onRead(item.id) } : undefined}
       className={cn(
         "fintech-card rounded-2xl p-4 transition-shadow",
-        item.isRead ? "border-slate-200/60" : "border-violet-200/80 bg-violet-50/50 ring-1 ring-violet-100"
+        item.isRead
+          ? "border-slate-200/60"
+          : "border-violet-200/80 bg-violet-50/50 ring-1 ring-violet-100",
+        canMarkRead && "cursor-pointer active:scale-[0.98]",
       )}
     >
       <div className="flex items-start gap-3">

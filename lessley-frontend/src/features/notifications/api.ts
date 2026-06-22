@@ -6,7 +6,7 @@ export async function fetchNotifications(): Promise<NotificationDto[]> {
   return Array.isArray(data) ? data : []
 }
 
-export async function markAllNotificationsRead(): Promise<void> {
-  await apiFetch("/api/Notification/read-all", { method: "POST" })
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  await apiFetch(`/api/Notification/${notificationId}/read`, { method: "POST" })
 }
 
