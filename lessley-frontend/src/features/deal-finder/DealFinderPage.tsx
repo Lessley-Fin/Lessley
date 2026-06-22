@@ -7,32 +7,42 @@ import { LoadingCard } from "@/components/shared/LoadingCard"
 import { fintech } from "@/lib/fintech-styles"
 import { DealCard } from "./components/DealCard"
 import { DealFilters } from "./components/DealFilters"
-import { useDealSearch } from "./hooks"
-import type { DealSearchFilters } from "./api"
+import { useDealSearch, useMccCategories } from "./hooks"
+import type { DealSearchFilters, DealSearchParams } from "./api"
 
 const PAGE_SIZE = 10
 
 export function DealFinderPage() {
-  const [submittedFilters, setSubmittedFilters] = useState<DealSearchFilters | null>(null)
+  const [submittedParams, setSubmittedParams] = useState<Omit<DealSearchParams, "page" | "pageSize"> | null>(null)
   const [page, setPage] = useState(1)
 
-  const enabled = submittedFilters !== null
-  const queryParams = submittedFilters
-    ? { ...submittedFilters, page, pageSize: PAGE_SIZE }
-    : { categories: [], storeText: "", dealText: "", page: 1, pageSize: PAGE_SIZE }
+  const { data: mccCategories = [], isLoading: isLoadingCategories } = useMccCategories()
+
+  const enabled = submittedParams !== null
+  const queryParams: DealSearchParams = submittedParams
+    ? { ...submittedParams, page, pageSize: PAGE_SIZE }
+    : { mccCodes: [], storeText: "", dealText: "", page: 1, pageSize: PAGE_SIZE }
 
   const { data, isLoading, error } = useDealSearch(queryParams, enabled)
 
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0
 
   function handleSearch(filters: DealSearchFilters) {
-    setSubmittedFilters(filters)
+    const mccCodes = filters.categories.flatMap(
+      (cat) => mccCategories.find((m) => m.category === cat)?.codes ?? [],
+    )
+    setSubmittedParams({ mccCodes, storeText: filters.storeText, dealText: filters.dealText })
     setPage(1)
   }
 
   return (
     <section className={fintech.page}>
-      <DealFilters onSearch={handleSearch} isLoading={isLoading} />
+      <DealFilters
+        onSearch={handleSearch}
+        isLoading={isLoading}
+        mccCategories={mccCategories}
+        isLoadingCategories={isLoadingCategories}
+      />
 
       {!enabled ? (
         <EmptyState

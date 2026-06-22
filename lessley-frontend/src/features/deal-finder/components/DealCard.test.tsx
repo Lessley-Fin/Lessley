@@ -13,6 +13,7 @@ const baseItem: DealSearchResultItem = {
     description: "Get 20% off on all items this weekend",
     clubId: "club_hot",
     scrapedAt: "2025-01-15T10:00:00Z",
+    redeemChannels: [],
   },
   store: {
     storeId: "store-1",
@@ -102,5 +103,55 @@ describe("DealCard", () => {
     expect(
       screen.queryByText("Get 20% off on all items this weekend"),
     ).not.toBeInTheDocument()
+  })
+
+  it("shows Get Deal link in collapsed view when benefitUrl is present", () => {
+    const item: DealSearchResultItem = {
+      ...baseItem,
+      deal: { ...baseItem.deal, benefitUrl: "https://deal.example.com/buy/123" },
+    }
+    render(<DealCard item={item} />)
+    const link = screen.getByRole("link", { name: /get deal/i })
+    expect(link).toHaveAttribute("href", "https://deal.example.com/buy/123")
+    expect(link).toHaveAttribute("target", "_blank")
+  })
+
+  it("does not show Get Deal link when benefitUrl is absent", () => {
+    render(<DealCard item={baseItem} />)
+    expect(screen.queryByRole("link", { name: /get deal/i })).not.toBeInTheDocument()
+  })
+
+  it("shows prominent Get Deal CTA in expanded view when benefitUrl is present", async () => {
+    const user = userEvent.setup()
+    const item: DealSearchResultItem = {
+      ...baseItem,
+      deal: { ...baseItem.deal, benefitUrl: "https://deal.example.com/buy/123" },
+    }
+    render(<DealCard item={item} />)
+    await user.click(screen.getByRole("button", { name: /expand deal/i }))
+    const links = screen.getAllByRole("link", { name: /get deal/i })
+    expect(links.length).toBeGreaterThanOrEqual(1)
+    expect(links[0]).toHaveAttribute("href", "https://deal.example.com/buy/123")
+  })
+
+  it("shows redeem channel badges in collapsed view", () => {
+    const item: DealSearchResultItem = {
+      ...baseItem,
+      deal: { ...baseItem.deal, redeemChannels: ["online", "physical_store"] },
+    }
+    render(<DealCard item={item} />)
+    expect(screen.getByText("online")).toBeInTheDocument()
+    expect(screen.getByText("physical store")).toBeInTheDocument()
+  })
+
+  it("shows coupon code when present in expanded view", async () => {
+    const user = userEvent.setup()
+    const item: DealSearchResultItem = {
+      ...baseItem,
+      deal: { ...baseItem.deal, couponCode: "SAVE20" },
+    }
+    render(<DealCard item={item} />)
+    await user.click(screen.getByRole("button", { name: /expand deal/i }))
+    expect(screen.getByText("SAVE20")).toBeInTheDocument()
   })
 })

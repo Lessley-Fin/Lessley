@@ -1,6 +1,5 @@
 import { apiFetch } from "@/lib/api-client"
-import { MCC_CATEGORY_CODES } from "@/lib/constants"
-import type { PagedDealSearchResult } from "@/lib/types"
+import type { MccCategoryDto, PagedDealSearchResult } from "@/lib/types"
 
 export interface DealSearchFilters {
   categories: string[]
@@ -8,16 +7,21 @@ export interface DealSearchFilters {
   dealText: string
 }
 
-export interface DealSearchParams extends DealSearchFilters {
+export interface DealSearchParams {
+  mccCodes: number[]
+  storeText: string
+  dealText: string
   page: number
   pageSize: number
 }
 
-export async function searchDeals(params: DealSearchParams): Promise<PagedDealSearchResult> {
-  const mccCodes = params.categories.flatMap((cat) => MCC_CATEGORY_CODES[cat] ?? [])
+export function fetchMccCategories(): Promise<MccCategoryDto[]> {
+  return apiFetch<MccCategoryDto[]>("/api/mcc/categories")
+}
 
+export async function searchDeals(params: DealSearchParams): Promise<PagedDealSearchResult> {
   const query = new URLSearchParams()
-  if (mccCodes.length > 0) query.set("mccs", mccCodes.join(","))
+  if (params.mccCodes.length > 0) query.set("mccs", params.mccCodes.join(","))
   if (params.storeText.trim()) query.set("store", params.storeText.trim())
   if (params.dealText.trim()) query.set("deal", params.dealText.trim())
   query.set("page", String(params.page))

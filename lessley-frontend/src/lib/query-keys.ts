@@ -27,6 +27,7 @@ export const queryKeys = {
   },
   dealFinder: {
     all: ["dealFinder"] as const,
+    categories: () => ["dealFinder", "categories"] as const,
     search: (params: object) => ["dealFinder", "search", params] as const,
   },
 }

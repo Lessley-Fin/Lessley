@@ -87,6 +87,11 @@ export interface RecommendationsResponse {
   matchingClubs: CalcResult<ClubRecommendationResponse> | null
 }
 
+export interface MccCategoryDto {
+  category: string
+  codes: number[]
+}
+
 export interface DealDocument {
   dealId: string
   storeId: string
@@ -95,6 +100,10 @@ export interface DealDocument {
   clubId: string
   scrapedAt: string
   resolvedAt?: string
+  benefitUrl?: string
+  url?: string
+  redeemChannels: string[]
+  couponCode?: string
 }
 
 export interface StoreMetadata {
