@@ -33,6 +33,11 @@ const SettingsPage = lazy(() =>
     default: m.SettingsPage,
   })),
 )
+const DealFinderPage = lazy(() =>
+  import("@/features/deal-finder/DealFinderPage").then((m) => ({
+    default: m.DealFinderPage,
+  })),
+)
 
 function SuspenseFallback() {
   return (
@@ -84,6 +89,14 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<SuspenseFallback />}>
                 <InsightsRecommendationsPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "deal-finder",
+            element: (
+              <Suspense fallback={<SuspenseFallback />}>
+                <DealFinderPage />
               </Suspense>
             ),
           },
