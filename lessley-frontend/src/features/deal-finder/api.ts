@@ -8,7 +8,7 @@ export interface DealSearchFilters {
 }
 
 export interface DealSearchParams {
-  mccCodes: number[]
+  mccCodes: string[]
   storeText: string
   dealText: string
   page: number

@@ -28,7 +28,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto      = new UpdateUserDto(null, new List<string> { "clubA", "clubB" }, 0.85);
+        var dto      = new UpdateUserDto(null, new List<string> { "clubA", "clubB" }, "High");
         var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -37,7 +37,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         var clubs = body.RootElement.GetProperty("clubs").EnumerateArray().Select(c => c.GetString()).ToList();
         Assert.Contains("clubA", clubs);
         Assert.Contains("clubB", clubs);
-        Assert.Equal(0.85, body.RootElement.GetProperty("matchingScore").GetDouble(), 2);
+        Assert.Equal("High", body.RootElement.GetProperty("matchLevel").GetString());
     }
 
     [Fact]
@@ -69,13 +69,13 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
 
-        var dto      = new UpdateUserDto(null, null, 0.6);
+        var dto      = new UpdateUserDto(null, null, "Medium");
         var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(0.6, body.RootElement.GetProperty("matchingScore").GetDouble(), 2);
+        Assert.Equal("Medium", body.RootElement.GetProperty("matchLevel").GetString());
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto      = new UpdateUserDto(null, null, 0.5);
+        var dto      = new UpdateUserDto(null, null, "Medium");
         var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -97,7 +97,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task UpdateUser_WithoutToken_Returns401()
     {
         using var http = _factory.CreateClient();
-        var dto        = new UpdateUserDto(null, null, 0.5);
+        var dto        = new UpdateUserDto(null, null, "Medium");
         var response   = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -113,7 +113,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
         var before   = _factory.PersonalizationService.RecalculateCallCount;
-        var dto      = new UpdateUserDto(null, null, 0.75);
+        var dto      = new UpdateUserDto(null, null, "High");
         var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

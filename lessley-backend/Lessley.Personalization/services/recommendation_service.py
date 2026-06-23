@@ -33,12 +33,12 @@ class RecommendationService:
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
-    def _mcc_codes_from_tags(self, tags: List[str]) -> List[int]:
-        """Convert stored category tags (MCC string labels) to MCC codes."""
-        mcc_set: set[int] = set()
+    def _mcc_codes_from_tags(self, tags: List[str]) -> List[str]:
+        """Convert stored category tags to category name strings."""
+        category_set: set[str] = set()
         for tag in tags:
-            mcc_set.update(self.mcc_service.get_mcc_codes_by_tag(tag))
-        return list(mcc_set)
+            category_set.update(self.mcc_service.get_mcc_codes_by_tag(tag))
+        return list(category_set)
 
     # ── Club matching ─────────────────────────────────────────────────────────
 

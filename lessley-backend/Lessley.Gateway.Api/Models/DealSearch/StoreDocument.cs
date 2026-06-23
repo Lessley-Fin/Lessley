@@ -7,7 +7,7 @@ namespace Lessley.Gateway.Api.Models.DealSearch;
 public class StoreMetadata
 {
     [BsonElement("mcc_codes")]
-    public List<int> MccCodes { get; set; } = [];
+    public List<string> MccCodes { get; set; } = [];
 
     [BsonElement("store_url")]
     public string? StoreUrl { get; set; }

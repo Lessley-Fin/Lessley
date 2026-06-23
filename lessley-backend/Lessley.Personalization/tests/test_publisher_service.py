@@ -11,7 +11,7 @@ from services.publisher_service import PublisherService
 async def test_publish_before_initialize_raises():
     svc = PublisherService()
     with pytest.raises(RuntimeError):
-        await svc.publish_user_tag_assigned("user@test.com", ["5411"])
+        await svc.publish_user_tag_assigned("user@test.com", ["GROCERIES"])
 
 
 async def test_initialize_is_idempotent():
@@ -31,8 +31,8 @@ async def test_publish_delegates_to_underlying_publisher():
     svc._user_publisher = AsyncMock()
     svc._tag_publisher = AsyncMock()
 
-    await svc.publish_user_tag_assigned("user@test.com", ["5411", "5812"])
-    svc._user_publisher.publish_user_tag_assigned.assert_awaited_once_with("user@test.com", ["5411", "5812"])
+    await svc.publish_user_tag_assigned("user@test.com", ["GROCERIES", "RESTAURANT"])
+    svc._user_publisher.publish_user_tag_assigned.assert_awaited_once_with("user@test.com", ["GROCERIES", "RESTAURANT"])
 
-    await svc.publish_group_notification("5411", "Deal!", "deal-1")
-    svc._tag_publisher.publish_group_notification.assert_awaited_once_with("5411", "Deal!", "deal-1")
+    await svc.publish_group_notification("GROCERIES", "Deal!", "deal-1")
+    svc._tag_publisher.publish_group_notification.assert_awaited_once_with("GROCERIES", "Deal!", "deal-1")

@@ -34,8 +34,6 @@ public class DealFinderController : ControllerBase
     {
         var mccList = mccs is not null
             ? mccs.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                  .Select(s => int.TryParse(s, out var m) ? (int?)m : null)
-                  .OfType<int>()
                   .ToList()
             : null;
 
