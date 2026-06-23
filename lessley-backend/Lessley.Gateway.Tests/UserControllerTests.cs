@@ -65,7 +65,7 @@ public class UserControllerTests
             .Setup(s => s.UpdateAsync("user@test.com", It.IsAny<UpdateUserDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(UserOperationResult.Ok(new { email = "user@test.com" }));
 
-        var dto    = new UpdateUserDto(new List<string> { "sports" }, new List<string> { "club-a" }, 0.75);
+        var dto    = new UpdateUserDto(new List<string> { "sports" }, new List<string> { "club-a" }, "High");
         var result = await _controller.UpdateUser(dto);
 
         Assert.IsType<OkObjectResult>(result);

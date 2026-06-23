@@ -1,6 +1,6 @@
 """
 Integration test for calculate_missed_savings_async function.
-Tests the simplified MCC-only deal discovery logic.
+Tests the simplified category-name-based deal discovery logic.
 """
 
 import asyncio
@@ -13,31 +13,32 @@ from services.mcc_service import MccService
 async def test_calculate_missed_savings():
     """Test the calculate_missed_savings_async function with mock data."""
 
-    # Setup mock MccService
+    # Setup mock MccService that translates numeric codes to category names
     mock_mcc_service = MagicMock(spec=MccService)
     mock_mcc_service.get_mcc = MagicMock(return_value={})
+    mock_mcc_service.get_mcc_by_id = MagicMock(return_value="COFFEE_&_SNACKS")
 
     # Create service instance
     service = ProcessingCoreService(mock_mcc_service)
 
-    # Create mock Store objects
+    # Create mock Store objects with category name strings
     store1 = MagicMock()
     store1.store_id = "store_1"
     store1.name = "Starbucks"
     store1.metadata = MagicMock()
-    store1.metadata.mcc_codes = [5462]  # Coffee shop MCC
+    store1.metadata.mcc_codes = ["COFFEE_&_SNACKS"]
 
     store2 = MagicMock()
     store2.store_id = "store_2"
     store2.name = "Costa Coffee"
     store2.metadata = MagicMock()
-    store2.metadata.mcc_codes = [5462]  # Same MCC
+    store2.metadata.mcc_codes = ["COFFEE_&_SNACKS"]
 
     store3 = MagicMock()
     store3.store_id = "store_3"
     store3.name = "McDonald's"
     store3.metadata = MagicMock()
-    store3.metadata.mcc_codes = [5814]  # Different MCC
+    store3.metadata.mcc_codes = ["RESTAURANT"]
 
     # Create mock Deal objects
     deal1 = MagicMock()
@@ -61,11 +62,11 @@ async def test_calculate_missed_savings():
     club2.name = "Premium Club"
     club2.stores = ["store_2"]
 
-    # Create real Transaction object with MCC 5462 (coffee shop)
+    # Create real Transaction object — categoryCode stays numeric, mcc_service translates it
     transaction = Transaction(
         id="txn_1",
         merchantName="STARBUCKS COFFEE #123",
-        categoryCode="5462",  # Coffee shop MCC
+        categoryCode="5462",
         amount=TransactionAmount(chargedAmount=AmountDetail(amount=50.0, currency="USD")),
     )
 
@@ -97,6 +98,7 @@ async def test_calculate_missed_savings():
         if insights:
             print(f"  - Transaction ID: {insights[0].transaction_id}")
             print(f"  - Had discount: {insights[0].had_discount}")
+            print(f"  - MCC code (category name): {insights[0].mcc_code}")
             print(f"  - Missed store discounts: {len(insights[0].missed_store_discont)} club(s)")
             for club_discount in insights[0].missed_store_discont:
                 print(f"    - Club {club_discount.club_id}: {club_discount.store_count} store(s)")
@@ -104,11 +106,14 @@ async def test_calculate_missed_savings():
         # Verify assertions
         assert len(insights) == 1, f"Expected 1 insight, got {len(insights)}"
         assert insights[0].transaction_id == "txn_1", "Transaction ID should match"
+        assert insights[0].mcc_code == "COFFEE_&_SNACKS", "MCC code should be category name"
 
-        # For MCC 5462, both store1 and store2 should be found (both have that MCC and deals)
-        # So had_discount should be True
-        assert insights[0].had_discount, "Should have found deals for MCC 5462"
+        # For category "COFFEE_&_SNACKS", both store1 and store2 should be found
+        assert insights[0].had_discount, "Should have found deals for COFFEE_&_SNACKS"
         assert len(insights[0].missed_store_discont) > 0, "Should have found alternative stores"
+
+        # Verify mcc_service was called to translate the numeric code
+        mock_mcc_service.get_mcc_by_id.assert_called_with("5462")
 
         print("\n✓ All validation checks passed!")
         return True

@@ -1,4 +1,4 @@
-"""Task 2 — MCC-code category tags must resolve to MCC codes."""
+"""MCC-code category tags must resolve to category name strings."""
 
 from services.mcc_service import MccService
 
@@ -12,15 +12,15 @@ def _service():
     return svc
 
 
-def test_mcc_code_label_resolves_to_that_code():
+def test_category_name_tag_resolves_to_itself():
     svc = _service()
-    assert svc.get_mcc_codes_by_tag("5411") == [5411]
-    assert svc.get_mcc_codes_by_tag(" 5812 ") == [5812]
+    assert svc.get_mcc_codes_by_tag("GROCERY STORES, SUPERMARKETS") == ["GROCERY STORES, SUPERMARKETS"]
 
 
-def test_full_description_still_resolves():
+def test_legacy_numeric_tag_resolves_to_category_name():
     svc = _service()
-    assert svc.get_mcc_codes_by_tag("GROCERY STORES, SUPERMARKETS") == [5411]
+    assert svc.get_mcc_codes_by_tag("5411") == ["GROCERY STORES, SUPERMARKETS"]
+    assert svc.get_mcc_codes_by_tag(" 5812 ") == ["EATING PLACES, RESTAURANTS"]
 
 
 def test_unknown_tag_returns_empty():

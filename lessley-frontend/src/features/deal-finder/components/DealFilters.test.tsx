@@ -6,9 +6,9 @@ import type { MccCategoryDto } from "@/lib/types"
 import { DealFilters } from "./DealFilters"
 
 const mockCategories: MccCategoryDto[] = [
-  { category: "GROCERIES", codes: [5411, 5441, 5451, 5499] },
-  { category: "RESTAURANT", codes: [5812, 5814] },
-  { category: "ELECTRONICS", codes: [5045, 5065, 5271, 5732, 5734] },
+  { category: "GROCERIES" },
+  { category: "RESTAURANT" },
+  { category: "ELECTRONICS" },
 ]
 
 describe("DealFilters", () => {

@@ -28,10 +28,7 @@ export function DealFinderPage() {
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0
 
   function handleSearch(filters: DealSearchFilters) {
-    const mccCodes = filters.categories.flatMap(
-      (cat) => mccCategories.find((m) => m.category === cat)?.codes ?? [],
-    )
-    setSubmittedParams({ mccCodes, storeText: filters.storeText, dealText: filters.dealText })
+    setSubmittedParams({ mccCodes: filters.categories, storeText: filters.storeText, dealText: filters.dealText })
     setPage(1)
   }
 

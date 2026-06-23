@@ -77,11 +77,12 @@ public class SendNotificationService : ISendNotificationService
         {
             var notifications = userEmails.Select(email => new Notification
             {
-                UserId  = email,
-                Message = message,
-                DealId  = dealId,
-                Type    = "group",
-                SentAt  = sentAt,
+                UserId     = email,
+                Message    = message,
+                DealId     = dealId,
+                Categories = new List<string> { groupTag },
+                Type       = "group",
+                SentAt     = sentAt,
             });
             await _notificationRepository.SaveManyAsync(notifications, ct);
         }

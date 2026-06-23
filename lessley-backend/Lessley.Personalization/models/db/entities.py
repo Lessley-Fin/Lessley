@@ -51,7 +51,7 @@ class NameForms(BaseModel):
 
 class StoreMetadata(BaseModel):
     image_urls: List[str] = Field(default_factory=list)
-    mcc_codes: List[int] = Field(default_factory=list)
+    mcc_codes: List[str] = Field(default_factory=list)
     store_url: str | None = None
 
 

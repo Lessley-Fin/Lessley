@@ -36,13 +36,17 @@ public class UserService : IUserService
         if (user is null)
             return UserOperationResult.NotFound();
 
-        var matchChanged = dto.MatchingScore.HasValue && dto.MatchingScore != user.MatchingScore;
+        double? newScore = dto.MatchLevel is not null && Enum.TryParse<MatchLevel>(dto.MatchLevel, true, out var parsed)
+            ? parsed.ToMatchingScore()
+            : null;
+
+        var matchChanged = newScore.HasValue && newScore != user.MatchingScore;
         var mutedChanged = dto.MutedTags is not null &&
             !(user.MutedTags ?? new()).OrderBy(t => t).SequenceEqual(dto.MutedTags.OrderBy(t => t));
 
-        if (dto.MutedTags is not null)   user.MutedTags     = dto.MutedTags;
-        if (dto.Clubs is not null)       user.Clubs         = dto.Clubs;
-        if (dto.MatchingScore.HasValue)  user.MatchingScore = dto.MatchingScore.Value;
+        if (dto.MutedTags is not null)  user.MutedTags     = dto.MutedTags;
+        if (dto.Clubs is not null)      user.Clubs         = dto.Clubs;
+        if (newScore.HasValue)          user.MatchingScore = newScore.Value;
 
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
@@ -59,22 +63,19 @@ public class UserService : IUserService
             }
             catch (Exception ex)
             {
-                // DB was saved and groups were already synced — log and continue.
                 _logger.LogError(ex, "Category recalculation failed for {Email} — DB changes are saved", email);
             }
         }
 
-        var allTags   = user.Tags     ?? new List<string>();
-        var mutedTags = user.MutedTags ?? new List<string>();
-
         return UserOperationResult.Ok(new
         {
-            email         = user.Email,
-            tags          = allTags.Where(t => !mutedTags.Contains(t)).ToList(),
-            mutedTags,
-            clubs         = user.Clubs,
-            matchingScore = user.MatchingScore,
-            recalculated  = matchChanged || mutedChanged,
+            email      = user.Email,
+            userName   = user.UserName,
+            tags       = user.Tags     ?? new List<string>(),
+            mutedTags  = user.MutedTags ?? new List<string>(),
+            clubs      = user.Clubs    ?? new List<string>(),
+            matchLevel = user.MatchingScore.ToMatchLevel(),
+            recalculated = matchChanged || mutedChanged,
         });
     }
 
@@ -119,17 +120,14 @@ public class UserService : IUserService
             .Select(r => r.Name!)
             .ToListAsync(ct);
 
-        var allTags   = user.Tags     ?? new List<string>();
-        var mutedTags = user.MutedTags ?? new List<string>();
-
         return UserOperationResult.Ok(new
         {
             email      = user.Email,
             userName   = user.UserName,
             roles,
-            clubs      = user.Clubs ?? new List<string>(),
-            tags       = allTags.Where(t => !mutedTags.Contains(t)).ToList(),
-            mutedTags,
+            clubs      = user.Clubs    ?? new List<string>(),
+            tags       = user.Tags     ?? new List<string>(),
+            mutedTags  = user.MutedTags ?? new List<string>(),
             matchLevel = user.MatchingScore.ToMatchLevel(),
         });
     }

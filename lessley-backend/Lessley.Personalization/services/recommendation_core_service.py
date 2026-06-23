@@ -71,31 +71,29 @@ class RecommendationCoreService:
             )
             raise
 
-    def _get_store_mcc_codes_from_store(self, store_data: Store) -> List[int]:
+    def _get_store_mcc_codes_from_store(self, store_data: Store) -> List[str]:
         """
-        Extract MCC codes from store metadata.
+        Extract category names from store metadata.
 
         Args:
-            store_data: The store dictionary
+            store_data: The store document
 
         Returns:
-            List of integer MCC codes
+            List of category name strings
         """
         if not store_data:
             return []
 
         try:
-            mcc_codes = store_data.metadata.mcc_codes
-            # Convert to int, filtering out non-numeric codes
-            return [int(code) for code in mcc_codes if code and str(code).isdigit()]
+            return [code for code in store_data.metadata.mcc_codes if code]
         except Exception as e:
             logger.debug(
-                f"Error extracting MCC codes from store: {str(e)}",
+                f"Error extracting categories from store: {str(e)}",
                 extra={"reason": "Data parsing", "extra_data": {"error_type": type(e).__name__}},
             )
             return []
 
-    def _calculate_club_scores(self, mcc_codes: List[int]) -> List[Dict]:
+    def _calculate_club_scores(self, mcc_codes: List[str]) -> List[Dict]:
         """
         Calculate hit counts for all clubs based on a list of MCCs using dictionary lookups.
 
@@ -137,7 +135,7 @@ class RecommendationCoreService:
     def get_club_recommendations_by_spending_analysis(
         self,
         user_id: str,
-        mcc_codes: List[int],
+        mcc_codes: List[str],
         threshold: float = 0.20,
         user_club_ids: List[str] | None = None,
     ) -> Dict:
@@ -205,7 +203,7 @@ class RecommendationCoreService:
             "recommendations": sorted_recommendations,
         }
 
-    def get_deal_categories(self, deal_id: str) -> List[int]:
+    def get_deal_categories(self, deal_id: str) -> List[str]:
         """
         Resolve a deal's categories from the store it belongs to.
 

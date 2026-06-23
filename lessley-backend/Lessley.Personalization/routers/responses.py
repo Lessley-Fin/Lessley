@@ -23,7 +23,7 @@ class BasicResponse(BaseModel, Generic[T]):
 
 
 class MccCountSchema(BaseModel):
-    mcc: int
+    mcc: str
     store_count: int
 
 
@@ -77,7 +77,7 @@ class TransactionInsightSchema(BaseModel):
     transaction_id: str = Field(..., description="Unique transaction identifier")
     had_discount: bool = Field(..., description="Whether the transaction's store had an active deal")
     store_name: str = Field(..., description="The name of the store where the transaction occurred")
-    mcc_code: int = Field(..., description="The MCC code of the store where the transaction occurred")
+    mcc_code: str = Field(..., description="The category name of the store where the transaction occurred")
     mcc_description: str = Field(..., description="The description of the MCC code")
     amount: float = Field(..., description="The amount of the transaction")
     missed_store_discont: list[MissedStoreDiscountSchema] = Field(

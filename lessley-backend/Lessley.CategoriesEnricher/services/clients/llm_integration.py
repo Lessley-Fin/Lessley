@@ -16,8 +16,8 @@ client = OpenAI(
 # 1. Define DTOs for store classification
 class StoreCategory(BaseModel):
     official_name: str
-    mcc_codes: List[int] = Field(
-        description="A ranked list of the 1 to 3 most accurate MCC codes, from most specific to least specific."
+    mcc_codes: List[str] = Field(
+        description="A ranked list of the 1 to 3 most relevant category names from the canonical set (e.g. GROCERIES, RESTAURANT, ELECTRONICS, CLOTHES_&_ACCESSORIES, etc.)."
     )
     confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
 
@@ -53,12 +53,20 @@ def get_store_category(store_name: str) -> StoreCategory:
                     "Assume that the store exists but have typos or inconsistencies. Try to identify the official store name. "
                     "Process raw, messy store strings (typos, hyphens, missing spaces, domain extensions) and perform Entity Resolution. "
                     "1. Return the official name of the store if you can identify it. If not, return the cleaned name with typos corrected and extraneous characters removed. "
-                    "2. Provide an array of the top 1 to 3 most applicable 4-digit Merchant Category Codes (MCC). Rank the array from most specific/likely to least specific/likely."
-                    "3. Provide a confidence_level of HIGH, MEDIUM, or LOW based on how certain you are. Use HIGH if you're very certain and found a clear match, MEDIUM if fairly certain, LOW if uncertain. If you cannot classify, return LOW"
+                    "2. Provide an array of the top 1 to 3 most relevant category names from this canonical set: "
+                    "ALCOHOL_&_TOBACCO, BARS, BEAUTY, BOOKS_&_GAMES, BUSINESS_EXPENSES, CAPITAL_MARKET, CAR_&_FUEL, CHARITY, "
+                    "CLOTHES_&_ACCESSORIES, COFFEE_&_SNACKS, COMMUNICATIONS, CULTURE_&_EVENTS, EDUCATION, ELECTRONICS, FEES, "
+                    "FINANCE_OTHER, FLIGHTS, FOOD_&_DRINKS_OTHER, FURNITURE_&_INTERIOR, GARDEN, GIFTS, GROCERIES, HEALTHCARE, "
+                    "HEALTH_&_BEAUTY_OTHER, HOBBIES, HOBBY_&_SPORTS_EQUIPMENT, HOME, HOME_IMPROVEMENTS_OTHER, "
+                    "HOUSEHOLD_&_SERVICES_-_OTHER, INSURANCE_&_FEES, KIDS, LEISURE_OTHER, LOANS, OTHER, PETS, PHARMACY, "
+                    "PUBLIC_TRANSPORT, RENOVATION_&_REPAIRS, RESTAURANT, SAVINGS, SERVICES, SHOPPING_OTHER, SPORTS_&_FITNESS, "
+                    "TRANSPORT_OTHER, UTILITIES, VACATION. "
+                    "Rank the array from most specific/likely to least specific/likely. "
+                    "3. Provide a confidence_level of HIGH, MEDIUM, or LOW based on how certain you are. Use HIGH if you're very certain and found a clear match, MEDIUM if fairly certain, LOW if uncertain. If you cannot classify, return LOW. "
                     "EXAMPLES: "
-                    "a) Input: 'nikestore' -> official_name: 'Nike', mcc_codes: [5941, 5661, 5651]. "
-                    "b) Input: 'shufersal-deal' -> official_name: 'Shufersal', mcc_codes: [5411, 5310]. "
-                    "c) Input: 'ksp.co.il' -> official_name: 'KSP', mcc_codes: [5732, 5722]"
+                    "a) Input: 'nikestore' -> official_name: 'Nike', mcc_codes: ['HOBBY_&_SPORTS_EQUIPMENT', 'CLOTHES_&_ACCESSORIES']. "
+                    "b) Input: 'shufersal-deal' -> official_name: 'Shufersal', mcc_codes: ['GROCERIES']. "
+                    "c) Input: 'ksp.co.il' -> official_name: 'KSP', mcc_codes: ['ELECTRONICS']."
                 ),
             },
             {"role": "user", "content": f"Analyze and classify this store string: {store_name.strip()}"},

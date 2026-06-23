@@ -19,7 +19,7 @@ const baseItem: DealSearchResultItem = {
     storeId: "store-1",
     name: "Test Store",
     metadata: {
-      mccCodes: [5311],
+      mccCodes: ["SHOPPING_OTHER"],
       storeUrl: "https://test-store.com",
       imageUrls: ["https://example.com/img1.jpg"],
     },

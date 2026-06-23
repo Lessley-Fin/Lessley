@@ -97,7 +97,7 @@ export interface TransactionInsight {
   transaction_id: string
   had_discount: boolean
   store_name: string
-  mcc_code: number
+  mcc_code: string
   mcc_description: string
   amount: number
   missed_store_discont: MissedStoreDiscount[]
@@ -110,7 +110,6 @@ export interface RecommendationsResponse {
 
 export interface MccCategoryDto {
   category: string
-  codes: number[]
 }
 
 export interface DealDocument {
@@ -128,7 +127,7 @@ export interface DealDocument {
 }
 
 export interface StoreMetadata {
-  mccCodes: number[]
+  mccCodes: string[]
   storeUrl?: string
   imageUrls: string[]
 }

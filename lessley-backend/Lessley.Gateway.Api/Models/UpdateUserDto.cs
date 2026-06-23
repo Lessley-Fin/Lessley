@@ -4,5 +4,5 @@ namespace Lessley.Gateway.Api.Models;
 public record UpdateUserDto(
     List<string>? MutedTags,
     List<string>? Clubs,
-    double? MatchingScore
+    string? MatchLevel
 );

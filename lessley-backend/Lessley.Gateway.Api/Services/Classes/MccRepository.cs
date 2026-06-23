@@ -18,17 +18,12 @@ public class MccRepository : IMccRepository
     {
         var pipeline = new[]
         {
-            new BsonDocument("$group", new BsonDocument
-            {
-                { "_id", "$category" },
-                { "codes", new BsonDocument("$push", new BsonDocument("$toInt", "$mcc")) },
-            }),
+            new BsonDocument("$group", new BsonDocument("_id", "$category")),
             new BsonDocument("$sort", new BsonDocument("_id", 1)),
             new BsonDocument("$project", new BsonDocument
             {
                 { "_id", 0 },
                 { "category", "$_id" },
-                { "codes", 1 },
             }),
         };
 
@@ -37,9 +32,7 @@ public class MccRepository : IMccRepository
             .ToListAsync(ct);
 
         return results
-            .Select(doc => new MccCategoryDto(
-                doc["category"].AsString,
-                doc["codes"].AsBsonArray.Select(c => c.ToInt32()).ToList()))
+            .Select(doc => new MccCategoryDto(doc["category"].AsString))
             .ToList();
     }
 }
