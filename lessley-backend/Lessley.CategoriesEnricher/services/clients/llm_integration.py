@@ -4,15 +4,27 @@ from typing import List, Literal
 from openai import OpenAI
 import logging
 from config.settings import settings
+import httpx
 
 logger = logging.getLogger(__name__)
 
 # Initialize OpenAI client from settings
-client = OpenAI(
-    base_url="https://models.inference.ai.azure.com/",
-    api_key=settings.OpenAI_ApiKey or "",
+# client = OpenAI(
+#     base_url="https://models.inference.ai.azure.com/",
+#     api_key=settings.OpenAI_ApiKey or "",
+# )
+
+http_client = httpx.Client(
+    verify=False,
+    headers={"Host": settings.COLLEGE_MODEL_HOST},
+    timeout=httpx.Timeout(120.0, connect=10.0),
 )
 
+client = OpenAI(
+    base_url=settings.COLLEGE_API_BASE,
+    api_key=settings.OpenAI_ApiKey or "",
+    http_client=http_client,
+)
 
 # 1. Define DTOs for store classification
 class StoreCategory(BaseModel):
