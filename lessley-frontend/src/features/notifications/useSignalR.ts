@@ -65,7 +65,7 @@ export function useSignalR() {
           },
           onDismiss: () => toast.dismiss(id),
         }),
-        { duration: 5000 },
+        { duration: Infinity },
       )
     }
 
