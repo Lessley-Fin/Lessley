@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import BaseModel, Field
 from typing import List, Literal
 from openai import OpenAI
@@ -74,6 +75,135 @@ def get_store_category(store_name: str) -> StoreCategory:
         response_format=StoreCategory,
         temperature=0.0,  # Deterministic output for classification
         seed=42,  # Fixed seed for reproducibility
+    )
+
+    return completion.choices[0].message.parsed
+
+
+class MccCategory(str, Enum):
+    ALCOHOL_AND_TOBACCO = "ALCOHOL_&_TOBACCO"
+    BARS = "BARS"
+    BEAUTY = "BEAUTY"
+    BOOKS_AND_GAMES = "BOOKS_&_GAMES"
+    BUSINESS_EXPENSES = "BUSINESS_EXPENSES"
+    CAPITAL_MARKET = "CAPITAL_MARKET"
+    CAR_AND_FUEL = "CAR_&_FUEL"
+    CHARITY = "CHARITY"
+    CLOTHES_AND_ACCESSORIES = "CLOTHES_&_ACCESSORIES"
+    COFFEE_AND_SNACKS = "COFFEE_&_SNACKS"
+    COMMUNICATIONS = "COMMUNICATIONS"
+    CULTURE_AND_EVENTS = "CULTURE_&_EVENTS"
+    EDUCATION = "EDUCATION"
+    ELECTRONICS = "ELECTRONICS"
+    FEES = "FEES"
+    FINANCE_OTHER = "FINANCE_OTHER"
+    FLIGHTS = "FLIGHTS"
+    FOOD_AND_DRINKS_OTHER = "FOOD_&_DRINKS_OTHER"
+    FURNITURE_AND_INTERIOR = "FURNITURE_&_INTERIOR"
+    GARDEN = "GARDEN"
+    GIFTS = "GIFTS"
+    GROCERIES = "GROCERIES"
+    HEALTHCARE = "HEALTHCARE"
+    HEALTH_AND_BEAUTY_OTHER = "HEALTH_&_BEAUTY_OTHER"
+    HOBBIES = "HOBBIES"
+    HOBBY_AND_SPORTS_EQUIPMENT = "HOBBY_&_SPORTS_EQUIPMENT"
+    HOME = "HOME"
+    HOME_IMPROVEMENTS_OTHER = "HOME_IMPROVEMENTS_OTHER"
+    HOUSEHOLD_AND_SERVICES_OTHER = "HOUSEHOLD_&_SERVICES_-_OTHER"
+    INSURANCE_AND_FEES = "INSURANCE_&_FEES"
+    KIDS = "KIDS"
+    LEISURE_OTHER = "LEISURE_OTHER"
+    LOANS = "LOANS"
+    OTHER = "OTHER"
+    PETS = "PETS"
+    PHARMACY = "PHARMACY"
+    PUBLIC_TRANSPORT = "PUBLIC_TRANSPORT"
+    RENOVATION_AND_REPAIRS = "RENOVATION_&_REPAIRS"
+    RESTAURANT = "RESTAURANT"
+    SAVINGS = "SAVINGS"
+    SERVICES = "SERVICES"
+    SHOPPING_OTHER = "SHOPPING_OTHER"
+    SPORTS_AND_FITNESS = "SPORTS_&_FITNESS"
+    TRANSPORT_OTHER = "TRANSPORT_OTHER"
+    UTILITIES = "UTILITIES"
+    VACATION = "VACATION"
+
+
+class DealClassification(BaseModel):
+    store_official_name: str = Field(
+        description="The official/canonical name of the store."
+    )
+    mcc_codes: List[MccCategory] = Field(
+        description="Ranked list of 1-3 most relevant MCC category names from the canonical set."
+    )
+    confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
+    reasoning: str = Field(
+        description="Brief explanation of why these categories were chosen."
+    )
+
+
+_CANONICAL_CATEGORIES = ", ".join(c.value for c in MccCategory)
+
+_CLASSIFY_DEAL_SYSTEM_PROMPT = (
+    "You are an expert financial classification engine for the Israeli retail market. "
+    "Given a store and its associated deal/promotion, classify the store into the most relevant MCC categories.\n\n"
+    "RULES:\n"
+    "1. You MUST ONLY select categories from this canonical set: " + _CANONICAL_CATEGORIES + ".\n"
+    "2. Do NOT invent, modify, or combine categories. Use the exact strings above.\n"
+    "3. Return 1 to 3 categories, ranked from most relevant to least.\n"
+    "4. Use all provided signals: store name, store URL, deal title, deal description, and store images.\n"
+    "5. If the store already has existing MCC codes, treat them as a prior classification that may be correct, "
+    "incorrect, or incomplete — re-evaluate based on the full context.\n"
+    "6. Provide a confidence_level: HIGH if the classification is clearly supported by the context, "
+    "MEDIUM if somewhat ambiguous, LOW if the context is insufficient.\n"
+    "7. Provide a brief reasoning explaining which signals led to your classification.\n"
+    "8. If the store name is messy (typos, domain extensions), resolve it to the official brand name."
+)
+
+
+def classify_deal_store(
+    deal_title: str,
+    deal_description: str | None,
+    store_name: str,
+    store_url: str | None,
+    store_image_urls: list[str] | None,
+    existing_mcc_codes: list[str] | None,
+) -> DealClassification:
+    logger.info(
+        f"Classifying deal store: {store_name} - {deal_title}",
+        extra={
+            "reason": "LLM deal-store classification requested",
+            "extra_data": {
+                "store_name": store_name,
+                "deal_title": deal_title,
+            },
+        },
+    )
+
+    context_text = (
+        f"Store Name: {store_name}\n"
+        f"Store URL: {store_url or 'N/A'}\n"
+        f"Existing Store Categories: {', '.join(existing_mcc_codes) if existing_mcc_codes else 'None'}\n"
+        f"Deal Title: {deal_title}\n"
+        f"Deal Description: {deal_description or 'N/A'}"
+    )
+
+    user_content: list[dict] = [{"type": "text", "text": context_text}]
+
+    for url in (store_image_urls or [])[:3]:
+        user_content.append(
+            {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+        )
+
+    completion = client.beta.chat.completions.parse(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": _CLASSIFY_DEAL_SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
+        ],
+        response_format=DealClassification,
+        temperature=0.0,
+        seed=42,
     )
 
     return completion.choices[0].message.parsed

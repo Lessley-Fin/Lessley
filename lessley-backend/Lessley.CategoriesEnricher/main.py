@@ -1,8 +1,5 @@
 from contextlib import asynccontextmanager
-import asyncio
-import json
 from fastapi import FastAPI, status, Request
-import aio_pika
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -11,136 +8,49 @@ from fastapi.responses import JSONResponse
 import logging
 from logging.handlers import QueueHandler, QueueListener
 import queue
-import logging_loki
-from services.di_container import DIContainer
-from config.settings import settings
 from config.structured_logging import StructuredFormatter, ContextInjectingFilter
-from routers import categories_controller  # Import your new controller
-from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
-import uuid
-
-# --- RabbitMQ Configuration ---
-QUEUE_NAME = "categories_enricher_queue"
-ROUTING_KEY = "Categories.enrich"
+from routers import categories_controller
+from middleware.log_context_middleware import UnifiedContextMiddleware
 
 # --- Logging Configuration ---
-# Create a structured formatter
 structured_formatter = StructuredFormatter()
-
-# Create Loki handler with structured formatter
-loki_handler = logging_loki.LokiHandler(
-    url=settings.Loki_Url,
-    tags={"app_name": "categories_enricher", "environment": getattr(settings, "Environment", "dev")},
-    version="1",
-)
-loki_handler.setFormatter(structured_formatter)
 
 
 class LocalQueueHandler(QueueHandler):
-    """
-    Custom QueueHandler that preserves exc_info.
-    The default QueueHandler flattens the exception into the message and strips exc_info
-    to make records picklable for multiprocessing. Since we use threads, we bypass this.
-    """
-
     def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
         return record
 
 
-# Use QueueHandler to prevent Loki HTTP requests from blocking the async event loop
 log_queue = queue.Queue(-1)
 queue_handler = LocalQueueHandler(log_queue)
-
-# Attach ContextInjectingFilter to capture request_id before handing off to the background thread
 queue_handler.addFilter(ContextInjectingFilter())
 
-# Stream handler for console output
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(structured_formatter)
 
-listener = QueueListener(log_queue, stream_handler, loki_handler)
+listener = QueueListener(log_queue, stream_handler)
 listener.start()
 
-# Configure root logger
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 root_logger.handlers.clear()
 root_logger.addHandler(queue_handler)
 
-# Route Uvicorn loggers to the queue handler so they are pushed to Loki
 for logger_name in ("uvicorn", "uvicorn.error"):
     log = logging.getLogger(logger_name)
     log.handlers = [queue_handler]
     log.propagate = False
 
-# Silence uvicorn.access entirely since we will log requests manually inside FastAPI with context
 logging.getLogger("uvicorn.access").disabled = True
 
 logger = logging.getLogger(__name__)
 
 
-async def process_enrichment_message(message: aio_pika.abc.AbstractIncomingMessage):
-    """
-    This function is triggered every time a message hits the queue.
-    """
-    async with message.process():
-        body = message.body.decode()
-        data = json.loads(body)
-        user_id = data.get("user_id")
-
-        # Set context variables for background RabbitMQ task logs
-        request_id_var.set(str(uuid.uuid4()))
-        username_var.set(user_id or "anonymous")
-
-        logger.info(
-            "Category enrichment request received",
-            extra={
-                "reason": "RabbitMQ message processed",
-                "extra_data": {"user_id": user_id, "message_type": "enrichment"},
-            },
-        )
-        # TODO: 1. Process enrichment request
-        # TODO: 2. Enrich transaction categories
-        # TODO: 3. Publish categories.enriched event
-
-
-async def consume_rabbitmq():
-    """
-    Background task to maintain the RabbitMQ connection and listen for events.
-    """
-    try:
-        connection = await aio_pika.connect_robust(settings.ConnectionStrings_Rabbit)
-        channel = await connection.channel()
-
-        # Declare the exchange and queue to ensure they exist
-        exchange = await channel.declare_exchange("lessley_events", aio_pika.ExchangeType.TOPIC, durable=True)
-        queue = await channel.declare_queue(QUEUE_NAME, durable=True)
-
-        # Bind the queue to the specific event topic
-        await queue.bind(exchange, routing_key=ROUTING_KEY)
-
-        logger.info(f"[*] Waiting for messages on '{ROUTING_KEY}' in {settings.Environment} mode. To exit press CTRL+C")
-        await queue.consume(process_enrichment_message)
-
-        # Keep the connection open indefinitely
-        await asyncio.Future()
-    except Exception as e:
-        logger.error(f"RabbitMQ connection failed: {e}")
-
-
 # --- FastAPI Lifespan Management ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.RabbitMQ_Enabled:
-        # Startup: Launch the RabbitMQ consumer as a background task
-        task = asyncio.create_task(consume_rabbitmq())
-        yield
-        # Shutdown: Clean up tasks when the server stops
-        task.cancel()
-    else:
-        yield
-
-    listener.stop()  # Gracefully stop the logging queue listener
+    yield
+    listener.stop()
 
 
 # --- Rate Limiter Configuration ---
@@ -254,5 +164,5 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
-app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging context
+app.add_middleware(UnifiedContextMiddleware)
 app.include_router(categories_controller.router)

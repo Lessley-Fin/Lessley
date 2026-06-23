@@ -8,6 +8,10 @@ from .schemas import (
     StoreCategoryResponseSchema,
     DealCategoryRequestSchema,
     DealCategoryResponseSchema,
+    ClassifyDealRequestSchema,
+    ClassifyDealResponseSchema,
+    ClassifyAllStoresRequestSchema,
+    ClassifyAllStoresResponseSchema,
 )
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -133,6 +137,142 @@ async def get_deal_category(request: Request, payload: DealCategoryRequestSchema
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to classify deal",
+        )
+
+
+@router.post("/classify-deal")
+async def classify_deal(request: Request, payload: ClassifyDealRequestSchema):
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {
+                "method": request.method,
+                "endpoint": request.url.path,
+                "deal_id": payload.deal_id,
+            },
+        },
+    )
+
+    try:
+        service = DIContainer.get_categories_service()
+        result = service.classify_deal(payload.deal_id)
+
+        response_time_ms = (time.time() - start_time) * 1000
+
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "deal_id": payload.deal_id,
+                },
+            },
+        )
+
+        return BasicResponse(
+            status="success",
+            data=ClassifyDealResponseSchema(**result),
+        )
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except ConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
+    except Exception as e:
+        response_time_ms = (time.time() - start_time) * 1000
+        logger.error(
+            f"Deal classification failed: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service processing error",
+                "extra_data": {
+                    "response_time_ms": response_time_ms,
+                    "error_type": type(e).__name__,
+                    "deal_id": payload.deal_id,
+                },
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to classify deal",
+        )
+
+
+@router.post("/classify-all-stores")
+async def classify_all_stores(request: Request, payload: ClassifyAllStoresRequestSchema):
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {
+                "method": request.method,
+                "endpoint": request.url.path,
+                "page": payload.page,
+                "page_size": payload.page_size,
+            },
+        },
+    )
+
+    try:
+        service = DIContainer.get_categories_service()
+        result = service.classify_all_stores(page=payload.page, page_size=payload.page_size)
+
+        response_time_ms = (time.time() - start_time) * 1000
+
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "classified": result["classified"],
+                    "total": result["total_stores"],
+                },
+            },
+        )
+
+        return BasicResponse(
+            status="success",
+            data=ClassifyAllStoresResponseSchema(**result),
+        )
+
+    except ConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
+    except Exception as e:
+        response_time_ms = (time.time() - start_time) * 1000
+        logger.error(
+            f"Batch classification failed: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service processing error",
+                "extra_data": {
+                    "response_time_ms": response_time_ms,
+                    "error_type": type(e).__name__,
+                },
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to classify stores",
         )
 
 
