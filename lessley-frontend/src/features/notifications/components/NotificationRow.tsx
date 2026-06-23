@@ -1,6 +1,10 @@
+import { useState } from "react"
+import { ChevronDown } from "lucide-react"
+
 import { formatRelativeTime } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import type { NotificationDto } from "../notificationTypes"
+import { NotificationDetail } from "./NotificationDetail"
 
 function typeAccent(type: string) {
   return type === "group"
@@ -14,20 +18,33 @@ interface NotificationRowProps {
 }
 
 export function NotificationRow({ item, onRead }: NotificationRowProps) {
-  const canMarkRead = !item.isRead && onRead
+  const [expanded, setExpanded] = useState(false)
+
+  const handleClick = () => {
+    if (!item.isRead && onRead) {
+      onRead(item.id)
+    }
+    setExpanded((prev) => !prev)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      handleClick()
+    }
+  }
 
   return (
     <div
-      role={canMarkRead ? "button" : undefined}
-      tabIndex={canMarkRead ? 0 : undefined}
-      onClick={canMarkRead ? () => onRead(item.id) : undefined}
-      onKeyDown={canMarkRead ? (e) => { if (e.key === "Enter" || e.key === " ") onRead(item.id) } : undefined}
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "fintech-card rounded-2xl p-4 transition-shadow",
+        "fintech-card cursor-pointer rounded-2xl p-4 transition-shadow active:scale-[0.99]",
         item.isRead
           ? "border-slate-200/60"
           : "border-violet-200/80 bg-violet-50/50 ring-1 ring-violet-100",
-        canMarkRead && "cursor-pointer active:scale-[0.98]",
       )}
     >
       <div className="flex items-start gap-3">
@@ -44,17 +61,23 @@ export function NotificationRow({ item, onRead }: NotificationRowProps) {
                 typeAccent(item.type)
               )}
             >
-              {item.type === "group" ? "Group" : "Direct"}
+              {item.type === "group" ? "Group" : item.type === "calc" ? "Analysis" : "Direct"}
             </span>
             <span className="text-xs text-slate-400 tabular-nums">{formatRelativeTime(item.sentAt)}</span>
           </div>
           <p className={cn("text-sm leading-relaxed", item.isRead ? "text-slate-600" : "font-medium text-slate-800")}>
             {item.message}
           </p>
-          {item.dealId ? (
-            <p className="truncate text-xs text-slate-400">Deal · {item.dealId}</p>
-          ) : null}
+
+          {expanded ? <NotificationDetail item={item} /> : null}
         </div>
+
+        <ChevronDown
+          className={cn(
+            "mt-1.5 size-4 shrink-0 text-slate-400 transition-transform duration-200",
+            expanded && "rotate-180",
+          )}
+        />
       </div>
     </div>
   )
