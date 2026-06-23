@@ -3,19 +3,17 @@ import { CheckCircle2 } from "lucide-react"
 
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
 import { fintech } from "@/lib/fintech-styles"
-import type { ClubRecommendation, ClubRecommendationResponse } from "@/lib/types"
 import { ActiveAccountsCard } from "./components/ActiveAccountsCard"
 import { AnalysisPeriodCard } from "./components/AnalysisPeriodCard"
 import { ConnectBankCard } from "./components/ConnectBankCard"
 import { ConnectionCheck } from "./components/ConnectionCheck"
-import { PickedForYouCard } from "./components/PickedForYouCard"
 import { RecentTransactionsCard } from "./components/RecentTransactionsCard"
 import { SpendingOverviewCard } from "./components/SpendingOverviewCard"
+import { TopStoresCard } from "./components/TopStoresCard"
 import {
   useCategoryInsights,
   useHasConnection,
   useInitOpenFinance,
-  useRecommendations,
   useTopAccounts,
   useTopStores,
   useTransactions,
@@ -31,11 +29,8 @@ export function InsightsRecommendationsPage() {
   const { data: categoryInsights = [] } = useCategoryInsights(timeRangeDays, connected)
   const { data: topAccounts = [] } = useTopAccounts(timeRangeDays, connected)
   const { data: topStoresRaw = [] } = useTopStores(timeRangeDays, connected)
-  const { data: recommendationsData } = useRecommendations(connected)
   const initOpenFinance = useInitOpenFinance()
 
-  const clubData = recommendationsData?.matchingClubs?.data as ClubRecommendationResponse | null | undefined
-  const clubRecommendations: ClubRecommendation[] = clubData?.recommendations ?? []
   const accountHighlights = topAccounts.slice(0, INSIGHTS_DEFAULTS.ACCOUNT_HIGHLIGHTS_LIMIT)
   const personalizationError = txError instanceof Error ? txError.message : ""
 
@@ -85,7 +80,7 @@ export function InsightsRecommendationsPage() {
       />
 
       {!txLoading && !personalizationError ? (
-        <PickedForYouCard clubs={clubRecommendations} stores={topStoresRaw} />
+        <TopStoresCard stores={topStoresRaw} />
       ) : null}
 
       <RecentTransactionsCard transactions={transactions} isLoading={txLoading} />

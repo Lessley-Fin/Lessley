@@ -1,5 +1,9 @@
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Bell, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const VISIBLE_MS = 5000
+const EXIT_ANIM_MS = 300
 
 interface NotificationToastProps {
   type: string
@@ -16,8 +20,34 @@ function typeAccent(type: string) {
 }
 
 export function NotificationToast({ type, message, dealId, onView, onDismiss }: NotificationToastProps) {
+  const [exiting, setExiting] = useState(false)
+  const onDismissRef = useRef(onDismiss)
+
+  useEffect(() => {
+    onDismissRef.current = onDismiss
+  }, [onDismiss])
+
+  const triggerExit = useCallback((callback: () => void) => {
+    setExiting(true)
+    setTimeout(callback, EXIT_ANIM_MS)
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      triggerExit(() => onDismissRef.current())
+    }, VISIBLE_MS)
+    return () => clearTimeout(timer)
+  }, [triggerExit])
+
   return (
-    <div className="w-[min(22rem,calc(100vw-2rem))] animate-[slideDown_0.3s_ease-out] overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-[0_4px_24px_hsl(250_95%_58%_/0.12),0_12px_32px_hsl(262_83%_58%_/0.10)]">
+    <div
+      className={cn(
+        "w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-[0_4px_24px_hsl(250_95%_58%_/0.12),0_12px_32px_hsl(262_83%_58%_/0.10)]",
+        exiting
+          ? "animate-[slideUp_0.3s_ease-in_forwards]"
+          : "animate-[slideDown_0.3s_ease-out]",
+      )}
+    >
       <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-600 px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
@@ -26,7 +56,7 @@ export function NotificationToast({ type, message, dealId, onView, onDismiss }: 
           </div>
           <button
             type="button"
-            onClick={onDismiss}
+            onClick={() => triggerExit(onDismiss)}
             className="rounded-lg p-0.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
             aria-label="Dismiss"
           >
@@ -35,7 +65,7 @@ export function NotificationToast({ type, message, dealId, onView, onDismiss }: 
         </div>
       </div>
 
-      <button type="button" onClick={onView} className="w-full px-4 py-3 text-left transition-colors hover:bg-slate-50/80">
+      <button type="button" onClick={() => triggerExit(onView)} className="w-full px-4 py-3 text-left transition-colors hover:bg-slate-50/80">
         <div className="flex items-start gap-3">
           <span className="mt-1 size-2 shrink-0 rounded-full bg-violet-500" aria-hidden />
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -57,6 +87,13 @@ export function NotificationToast({ type, message, dealId, onView, onDismiss }: 
           </div>
         </div>
       </button>
+
+      <div className="h-1 w-full bg-violet-100/50">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+          style={{ animation: `toastProgress ${VISIBLE_MS}ms linear forwards` }}
+        />
+      </div>
     </div>
   )
 }
