@@ -99,7 +99,9 @@ class MccCategory(str, Enum):
 class DealClassification(BaseModel):
     store_official_name: str = Field(description="The official/canonical name of the store.")
     mcc_codes: List[MccCategory] = Field(
-        description="Ranked list of 1-3 most relevant MCC category names from the canonical set."
+        min_length=1,
+        max_length=2,
+        description="1 or 2 distinct MCC category names, ranked by relevance. If 2 are returned they must be different from each other."
     )
     confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
     reasoning: str = Field(description="Brief explanation of why these categories were chosen.")
@@ -113,7 +115,7 @@ _CLASSIFY_DEAL_SYSTEM_PROMPT = (
     "RULES:\n"
     "1. You MUST ONLY select categories from this canonical set: " + _CANONICAL_CATEGORIES + ".\n"
     "2. Do NOT invent, modify, or combine categories. Use the exact strings above.\n"
-    "3. Return 1 to 3 categories, ranked from most relevant to least.\n"
+    "3. Return 1 or 2 categories. If the store clearly fits a single category, return only 1. If it spans two distinct categories, return 2 — but the two MUST be different from each other.\n"
     "4. Use all provided signals: store name, store URL, deal link, deal title, deal description, and store images.\n"
     "5. Provide a confidence_level: HIGH if the classification is clearly supported by the context, "
     "MEDIUM if somewhat ambiguous, LOW if the context is insufficient.\n"

@@ -138,7 +138,6 @@ class CategoriesService:
                     deal_url=deal.get("url"),
                     benefit_url=deal.get("benefit_url"),
                     store_image_urls=metadata.get("image_urls", []),
-                    existing_mcc_codes=metadata.get("mcc_codes", []),
                 )
 
                 mcc_codes = [c.value for c in classification.mcc_codes]
