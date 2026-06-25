@@ -6,4 +6,5 @@ export const ROUTES = {
   DEAL_FINDER: "/deal-finder",
   NOTIFICATIONS: "/notifications",
   SETTINGS: "/settings",
+  ADMIN: "/admin",
 } as const

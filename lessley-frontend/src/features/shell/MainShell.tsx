@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 
 import { useAuthStore } from "@/features/auth/store"
 import { useUnreadCount } from "@/features/notifications/hooks"
+import { useMyProfile } from "@/features/user/hooks"
 import { MAIN_TABS, OVERLAY_ROUTES, deriveActiveTab } from "@/lib/navigation"
 import { ROUTES } from "@/lib/routes"
 import { cn } from "@/lib/utils"
@@ -11,6 +12,8 @@ import { AppMenu } from "./AppMenu"
 export function MainShell({ children }: { children: ReactNode }) {
   const username = useAuthStore((s) => s.username)
   const unreadCount = useUnreadCount()
+  const { data: profile } = useMyProfile()
+  const isAdmin = profile?.roles.includes("Admin") ?? false
   const location = useLocation()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -31,9 +34,11 @@ export function MainShell({ children }: { children: ReactNode }) {
             username={username}
             open={menuOpen}
             unreadCount={unreadCount}
+            isAdmin={isAdmin}
             onOpenChange={setMenuOpen}
             onOpenNotifications={() => navigate(ROUTES.NOTIFICATIONS)}
             onOpenSettings={() => navigate(ROUTES.SETTINGS)}
+            onOpenAdmin={() => navigate(ROUTES.ADMIN)}
             onLogout={handleLogout}
           />
           <div className="min-w-0 flex-1">

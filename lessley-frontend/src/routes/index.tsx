@@ -9,6 +9,7 @@ import { AppLayout } from "@/layouts/AppLayout"
 import { ROUTES } from "@/lib/routes"
 import { ProtectedRoute } from "./ProtectedRoute"
 import { GuestRoute } from "./GuestRoute"
+import { AdminRoute } from "./AdminRoute"
 
 const LoginPage = lazy(() =>
   import("@/features/auth/LoginPage").then((m) => ({ default: m.LoginPage })),
@@ -41,6 +42,11 @@ const RecommendationsPage = lazy(() =>
 const DealFinderPage = lazy(() =>
   import("@/features/deal-finder/DealFinderPage").then((m) => ({
     default: m.DealFinderPage,
+  })),
+)
+const AdminPage = lazy(() =>
+  import("@/features/admin/AdminPage").then((m) => ({
+    default: m.AdminPage,
   })),
 )
 
@@ -128,6 +134,19 @@ export const router = createBrowserRouter([
                 <SettingsPage />
               </Suspense>
             ),
+          },
+          {
+            element: <AdminRoute />,
+            children: [
+              {
+                path: "admin",
+                element: (
+                  <Suspense fallback={<SuspenseFallback />}>
+                    <AdminPage />
+                  </Suspense>
+                ),
+              },
+            ],
           },
         ],
       },

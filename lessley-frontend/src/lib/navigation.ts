@@ -14,7 +14,7 @@ export const MAIN_TABS = [
   { id: "deal-finder", label: "Deal", subtitle: "Finder", icon: Tag, path: ROUTES.DEAL_FINDER },
 ] as const
 
-export const OVERLAY_ROUTES = [ROUTES.NOTIFICATIONS, ROUTES.SETTINGS] as const
+export const OVERLAY_ROUTES = [ROUTES.NOTIFICATIONS, ROUTES.SETTINGS, ROUTES.ADMIN] as const
 
 export type MainTab = (typeof MAIN_TABS)[number]["id"]
 

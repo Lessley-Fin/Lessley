@@ -2,6 +2,7 @@
 using Lessley.Gateway.Api.Services.Interfaces;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Lessley.Gateway.Api.Services.Classes
 {
@@ -48,9 +49,14 @@ namespace Lessley.Gateway.Api.Services.Classes
                 redirectUrl
             };
 
+            var serializerOptions = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
+
             var request = new HttpRequestMessage(HttpMethod.Post, "v2/connections")
             {
-                Content = JsonContent.Create(payload)
+                Content = JsonContent.Create(payload, options: serializerOptions)
             };
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
