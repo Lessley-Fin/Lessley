@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using System.Net.Mime;
+using System.Security.Claims;
 
 namespace Lessley.Gateway.Api.Controllers;
 
@@ -36,6 +37,11 @@ public class NotificationController : ControllerBase
 
     // Users are addressed by email (the system-wide primary identifier); SignalR connections
     // and notification records are keyed on user.Id, so we resolve email -> user here.
+
+    // Admins may act on any user; everyone else only on their own (email-claim) data.
+    private bool IsCallerAllowed(string email) =>
+        User.IsInRole("Admin")
+        || string.Equals(User.FindFirstValue(ClaimTypes.Email), email, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Sends a direct notification to a specific user.</summary>
     /// <remarks>
@@ -93,6 +99,9 @@ public class NotificationController : ControllerBase
         if (string.IsNullOrWhiteSpace(email))
             return BadRequest(new { error = "User email is required" });
 
+        if (!IsCallerAllowed(email))
+            return Forbid();
+
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
             return NotFound(new { error = $"User {email} not found" });
@@ -124,6 +133,9 @@ public class NotificationController : ControllerBase
         if (string.IsNullOrWhiteSpace(email))
             return BadRequest(new { error = "User email is required" });
 
+        if (!IsCallerAllowed(email))
+            return Forbid();
+
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
             return NotFound(new { error = $"User {email} not found" });
@@ -142,6 +154,9 @@ public class NotificationController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(email))
             return BadRequest(new { error = "User email is required" });
+
+        if (!IsCallerAllowed(email))
+            return Forbid();
 
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
@@ -163,6 +178,9 @@ public class NotificationController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(email))
             return BadRequest(new { error = "User email is required" });
+
+        if (!IsCallerAllowed(email))
+            return Forbid();
 
         if (!ObjectId.TryParse(notificationId, out var objId))
             return BadRequest(new { error = "Invalid notification ID" });
