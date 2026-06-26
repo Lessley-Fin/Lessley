@@ -39,6 +39,22 @@ class MongoRepository:
     def get_first_deal_by_store_id(self, store_id: str) -> Optional[Dict[str, Any]]:
         return self._db[_DEAL_COLLECTION].find_one({"store_id": store_id})
 
+    def get_all_stores(self) -> List[Dict[str, Any]]:
+        """Returns every store with only the fields needed to validate it (id + store url)."""
+        projection = {"id": 1, "metadata.store_url": 1, "_id": 0}
+        return list(self._db[_STORE_COLLECTION].find({}, projection))
+
+    def get_store_ids_with_deals(self) -> List[str]:
+        """Returns the distinct store ids that have at least one deal."""
+        return self._db[_DEAL_COLLECTION].distinct("store_id")
+
+    def delete_stores_by_ids(self, store_ids: List[str]) -> int:
+        """Deletes the given stores and returns how many were removed."""
+        if not store_ids:
+            return 0
+        result = self._db[_STORE_COLLECTION].delete_many({"id": {"$in": store_ids}})
+        return result.deleted_count
+
     def update_store_mcc(self, store_id: str, mcc_codes: List[str], official_name: str, confidence: str):
         self._db[_STORE_COLLECTION].update_one(
             {"id": store_id},

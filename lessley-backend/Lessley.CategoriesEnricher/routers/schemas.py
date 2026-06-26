@@ -87,3 +87,11 @@ class ClassifyAllStoresResponseSchema(BaseModel):
     skipped: int
     failed: int
     results: list[StoreClassificationResult]
+
+
+class DeleteInvalidStoresResponseSchema(BaseModel):
+    """Schema for the delete-invalid-stores maintenance script response"""
+
+    scanned: int
+    invalid: int
+    deleted: int

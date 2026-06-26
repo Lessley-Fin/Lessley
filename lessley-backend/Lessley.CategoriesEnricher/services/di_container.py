@@ -1,6 +1,7 @@
 import logging
 import threading
 from .categories_service import CategoriesService
+from .scripts_service import ScriptsService
 from .clients.mongo_client import MongoRepository
 
 logger = logging.getLogger(__name__)
@@ -32,3 +33,13 @@ class DIContainer:
                     mongo_repo=mongo_repo
                 )
             return DIContainer._instances["categories_service"]
+
+    @staticmethod
+    def get_scripts_service() -> ScriptsService:
+        with DIContainer._lock:
+            if "scripts_service" not in DIContainer._instances:
+                mongo_repo = DIContainer._get_mongo_repository()
+                DIContainer._instances["scripts_service"] = ScriptsService(
+                    mongo_repo=mongo_repo
+                )
+            return DIContainer._instances["scripts_service"]

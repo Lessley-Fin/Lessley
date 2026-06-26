@@ -10,6 +10,7 @@ from logging.handlers import QueueHandler, QueueListener
 import queue
 from config.structured_logging import StructuredFormatter, ContextInjectingFilter
 from routers import categories_controller
+from routers import scripts_controller
 from middleware.log_context_middleware import UnifiedContextMiddleware
 
 # --- Logging Configuration ---
@@ -166,3 +167,4 @@ app.state.limiter = limiter
 # --- Middleware Registration (order matters) ---
 app.add_middleware(UnifiedContextMiddleware)
 app.include_router(categories_controller.router)
+app.include_router(scripts_controller.router)
