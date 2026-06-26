@@ -1,7 +1,8 @@
-import { Sparkles } from "lucide-react"
+import { CheckCircle2, RefreshCw, Sparkles } from "lucide-react"
 
 import { CardHeaderWithIcon } from "@/components/shared/CardHeaderWithIcon"
 import { ListRow } from "@/components/shared/ListRow"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
 import { fintech } from "@/lib/fintech-styles"
@@ -10,9 +11,12 @@ import type { ClubRecommendation } from "@/lib/types"
 
 interface PickedForYouCardProps {
   clubs: ClubRecommendation[]
+  onTrigger: () => void
+  isPending: boolean
+  isSuccess: boolean
 }
 
-export function PickedForYouCard({ clubs }: PickedForYouCardProps) {
+export function PickedForYouCard({ clubs, onTrigger, isPending, isSuccess }: PickedForYouCardProps) {
   const topClubs = clubs.slice(0, INSIGHTS_DEFAULTS.TOP_CLUB_RECOMMENDATIONS_LIMIT)
   const hasClubAnalysis = clubs.length > 0
 
@@ -49,6 +53,26 @@ export function PickedForYouCard({ clubs }: PickedForYouCardProps) {
             ))}
           </div>
         )}
+
+        <div className="flex items-center gap-3 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={onTrigger}
+            disabled={isPending}
+          >
+            <RefreshCw className={`size-3.5 ${isPending ? "animate-spin" : ""}`} />
+            {isPending ? "Calculating…" : "Calculate matching clubs"}
+          </Button>
+          {isSuccess ? (
+            <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <CheckCircle2 className="size-3.5" />
+              Started — check back soon
+            </span>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   )
