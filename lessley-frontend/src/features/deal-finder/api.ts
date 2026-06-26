@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api-client"
-import type { MccCategoryDto, PagedDealSearchResult } from "@/lib/types"
+import type { DealSearchResultItem, MccCategoryDto, PagedDealSearchResult } from "@/lib/types"
 
 export interface DealSearchFilters {
   categories: string[]
@@ -17,6 +17,10 @@ export interface DealSearchParams {
 
 export function fetchMccCategories(): Promise<MccCategoryDto[]> {
   return apiFetch<MccCategoryDto[]>("/api/mcc/categories")
+}
+
+export function fetchDealById(dealId: string): Promise<DealSearchResultItem> {
+  return apiFetch<DealSearchResultItem>(`/api/deals/${encodeURIComponent(dealId)}`)
 }
 
 export async function searchDeals(params: DealSearchParams): Promise<PagedDealSearchResult> {

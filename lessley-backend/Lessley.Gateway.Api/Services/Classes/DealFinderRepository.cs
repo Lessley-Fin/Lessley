@@ -17,6 +17,23 @@ public class DealFinderRepository : IDealFinderRepository
         _dealCollection  = db.GetCollection<DealDocument>("deal_list");
     }
 
+    public async Task<DealSearchResult?> GetByIdAsync(string dealId, CancellationToken ct = default)
+    {
+        var deal = await _dealCollection
+            .Find(d => d.DealId == dealId)
+            .FirstOrDefaultAsync(ct);
+
+        if (deal is null) return null;
+
+        var store = await _storeCollection
+            .Find(s => s.StoreId == deal.StoreId)
+            .FirstOrDefaultAsync(ct);
+
+        if (store is null) return null;
+
+        return new DealSearchResult(deal, store);
+    }
+
     public async Task<(List<DealSearchResult> Results, int Total)> SearchAsync(DealSearchQuery query, CancellationToken ct = default)
     {
         // Step 1: filter stores

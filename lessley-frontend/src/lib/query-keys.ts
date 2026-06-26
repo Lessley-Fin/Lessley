@@ -29,6 +29,7 @@ export const queryKeys = {
     all: ["dealFinder"] as const,
     categories: () => ["dealFinder", "categories"] as const,
     search: (params: object) => ["dealFinder", "search", params] as const,
+    byId: (id: string) => ["dealFinder", "byId", id] as const,
   },
   mcc: {
     categories: () => ["mcc", "categories"] as const,

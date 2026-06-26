@@ -9,6 +9,14 @@ public class DealFinderService : IDealFinderService
 
     public DealFinderService(IDealFinderRepository repository) => _repository = repository;
 
+    public async Task<UserOperationResult> GetByIdAsync(string dealId, CancellationToken ct = default)
+    {
+        var result = await _repository.GetByIdAsync(dealId, ct);
+        return result is null
+            ? UserOperationResult.NotFound()
+            : UserOperationResult.Ok(result);
+    }
+
     public async Task<UserOperationResult> SearchAsync(DealSearchQuery query, CancellationToken ct = default)
     {
         if ((query.MccCodes is null || query.MccCodes.Count == 0)
