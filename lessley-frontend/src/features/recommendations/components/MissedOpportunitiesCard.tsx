@@ -1,6 +1,7 @@
-import { Lightbulb, Store, TrendingDown } from "lucide-react"
+import { CheckCircle2, Lightbulb, RefreshCw, Store, TrendingDown } from "lucide-react"
 
 import { CardHeaderWithIcon } from "@/components/shared/CardHeaderWithIcon"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CLUBS } from "@/lib/constants"
 import { fintech } from "@/lib/fintech-styles"
@@ -15,9 +16,12 @@ function resolveClubName(clubId: string): string {
 
 interface MissedOpportunitiesCardProps {
   insights: TransactionInsight[]
+  onTrigger: () => void
+  isPending: boolean
+  isSuccess: boolean
 }
 
-export function MissedOpportunitiesCard({ insights }: MissedOpportunitiesCardProps) {
+export function MissedOpportunitiesCard({ insights, onTrigger, isPending, isSuccess }: MissedOpportunitiesCardProps) {
   const relevantInsights = insights
     .filter((i) => i.missed_store_discont.length > 0)
     .slice(0, MISSED_OPPORTUNITIES_LIMIT)
@@ -90,6 +94,26 @@ export function MissedOpportunitiesCard({ insights }: MissedOpportunitiesCardPro
             )
           })
         )}
+
+        <div className="flex items-center gap-3 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={onTrigger}
+            disabled={isPending}
+          >
+            <RefreshCw className={`size-3.5 ${isPending ? "animate-spin" : ""}`} />
+            {isPending ? "Analyzing…" : "Analyze missed savings"}
+          </Button>
+          {isSuccess ? (
+            <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <CheckCircle2 className="size-3.5" />
+              Started — check back soon
+            </span>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   )
