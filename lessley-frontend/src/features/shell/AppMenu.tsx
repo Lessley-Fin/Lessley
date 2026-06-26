@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom"
 import { createPortal } from "react-dom"
-import { Bell, LogOut, Menu, Settings, Shield, X } from "lucide-react"
+import { Bell, LogOut, Menu, Settings, Shield, ShieldCheck, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
@@ -11,9 +11,11 @@ interface AppMenuProps {
   username: string
   open: boolean
   unreadCount: number
+  isAdmin: boolean
   onOpenChange: (open: boolean) => void
   onOpenNotifications: () => void
   onOpenSettings: () => void
+  onOpenAdmin: () => void
   onLogout: () => void
 }
 
@@ -28,9 +30,11 @@ export function AppMenu({
   username,
   open,
   unreadCount,
+  isAdmin,
   onOpenChange,
   onOpenNotifications,
   onOpenSettings,
+  onOpenAdmin,
   onLogout,
 }: AppMenuProps) {
   const location = useLocation()
@@ -39,6 +43,7 @@ export function AppMenu({
 
   const isNotificationsActive = location.pathname === ROUTES.NOTIFICATIONS
   const isSettingsActive = location.pathname === ROUTES.SETTINGS
+  const isAdminActive = location.pathname === ROUTES.ADMIN
 
   useBodyScrollLock(open)
 
@@ -111,6 +116,14 @@ export function AppMenu({
                     active={isSettingsActive}
                     onClick={() => closeAnd(onOpenSettings)}
                   />
+                  {isAdmin ? (
+                    <MenuNavItem
+                      label="Admin"
+                      icon={ShieldCheck}
+                      active={isAdminActive}
+                      onClick={() => closeAnd(onOpenAdmin)}
+                    />
+                  ) : null}
                 </nav>
 
                 <div className="mt-auto shrink-0 border-t border-slate-100 px-3 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">

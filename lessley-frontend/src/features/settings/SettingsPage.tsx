@@ -63,12 +63,14 @@ export function SettingsPage() {
     updateProfile.mutate(values)
   }
 
+  useEffect(() => {
+    if (initOpenFinance.isSuccess && initOpenFinance.data?.connectUrl) {
+      window.location.assign(initOpenFinance.data.connectUrl)
+    }
+  }, [initOpenFinance.isSuccess, initOpenFinance.data])
+
   function handleConnectCard() {
-    initOpenFinance.mutate(undefined, {
-      onSuccess: (data) => {
-        window.location.assign(data.connectUrl)
-      },
-    })
+    initOpenFinance.mutate(undefined)
   }
 
   return (

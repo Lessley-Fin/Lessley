@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from .clients.open_finance_client import OpenFinanceClient
 from config.constants import LIMITS
 from models.transaction import Transaction
@@ -209,3 +209,16 @@ class OpenFinanceService:
                 },
             )
             raise
+
+    def sort_transactions(self, transactions: list[Transaction]) -> list[Transaction]:
+        """
+        Sorts transactions by date in descending order.
+        """
+        return sorted(
+            transactions,
+            key=lambda tx: (
+                tx.date.transactionDate or tx.date.bookingDate or tx.date.valueDate or date.min
+                if tx.date else date.min
+            ),
+            reverse=True,
+        )
