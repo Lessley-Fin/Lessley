@@ -23,6 +23,7 @@ python -m deals process                              # Normalize + match raw dat
 python -m deals review                               # Interactive TUI for uncertain matches
 python -m deals review --pending                     # Show review queue summary
 python -m deals discover-stores                      # Analyze raw data for new stores
+python -m deals optimize <store_id> <cart_total>      # Cheapest legal deal stack (needs `pip install -e ../deal-optimizer`)
 ```
 
 ### Tests

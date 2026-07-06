@@ -42,5 +42,13 @@ def apply_deal(price_in: float, quantity: int, deal: DealNode) -> float | None:
     else:
         savings = 0
 
+    # Optional savings ceiling, e.g. a gift card loadable up to 1000 ILS at 30%
+    # off is expressed as {"type": "percentage_off", "value": 0.30,
+    # "max_discount_amount": 300} — equivalent to capping the base at 1000
+    # ILS, but works uniformly across every reward type.
+    max_discount = rew.get("max_discount_amount")
+    if max_discount is not None:
+        savings = min(savings, max_discount)
+
     savings = min(savings, price_in)  # never refund more than the running price
     return max(0.0, price_in - savings)

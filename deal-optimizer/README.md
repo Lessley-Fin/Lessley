@@ -14,13 +14,35 @@ Each deal-vertex transforms a price (`price_in → price_out`) via its
 derived from each deal's `combinability` plus a fixed global layer order:
 
 ```
-store_sale → member_discount → coupon → giftcard_discount → payment_discount → cashback
+store_sale → member_discount → coupon
 ```
 
 An edge `A → B` exists only when **both** sides agree (A allows B's category AND
 B allows A's), and B's layer is not earlier than A's. The optimal path is found
 with a state-tracking DP that re-validates every (new, prior) pair as the chain
 grows — so 3+ deal stacks can't sneak in a pairwise-illegal member.
+
+**`giftcard_discount`, `payment_discount`, and `cashback` are not part of the
+DAG chain.** Price-level deals (store_sale/member_discount/coupon) really do
+apply to whatever's left, however you eventually pay, so chaining them is
+exact. But gift-card loads, card-brand rebates, and cashback (earned on
+whatever was charged to the card that earns it) each only discount the
+specific slice of money paid through that instrument — you can't pay the same
+400 ILS with two different cards. Chaining them the same way as price-level
+deals would double-count. Instead, `tender.py` solves them as a bill-splitting
+problem: for every DAG state, it finds the savings-maximizing way to route the
+remaining bill across payment instruments (fixed-value vouchers are
+all-or-nothing; percentage-off deals — capped via `max_discount_amount`, or
+uncapped — are fractional-knapsack filled highest-rate-first). E.g. a 2000 ILS
+bill against a 30%-off-up-to-1000 card, a 30%-off-up-to-500 card, and an
+uncapped 20%-off card routes 1000 → the first card, 500 → the second, and the
+remaining 500 → the third — never "30% off the whole 2000" from two different
+cards at once.
+
+`optimize()` doesn't just return the winner — it returns the top `top_n`
+(default 5) distinct ranked outcomes, cheapest first, so you can see the
+runner-up combinations too (e.g. "use only Hever" vs. "split Hever + Behatsdaa
++ Mastercard").
 
 ## Why a separate module
 
@@ -45,12 +67,16 @@ pip install -e ".[dev]"
 
 # CLI
 python -m deal_optimizer.cli data/deals.json <store_id> 500 --quantity 1
-python -m deal_optimizer.cli data/deals.json <store_id> 500 --strict   # unknown→no
+python -m deal_optimizer.cli data/deals.json <store_id> 500 --strict     # unknown→no
+python -m deal_optimizer.cli data/deals.json <store_id> 500 --top-n 3    # show fewer/more ranked options (default 5)
 
 # Library
 from deal_optimizer import optimize, UserContext
-result = optimize(deals, cart_total=500, cart_quantity=1)
-# → {"path": [...], "starting_price", "final_price", "total_savings", "per_step": [...]}
+results = optimize(deals, cart_total=500, cart_quantity=1, top_n=5)
+# → list of up to top_n dicts, cheapest first:
+#   {"rank", "path": [...], "starting_price", "final_price", "total_savings", "per_step": [...]}
+# per_step entries include "ils_covered": how much of the bill that specific
+# deal paid for (tender deals only — None for price-level deals).
 ```
 
 `unknown_as_yes=True` (default, optimistic) treats combinability `"unknown"` as
@@ -77,5 +103,6 @@ pytest -q          # all Part 5 verification scenarios + adapter + eligibility
 | `adapter.py` | Normalize new + legacy deal dicts; deterministic `deal_type` inference |
 | `graph.py` | `DealNode`, `LAYER_ORDER`, `ACCEPTS_KEY`, edges, vertex expansion (duplicates) |
 | `transform.py` | `apply_deal` price transform (both plan bug fixes baked in) |
-| `engine.py` | `UserContext`, eligibility prune, state-DP `find_best_path`, `optimize`, `get_optimal_deal_path` |
+| `tender.py` | `allocate_tender` / `allocate_tender_top_k` — ranked bill-splitting across giftcard/payment/cashback deals |
+| `engine.py` | `UserContext`, eligibility prune, 2-phase state-DP `find_top_paths` (chain → tender, ranked) + `find_best_path` convenience wrapper, `optimize`, `get_optimal_deal_path` |
 | `cli.py` | Command-line entry point |

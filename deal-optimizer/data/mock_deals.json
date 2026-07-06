@@ -1,0 +1,391 @@
+[
+  {
+    "id": "D01_store_sale",
+    "store_id": "store_1",
+    "deal_type": "store_sale",
+    "title": "5% store sale",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.05 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D02_member",
+    "store_id": "store_1",
+    "deal_type": "member_discount",
+    "club_id": "club_a",
+    "title": "5% club_a member discount",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.05 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "no",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "yes", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D03_couponA",
+    "store_id": "store_1",
+    "deal_type": "coupon",
+    "title": "10% coupon A (min 100)",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 100 },
+      "reward": { "type": "percentage_off", "value": 0.10 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "no",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D04_couponB",
+    "store_id": "store_1",
+    "deal_type": "coupon",
+    "title": "50 ILS flat coupon B (min 200)",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 200 },
+      "reward": { "type": "fixed_discount_amount", "value": 50 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D05_giftcard",
+    "store_id": "store_1",
+    "deal_type": "giftcard_discount",
+    "title": "500 ILS voucher for 460",
+    "discount_logic": {
+      "condition": { "type": "exact_spend", "value": 500 },
+      "reward": { "type": "fixed_total_amount", "value": 460 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D06_payment",
+    "store_id": "store_1",
+    "deal_type": "payment_discount",
+    "title": "15% credit-card discount",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.15 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "no",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": "Card X" }
+    }
+  },
+  {
+    "id": "D07_cashback",
+    "store_id": "store_1",
+    "deal_type": "cashback",
+    "title": "3% cashback",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.03 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D08_giftcard_repeat",
+    "store_id": "store_1",
+    "deal_type": "giftcard_discount",
+    "title": "10% off, usable twice",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.10 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": 2, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D09_member_wrongclub",
+    "store_id": "store_1",
+    "deal_type": "member_discount",
+    "club_id": "club_b",
+    "title": "CANARY: 50% club_b member discount (user is not a member)",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.50 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "yes", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D10_coupon_channel_blocked",
+    "store_id": "store_1",
+    "deal_type": "coupon",
+    "title": "CANARY: 20% coupon, blocked on every channel the user prefers",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.20 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "no", "mobile_app": "no", "physical_store": "no" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "D11_coupon_capped",
+    "store_id": "store_1",
+    "deal_type": "coupon",
+    "title": "CANARY: 25% coupon, monthly cap already used up",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.25 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": 1, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "eligibility": { "membership_required": "unknown", "payment_method_required": null }
+    }
+  },
+  {
+    "id": "LC01_hot_giftcard",
+    "store_id": "019d209b8101_f9b9017f2ef608d3",
+    "deal_type": "giftcard_discount",
+    "title": "HOT club: 13% off Lee Cooper gift voucher",
+    "source": "hot",
+    "source_url": "https://www.hot.co.il/%D7%94%D7%98%D7%91%D7%94/57329/%D7%AA%D7%95-%D7%A7%D7%A0%D7%99%D7%94-Lee-Cooper",
+    "discount_logic": {
+      "condition": { "type": "min_quantity", "value": 1 },
+      "reward": { "type": "percentage_off", "value": 0.13 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "unknown",
+        "stackable_with_coupons": "unknown",
+        "stackable_with_giftcards": "unknown",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "unknown"
+      },
+      "limits": { "max_uses_per_transaction": 2, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "no", "mobile_app": "no", "physical_store": "yes" },
+      "eligibility": { "membership_required": "yes", "payment_method_required": "HOT club-linked credit card" }
+    },
+    "club_id": "club_hot",
+    "coupon_code": null
+  },
+  {
+    "id": "LC02_mastercard_20pct",
+    "store_id": "019d209b8101_f9b9017f2ef608d3",
+    "deal_type": "payment_discount",
+    "title": "Mastercard Day: 20% off leecooper.co.il (code MASTER20)",
+    "source": "mastercard",
+    "notes": "Valid the 10th of each month, Jan 2026 until further notice (date restriction is informational only — not enforced by the engine).",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.20 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "unknown",
+        "stackable_with_coupons": "no",
+        "stackable_with_giftcards": "no",
+        "stackable_with_payment_discounts": "no",
+        "stackable_with_cashback": "no"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "yes", "mobile_app": "no", "physical_store": "no" },
+      "eligibility": { "membership_required": "no", "payment_method_required": "Mastercard credit card" }
+    },
+    "club_id": "club_mastercard",
+    "coupon_code": "MASTER20"
+  },
+  {
+    "id": "LC03_pais_voucher_200",
+    "store_id": "019d209b8101_f9b9017f2ef608d3",
+    "deal_type": "giftcard_discount",
+    "title": "Pais club: 200 ILS Lee Cooper voucher for 160 ILS",
+    "source": "pais",
+    "discount_logic": {
+      "condition": { "type": "exact_spend", "value": 200 },
+      "reward": { "type": "fixed_total_amount", "value": 160 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "unknown",
+        "stackable_with_coupons": "unknown",
+        "stackable_with_giftcards": "unknown",
+        "stackable_with_payment_discounts": "unknown",
+        "stackable_with_cashback": "unknown"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "yes" },
+      "eligibility": { "membership_required": "yes", "payment_method_required": null }
+    },
+    "club_id": "club_pais",
+    "coupon_code": null
+  },
+  {
+    "id": "LC04_hever_giftcard_1000",
+    "store_id": "019d209b8101_f9b9017f2ef608d3",
+    "deal_type": "giftcard_discount",
+    "title": "Hever card: 30% off, loadable up to 1000 ILS",
+    "source": "hever",
+    "notes": "Illustrative mock values (user-provided verbally, no source link). 1000 ILS is a ceiling, not a fixed voucher amount — any load amount up to it gets 30% off.",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.30, "max_discount_amount": 300 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "yes", "mobile_app": "unknown", "physical_store": "yes" },
+      "eligibility": { "membership_required": "yes", "payment_method_required": null }
+    },
+    "club_id": "club_hever",
+    "coupon_code": null
+  },
+  {
+    "id": "LC05_behatsdaa_giftcard_500",
+    "store_id": "019d209b8101_f9b9017f2ef608d3",
+    "deal_type": "giftcard_discount",
+    "title": "Behatsdaa card: 30% off, loadable up to 500 ILS",
+    "source": "behatsdaa",
+    "notes": "Illustrative mock values (user-provided verbally, no source link). 500 ILS is a ceiling, not a fixed voucher amount — any load amount up to it gets 30% off.",
+    "discount_logic": {
+      "condition": { "type": "min_spend", "value": 0 },
+      "reward": { "type": "percentage_off", "value": 0.30, "max_discount_amount": 150 }
+    },
+    "constraints": {
+      "combinability": {
+        "stackable_with_store_sale": "yes",
+        "stackable_with_member_discounts": "yes",
+        "stackable_with_coupons": "yes",
+        "stackable_with_giftcards": "yes",
+        "stackable_with_payment_discounts": "yes",
+        "stackable_with_cashback": "yes"
+      },
+      "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
+      "redemption_channels": { "website": "no", "mobile_app": "unknown", "physical_store": "yes" },
+      "eligibility": { "membership_required": "yes", "payment_method_required": null }
+    },
+    "club_id": "club_behatsdaa",
+    "coupon_code": null
+  }
+]

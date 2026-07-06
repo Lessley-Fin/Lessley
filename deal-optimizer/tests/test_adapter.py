@@ -63,10 +63,12 @@ def test_period_coercion_to_month():
 
 
 def test_legacy_deal_runs_through_engine():
-    # max_uses_per_transaction=2 → two vertices; 13% off twice on 500.
-    res = optimize([LEGACY_LEE_COOPER], cart_total=500, cart_quantity=1)
-    # applying once: 435; twice: 435 * 0.87 = 378.45 — engine picks the cheaper (twice).
-    assert res["final_price"] == pytest.approx(378.45)
+    # giftcard_discount goes through the tender allocator, not the price-level
+    # chain. It's an uncapped rate (no max_discount_amount), so a second unit
+    # (max_uses_per_transaction=2) has nothing left to cover once the first
+    # unit already discounts the whole bill — no compounding to 0.87^2.
+    res = optimize([LEGACY_LEE_COOPER], cart_total=500, cart_quantity=1)[0]
+    assert res["final_price"] == pytest.approx(435.0)
 
 
 def test_infer_deal_type_coupon_code():

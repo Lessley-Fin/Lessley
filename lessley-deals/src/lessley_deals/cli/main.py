@@ -1429,5 +1429,87 @@ def enrich_store_urls_cmd(
     )
 
 
+@app.command(name="optimize")
+def optimize_cmd(
+    store_id: str = typer.Argument(..., help="Target store_id to optimize the cart for"),
+    cart_total: float = typer.Argument(..., help="Total cart value in ILS"),
+    quantity: int = typer.Option(1, "--quantity", "-q", help="Cart item quantity"),
+    data_dir: str = typer.Option("data", "--data-dir", "-d", help="Reads <data-dir>/deals.json unless --file is set"),
+    file: Optional[str] = typer.Option(None, "--file", help="Deals JSON file to read instead of <data-dir>/deals.json"),
+    strict: bool = typer.Option(
+        False, "--strict", help="Treat combinability 'unknown' as 'no' (default: optimistic 'yes')"
+    ),
+    member_clubs: Optional[str] = typer.Option(
+        None, "--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b"
+    ),
+    channels: Optional[str] = typer.Option(
+        None, "--channels", help="Comma-separated preferred redemption channels, e.g. website,mobile_app"
+    ),
+    monthly_uses: Optional[str] = typer.Option(
+        None, "--monthly-uses", help="Comma-separated deal_id:count already used this month, e.g. D11:1"
+    ),
+    top_n: int = typer.Option(5, "--top-n", help="Number of ranked options to show (default 5)"),
+    verbose: bool = typer.Option(
+        False, "--verbose", help="Print the eligibility prune, DP-sweep decisions, and exclusion reasons"
+    ),
+) -> None:
+    """Find the cheapest legal stack of deals for a store + cart (deal-optimizer engine)."""
+    try:
+        from deal_optimizer.engine import UserContext, get_optimal_deal_path
+    except ModuleNotFoundError as exc:
+        console.print(
+            "[red]deal_optimizer is not installed in this environment.[/red]\n"
+            "It lives in the sibling [bold]deal-optimizer/[/bold] package. From this venv, run:\n"
+            "  [bold]pip install -e ../deal-optimizer[/bold]"
+        )
+        raise typer.Exit(code=1) from exc
+
+    user_context = None
+    if member_clubs or channels or monthly_uses:
+        uses_this_month: dict[str, int] = {}
+        if monthly_uses:
+            for pair in monthly_uses.split(","):
+                deal_id, _, count = pair.partition(":")
+                uses_this_month[deal_id.strip()] = int(count.strip() or 0)
+        user_context = UserContext(
+            member_club_ids=[c.strip() for c in member_clubs.split(",")] if member_clubs else [],
+            preferred_channels=[c.strip() for c in channels.split(",")] if channels else [],
+            uses_this_month=uses_this_month,
+        )
+
+    results = get_optimal_deal_path(
+        file_path=file or str(Path(data_dir) / "deals.json"),
+        target_store_id=store_id,
+        cart_total=cart_total,
+        cart_quantity=quantity,
+        user_context=user_context,
+        unknown_as_yes=not strict,
+        top_n=top_n,
+        verbose=verbose,
+    )
+
+    print(f"\nStore: {store_id}  |  Cart: {cart_total:.2f} ILS  |  Items: {quantity}")
+    print(f"Starting price: {cart_total:.2f}")
+    if not results or not results[0]["per_step"]:
+        print("No applicable deals found.")
+        return
+
+    print(f"Top {len(results)} option(s) (cheapest first):")
+    for result in results:
+        print("=" * 60)
+        console.print(
+            f"[bold]#{result['rank']}[/bold] — [green]Final price: {result['final_price']:.2f}[/green]  "
+            f"(saved {result['total_savings']:.2f})"
+        )
+        print("-" * 60)
+        for i, step in enumerate(result["per_step"], 1):
+            deal = result["path"][i - 1]
+            title = deal.get("title") or deal.get("deal_description") or deal.get("id")
+            print(f"  {i}. [{deal.get('deal_type', '?')}] {title}")
+            if step["ils_covered"] is not None:
+                print(f"     pays for {step['ils_covered']:.2f} ILS of the bill via this instrument")
+            print(f"     {step['price_in']:.2f} -> {step['price_out']:.2f}  (deal {step['deal_id']})")
+
+
 if __name__ == "__main__":
     app()

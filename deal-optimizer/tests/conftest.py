@@ -20,6 +20,7 @@ def mk_deal(
     *,
     reward_type: str = "percentage_off",
     reward_value: float = 0.0,
+    max_discount_amount: float | None = None,
     cond_type: str = "min_spend",
     cond_value: float = 0,
     accepts_all: bool = False,
@@ -37,6 +38,10 @@ def mk_deal(
     if combinability:
         comb.update(combinability)
 
+    reward: dict[str, Any] = {"type": reward_type, "value": reward_value}
+    if max_discount_amount is not None:
+        reward["max_discount_amount"] = max_discount_amount
+
     ch = {"website": "unknown", "mobile_app": "unknown", "physical_store": "unknown"}
     if channels:
         ch.update(channels)
@@ -48,7 +53,7 @@ def mk_deal(
         "deal_type": deal_type,
         "discount_logic": {
             "condition": {"type": cond_type, "value": cond_value},
-            "reward": {"type": reward_type, "value": reward_value},
+            "reward": reward,
         },
         "constraints": {
             "combinability": comb,

@@ -11,6 +11,13 @@ from dataclasses import dataclass
 from typing import Any
 
 # Fixed global application order (Part 1).
+#
+# Only store_sale/member_discount/coupon actually chain through this graph
+# (engine.py's phase 1) — giftcard_discount/payment_discount/cashback are all
+# "tender" deals (they discount whichever slice of the bill was paid through
+# that specific instrument, not the bill as a whole) and are instead solved as
+# a bill-splitting allocation in tender.py. Their entries below only matter
+# for ACCEPTS_KEY (combinability lookups) and are otherwise unused numbers.
 LAYER_ORDER = {
     "store_sale": 0,
     "member_discount": 1,
@@ -43,6 +50,7 @@ class DealNode:
     discount_logic: dict[str, Any]
     constraints: dict[str, Any]  # the full lean DealConstraints dict
     raw: dict[str, Any]  # the original deal dict (for output)
+    ils_covered: float | None = None  # tender deals only: how much of the bill this deal paid for
 
 
 def build_vertices(deals: list[dict[str, Any]]) -> list[DealNode]:
@@ -87,6 +95,20 @@ def mutually_compatible(a: DealNode, b: DealNode, unknown_as_yes: bool) -> bool:
     if a.deal_id == b.deal_id:
         return True
     return accepts(a, b.category, unknown_as_yes) and accepts(b, a.category, unknown_as_yes)
+
+
+def refusal_reasons(a: DealNode, b: DealNode, unknown_as_yes: bool) -> list[str]:
+    """Human-readable reasons ``a`` and ``b`` are NOT mutually compatible (empty if they are)."""
+    if a.deal_id == b.deal_id:
+        return []
+    reasons = []
+    if not accepts(a, b.category, unknown_as_yes):
+        val = (a.constraints.get("combinability", {}) or {}).get(ACCEPTS_KEY[b.category], "unknown")
+        reasons.append(f"{a.deal_id} refuses {b.category} ({ACCEPTS_KEY[b.category]}={val!r})")
+    if not accepts(b, a.category, unknown_as_yes):
+        val = (b.constraints.get("combinability", {}) or {}).get(ACCEPTS_KEY[a.category], "unknown")
+        reasons.append(f"{b.deal_id} refuses {a.category} ({ACCEPTS_KEY[a.category]}={val!r})")
+    return reasons
 
 
 def directed_edge_allowed(src: DealNode, dst: DealNode, unknown_as_yes: bool) -> bool:
