@@ -1511,5 +1511,34 @@ def optimize_cmd(
             print(f"     {step['price_in']:.2f} -> {step['price_out']:.2f}  (deal {step['deal_id']})")
 
 
+@app.command(name="enrich-constraints")
+def enrich_constraints_cmd(
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    source: str = typer.Option(
+        "hot",
+        "--source",
+        "-s",
+        help="Only enrich deals from this source_id. Pass an empty string to enrich all sources.",
+    ),
+    limit: int = typer.Option(0, "--limit", "-n", help="Enrich at most N deals (0 = all)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Call the LLM but do not write deals.json"),
+    force: bool = typer.Option(False, "--force", help="Re-parse deals that already have constraints"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Parse `terms_and_conditions` into a structured `constraints` object on each deal."""
+    _setup_logging(log_level)
+
+    from lessley_deals.enrichment.enrich_deal_constraints import enrich_deal_constraints
+
+    stats = enrich_deal_constraints(
+        data_dir=data_dir, source=source, limit=limit, dry_run=dry_run, force=force
+    )
+    console.print(
+        f"[green]Done.[/green] total={stats['total']} "
+        f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']}"
+        + (" [yellow](dry-run)[/yellow]" if dry_run else "")
+    )
+
+
 if __name__ == "__main__":
     app()
