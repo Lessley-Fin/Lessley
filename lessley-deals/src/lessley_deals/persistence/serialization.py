@@ -209,6 +209,7 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         currency=d.get("currency"),
         url=d.get("url"),
         discount_logic=d.get("discount_logic"),
+        constraints=d.get("constraints"),
         stackable=d.get("stackable"),
         redeem_channels=d.get("redeem_channels", []),
         coupon_code=d.get("coupon_code"),

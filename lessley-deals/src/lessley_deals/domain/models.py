@@ -158,6 +158,10 @@ class Deal:
     currency: str | None = None
     url: str | None = None
     discount_logic: dict[str, Any] | None = None
+    # Structured deal terms parsed from ``terms_and_conditions`` (combinability,
+    # limits, redemption_channels, eligibility). Populated by the constraints
+    # enrichment step; see enrichment/constaints_parser.py for the schema.
+    constraints: dict[str, Any] | None = None
     stackable: bool | None = None
     redeem_channels: list[str] = field(default_factory=list)
     coupon_code: str | None = None

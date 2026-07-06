@@ -106,6 +106,7 @@ class PersistStage:
                     currency=normalized.price.currency if normalized.price else "ILS",
                     url=prec.raw.url,
                     discount_logic=raw_payload.get("discount_logic"),
+                    constraints=raw_payload.get("constraints"),
                     stackable=raw_payload.get("stackable"),
                     redeem_channels=raw_payload.get("redeem_channels", []),
                     coupon_code=raw_payload.get("coupon_code"),
