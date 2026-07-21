@@ -1,8 +1,13 @@
 """CLI entry point: find the optimal deal stack for a store + cart.
 
     python -m deal_optimizer.cli <deals.json> <store_id> <cart_total> [--quantity N] [--strict]
-        [--verbose] [--top-n N] [--member-clubs club_a,club_b] [--channels website,mobile_app]
+        [--verbose] [--top-n N] [--wallet-id user_x --wallet-file mock_wallets.json]
+        [--member-clubs club_a,club_b] [--channels website,mobile_app]
         [--monthly-uses deal_id:2,other_deal:1]
+
+    A wallet (--wallet-id/--wallet-file) provides a baseline user context loaded
+    from a mock wallets JSON file; --member-clubs/--channels/--monthly-uses layer
+    extra ad-hoc data on top without needing to edit the file.
 """
 
 from __future__ import annotations
@@ -10,23 +15,38 @@ from __future__ import annotations
 import argparse
 
 from .engine import UserContext, get_optimal_deal_path
+from .wallet import load_wallets, wallet_to_user_context
 
 
 def _build_user_context(args: argparse.Namespace) -> UserContext | None:
-    if not (args.member_clubs or args.channels or args.monthly_uses):
+    wallet_ctx: UserContext | None = None
+    if args.wallet_id:
+        if not args.wallet_file:
+            raise SystemExit("--wallet-id requires --wallet-file")
+        wallets = load_wallets(args.wallet_file)
+        wallet = wallets.get(args.wallet_id)
+        if wallet is None:
+            raise SystemExit(f"No wallet with user_id={args.wallet_id!r} in {args.wallet_file}")
+        wallet_ctx = wallet_to_user_context(wallet)
+
+    if not (args.member_clubs or args.channels or args.monthly_uses or wallet_ctx):
         return None
 
-    uses_this_month = {}
+    uses_this_month = dict(wallet_ctx.uses_this_month) if wallet_ctx else {}
     if args.monthly_uses:
         for pair in args.monthly_uses.split(","):
             deal_id, _, count = pair.partition(":")
             uses_this_month[deal_id.strip()] = int(count.strip() or 0)
 
-    return UserContext(
-        member_club_ids=[c.strip() for c in args.member_clubs.split(",")] if args.member_clubs else [],
-        preferred_channels=[c.strip() for c in args.channels.split(",")] if args.channels else [],
-        uses_this_month=uses_this_month,
-    )
+    member_clubs = list(wallet_ctx.member_club_ids) if wallet_ctx else []
+    if args.member_clubs:
+        member_clubs += [c.strip() for c in args.member_clubs.split(",")]
+
+    channels = list(wallet_ctx.preferred_channels) if wallet_ctx else []
+    if args.channels:
+        channels += [c.strip() for c in args.channels.split(",")]
+
+    return UserContext(member_club_ids=member_clubs, preferred_channels=channels, uses_this_month=uses_this_month)
 
 
 def main() -> None:
@@ -45,6 +65,8 @@ def main() -> None:
         action="store_true",
         help="Print the eligibility prune, vertex list, DP-sweep decisions, and exclusion reasons",
     )
+    p.add_argument("--wallet-id", help="user_id to load from --wallet-file as a baseline user context")
+    p.add_argument("--wallet-file", help="Path to a mock wallets JSON file (required if --wallet-id is passed)")
     p.add_argument("--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b")
     p.add_argument(
         "--channels", help="Comma-separated preferred redemption channels, e.g. website,mobile_app,physical_store"
