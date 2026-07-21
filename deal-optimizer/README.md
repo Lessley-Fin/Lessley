@@ -44,6 +44,14 @@ cards at once.
 runner-up combinations too (e.g. "use only Hever" vs. "split Hever + Behatsdaa
 + Mastercard").
 
+`deal_eligibility` (used internally by `find_top_paths` before any DP runs, and
+publicly by `wallet.py`) prunes deals a given `UserContext` doesn't qualify
+for: club membership (`eligibility.membership_required` vs.
+`ctx.member_club_ids`), a required payment method (`eligibility.
+payment_method_required`, matched via the deal's `club_id` against the same
+`member_club_ids` — a deal with no `club_id` can't be verified and is kept
+optimistically), redemption channel, and monthly usage caps.
+
 ## Why a separate module
 
 It is fully self-contained: depends only on `pydantic`, imports nothing from
@@ -82,6 +90,37 @@ results = optimize(deals, cart_total=500, cart_quantity=1, top_n=5)
 `unknown_as_yes=True` (default, optimistic) treats combinability `"unknown"` as
 `"yes"`; `--strict` / `unknown_as_yes=False` treats it as `"no"`.
 
+## User wallets (demo)
+
+A `UserWallet` (`wallet.py`) is a mock struct — generic user info plus the
+loyalty clubs joined and credit cards held — that resolves into a
+`UserContext` so the optimizer only considers deals actually available to that
+person. Each `WalletCard` links to the `club_id` a deal's `eligibility` block
+checks against, so holding "a Mastercard" is enough to unlock deals gated by
+`payment_method_required`, exactly the same way club membership unlocks deals
+gated by `membership_required`.
+
+```python
+from deal_optimizer.wallet import load_wallets, get_eligible_deals, wallet_to_user_context
+from deal_optimizer import optimize
+
+wallets = load_wallets("data/mock_wallets.json")
+wallet = wallets["user_ido_full"]
+
+eligible = get_eligible_deals(deals, wallet)  # standalone pre-filter trace
+results = optimize(deals, cart_total=500, cart_quantity=1,
+                    user_context=wallet_to_user_context(wallet))
+```
+
+```bash
+python -m deal_optimizer.cli data/mock_deals.json <store_id> 500 \
+    --wallet-id user_ido_full --wallet-file data/mock_wallets.json
+```
+
+`--wallet-id`/`--wallet-file` provide a baseline context; `--member-clubs`/
+`--channels`/`--monthly-uses` layer extra ad-hoc data on top without editing
+the wallet file.
+
 ## Docker
 
 ```bash
@@ -104,5 +143,6 @@ pytest -q          # all Part 5 verification scenarios + adapter + eligibility
 | `graph.py` | `DealNode`, `LAYER_ORDER`, `ACCEPTS_KEY`, edges, vertex expansion (duplicates) |
 | `transform.py` | `apply_deal` price transform (both plan bug fixes baked in) |
 | `tender.py` | `allocate_tender` / `allocate_tender_top_k` — ranked bill-splitting across giftcard/payment/cashback deals |
-| `engine.py` | `UserContext`, eligibility prune, 2-phase state-DP `find_top_paths` (chain → tender, ranked) + `find_best_path` convenience wrapper, `optimize`, `get_optimal_deal_path` |
+| `engine.py` | `UserContext`, `deal_eligibility` prune (club/card/channel/monthly-cap), 2-phase state-DP `find_top_paths` (chain → tender, ranked) + `find_best_path` convenience wrapper, `optimize`, `get_optimal_deal_path` |
+| `wallet.py` | `UserWallet`/`WalletCard` mock demo model, `wallet_to_user_context` bridging, `get_eligible_deals()` standalone pre-filter, `load_wallets()` JSON loader |
 | `cli.py` | Command-line entry point |
