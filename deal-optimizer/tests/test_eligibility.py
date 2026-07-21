@@ -43,3 +43,21 @@ def test_store_type_unknown_is_optimistic():
                    accepts_all=True, store_coverage={"is_include_online_stores": "unknown"})
     ctx = UserContext(preferred_store_types=["online"])
     assert _ids(find_best_path(100, 1, [deal], ctx)) == ["c"]
+
+
+def test_card_required_filters_wallet_without_matching_club_id():
+    deal = mk_deal("pay", "payment_discount", reward_type="percentage_off", reward_value=0.20,
+                   accepts_all=True, club_id="club_mastercard", payment_method_required="Mastercard credit card")
+    assert find_best_path(100, 1, [deal], UserContext(member_club_ids=[])) == []
+
+
+def test_card_required_passes_when_club_id_present_in_context():
+    deal = mk_deal("pay", "payment_discount", reward_type="percentage_off", reward_value=0.20,
+                   accepts_all=True, club_id="club_mastercard", payment_method_required="Mastercard credit card")
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_club_ids=["club_mastercard"]))) == ["pay"]
+
+
+def test_card_required_but_no_club_id_is_optimistic_keep():
+    deal = mk_deal("pay", "payment_discount", reward_type="percentage_off", reward_value=0.15,
+                   accepts_all=True, club_id=None, payment_method_required="Card X")
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_club_ids=[]))) == ["pay"]

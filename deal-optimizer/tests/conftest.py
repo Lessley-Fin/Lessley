@@ -29,6 +29,7 @@ def mk_deal(
     max_uses_per_month: int | None = None,
     minimum_purchase: float | None = None,
     membership_required: str = "unknown",
+    payment_method_required: str | None = None,
     club_id: str | None = None,
     store_coverage: dict[str, str] | None = None,
     store_id: str = "store_default",
@@ -69,7 +70,7 @@ def mk_deal(
             "store_coverage": coverage,
             "eligibility": {
                 "membership_required": membership_required,
-                "payment_method_required": None,
+                "payment_method_required": payment_method_required,
             },
         },
         "club_id": club_id,

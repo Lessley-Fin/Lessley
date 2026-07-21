@@ -1457,6 +1457,12 @@ def optimize_cmd(
     strict: bool = typer.Option(
         False, "--strict", help="Treat combinability 'unknown' as 'no' (default: optimistic 'yes')"
     ),
+    wallet_id: Optional[str] = typer.Option(
+        None, "--wallet-id", help="user_id to load from --wallet-file as a baseline user context"
+    ),
+    wallet_file: Optional[str] = typer.Option(
+        None, "--wallet-file", help="Path to a mock wallets JSON file (required if --wallet-id is passed)"
+    ),
     member_clubs: Optional[str] = typer.Option(
         None, "--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b"
     ),
@@ -1474,6 +1480,7 @@ def optimize_cmd(
     """Find the cheapest legal stack of deals for a store + cart (deal-optimizer engine)."""
     try:
         from deal_optimizer.engine import UserContext, get_optimal_deal_path
+        from deal_optimizer.wallet import load_wallets, wallet_to_user_context
     except ModuleNotFoundError as exc:
         console.print(
             "[red]deal_optimizer is not installed in this environment.[/red]\n"
@@ -1482,16 +1489,37 @@ def optimize_cmd(
         )
         raise typer.Exit(code=1) from exc
 
+    wallet_ctx: Optional[UserContext] = None
+    if wallet_id:
+        if not wallet_file:
+            console.print("[red]--wallet-id requires --wallet-file[/red]")
+            raise typer.Exit(code=1)
+        wallets = load_wallets(wallet_file)
+        wallet = wallets.get(wallet_id)
+        if wallet is None:
+            console.print(f"[red]No wallet with user_id={wallet_id!r} in {wallet_file}[/red]")
+            raise typer.Exit(code=1)
+        wallet_ctx = wallet_to_user_context(wallet)
+
     user_context = None
-    if member_clubs or store_types or monthly_uses:
-        uses_this_month: dict[str, int] = {}
+    if member_clubs or store_types or monthly_uses or wallet_ctx:
+        uses_this_month: dict[str, int] = dict(wallet_ctx.uses_this_month) if wallet_ctx else {}
         if monthly_uses:
             for pair in monthly_uses.split(","):
                 deal_id, _, count = pair.partition(":")
                 uses_this_month[deal_id.strip()] = int(count.strip() or 0)
+
+        member_club_ids = list(wallet_ctx.member_club_ids) if wallet_ctx else []
+        if member_clubs:
+            member_club_ids += [c.strip() for c in member_clubs.split(",")]
+
+        preferred_store_types = list(wallet_ctx.preferred_store_types) if wallet_ctx else []
+        if store_types:
+            preferred_store_types += [c.strip() for c in store_types.split(",")]
+
         user_context = UserContext(
-            member_club_ids=[c.strip() for c in member_clubs.split(",")] if member_clubs else [],
-            preferred_store_types=[c.strip() for c in store_types.split(",")] if store_types else [],
+            member_club_ids=member_club_ids,
+            preferred_store_types=preferred_store_types,
             uses_this_month=uses_this_month,
         )
 

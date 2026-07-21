@@ -61,18 +61,28 @@ _STORE_TYPE_KEYS = {
 _EXCLUDED = ("no", False)
 
 
-def _deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str]:
+def deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str]:
     """Return ``(keep, reason)`` — the single source of truth for the eligibility prune."""
     constraints = deal.get("constraints", {}) or {}
     elig = constraints.get("eligibility", {}) or {}
     limits = constraints.get("limits", {}) or {}
     coverage = constraints.get("store_coverage", {}) or {}
+    club_id = deal.get("club_id")
 
     # Membership required but user is not a member of the deal's club.
     if elig.get("membership_required") == "yes":
-        club_id = deal.get("club_id")
         if club_id not in ctx.member_club_ids:
             return False, f"membership_required=yes, club_id={club_id!r} not in user clubs {ctx.member_club_ids}"
+
+    # Card-linked deal: requires a specific payment method (free-text), verified via the
+    # deal's club_id against the wallet-resolved club/card id set. No club_id on the deal
+    # means nothing to verify against — optimistic keep (mirrors unknown_as_yes elsewhere).
+    pay_req = elig.get("payment_method_required")
+    if pay_req and club_id is not None and club_id not in ctx.member_club_ids:
+        return False, (
+            f"payment_method_required={pay_req!r}, club_id={club_id!r} "
+            f"not in user clubs/cards {ctx.member_club_ids}"
+        )
 
     # Store-type preference: reject only if EVERY preferred store type is explicitly
     # excluded by the deal. ("unknown"/absent is treated optimistically — no disqualify.)
@@ -233,7 +243,7 @@ def find_top_paths(
     if user_context is not None:
         kept = []
         for d in deal_dicts:
-            keep, reason = _deal_eligibility(d, user_context)
+            keep, reason = deal_eligibility(d, user_context)
             if verbose:
                 print(f"  [{'KEEP ' if keep else 'PRUNE'}] {d['id']:<28} {reason}")
             if keep:

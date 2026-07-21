@@ -1,0 +1,75 @@
+[
+  {
+    "user_id": "user_ido_full",
+    "display_name": "Ido (full wallet demo)",
+    "email": "ido.shmerling@gmail.com",
+    "member_clubs": ["club_hot", "club_pais", "club_hever", "club_behatsdaa"],
+    "credit_cards": [
+      {
+        "card_id": "card_ido_mastercard",
+        "club_id": "club_mastercard",
+        "brand": "Mastercard",
+        "nickname": "Personal Mastercard"
+      }
+    ],
+    "preferred_store_types": [],
+    "uses_this_month": {}
+  },
+  {
+    "user_id": "user_dana_card_only",
+    "display_name": "Dana (card-only demo)",
+    "email": null,
+    "member_clubs": [],
+    "credit_cards": [
+      {
+        "card_id": "card_dana_mastercard",
+        "club_id": "club_mastercard",
+        "brand": "Mastercard",
+        "nickname": "Dana's Mastercard"
+      }
+    ],
+    "preferred_store_types": ["online"],
+    "uses_this_month": {}
+  },
+  {
+    "user_id": "user_yossi_loyalty_only",
+    "display_name": "Yossi (loyalty-clubs-only demo)",
+    "email": null,
+    "member_clubs": ["club_pais", "club_hever"],
+    "credit_cards": [],
+    "preferred_store_types": [],
+    "uses_this_month": {}
+  },
+  {
+    "user_id": "shmer",
+    "display_name": "Shmer (full wallet demo)",
+    "email": "ido.shmerling@gmail.com",
+    "member_clubs": ["club_hot", "club_hever", "club_behatsdaa"],
+    "credit_cards": [
+      {
+        "card_id": "card_ido_mastercard",
+        "club_id": "club_mastercard",
+        "brand": "Mastercard",
+        "nickname": "Personal Mastercard"
+      }
+    ],
+    "preferred_store_types": [],
+    "uses_this_month": {}
+  },
+  {
+    "user_id": "dor",
+    "display_name": "Dor (full wallet demo)",
+    "email": "dor.habasovg@gmail.com",
+    "member_clubs": ["club_pais", "club_behatsdaa"],
+    "credit_cards": [
+      {
+        "card_id": "card_dor_mastercard",
+        "club_id": "club_mastercard",
+        "brand": "Mastercard",
+        "nickname": "Personal Mastercard"
+      }
+    ],
+    "preferred_store_types": [],
+    "uses_this_month": {}
+  }
+]
