@@ -30,7 +30,7 @@ def mk_deal(
     minimum_purchase: float | None = None,
     membership_required: str = "unknown",
     club_id: str | None = None,
-    channels: dict[str, str] | None = None,
+    store_coverage: dict[str, str] | None = None,
     store_id: str = "store_default",
     title: str = "",
 ) -> dict[str, Any]:
@@ -42,9 +42,13 @@ def mk_deal(
     if max_discount_amount is not None:
         reward["max_discount_amount"] = max_discount_amount
 
-    ch = {"website": "unknown", "mobile_app": "unknown", "physical_store": "unknown"}
-    if channels:
-        ch.update(channels)
+    coverage = {
+        "is_include_outlets_stores": "unknown",
+        "is_include_online_stores": "unknown",
+        "is_include_physical_stores": "unknown",
+    }
+    if store_coverage:
+        coverage.update(store_coverage)
 
     return {
         "id": deal_id,
@@ -62,7 +66,7 @@ def mk_deal(
                 "max_uses_per_month": max_uses_per_month,
                 "minimum_purchase": minimum_purchase,
             },
-            "redemption_channels": ch,
+            "store_coverage": coverage,
             "eligibility": {
                 "membership_required": membership_required,
                 "payment_method_required": None,

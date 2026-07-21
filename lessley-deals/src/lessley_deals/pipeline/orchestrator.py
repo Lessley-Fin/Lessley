@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Sequence
+from typing import Any, Sequence
 
 from lessley_deals.domain.models import NormalizedRecord, PipelineRecord
 from lessley_deals.domain.protocols import AliasRepository, CanonicalStoreRepository
 from lessley_deals.matching.index import AliasIndex
+from lessley_deals.pipeline.constraints_stage import ConstraintsStage
 from lessley_deals.pipeline.context import PipelineContext
 from lessley_deals.pipeline.match_stage import MatchStage
 from lessley_deals.pipeline.normalize_stage import NormalizeStage
@@ -27,6 +28,7 @@ class PipelineOrchestrator:
         persist_stage: PersistStage,
         store_repo: CanonicalStoreRepository,
         alias_repo: AliasRepository,
+        constraints_stage: ConstraintsStage | None = None,
     ) -> None:
         self._scrape = scrape_stage
         self._normalize = normalize_stage
@@ -34,6 +36,7 @@ class PipelineOrchestrator:
         self._persist = persist_stage
         self._store_repo = store_repo
         self._alias_repo = alias_repo
+        self._constraints = constraints_stage
 
     async def run(self, source_ids: Sequence[str] | None = None) -> PipelineReport:
         ctx = PipelineContext()
@@ -66,9 +69,16 @@ class PipelineOrchestrator:
         verdicts = self._match.run(normalized, index)
         verdict_map = {v.record_id: v for v in verdicts}
 
+        # Stage 3b: Constraints (optional) — parse each deal's terms into a
+        # structured constraints block, for every source uniformly.
+        constraints_map: dict[str, dict[str, Any]] = {}
+        if self._constraints is not None:
+            logger.info("Starting constraints stage...")
+            constraints_map = await self._constraints.run(deals)
+
         # Stage 4: Persist
         logger.info("Starting persist stage...")
-        await self._persist.run(pipeline_records, normalized_map, verdict_map)
+        await self._persist.run(pipeline_records, normalized_map, verdict_map, constraints_map)
 
         ctx.finish()
         report = PipelineReport.from_context(ctx)

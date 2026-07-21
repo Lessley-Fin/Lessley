@@ -50,6 +50,11 @@ def test_legacy_normalizes_to_new_shape():
     assert comb["stackable_with_giftcards"] == "unknown"
     # transaction limit moved up
     assert norm["constraints"]["limits"]["max_uses_per_transaction"] == 2
+    # legacy redemption_channels translated to store_coverage: website->online, physical->physical
+    cov = norm["constraints"]["store_coverage"]
+    assert cov["is_include_online_stores"] == "no"       # was website: no
+    assert cov["is_include_physical_stores"] == "yes"    # was physical_store: yes
+    assert cov["is_include_outlets_stores"] == "unknown"  # no legacy equivalent
     # legacy nested constraints dropped
     assert "constraints" not in norm["discount_logic"]
 

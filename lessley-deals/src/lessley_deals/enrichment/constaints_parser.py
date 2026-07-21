@@ -28,16 +28,18 @@ TriBool = bool | Literal["unknown"]
 class Combinability(BaseModel):
     """Whether the deal stacks with each other kind of discount.
 
-    Every field is independent — a deal can stack with store sales yet be
-    blocked from stacking with coupons.
+    Optimistic by default: when the terms are silent about a given kind of
+    stacking, the field is ``True`` (assume it stacks). Only an explicit
+    prohibition in the text sets a field to ``False``. Every field is
+    independent — a deal can stack with store sales yet be blocked from coupons.
     """
 
-    stackable_with_store_sale: TriBool = "unknown"
-    stackable_with_member_discounts: TriBool = "unknown"
-    stackable_with_coupons: TriBool = "unknown"
-    stackable_with_payment_discounts: TriBool = "unknown"
-    stackable_with_giftcards: TriBool = "unknown"
-    stackable_with_cashback: TriBool = "unknown"
+    stackable_with_store_sale: bool = True
+    stackable_with_member_discounts: bool = True
+    stackable_with_coupons: bool = True
+    stackable_with_payment_discounts: bool = True
+    stackable_with_giftcards: bool = True
+    stackable_with_cashback: bool = True
 
 
 class Limits(BaseModel):
@@ -66,12 +68,12 @@ class Limits(BaseModel):
         return ivalue if ivalue > 0 else None
 
 
-class RedemptionChannels(BaseModel):
-    """Where the customer REDEEMS the discount (not where they buy it)."""
+class StoreCoverage(BaseModel):
+    """Which store types the deal applies to (its scope of coverage)."""
 
-    website: TriBool = "unknown"
-    mobile_app: TriBool = "unknown"
-    physical_store: TriBool = "unknown"
+    is_include_outlets_stores: TriBool = "unknown"
+    is_include_online_stores: TriBool = "unknown"
+    is_include_physical_stores: TriBool = "unknown"
 
 
 class Eligibility(BaseModel):
@@ -82,7 +84,7 @@ class Eligibility(BaseModel):
 class DealConstraints(BaseModel):
     combinability: Combinability = Combinability()
     limits: Limits = Limits()
-    redemption_channels: RedemptionChannels = RedemptionChannels()
+    store_coverage: StoreCoverage = StoreCoverage()
     eligibility: Eligibility = Eligibility()
 
 
@@ -115,10 +117,10 @@ class _LlmLimits(BaseModel):
     minimum_purchase: int | None
 
 
-class _LlmRedemptionChannels(BaseModel):
-    website: _YesNo
-    mobile_app: _YesNo
-    physical_store: _YesNo
+class _LlmStoreCoverage(BaseModel):
+    is_include_outlets_stores: _YesNo
+    is_include_online_stores: _YesNo
+    is_include_physical_stores: _YesNo
 
 
 class _LlmEligibility(BaseModel):
@@ -129,7 +131,7 @@ class _LlmEligibility(BaseModel):
 class _LlmDealConstraints(BaseModel):
     combinability: _LlmCombinability
     limits: _LlmLimits
-    redemption_channels: _LlmRedemptionChannels
+    store_coverage: _LlmStoreCoverage
     eligibility: _LlmEligibility
 
 
@@ -142,29 +144,37 @@ def _tri(value: str) -> TriBool:
     return "unknown"
 
 
+def _tri_optimistic(value: str) -> bool:
+    """Combinability mapping: default to True unless explicitly prohibited.
+
+    "yes" and "unknown" (no information) both become True; only "no" is False.
+    """
+    return value != "no"
+
+
 def _to_public(llm: _LlmDealConstraints) -> DealConstraints:
     """Convert the enum-based LLM output into the boolean public schema."""
     c = llm.combinability
-    r = llm.redemption_channels
+    r = llm.store_coverage
     e = llm.eligibility
     return DealConstraints(
         combinability=Combinability(
-            stackable_with_store_sale=_tri(c.stackable_with_store_sale),
-            stackable_with_member_discounts=_tri(c.stackable_with_member_discounts),
-            stackable_with_coupons=_tri(c.stackable_with_coupons),
-            stackable_with_payment_discounts=_tri(c.stackable_with_payment_discounts),
-            stackable_with_giftcards=_tri(c.stackable_with_giftcards),
-            stackable_with_cashback=_tri(c.stackable_with_cashback),
+            stackable_with_store_sale=_tri_optimistic(c.stackable_with_store_sale),
+            stackable_with_member_discounts=_tri_optimistic(c.stackable_with_member_discounts),
+            stackable_with_coupons=_tri_optimistic(c.stackable_with_coupons),
+            stackable_with_payment_discounts=_tri_optimistic(c.stackable_with_payment_discounts),
+            stackable_with_giftcards=_tri_optimistic(c.stackable_with_giftcards),
+            stackable_with_cashback=_tri_optimistic(c.stackable_with_cashback),
         ),
         limits=Limits(
             max_uses_per_transaction=llm.limits.max_uses_per_transaction,
             max_uses_per_month=llm.limits.max_uses_per_month,
             minimum_purchase=llm.limits.minimum_purchase,
         ),
-        redemption_channels=RedemptionChannels(
-            website=_tri(r.website),
-            mobile_app=_tri(r.mobile_app),
-            physical_store=_tri(r.physical_store),
+        store_coverage=StoreCoverage(
+            is_include_outlets_stores=_tri(r.is_include_outlets_stores),
+            is_include_online_stores=_tri(r.is_include_online_stores),
+            is_include_physical_stores=_tri(r.is_include_physical_stores),
         ),
         eligibility=Eligibility(
             membership_required=_tri(e.membership_required),
@@ -178,7 +188,7 @@ def _to_public(llm: _LlmDealConstraints) -> DealConstraints:
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """\
-You are a precise Hebrew-language deal terms analyzer. Your task is to parse Hebrew text containing terms and conditions of a promotional deal, coupon, or offer (from the Israeli loyalty club "מועדון הוט"/HOT) and extract structured information about how it may be combined with other discounts, its usage limits, where it is redeemed, and who is eligible.
+You are a precise Hebrew-language deal terms analyzer. Your task is to parse Hebrew text containing terms and conditions of a promotional deal, coupon, or offer from an Israeli retailer, loyalty club, or credit-card benefits program (e.g. HOT / מועדון הוט, Mastercard, Behatsdaa / בהצדעה, Isracard) and extract structured information about how it may be combined with other discounts, its usage limits, which store types it covers, and who is eligible.
 
 ## Your Responsibilities
 
@@ -203,10 +213,10 @@ You are a precise Hebrew-language deal terms analyzer. Your task is to parse Heb
     "max_uses_per_month": <positive integer or null>,
     "minimum_purchase": <positive integer or null>
   },
-  "redemption_channels": {
-    "website": "yes|no|unknown",
-    "mobile_app": "yes|no|unknown",
-    "physical_store": "yes|no|unknown"
+  "store_coverage": {
+    "is_include_outlets_stores": "yes|no|unknown",
+    "is_include_online_stores": "yes|no|unknown",
+    "is_include_physical_stores": "yes|no|unknown"
   },
   "eligibility": {
     "membership_required": "yes|no|unknown",
@@ -218,8 +228,9 @@ You are a precise Hebrew-language deal terms analyzer. Your task is to parse Heb
 
 1. Numbers are ALWAYS positive whole integers or null. Never a string, never a decimal, never 0.
 2. yes/no/unknown fields: use "unknown" (not "no") when the text is silent. "no" requires an explicit prohibition.
-3. Do NOT infer beyond the text. If the text says nothing about the app, mobile_app = "unknown".
+3. Do NOT infer beyond the text. If the text says nothing about outlet stores, is_include_outlets_stores = "unknown".
 4. Each combinability field is independent — a deal can be "yes" for store sales but "no" for coupons.
+5. Combinability is OPTIMISTIC: when the text is silent about a kind of stacking, answer "unknown" (it is stored as stackable=true). Only use "no" when the text explicitly prohibits that stacking.
 
 ## Combinability — Hebrew phrase mapping (CRITICAL)
 
@@ -239,19 +250,23 @@ Examples:
 - "לא ניתן לרכוש כרטיס מתנה באמצעות השובר" → stackable_with_giftcards: no
 - "בנוסף לכל הנחה אחרת" → all six combinability fields: yes
 
-## Channels — purchase vs. redemption (CRITICAL)
+## Store coverage — WHICH store types the deal applies to (CRITICAL)
 
-`redemption_channels` = WHERE THE CUSTOMER USES (REDEEMS) THE DISCOUNT, not where they buy the voucher/coupon.
-- Phrases like "רכישת תו דיגיטלי באתר/אפליקציית מועדון הוט" describe the PURCHASE flow — they are NOT evidence for redemption_channels. Ignore them.
-- Only phrases describing REDEMPTION ("למימוש", "לשימוש", "תקף ל...", "מימוש התו ב...", "בקופות הסניפים") set redemption_channels.
-- If the text only says where to BUY and nothing about where to REDEEM, all redemption_channels stay "unknown".
+`store_coverage` = the TYPES OF STORES where the deal is valid. This is about the deal's scope
+(are outlet branches in? is the online shop in? are regular branches in?), NOT where the customer
+buys the voucher. "yes" = that store type IS included; "no" = explicitly EXCLUDED; "unknown" = silent.
 
-Mapping (redemption context only):
-- "למימוש באתר" / "מימוש אונליין" → website: yes
-- "למימוש באפליקציה" / "באפליקציית ...למימוש" → mobile_app: yes
-- "למימוש בסניפים" / "בקופות הסניפים" / "בחנות" → physical_store: yes
-- "בסניפים בלבד" → physical_store: yes; website: no; mobile_app: no
-- "לא ניתן למימוש באתר" / "לא ניתן למימוש באתר הסחר" → website: no
+- is_include_outlets_stores → outlet / surplus branches ("חנויות עודפים", "אאוטלט", "חנויות העודפים")
+- is_include_online_stores → the retailer's e-commerce / online shop ("אתר הסחר", "אתר האינטרנט", "אונליין", "החנות המקוונת")
+- is_include_physical_stores → the retailer's regular physical branches ("סניפים", "בחנות", "בקופות הסניפים")
+
+Mapping:
+- "תקף בסניפים" / "למימוש בקופות הסניפים" / "בחנות" → is_include_physical_stores: yes
+- "תקף גם באתר" / "כולל אתר האינטרנט" / "למימוש אונליין" → is_include_online_stores: yes
+- "לא ניתן למימוש באתר הסחר" / "לא תקף באתר" → is_include_online_stores: no
+- "לא ניתן לממש בחנויות העודפים" / "לא כולל חנויות עודפים" → is_include_outlets_stores: no
+- "תקף בסניפים בלבד" → is_include_physical_stores: yes; is_include_online_stores: no; is_include_outlets_stores: no
+- Do NOT infer coverage from the PURCHASE channel ("רכישת תו דיגיטלי באתר מועדון הוט" is where you BUY the voucher — it does not make is_include_online_stores yes).
 
 ## Limits
 
@@ -265,7 +280,7 @@ Mapping (redemption context only):
 ## Eligibility
 
 - "לחברי מועדון בלבד" / voucher purchasable only with the club-linked card → membership_required: yes
-- "בלעדי למשלמים בכרטיס אשראי X" / "בכרטיס האשראי המשויך למועדון הוט" → payment_method_required: describe the card in English (e.g. "HOT club-linked credit card"), AND membership_required: yes when club membership is implied.
+- "בלעדי למשלמים בכרטיס אשראי X" / "בכרטיס האשראי המשויך למועדון X" → payment_method_required: describe the card/club in English using the ACTUAL name in the text (e.g. "HOT club-linked credit card", "Isracard", "Mastercard"), AND membership_required: yes when club membership is implied.
 - If no specific payment instrument is required → payment_method_required: null.
 
 ## Final Reminder

@@ -18,7 +18,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -42,7 +42,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     }
   },
@@ -65,7 +65,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -88,7 +88,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -111,7 +111,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -134,7 +134,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": "Card X" }
     }
   },
@@ -157,7 +157,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -180,7 +180,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": 2, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -204,7 +204,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     }
   },
@@ -227,7 +227,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "no", "mobile_app": "no", "physical_store": "no" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "no", "is_include_physical_stores": "no" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -250,7 +250,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": 1, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "unknown" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "unknown" },
       "eligibility": { "membership_required": "unknown", "payment_method_required": null }
     }
   },
@@ -275,7 +275,7 @@
         "stackable_with_cashback": "unknown"
       },
       "limits": { "max_uses_per_transaction": 2, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "no", "mobile_app": "no", "physical_store": "yes" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "no", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": "HOT club-linked credit card" }
     },
     "club_id": "club_hot",
@@ -302,7 +302,7 @@
         "stackable_with_cashback": "no"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "yes", "mobile_app": "no", "physical_store": "no" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "yes", "is_include_physical_stores": "no" },
       "eligibility": { "membership_required": "no", "payment_method_required": "Mastercard credit card" }
     },
     "club_id": "club_mastercard",
@@ -328,7 +328,7 @@
         "stackable_with_cashback": "unknown"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "unknown", "mobile_app": "unknown", "physical_store": "yes" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     },
     "club_id": "club_pais",
@@ -355,7 +355,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "yes", "mobile_app": "unknown", "physical_store": "yes" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "yes", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     },
     "club_id": "club_hever",
@@ -382,7 +382,7 @@
         "stackable_with_cashback": "yes"
       },
       "limits": { "max_uses_per_transaction": null, "max_uses_per_month": null, "minimum_purchase": null },
-      "redemption_channels": { "website": "no", "mobile_app": "unknown", "physical_store": "yes" },
+      "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "no", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     },
     "club_id": "club_behatsdaa",

@@ -16,6 +16,7 @@ def enrich_deal_constraints(
     limit: int = 0,
     dry_run: bool = False,
     force: bool = False,
+    file: str | None = None,
 ) -> dict[str, int]:
     """Parse ``terms_and_conditions`` into structured ``constraints`` on deals.
 
@@ -24,17 +25,18 @@ def enrich_deal_constraints(
     other deal fields are preserved — only ``constraints`` is written.
 
     Args:
-        data_dir: Data directory holding ``deals.json``.
+        data_dir: Data directory holding ``deals.json`` (used when ``file`` is None).
         source:   Only enrich deals from this ``source_id`` (``""`` = all).
         limit:    Enrich at most N deals (0 = no cap).
         dry_run:  Call the LLM but do not persist the result.
         force:    Re-parse deals that already have ``constraints``.
+        file:     Explicit path to a deals JSON file. Overrides ``data_dir``.
 
     Returns:
         Counters: ``total``, ``processed``, ``skipped``, ``failed``.
     """
-    config = PersistenceConfig(base_dir=Path(data_dir))
-    repo = DealJsonRepository(config.deals_path)
+    deals_path = Path(file) if file else PersistenceConfig(base_dir=Path(data_dir)).deals_path
+    repo = DealJsonRepository(deals_path)
     deals = repo.get_all()
 
     stats = {"total": len(deals), "processed": 0, "skipped": 0, "failed": 0}

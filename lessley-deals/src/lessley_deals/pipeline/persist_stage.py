@@ -67,8 +67,10 @@ class PersistStage:
         pipeline_records: list[PipelineRecord],
         normalized_map: dict[str, NormalizedRecord],
         verdict_map: dict[str, MatchVerdict],
+        constraints_map: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         now = datetime.now(timezone.utc)
+        constraints_map = constraints_map or {}
 
         # ------------------------------------------------------------------ #
         # Classify every record by verdict so we can batch-persist per type. #
@@ -106,7 +108,7 @@ class PersistStage:
                     currency=normalized.price.currency if normalized.price else "ILS",
                     url=prec.raw.url,
                     discount_logic=raw_payload.get("discount_logic"),
-                    constraints=raw_payload.get("constraints"),
+                    constraints=constraints_map.get(raw_id) or raw_payload.get("constraints"),
                     stackable=raw_payload.get("stackable"),
                     redeem_channels=raw_payload.get("redeem_channels", []),
                     coupon_code=raw_payload.get("coupon_code"),

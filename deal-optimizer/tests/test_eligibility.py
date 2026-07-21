@@ -27,15 +27,19 @@ def test_monthly_cap_exhausted_filters_deal():
     assert find_best_path(100, 1, [deal], ctx) == []
 
 
-def test_channel_all_no_filters_deal():
+def test_store_type_all_excluded_filters_deal():
     deal = mk_deal("c", "coupon", reward_type="percentage_off", reward_value=0.10,
-                   accepts_all=True, channels={"website": "no", "mobile_app": "no", "physical_store": "no"})
-    ctx = UserContext(preferred_channels=["website"])
+                   accepts_all=True, store_coverage={
+                       "is_include_outlets_stores": "no",
+                       "is_include_online_stores": "no",
+                       "is_include_physical_stores": "no",
+                   })
+    ctx = UserContext(preferred_store_types=["online"])
     assert find_best_path(100, 1, [deal], ctx) == []
 
 
-def test_channel_unknown_is_optimistic():
+def test_store_type_unknown_is_optimistic():
     deal = mk_deal("c", "coupon", reward_type="percentage_off", reward_value=0.10,
-                   accepts_all=True, channels={"website": "unknown"})
-    ctx = UserContext(preferred_channels=["website"])
+                   accepts_all=True, store_coverage={"is_include_online_stores": "unknown"})
+    ctx = UserContext(preferred_store_types=["online"])
     assert _ids(find_best_path(100, 1, [deal], ctx)) == ["c"]

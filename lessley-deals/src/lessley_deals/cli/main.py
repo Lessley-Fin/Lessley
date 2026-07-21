@@ -215,6 +215,18 @@ def scrape(
         "--enrich/--no-enrich",
         help="After scraping, classify stores missing `metadata.mcc_codes` via the LLM.",
     ),
+    enrich_constraints: bool = typer.Option(
+        True,
+        "--enrich-constraints/--no-enrich-constraints",
+        help=(
+            "Parse each scraped deal's terms into a structured `constraints` block during "
+            "the scrape (one LLM call per deal). On by default; use --no-enrich-constraints "
+            "to skip (e.g. offline, or to run `enrich-constraints` separately later)."
+        ),
+    ),
+    constraints_concurrency: int = typer.Option(
+        5, "--constraints-concurrency", help="Max concurrent constraints LLM calls (default 5)."
+    ),
 ) -> None:
     """Run the full scrape -> normalize -> match -> persist pipeline."""
     _setup_logging(log_level)
@@ -264,6 +276,11 @@ def scrape(
                                  review_no_match=review_no_match,
                                  club_repo=repos.club_repo)
 
+    constraints_stage = None
+    if enrich_constraints:
+        from lessley_deals.pipeline.constraints_stage import ConstraintsStage
+        constraints_stage = ConstraintsStage(max_concurrency=constraints_concurrency)
+
     pipeline = PipelineOrchestrator(
         scrape_stage=scrape_stage,
         normalize_stage=normalize_stage,
@@ -271,6 +288,7 @@ def scrape(
         persist_stage=persist_stage,
         store_repo=store_repo,
         alias_repo=alias_repo,
+        constraints_stage=constraints_stage,
     )
 
     source_ids = [source] if source else None
@@ -1442,8 +1460,8 @@ def optimize_cmd(
     member_clubs: Optional[str] = typer.Option(
         None, "--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b"
     ),
-    channels: Optional[str] = typer.Option(
-        None, "--channels", help="Comma-separated preferred redemption channels, e.g. website,mobile_app"
+    store_types: Optional[str] = typer.Option(
+        None, "--store-types", help="Comma-separated preferred store types, e.g. outlets,online,physical"
     ),
     monthly_uses: Optional[str] = typer.Option(
         None, "--monthly-uses", help="Comma-separated deal_id:count already used this month, e.g. D11:1"
@@ -1465,7 +1483,7 @@ def optimize_cmd(
         raise typer.Exit(code=1) from exc
 
     user_context = None
-    if member_clubs or channels or monthly_uses:
+    if member_clubs or store_types or monthly_uses:
         uses_this_month: dict[str, int] = {}
         if monthly_uses:
             for pair in monthly_uses.split(","):
@@ -1473,7 +1491,7 @@ def optimize_cmd(
                 uses_this_month[deal_id.strip()] = int(count.strip() or 0)
         user_context = UserContext(
             member_club_ids=[c.strip() for c in member_clubs.split(",")] if member_clubs else [],
-            preferred_channels=[c.strip() for c in channels.split(",")] if channels else [],
+            preferred_store_types=[c.strip() for c in store_types.split(",")] if store_types else [],
             uses_this_month=uses_this_month,
         )
 
@@ -1513,7 +1531,12 @@ def optimize_cmd(
 
 @app.command(name="enrich-constraints")
 def enrich_constraints_cmd(
-    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    data_dir: str = typer.Option(
+        "data", "--data-dir", "-d", help="Reads <data-dir>/deals.json unless --file is set"
+    ),
+    file: Optional[str] = typer.Option(
+        None, "--file", help="Deals JSON file to enrich instead of <data-dir>/deals.json"
+    ),
     source: str = typer.Option(
         "hot",
         "--source",
@@ -1521,7 +1544,7 @@ def enrich_constraints_cmd(
         help="Only enrich deals from this source_id. Pass an empty string to enrich all sources.",
     ),
     limit: int = typer.Option(0, "--limit", "-n", help="Enrich at most N deals (0 = all)"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Call the LLM but do not write deals.json"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Call the LLM but do not write the file"),
     force: bool = typer.Option(False, "--force", help="Re-parse deals that already have constraints"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
@@ -1531,7 +1554,7 @@ def enrich_constraints_cmd(
     from lessley_deals.enrichment.enrich_deal_constraints import enrich_deal_constraints
 
     stats = enrich_deal_constraints(
-        data_dir=data_dir, source=source, limit=limit, dry_run=dry_run, force=force
+        data_dir=data_dir, source=source, limit=limit, dry_run=dry_run, force=force, file=file
     )
     console.print(
         f"[green]Done.[/green] total={stats['total']} "

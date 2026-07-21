@@ -13,7 +13,7 @@ from .schema import (
     DealType,
     Eligibility,
     Limits,
-    RedemptionChannels,
+    StoreCoverage,
 )
 from .transform import apply_deal
 
@@ -30,7 +30,7 @@ __all__ = [
     "DealType",
     "Combinability",
     "Limits",
-    "RedemptionChannels",
+    "StoreCoverage",
     "Eligibility",
     "DealConstraints",
     "DealParseResult",

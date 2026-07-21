@@ -68,6 +68,18 @@ def test_one_sided_refusal_blocks_edge():
     assert _ids(path) == ["Y"]
 
 
+def test_boolean_false_refusal_blocks_edge():
+    # Enriched deals carry booleans (not "yes"/"no"). A boolean False must be
+    # honored as an explicit refusal, exactly like the string "no".
+    x = mk_deal("X", "coupon", reward_type="percentage_off", reward_value=0.10,
+                combinability={"stackable_with_payment_discounts": True})
+    y = mk_deal("Y", "payment_discount", reward_type="percentage_off", reward_value=0.20,
+                combinability={"stackable_with_coupons": False})
+    # Even optimistic (unknown_as_yes=True), the explicit False blocks stacking.
+    path = find_best_path(1000, 1, [x, y], unknown_as_yes=True)
+    assert _ids(path) == ["Y"]
+
+
 # 5b. max_discount_amount (e.g. gift card loadable up to a ceiling) ------------
 
 def test_max_discount_amount_below_cap_uses_full_price():

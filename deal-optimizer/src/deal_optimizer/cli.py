@@ -1,7 +1,7 @@
 """CLI entry point: find the optimal deal stack for a store + cart.
 
     python -m deal_optimizer.cli <deals.json> <store_id> <cart_total> [--quantity N] [--strict]
-        [--verbose] [--top-n N] [--member-clubs club_a,club_b] [--channels website,mobile_app]
+        [--verbose] [--top-n N] [--member-clubs club_a,club_b] [--store-types online,physical]
         [--monthly-uses deal_id:2,other_deal:1]
 """
 
@@ -13,7 +13,7 @@ from .engine import UserContext, get_optimal_deal_path
 
 
 def _build_user_context(args: argparse.Namespace) -> UserContext | None:
-    if not (args.member_clubs or args.channels or args.monthly_uses):
+    if not (args.member_clubs or args.store_types or args.monthly_uses):
         return None
 
     uses_this_month = {}
@@ -24,7 +24,7 @@ def _build_user_context(args: argparse.Namespace) -> UserContext | None:
 
     return UserContext(
         member_club_ids=[c.strip() for c in args.member_clubs.split(",")] if args.member_clubs else [],
-        preferred_channels=[c.strip() for c in args.channels.split(",")] if args.channels else [],
+        preferred_store_types=[c.strip() for c in args.store_types.split(",")] if args.store_types else [],
         uses_this_month=uses_this_month,
     )
 
@@ -47,7 +47,7 @@ def main() -> None:
     )
     p.add_argument("--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b")
     p.add_argument(
-        "--channels", help="Comma-separated preferred redemption channels, e.g. website,mobile_app,physical_store"
+        "--store-types", help="Comma-separated preferred store types, e.g. outlets,online,physical"
     )
     p.add_argument(
         "--monthly-uses", help="Comma-separated deal_id:count already used this month, e.g. D11_coupon_capped:1"

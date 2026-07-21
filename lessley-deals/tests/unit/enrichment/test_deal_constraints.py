@@ -7,12 +7,12 @@ from lessley_deals.enrichment.constaints_parser import (
     DealConstraints,
     Eligibility,
     Limits,
-    RedemptionChannels,
+    StoreCoverage,
     _LlmCombinability,
     _LlmDealConstraints,
     _LlmEligibility,
     _LlmLimits,
-    _LlmRedemptionChannels,
+    _LlmStoreCoverage,
     _to_public,
     empty_constraints,
     parse_deal_constraints,
@@ -26,22 +26,22 @@ def test_empty_constraints_is_all_unknown_and_null() -> None:
     template = empty_constraints()
     assert template == {
         "combinability": {
-            "stackable_with_store_sale": "unknown",
-            "stackable_with_member_discounts": "unknown",
-            "stackable_with_coupons": "unknown",
-            "stackable_with_payment_discounts": "unknown",
-            "stackable_with_giftcards": "unknown",
-            "stackable_with_cashback": "unknown",
+            "stackable_with_store_sale": True,
+            "stackable_with_member_discounts": True,
+            "stackable_with_coupons": True,
+            "stackable_with_payment_discounts": True,
+            "stackable_with_giftcards": True,
+            "stackable_with_cashback": True,
         },
         "limits": {
             "max_uses_per_transaction": None,
             "max_uses_per_month": None,
             "minimum_purchase": None,
         },
-        "redemption_channels": {
-            "website": "unknown",
-            "mobile_app": "unknown",
-            "physical_store": "unknown",
+        "store_coverage": {
+            "is_include_outlets_stores": "unknown",
+            "is_include_online_stores": "unknown",
+            "is_include_physical_stores": "unknown",
         },
         "eligibility": {
             "membership_required": "unknown",
@@ -54,16 +54,16 @@ def test_empty_constraints_is_all_unknown_and_null() -> None:
 # Tri-state booleans                                                          #
 # --------------------------------------------------------------------------- #
 
-def test_tristate_accepts_real_booleans() -> None:
+def test_combinability_defaults_to_true() -> None:
     c = Combinability(stackable_with_coupons=True, stackable_with_giftcards=False)
     assert c.stackable_with_coupons is True
     assert c.stackable_with_giftcards is False
-    # Untouched fields keep the unknown sentinel.
-    assert c.stackable_with_store_sale == "unknown"
+    # Untouched combinability fields default to True (optimistic).
+    assert c.stackable_with_store_sale is True
 
 
-def test_redemption_and_eligibility_defaults() -> None:
-    assert RedemptionChannels().website == "unknown"
+def test_store_coverage_and_eligibility_defaults() -> None:
+    assert StoreCoverage().is_include_online_stores == "unknown"
     e = Eligibility()
     assert e.membership_required == "unknown"
     assert e.payment_method_required is None
@@ -113,8 +113,10 @@ def _llm_constraints(**overrides: object) -> _LlmDealConstraints:
             max_uses_per_month=None,
             minimum_purchase=0,  # invalid -> should collapse to None
         ),
-        redemption_channels=_LlmRedemptionChannels(
-            website="no", mobile_app="unknown", physical_store="yes"
+        store_coverage=_LlmStoreCoverage(
+            is_include_outlets_stores="no",
+            is_include_online_stores="no",
+            is_include_physical_stores="yes",
         ),
         eligibility=_LlmEligibility(
             membership_required="yes",
@@ -132,17 +134,18 @@ def test_to_public_maps_enums_to_booleans() -> None:
     assert comb.stackable_with_store_sale is True
     assert comb.stackable_with_member_discounts is True
     assert comb.stackable_with_coupons is False
-    assert comb.stackable_with_payment_discounts == "unknown"
+    # "unknown" from the LLM maps to True (optimistic combinability default).
+    assert comb.stackable_with_payment_discounts is True
     assert comb.stackable_with_giftcards is False
-    assert comb.stackable_with_cashback == "unknown"
+    assert comb.stackable_with_cashback is True
 
     # 0 from the LLM is not a valid positive limit -> None.
     assert public.limits.minimum_purchase is None
     assert public.limits.max_uses_per_transaction == 2
 
-    assert public.redemption_channels.website is False
-    assert public.redemption_channels.physical_store is True
-    assert public.redemption_channels.mobile_app == "unknown"
+    assert public.store_coverage.is_include_online_stores is False
+    assert public.store_coverage.is_include_physical_stores is True
+    assert public.store_coverage.is_include_outlets_stores is False
 
     assert public.eligibility.membership_required is True
     assert public.eligibility.payment_method_required == "HOT club-linked credit card"

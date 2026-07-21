@@ -27,14 +27,14 @@ def _make_deal(deal_id: str = "deal_1", constraints: dict | None = None) -> Deal
 def test_deal_constraints_round_trip() -> None:
     constraints = empty_constraints()
     constraints["limits"]["max_uses_per_transaction"] = 2
-    constraints["redemption_channels"]["physical_store"] = True
+    constraints["store_coverage"]["is_include_physical_stores"] = True
 
     deal = _make_deal(constraints=constraints)
     restored = deal_from_dict(to_dict(deal))
 
     assert restored.constraints == constraints
     assert restored.constraints["limits"]["max_uses_per_transaction"] == 2
-    assert restored.constraints["redemption_channels"]["physical_store"] is True
+    assert restored.constraints["store_coverage"]["is_include_physical_stores"] is True
 
 
 def test_save_omits_null_constraints(tmp_path: Path) -> None:

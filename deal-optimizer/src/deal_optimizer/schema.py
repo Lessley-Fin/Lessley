@@ -6,7 +6,7 @@ not import anything from the main `lessley_deals` package.
 
 Two top-level facts describe a deal for the graph:
   * ``deal_type`` — which layer it lives in (Part 1).
-  * ``constraints`` — combinability / limits / channels / eligibility.
+  * ``constraints`` — combinability / limits / store_coverage / eligibility.
 
 The engine works on plain dicts (see ``adapter.py``); these Pydantic models are
 the contract for validation, the categorization fallback, and tests.
@@ -48,10 +48,12 @@ class Limits(BaseModel):
     minimum_purchase: float | None = None  # ₪ threshold the customer must spend
 
 
-class RedemptionChannels(BaseModel):
-    website: TriState = "unknown"
-    mobile_app: TriState = "unknown"
-    physical_store: TriState = "unknown"
+class StoreCoverage(BaseModel):
+    """Which store types the deal applies to (its scope of coverage)."""
+
+    is_include_outlets_stores: TriState = "unknown"
+    is_include_online_stores: TriState = "unknown"
+    is_include_physical_stores: TriState = "unknown"
 
 
 class Eligibility(BaseModel):
@@ -62,7 +64,7 @@ class Eligibility(BaseModel):
 class DealConstraints(BaseModel):
     combinability: Combinability
     limits: Limits
-    redemption_channels: RedemptionChannels
+    store_coverage: StoreCoverage
     eligibility: Eligibility
 
 

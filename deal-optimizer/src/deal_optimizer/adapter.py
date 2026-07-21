@@ -72,7 +72,11 @@ def _empty_constraints() -> dict[str, Any]:
     return {
         "combinability": {k: "unknown" for k in _NEW_COMBINABILITY_KEYS},
         "limits": {"max_uses_per_transaction": None, "max_uses_per_month": None, "minimum_purchase": None},
-        "redemption_channels": {"website": "unknown", "mobile_app": "unknown", "physical_store": "unknown"},
+        "store_coverage": {
+            "is_include_outlets_stores": "unknown",
+            "is_include_online_stores": "unknown",
+            "is_include_physical_stores": "unknown",
+        },
         "eligibility": {"membership_required": "unknown", "payment_method_required": None},
     }
 
@@ -91,10 +95,14 @@ def _translate_legacy_constraints(legacy: dict[str, Any]) -> dict[str, Any]:
     out["limits"]["max_uses_per_month"] = _coerce_period_to_month(tx.get("max_uses_per_period"))
     out["limits"]["minimum_purchase"] = _parse_minimum_purchase(elig.get("minimum_purchase"))
 
+    # Legacy 'redemption_channels' (where you redeem) is the closest signal we have
+    # for the new store_coverage axis: online <- website, physical <- physical_store.
+    # There is no legacy equivalent for outlet stores, so it stays "unknown".
     ch = legacy.get("redemption_channels", {}) or {}
-    for k in ("website", "mobile_app", "physical_store"):
-        if k in ch:
-            out["redemption_channels"][k] = ch[k]
+    if "website" in ch:
+        out["store_coverage"]["is_include_online_stores"] = ch["website"]
+    if "physical_store" in ch:
+        out["store_coverage"]["is_include_physical_stores"] = ch["physical_store"]
 
     out["eligibility"]["membership_required"] = elig.get("membership_required", "unknown")
     out["eligibility"]["payment_method_required"] = elig.get("payment_method_required")

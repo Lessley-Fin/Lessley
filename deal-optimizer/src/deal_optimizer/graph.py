@@ -81,9 +81,11 @@ def accepts(deal: DealNode, other_type: str, unknown_as_yes: bool) -> bool:
     """True if ``deal`` allows being stacked with a deal of ``other_type``."""
     key = ACCEPTS_KEY[other_type]
     val = (deal.constraints.get("combinability", {}) or {}).get(key, "unknown")
-    if val == "yes":
+    # Enriched deals carry booleans (True/False); the mock/legacy string
+    # convention uses "yes"/"no". Honor both; anything else falls back.
+    if val is True or val == "yes":
         return True
-    if val == "no":
+    if val is False or val == "no":
         return False
     return unknown_as_yes
 

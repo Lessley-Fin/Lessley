@@ -45,8 +45,20 @@ _TENDER_CATEGORIES = ("giftcard_discount", "payment_discount", "cashback")
 @dataclass
 class UserContext:
     member_club_ids: list[str] = field(default_factory=list)
-    preferred_channels: list[str] = field(default_factory=list)  # website|mobile_app|physical_store
+    preferred_store_types: list[str] = field(default_factory=list)  # outlets|online|physical
     uses_this_month: dict[str, int] = field(default_factory=dict)  # {deal_id: uses_in_current_month}
+
+
+# preferred_store_type value → store_coverage key
+_STORE_TYPE_KEYS = {
+    "outlets": "is_include_outlets_stores",
+    "online": "is_include_online_stores",
+    "physical": "is_include_physical_stores",
+}
+
+# A store type is "excluded" when the deal says so explicitly — as the yes/no/unknown
+# string "no" (optimizer/mock convention) or the boolean False (enriched-deal output).
+_EXCLUDED = ("no", False)
 
 
 def _deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str]:
@@ -54,7 +66,7 @@ def _deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str
     constraints = deal.get("constraints", {}) or {}
     elig = constraints.get("eligibility", {}) or {}
     limits = constraints.get("limits", {}) or {}
-    channels = constraints.get("redemption_channels", {}) or {}
+    coverage = constraints.get("store_coverage", {}) or {}
 
     # Membership required but user is not a member of the deal's club.
     if elig.get("membership_required") == "yes":
@@ -62,11 +74,13 @@ def _deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str
         if club_id not in ctx.member_club_ids:
             return False, f"membership_required=yes, club_id={club_id!r} not in user clubs {ctx.member_club_ids}"
 
-    # Channel preference: reject only if EVERY preferred channel is explicitly "no".
-    # ("unknown" is treated optimistically — does not disqualify.)
-    if ctx.preferred_channels:
-        if all(channels.get(ch) == "no" for ch in ctx.preferred_channels):
-            return False, f"all preferred channels {ctx.preferred_channels} are 'no' ({channels})"
+    # Store-type preference: reject only if EVERY preferred store type is explicitly
+    # excluded by the deal. ("unknown"/absent is treated optimistically — no disqualify.)
+    if ctx.preferred_store_types:
+        if all(
+            coverage.get(_STORE_TYPE_KEYS.get(st, st)) in _EXCLUDED for st in ctx.preferred_store_types
+        ):
+            return False, f"all preferred store types {ctx.preferred_store_types} are excluded ({coverage})"
 
     # Monthly usage cap already exhausted.
     cap = limits.get("max_uses_per_month")

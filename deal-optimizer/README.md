@@ -55,7 +55,7 @@ runtime engine.
 
 The engine consumes the lean target schema (`schema.py`): a top-level
 `deal_type` + a `constraints` block (`combinability` / `limits` /
-`redemption_channels` / `eligibility`). The `adapter.py` layer also accepts the
+`store_coverage` / `eligibility`). The `adapter.py` layer also accepts the
 **legacy** enrichment shape (`discount_logic.constraints` with old field names,
 structured `max_uses_per_period`, string `minimum_purchase`) and translates it
 — so the engine runs on existing data today.
