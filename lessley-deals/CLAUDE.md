@@ -93,7 +93,9 @@ The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json`
 3. Register in `src/lessley_deals/scraping/registry.py`
 4. Add tests in `tests/unit/scraping/`
 
-Existing sources: `hot.py`, `mastercard.py`, `behatsdaa.py`, `isracard_topcash.py`.
+Existing sources: `hot.py`, `mastercard.py`, `behatsdaa.py`, `isracard_topcash.py`,
+`hever.py` (`HeverGiftCardAdapter` — reads a locally saved JSON export instead
+of a live API call; see the file-based sources note below).
 
 ### Adding an AI-scraped site (no code)
 For sites without a clean API, use the generic AI scraper engine instead of a
@@ -103,6 +105,28 @@ The `LlmScraperAdapter` (`scraping/sources/llm_scraper.py`) renders the page wit
 Selenium (`scraping/engine/llm_scraper.py`), cleans the DOM, chunks it, and uses
 the LLM client (`enrichment/llm_client.py::extract_deals_from_content`) to extract
 deals into the normal `RawStore`/`RawScrapedRecord` pipeline.
+
+**File-based LLM sources (no live fetch)**: add `"file_path"` (relative to the
+`lessley-deals` package root) to a `llm_sources.json` entry and the adapter
+reads that local file instead of fetching `url` at all — no Selenium, no
+httpx. Set `"is_json": true` when the file is a raw JSON payload rather than
+HTML (it's pretty-printed before chunking so `split_content` gets real line
+boundaries). This is for sites that require a login the scraper can't
+automate — you save the authenticated page/response by hand periodically and
+the adapter just parses whatever's currently on disk. Used by
+`llm:hever-teamim` (the teamim restaurant listing has no clean API, so its
+free-form HTML still goes through the LLM).
+
+**Prefer a hand-coded adapter over the LLM route whenever the source is
+already structured** (a JSON API response, or consistently-shaped HTML with
+no real judgment calls) — see `hever.py`'s `HeverGiftCardAdapter`, which
+reads the same kind of locally-saved snapshot (`data/hever_snapshots/giftcard.json`,
+since hvr.co.il needs a login the scraper doesn't automate) but maps every
+field directly, same spirit as `hot.py`'s live API adapter. No LLM call, no
+inference — `limitations` is copied verbatim into `terms_and_conditions`.
+The LLM route is for when fields have to be *found* in messy freeform text;
+skip it when they're already named JSON/HTML fields. See
+`data/hever_snapshots/README.md` for what to save and how often.
 
 ## Key Design Decisions
 

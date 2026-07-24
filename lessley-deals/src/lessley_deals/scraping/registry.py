@@ -10,9 +10,13 @@ from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
 logger = logging.getLogger(__name__)
 
 
-def _default_llm_sources_path() -> Path:
+def _lessley_deals_root() -> Path:
     # registry.py is at src/lessley_deals/scraping/registry.py
-    return Path(__file__).resolve().parents[3] / "data" / "seed" / "llm_sources.json"
+    return Path(__file__).resolve().parents[3]
+
+
+def _default_llm_sources_path() -> Path:
+    return _lessley_deals_root() / "data" / "seed" / "llm_sources.json"
 
 
 def load_llm_site_configs(path: Path | None = None) -> list[dict[str, str]]:
@@ -37,6 +41,16 @@ def _coerce_float(value: object, default: float = 0.0) -> float:
     except ValueError:
         return default
     return n if n >= 0 else default
+
+
+def _resolve_file_path(value: object) -> str | None:
+    """Resolve a config ``file_path`` (relative paths are against the package root)."""
+    if not value or not isinstance(value, str):
+        return None
+    path = Path(value)
+    if not path.is_absolute():
+        path = _lessley_deals_root() / path
+    return str(path)
 
 
 def _coerce_max_len(value: object, default: int = 6000) -> int:
@@ -124,6 +138,8 @@ class SourceRegistry:
                         if cfg.get("wait_selector")
                         else None
                     ),
+                    file_path=_resolve_file_path(cfg.get("file_path")),
+                    is_json=bool(cfg.get("is_json", False)),
                 )
                 self._adapters[instance.source_id] = instance
                 logger.info("Registered LLM source adapter: %s", instance.source_id)
@@ -133,6 +149,7 @@ class SourceRegistry:
     def register_defaults(self) -> None:
         """Register the built-in source adapters."""
         from lessley_deals.scraping.sources.behatsdaa import BehatsdaaAdapter
+        from lessley_deals.scraping.sources.hever import HeverGiftCardAdapter
         from lessley_deals.scraping.sources.hot import HotAdapter
         from lessley_deals.scraping.sources.isracard_topcash import IsracardTopcashAdapter
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
@@ -144,6 +161,7 @@ class SourceRegistry:
             (BehatsdaaAdapter, "https://back.behatsdaa.org.il"),
             (IsracardTopcashAdapter, "https://www.topcash.co.il/all-stores"),
             (SwishAdapter, "https://swish.co.il"),
+            (HeverGiftCardAdapter, "https://www.hvr.co.il"),
         ]
         for cls, url in defaults:
             try:

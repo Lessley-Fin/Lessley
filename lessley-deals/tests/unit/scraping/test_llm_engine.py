@@ -223,6 +223,69 @@ async def test_run_with_details_two_phase_pairs_listing_and_detail() -> None:
     assert detail is not None and detail.deal_description == "store blurb"
 
 
+async def test_run_from_file_html_cleans_dom(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    engine = LlmScrapeEngine()
+    page = tmp_path / "snapshot.html"
+    page.write_text(
+        "<html><body><script>track()</script><p>Nike 20% off</p></body></html>",
+        encoding="utf-8",
+    )
+    with patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
+        return_value=ExtractedDeals(
+            deals=[ExtractedDeal(store_name="Nike", deal_description="20% off")]
+        ),
+    ) as mocked:
+        deals = await engine.run_from_file(str(page), "Extract")
+    assert deals[0].store_name == "Nike"
+    # DOM was cleaned before reaching the LLM: no <script>/tag noise in the chunk
+    sent_content = mocked.call_args[0][0]
+    assert "track()" not in sent_content
+    assert "Nike 20% off" in sent_content
+
+
+async def test_run_from_file_json_pretty_prints_before_chunking(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    engine = LlmScrapeEngine()
+    payload = tmp_path / "giftcard.json"
+    payload.write_text(
+        '[{"company": "FOX", "limitations": "no club discount"}]', encoding="utf-8"
+    )
+    with patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
+        return_value=ExtractedDeals(
+            deals=[ExtractedDeal(store_name="FOX", deal_description="d", terms_and_conditions="no club discount")]
+        ),
+    ) as mocked:
+        deals = await engine.run_from_file(str(payload), "Extract", is_json=True)
+    assert deals[0].store_name == "FOX"
+    assert deals[0].terms_and_conditions == "no club discount"
+    sent_content = mocked.call_args[0][0]
+    assert "\n" in sent_content  # pretty-printed, not the original single-line minified JSON
+
+
+async def test_run_from_file_invalid_json_falls_back_to_raw_text(tmp_path, caplog) -> None:  # type: ignore[no-untyped-def]
+    import logging
+
+    engine = LlmScrapeEngine()
+    payload = tmp_path / "broken.json"
+    payload.write_text("not actually json {", encoding="utf-8")
+    with patch(
+        "lessley_deals.scraping.engine.llm_scraper.extract_deals_from_content",
+        return_value=ExtractedDeals(deals=[]),
+    ):
+        with caplog.at_level(logging.WARNING):
+            await engine.run_from_file(str(payload), "Extract", is_json=True)
+    assert any("not valid JSON" in r.message for r in caplog.records)
+
+
+async def test_run_from_file_empty_content_returns_empty_list(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    engine = LlmScrapeEngine()
+    page = tmp_path / "empty.html"
+    page.write_text("<html><body></body></html>", encoding="utf-8")
+    deals = await engine.run_from_file(str(page), "Extract")
+    assert deals == []
+
+
 async def test_run_with_details_respects_sample_limit() -> None:
     engine = LlmScrapeEngine()
     deals = [

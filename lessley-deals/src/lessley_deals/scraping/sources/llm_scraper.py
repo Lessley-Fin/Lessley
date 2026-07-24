@@ -70,6 +70,8 @@ class LlmScraperAdapter(BaseSourceAdapter):
         detail_concurrency: int = 3,
         render_wait_seconds: float = 0.0,
         wait_selector: str | None = None,
+        file_path: str | None = None,
+        is_json: bool = False,
         engine: LlmScrapeEngine | None = None,
     ) -> None:
         super().__init__(config)
@@ -80,6 +82,8 @@ class LlmScraperAdapter(BaseSourceAdapter):
         self._detail_instructions = detail_instructions
         self._sample_limit = sample_limit
         self._detail_concurrency = detail_concurrency
+        self._file_path = file_path
+        self._is_json = is_json
         self._engine = engine or LlmScrapeEngine(
             timeout_seconds=config.timeout_seconds,
             max_len=max_len,
@@ -93,7 +97,13 @@ class LlmScraperAdapter(BaseSourceAdapter):
 
     async def scrape(self) -> tuple[list[RawStore], list[RawScrapedRecord]]:
         try:
-            if self._crawl_details:
+            pairs: list[tuple[ExtractedDeal, DealDetail | None]]
+            if self._file_path:
+                deals = await self._engine.run_from_file(
+                    self._file_path, self._instructions, is_json=self._is_json
+                )
+                pairs = [(d, None) for d in deals]
+            elif self._crawl_details:
                 pairs = await self._engine.run_with_details(
                     self._url,
                     self._instructions,
@@ -158,7 +168,11 @@ class LlmScraperAdapter(BaseSourceAdapter):
                 store_id, external_id = parts[-2], parts[-1]
 
         blurb = (detail.deal_description.strip() if detail and detail.deal_description else "")
-        terms = (detail.terms_and_conditions.strip() if detail and detail.terms_and_conditions else "")
+        terms = (
+            detail.terms_and_conditions.strip()
+            if detail and detail.terms_and_conditions
+            else item.terms_and_conditions.strip()
+        )
         coupon = detail.coupon_code if detail else None
         description = blurb or item.deal_description.strip()
         title = f"{price_text} באתר {name}".strip()

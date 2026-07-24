@@ -112,6 +112,7 @@ class ExtractedDeal(BaseModel):
     price_text: str = ""
     url: str | None = None
     detail_url: str | None = None
+    terms_and_conditions: str = ""
 
 
 class ExtractedDeals(BaseModel):
@@ -138,8 +139,11 @@ def extract_deals_from_content(content: str, instructions: str) -> ExtractedDeal
                     "You extract retail deals/promotions from messy web page text. "
                     "Return ONLY deals that are clearly supported by the content; if none, "
                     "return an empty list. Each deal needs a store_name and a deal_description; "
-                    "include price_text (price, percent, or '') and url when present. "
-                    "Follow the user's extraction instructions."
+                    "include price_text (price, percent, or '') and url when present. When the "
+                    "content contains an explicit terms/limitations/constraints field for a "
+                    "store (separate from its description), copy it verbatim into "
+                    "terms_and_conditions — never infer or invent constraints text that isn't "
+                    "literally present. Follow the user's extraction instructions."
                 ),
             },
             {

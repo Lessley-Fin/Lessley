@@ -88,6 +88,41 @@ async def test_scrape_returns_empty_on_engine_failure() -> None:
 
 
 # --------------------------------------------------------------------------
+# file-based mode (local snapshot, no live fetch)
+# --------------------------------------------------------------------------
+
+async def test_scrape_file_path_uses_run_from_file_not_run() -> None:
+    engine = AsyncMock()
+    engine.run_from_file.return_value = [
+        ExtractedDeal(
+            store_name="FOX",
+            deal_description="30% loading bonus",
+            price_text="30%",
+            terms_and_conditions="no club discount",
+        ),
+    ]
+    adapter = _adapter(engine, file_path="/snapshots/giftcard.json", is_json=True)
+    stores, deals = await adapter.scrape()
+
+    engine.run_from_file.assert_awaited_once_with(
+        "/snapshots/giftcard.json", "Extract deals", is_json=True
+    )
+    engine.run.assert_not_called()
+    assert len(deals) == 1
+    assert deals[0].store_name == "FOX"
+    # terms_and_conditions from the plain (non-detail) ExtractedDeal flows into raw_payload
+    assert deals[0].raw_payload["terms_and_conditions"] == "no club discount"
+
+
+async def test_scrape_file_path_returns_empty_on_engine_failure() -> None:
+    engine = AsyncMock()
+    engine.run_from_file.side_effect = FileNotFoundError("no snapshot yet")
+    stores, deals = await _adapter(engine, file_path="/snapshots/missing.json").scrape()
+    assert stores == []
+    assert deals == []
+
+
+# --------------------------------------------------------------------------
 # detail-crawl mode
 # --------------------------------------------------------------------------
 

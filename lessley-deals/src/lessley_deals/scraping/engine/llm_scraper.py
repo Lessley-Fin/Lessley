@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
+from pathlib import Path
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -307,6 +309,43 @@ class LlmScrapeEngine:
             return deal, detail
 
         return list(await asyncio.gather(*[enrich(d) for d in deals]))
+
+    def _read_file_sync(self, path: str) -> str:
+        return Path(path).read_text(encoding="utf-8")
+
+    async def fetch_local_file(self, path: str) -> str:
+        """Read a locally saved snapshot (HTML page or raw JSON) off the event loop thread."""
+        return await asyncio.to_thread(self._read_file_sync, path)
+
+    async def run_from_file(
+        self, file_path: str, instructions: str, *, is_json: bool = False
+    ) -> list[ExtractedDeal]:
+        """Extract deals from a locally saved snapshot instead of a live fetch.
+
+        For periodically-refreshed manual exports (e.g. a logged-in page saved
+        by hand, or a raw JSON API response) where no network request — and no
+        Selenium/httpx fetch — is involved at all. ``is_json`` pretty-prints the
+        parsed JSON before chunking so ``split_content`` gets real line
+        boundaries between records instead of one giant minified line.
+        """
+        raw = await self.fetch_local_file(file_path)
+        if is_json:
+            try:
+                cleaned = json.dumps(json.loads(raw), ensure_ascii=False, indent=2)
+            except ValueError:
+                logger.warning("run_from_file: %s is not valid JSON; using raw text", file_path)
+                cleaned = raw
+        else:
+            cleaned = clean_dom(raw)
+
+        if not cleaned.strip():
+            logger.warning("run_from_file: %s produced no content", file_path)
+            return []
+
+        chunks = split_content(cleaned, max_len=self._max_len)
+        deals = await self.extract(chunks, instructions)
+        logger.info("Extracted %d deals from local file %s", len(deals), file_path)
+        return deals
 
     async def run(self, url: str, instructions: str) -> list[ExtractedDeal]:
         html = await self.fetch_html(url)
