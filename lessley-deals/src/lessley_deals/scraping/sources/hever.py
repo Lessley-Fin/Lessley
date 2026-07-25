@@ -1,15 +1,14 @@
 """Hever ("חבר") gift-card store directory scraper.
 
-Unlike ``llm_scraper.py``-backed sources, every field here is already
-structured in the site's own JSON — no LLM inference needed, same spirit as
-``hot.py``'s API-backed adapter. The only difference from a normal API
-adapter is *where* the JSON comes from: hvr.co.il requires a logged-in
-session that this adapter doesn't automate, so it reads a locally saved
-export instead of fetching live (see ``data/hever_snapshots/README.md``).
+Every field here is already structured in the site's own JSON — no LLM
+inference needed, same spirit as ``hot.py``'s API-backed adapter. Unlike
+``hever_teamim.py``'s dataset, this one turned out to require no login at
+all: ``/bs2/datasets/giftcard.json`` is a plain public endpoint, so this
+adapter fetches it live.
 
 Source schema (one object per store in the JSON array), confirmed from a real
 saved page's own extraction JS (``getCompanyInfo()`` on a ``gift_card_store``
-detail page):
+detail page) and from the live JSON response itself:
 
 - ``company``            store name
 - ``company_desc``       short description
@@ -24,12 +23,11 @@ detail page):
 
 from __future__ import annotations
 
-import asyncio
-import json
 import logging
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
+
+import httpx
 
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
@@ -39,11 +37,17 @@ from lessley_deals.scraping.sources.llm_scraper import build_discount_logic
 logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://www.hvr.co.il"
+_DATASET_URL = f"{_BASE_URL}/bs2/datasets/giftcard.json?_"
+
+_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36"
+)
 
 # Same fixed, program-wide loading bonus for every store in this directory —
 # confirmed identical wording on the site's own gift_card_company page, not a
-# per-store number. See data/hever_snapshots/README.md for how the source
-# file is obtained.
+# per-store number.
 _LOADING_BONUS_TEXT = (
     'ניתן לטעון כרטיס "חבר" הנטען ולקבל 30% הנחה על טעינת 1,000 ₪ ראשונים, '
     '25% הנחה על 1,000 ₪ הבאים ו-20% הנחה על 1,000 ₪ נוספים (עד 3,000 ₪ בסה"כ)'
@@ -51,32 +55,22 @@ _LOADING_BONUS_TEXT = (
 _LOADING_BONUS_PRICE_TEXT = "30% הנחה בטעינה (עד 3,000 ₪)"
 
 
-def _default_snapshot_path() -> Path:
-    # sources/hever.py is at src/lessley_deals/scraping/sources/hever.py
-    return (
-        Path(__file__).resolve().parents[4]
-        / "data"
-        / "hever_snapshots"
-        / "giftcard.json"
-    )
-
-
 class HeverGiftCardAdapter(BaseSourceAdapter):
     """Deterministic scraper for the Hever gift-card ("של קבע") store directory.
 
-    Reads a locally saved copy of ``/bs2/datasets/giftcard.json`` (no live
-    fetch — see module docstring) and maps every field directly; the only
-    free text involved is copied verbatim from the source, never generated.
+    Fetches ``giftcard.json`` live (public endpoint, no login required) and
+    maps every field directly; the only free text involved is copied
+    verbatim from the source, never generated.
     """
 
     def __init__(
         self,
         config: SourceConfig | None = None,
         *,
-        file_path: str | Path | None = None,
+        transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         super().__init__(config or SourceConfig(base_url=_BASE_URL))
-        self._file_path = Path(file_path) if file_path else _default_snapshot_path()
+        self._transport = transport
 
     @property
     def source_id(self) -> str:
@@ -84,17 +78,12 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
 
     async def scrape(self) -> tuple[list[RawStore], list[RawScrapedRecord]]:
         try:
-            records = await asyncio.to_thread(self._read_records_sync)
-        except FileNotFoundError:
-            logger.warning(
-                "[%s] snapshot not found at %s — drop a fresh export there "
-                "(see data/hever_snapshots/README.md) and re-run",
-                self.source_id,
-                self._file_path,
-            )
+            records = await self._fetch_records()
+        except httpx.HTTPError:
+            logger.exception("[%s] failed to fetch %s", self.source_id, _DATASET_URL)
             return [], []
         except ValueError:
-            logger.exception("[%s] snapshot at %s is not valid JSON", self.source_id, self._file_path)
+            logger.exception("[%s] response from %s was not valid JSON", self.source_id, _DATASET_URL)
             return [], []
 
         now = datetime.now(timezone.utc)
@@ -113,13 +102,20 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
 
         logger.info(
             "[%s] Parsed %d stores, %d deals from %s",
-            self.source_id, len(stores), len(deals), self._file_path,
+            self.source_id, len(stores), len(deals), _DATASET_URL,
         )
         return stores, deals
 
-    def _read_records_sync(self) -> list[dict[str, Any]]:
-        raw = self._file_path.read_text(encoding="utf-8")
-        data = json.loads(raw)
+    async def _fetch_records(self) -> list[dict[str, Any]]:
+        async with httpx.AsyncClient(
+            timeout=self.config.timeout_seconds,
+            follow_redirects=True,
+            headers={"User-Agent": _USER_AGENT},
+            transport=self._transport,
+        ) as client:
+            resp = await client.get(_DATASET_URL)
+            resp.raise_for_status()
+            data = resp.json()
         if not isinstance(data, list):
             raise ValueError(f"expected a JSON array, got {type(data).__name__}")
         return data
@@ -167,8 +163,7 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
         limitations = str(record.get("limitations") or "").strip()
         loading_bonus_sentence = self._loading_bonus_sentence(record)
         # terms_and_conditions = the store's own limitations text, with the
-        # loading-bonus blurb (previously the whole deal_description) appended
-        # as an extra sentence rather than duplicated into deal_description.
+        # fixed loading-bonus blurb appended as an extra sentence.
         terms = f"{limitations} {loading_bonus_sentence}".strip() if limitations else loading_bonus_sentence
         store_url = self._store_url(record)
         benefit_url = self._benefit_url(record)
@@ -207,7 +202,18 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
             id=generate_id(),
             source_id=self.source_id,
             store_name=store_name,
-            deal_description=deal_description,
+            # NOT plain `deal_description` — RawScrapedRecord.fingerprint is
+            # sha256(source_id|deal_description|price_text), and price_text
+            # is the same fixed string for every store while `company_desc`
+            # is sometimes empty or a generic phrase shared by unrelated
+            # companies. Without the store name folded in, ScrapeStage's
+            # fingerprint dedup would treat a brand-new store as "already
+            # scraped" whenever it collides with some other store's
+            # fingerprint from an earlier run, silently dropping it. This is
+            # fingerprint-only — raw_payload["full_description"] above stays
+            # the plain `company_desc` text that PersistStage reads into the
+            # final Deal.deal_description.
+            deal_description=f"{store_name} | {deal_description}" if deal_description else store_name,
             price_text=_LOADING_BONUS_PRICE_TEXT,
             scraped_at=now,
             # PersistStage sets Deal.url = prec.raw.url directly (no

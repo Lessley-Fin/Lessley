@@ -1,7 +1,2 @@
 # Swish scraper state and session
 data/swish/
-
-# Hever local snapshots (manually saved, contain the logged-in member's own
-# session data — never commit real exports)
-data/hever_snapshots/*
-!data/hever_snapshots/README.md

@@ -150,6 +150,7 @@ class SourceRegistry:
         """Register the built-in source adapters."""
         from lessley_deals.scraping.sources.behatsdaa import BehatsdaaAdapter
         from lessley_deals.scraping.sources.hever import HeverGiftCardAdapter
+        from lessley_deals.scraping.sources.hever_teamim import HeverTeamimAdapter
         from lessley_deals.scraping.sources.hot import HotAdapter
         from lessley_deals.scraping.sources.isracard_topcash import IsracardTopcashAdapter
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
@@ -162,6 +163,7 @@ class SourceRegistry:
             (IsracardTopcashAdapter, "https://www.topcash.co.il/all-stores"),
             (SwishAdapter, "https://swish.co.il"),
             (HeverGiftCardAdapter, "https://www.hvr.co.il"),
+            (HeverTeamimAdapter, "https://www.hvr.co.il"),
         ]
         for cls, url in defaults:
             try:

@@ -94,8 +94,9 @@ The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json`
 4. Add tests in `tests/unit/scraping/`
 
 Existing sources: `hot.py`, `mastercard.py`, `behatsdaa.py`, `isracard_topcash.py`,
-`hever.py` (`HeverGiftCardAdapter` — reads a locally saved JSON export instead
-of a live API call; see the file-based sources note below).
+`hever.py` (`HeverGiftCardAdapter`, source_id `hever_gift_card_company`) and
+`hever_teamim.py` (`HeverTeamimAdapter`, source_id `hever_teamim_card_store`) —
+both fetch hvr.co.il's public JSON datasets live, no login required.
 
 ### Adding an AI-scraped site (no code)
 For sites without a clean API, use the generic AI scraper engine instead of a
@@ -113,20 +114,18 @@ httpx. Set `"is_json": true` when the file is a raw JSON payload rather than
 HTML (it's pretty-printed before chunking so `split_content` gets real line
 boundaries). This is for sites that require a login the scraper can't
 automate — you save the authenticated page/response by hand periodically and
-the adapter just parses whatever's currently on disk. Used by
-`llm:hever-teamim` (the teamim restaurant listing has no clean API, so its
-free-form HTML still goes through the LLM).
+the adapter just parses whatever's currently on disk.
 
 **Prefer a hand-coded adapter over the LLM route whenever the source is
 already structured** (a JSON API response, or consistently-shaped HTML with
-no real judgment calls) — see `hever.py`'s `HeverGiftCardAdapter`, which
-reads the same kind of locally-saved snapshot (`data/hever_snapshots/giftcard.json`,
-since hvr.co.il needs a login the scraper doesn't automate) but maps every
+no real judgment calls) — see `hever.py`'s `HeverGiftCardAdapter` and
+`hever_teamim.py`'s `HeverTeamimAdapter`, which fetch hvr.co.il's public JSON
+datasets (`/bs2/datasets/giftcard.json`, `/bs2/datasets/teamimcard_branches.json`
+— no login needed, despite the site's own pages requiring one) and map every
 field directly, same spirit as `hot.py`'s live API adapter. No LLM call, no
-inference — `limitations` is copied verbatim into `terms_and_conditions`.
-The LLM route is for when fields have to be *found* in messy freeform text;
-skip it when they're already named JSON/HTML fields. See
-`data/hever_snapshots/README.md` for what to save and how often.
+inference — `limitations`/`delivery` are copied verbatim into
+`terms_and_conditions`. The LLM route is for when fields have to be *found*
+in messy freeform text; skip it when they're already named JSON/HTML fields.
 
 ## Key Design Decisions
 
