@@ -6,6 +6,14 @@ shapes: this one is a public, ungrouped list of restaurant *branches* (a
 chain with several locations appears once per branch), not one row per
 company. No login required — same as the gift-card dataset.
 
+The underlying deal (fixed loading bonus) is identical for every branch of a
+restaurant, so branches are grouped by ``name`` into a single deal per
+restaurant — same convention as ``hot.py``'s ``_locations`` handling for
+multi-branch brands. Per-branch address/hours/etc. go into
+``raw_payload["_locations"]``; fields that can legitimately differ between
+branches of the same restaurant (``delivery`` mode, ``desc``) are merged
+rather than arbitrarily taking the first branch's value.
+
 Source schema (one object per branch in ``data["branch"]``), confirmed from
 the live JSON response:
 
@@ -62,7 +70,8 @@ class HeverTeamimAdapter(BaseSourceAdapter):
     """Deterministic scraper for the Hever "טעמים" restaurant-card directory.
 
     Fetches ``teamimcard_branches.json`` live (public endpoint, no login
-    required) and maps every field directly — no LLM, no inference.
+    required), groups branches by restaurant name, and maps every field
+    directly — no LLM, no inference.
     """
 
     def __init__(
@@ -89,22 +98,18 @@ class HeverTeamimAdapter(BaseSourceAdapter):
             return [], []
 
         now = datetime.now(timezone.utc)
-        seen_stores: dict[str, RawStore] = {}
-        stores: list[RawStore] = []
-        deals: list[RawScrapedRecord] = []
-
+        groups: dict[str, list[dict[str, Any]]] = {}
         for record in records:
             if not isinstance(record, dict) or not record.get("name"):
                 continue
-            store = self._to_raw_store(record, now)
-            if store.name not in seen_stores:
-                seen_stores[store.name] = store
-                stores.append(store)
-            deals.append(self._to_raw_deal(record, now))
+            groups.setdefault(str(record["name"]).strip(), []).append(record)
+
+        stores = [self._to_raw_store(branches, now) for branches in groups.values()]
+        deals = [self._to_raw_deal(branches, now) for branches in groups.values()]
 
         logger.info(
-            "[%s] Parsed %d stores, %d deals from %s",
-            self.source_id, len(stores), len(deals), _DATASET_URL,
+            "[%s] Parsed %d restaurants (%d branches) from %s",
+            self.source_id, len(stores), len(records), _DATASET_URL,
         )
         return stores, deals
 
@@ -126,70 +131,117 @@ class HeverTeamimAdapter(BaseSourceAdapter):
         return branches
 
     # ------------------------------------------------------------------
-    # Mapping helpers
+    # Branch-group merge helpers
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _store_url(record: dict[str, Any]) -> str | None:
-        website = str(record.get("website") or "").strip()
-        return f"https://{website}" if website else None
+    def _first_nonempty(branches: list[dict[str, Any]], key: str) -> str:
+        for branch in branches:
+            value = str(branch.get(key) or "").strip()
+            if value:
+                return value
+        return ""
 
     @staticmethod
-    def _benefit_url(record: dict[str, Any]) -> str | None:
-        internal_link = str(record.get("internal_link") or "").strip()
+    def _merge_delivery_modes(branches: list[dict[str, Any]]) -> str:
+        """Union of every distinct redemption mode across branches.
+
+        ``delivery`` is a comma-separated set per branch (e.g. "ישיבה
+        במסעדה,איסוף עצמי"), and different branches of the same restaurant
+        can support different modes — picking just one branch's value would
+        silently drop modes another branch offers.
+        """
+        modes: dict[str, None] = {}
+        for branch in branches:
+            for part in str(branch.get("delivery") or "").split(","):
+                part = part.strip()
+                if part:
+                    modes.setdefault(part, None)
+        return ",".join(modes)
+
+    @staticmethod
+    def _merge_limitations(branches: list[dict[str, Any]]) -> str:
+        """Every distinct non-empty ``limitations`` text across branches, verbatim."""
+        seen: list[str] = []
+        for branch in branches:
+            text = str(branch.get("limitations") or "").strip()
+            if text and text not in seen:
+                seen.append(text)
+        return " ".join(seen)
+
+    @staticmethod
+    def _branch_locations(branches: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            {
+                "area": branch.get("area"),
+                "city": branch.get("city"),
+                "address": branch.get("address"),
+                "phone": branch.get("phone"),
+                "hours": branch.get("hours"),
+                "kosher": branch.get("kosher"),
+                "handicap": branch.get("handicap"),
+                "latitude": branch.get("latitude"),
+                "longitude": branch.get("longitude"),
+            }
+            for branch in branches
+        ]
+
+    def _store_url(self, branches: list[dict[str, Any]]) -> str | None:
+        website = self._first_nonempty(branches, "website")
+        return f"https://{website}" if website else None
+
+    def _benefit_url(self, branches: list[dict[str, Any]]) -> str | None:
+        internal_link = self._first_nonempty(branches, "internal_link")
         return f"{_BASE_URL}/site/pg/{internal_link}" if internal_link else None
 
-    def _loading_bonus_sentence(self, record: dict[str, Any]) -> str:
+    def _loading_bonus_sentence(self, store_name: str) -> str:
         """The fixed Hever Taste-card loading-bonus sentence, naming the restaurant.
 
-        Appended to ``terms_and_conditions`` after the branch's own
+        Appended to ``terms_and_conditions`` after the restaurant's merged
         ``delivery``/``limitations`` text — see ``_to_raw_deal``. Deliberately
         excludes ``desc``: that isn't a limitation, it feeds ``deal_description``
         instead.
         """
-        name = str(record.get("name") or "").strip()
-        return f"{_LOADING_BONUS_TEXT}, למימוש ב{name}."
+        return f"{_LOADING_BONUS_TEXT}, למימוש ב{store_name}."
 
-    def _to_raw_store(self, record: dict[str, Any], now: datetime) -> RawStore:
+    def _to_raw_store(self, branches: list[dict[str, Any]], now: datetime) -> RawStore:
+        store_name = str(branches[0]["name"]).strip()
         return RawStore(
             id=generate_id(),
             source_id=self.source_id,
-            name=str(record["name"]).strip(),
+            name=store_name,
             scraped_at=now,
-            url=self._store_url(record),
-            raw_payload={"source": "hever_teamim", "internal_link": record.get("internal_link")},
+            url=self._store_url(branches),
+            raw_payload={
+                "source": "hever_teamim",
+                "internal_link": self._first_nonempty(branches, "internal_link") or None,
+                "branch_qty": len(branches),
+            },
         )
 
-    def _to_raw_deal(self, record: dict[str, Any], now: datetime) -> RawScrapedRecord:
-        store_name = str(record["name"]).strip()
-        deal_description = str(record.get("desc") or "").strip()
-        delivery = str(record.get("delivery") or "").strip()
-        limitations = str(record.get("limitations") or "").strip()
-        loading_bonus_sentence = self._loading_bonus_sentence(record)
+    def _to_raw_deal(self, branches: list[dict[str, Any]], now: datetime) -> RawScrapedRecord:
+        store_name = str(branches[0]["name"]).strip()
+        deal_description = self._first_nonempty(branches, "desc")
+        delivery = self._merge_delivery_modes(branches)
+        limitations = self._merge_limitations(branches)
+        loading_bonus_sentence = self._loading_bonus_sentence(store_name)
 
-        # terms_and_conditions = the branch's own redemption-mode + constraints
-        # text, verbatim, with the fixed loading-bonus blurb appended.
+        # terms_and_conditions = the merged redemption-mode + constraints
+        # text across all branches, verbatim, with the fixed loading-bonus
+        # blurb appended.
         own_terms = " ".join(part for part in (delivery, limitations) if part)
         terms = f"{own_terms} {loading_bonus_sentence}".strip() if own_terms else loading_bonus_sentence
 
-        store_url = self._store_url(record)
-        benefit_url = self._benefit_url(record)
+        store_url = self._store_url(branches)
+        benefit_url = self._benefit_url(branches)
         discount_logic, currency = build_discount_logic(_LOADING_BONUS_PRICE_TEXT)
 
         raw_payload: dict[str, Any] = {
             "source": "hever_teamim",
-            "category": record.get("category"),
-            "type": record.get("type"),
-            "area": record.get("area"),
-            "city": record.get("city"),
-            "address": record.get("address"),
-            "phone": record.get("phone"),
-            "hours": record.get("hours"),
-            "kosher": record.get("kosher"),
-            "handicap": record.get("handicap"),
-            "latitude": record.get("latitude"),
-            "longitude": record.get("longitude"),
+            "category": self._first_nonempty(branches, "category") or None,
+            "type": self._first_nonempty(branches, "type") or None,
             "delivery": delivery,
+            "_locations": self._branch_locations(branches),
             # PersistStage (pipeline/persist_stage.py) reads deal_title /
             # full_description straight off raw_payload with no fallback —
             # set them explicitly so Deal.title/deal_description aren't left
@@ -208,7 +260,7 @@ class HeverTeamimAdapter(BaseSourceAdapter):
             "redeem_channels": ["physical_store"],
             "stackable": False,
         }
-        internal_link = str(record.get("internal_link") or "").strip()
+        internal_link = self._first_nonempty(branches, "internal_link")
         if internal_link:
             raw_payload["internal_link"] = internal_link
 
