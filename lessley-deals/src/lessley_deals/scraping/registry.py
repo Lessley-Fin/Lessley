@@ -146,8 +146,13 @@ class SourceRegistry:
             except ValueError:
                 pass
 
-    def register_defaults(self) -> None:
-        """Register the built-in source adapters."""
+    def register_defaults(self, include_llm_sites: bool = True) -> None:
+        """Register the built-in source adapters.
+
+        When ``include_llm_sites`` is False, the LLM-based scraper sources
+        (``llm:*`` from ``llm_sources.json``) are skipped — only the
+        code-based adapters are registered.
+        """
         from lessley_deals.scraping.sources.behatsdaa import BehatsdaaAdapter
         from lessley_deals.scraping.sources.hever import HeverGiftCardAdapter
         from lessley_deals.scraping.sources.hever_teamim import HeverTeamimAdapter
@@ -171,4 +176,5 @@ class SourceRegistry:
             except ValueError:
                 pass  # already registered
 
-        self.register_llm_sites()
+        if include_llm_sites:
+            self.register_llm_sites()

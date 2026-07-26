@@ -227,6 +227,15 @@ def scrape(
     constraints_concurrency: int = typer.Option(
         5, "--constraints-concurrency", help="Max concurrent constraints LLM calls (default 5)."
     ),
+    llm_sources: bool = typer.Option(
+        True,
+        "--llm-sources/--no-llm-sources",
+        help=(
+            "Include the LLM-based scraper sources (llm:* from llm_sources.json, where the "
+            "LLM extracts the deals). On by default; use --no-llm-sources to scrape only the "
+            "code-based adapters (hot, mastercard, behatsdaa, topcash, swish)."
+        ),
+    ),
 ) -> None:
     """Run the full scrape -> normalize -> match -> persist pipeline."""
     _setup_logging(log_level)
@@ -255,7 +264,7 @@ def scrape(
 
     # Build pipeline components
     registry = SourceRegistry()
-    registry.register_defaults()
+    registry.register_defaults(include_llm_sites=llm_sources)
 
     # Override the HOT adapter if custom benefit types or detail mode requested.
     if hot_benefit_type or hot_fetch_details or hot_details_delay != 2.0 or hot_request_delay != 1.5:
