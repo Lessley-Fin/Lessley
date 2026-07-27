@@ -159,6 +159,11 @@ class SourceRegistry:
         from lessley_deals.scraping.sources.hot import HotAdapter
         from lessley_deals.scraping.sources.isracard_topcash import IsracardTopcashAdapter
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
+        from lessley_deals.scraping.sources.paisplus import PaisPlusAdapter
+        from lessley_deals.scraping.sources.paisplus_cashcards import (
+            PaisPlusFoodChainsAdapter,
+            PaisPlusNetworksAdapter,
+        )
         from lessley_deals.scraping.sources.swish import SwishAdapter
 
         defaults: list[tuple[type[BaseSourceAdapter], str]] = [
@@ -169,6 +174,9 @@ class SourceRegistry:
             (SwishAdapter, "https://swish.co.il"),
             (HeverGiftCardAdapter, "https://www.hvr.co.il"),
             (HeverTeamimAdapter, "https://www.hvr.co.il"),
+            (PaisPlusAdapter, "https://paisplus.co.il"),
+            (PaisPlusFoodChainsAdapter, "https://paisplus.co.il"),
+            (PaisPlusNetworksAdapter, "https://paisplus.co.il"),
         ]
         for cls, url in defaults:
             try:
