@@ -19,6 +19,23 @@ public class DealFinderController : ControllerBase
         _dealFinderService = dealFinderService;
     }
 
+    /// <summary>Returns a single deal with its store by deal ID.</summary>
+    [HttpGet("{dealId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetById(string dealId, CancellationToken ct = default)
+    {
+        var result = await _dealFinderService.GetByIdAsync(dealId, ct);
+
+        return result switch
+        {
+            UserOperationResult.NotFoundResult       => NotFound(new { error = "Deal not found" }),
+            UserOperationResult.Success           s  => Ok(s.Payload),
+            _                                        => throw new InvalidOperationException("Unknown result"),
+        };
+    }
+
     /// <summary>Searches deals by MCC categories, store name fragment, or deal text. At least one filter is required.</summary>
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]

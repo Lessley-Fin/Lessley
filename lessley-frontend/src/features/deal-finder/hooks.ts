@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { queryKeys } from "@/lib/query-keys"
-import { fetchMccCategories, searchDeals, type DealSearchParams } from "./api"
+import { fetchDealById, fetchMccCategories, searchDeals, type DealSearchParams } from "./api"
 
 export function useMccCategories() {
   return useQuery({
@@ -16,5 +16,14 @@ export function useDealSearch(params: DealSearchParams, enabled: boolean) {
     queryKey: queryKeys.dealFinder.search(params),
     queryFn: () => searchDeals(params),
     enabled,
+  })
+}
+
+export function useDealById(dealId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.dealFinder.byId(dealId ?? ""),
+    queryFn: () => fetchDealById(dealId!),
+    enabled: !!dealId,
+    staleTime: 5 * 60 * 1000,
   })
 }
