@@ -2,6 +2,7 @@ using Lessley.Gateway.Api.Models.DealSearch;
 using Lessley.Gateway.Api.Services.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 
 namespace Lessley.Gateway.Api.Services.Classes;
 
@@ -43,7 +44,7 @@ public class DealFinderRepository : IDealFinderRepository
             storeFilter &= Builders<StoreDocument>.Filter.AnyIn(s => s.Metadata.MccCodes, query.MccCodes);
 
         if (!string.IsNullOrWhiteSpace(query.StoreText))
-            storeFilter &= Builders<StoreDocument>.Filter.Regex(s => s.Name, new BsonRegularExpression(query.StoreText, "i"));
+            storeFilter &= Builders<StoreDocument>.Filter.Regex(s => s.Name, LiteralContains(query.StoreText));
 
         var matchingStores = await _storeCollection.Find(storeFilter).ToListAsync(ct);
 
@@ -58,8 +59,8 @@ public class DealFinderRepository : IDealFinderRepository
 
         if (!string.IsNullOrWhiteSpace(query.DealText))
             dealFilter &= Builders<DealDocument>.Filter.Or(
-                Builders<DealDocument>.Filter.Regex(d => d.Title,       new BsonRegularExpression(query.DealText, "i")),
-                Builders<DealDocument>.Filter.Regex(d => d.Description, new BsonRegularExpression(query.DealText, "i"))
+                Builders<DealDocument>.Filter.Regex(d => d.Title,       LiteralContains(query.DealText)),
+                Builders<DealDocument>.Filter.Regex(d => d.Description, LiteralContains(query.DealText))
             );
 
         var total = (int)await _dealCollection.CountDocumentsAsync(dealFilter, cancellationToken: ct);
@@ -77,4 +78,9 @@ public class DealFinderRepository : IDealFinderRepository
 
         return (results, total);
     }
+
+    // Escape user input so it is matched as a literal substring. Prevents regex injection
+    // and catastrophic-backtracking (ReDoS) from attacker-supplied patterns.
+    private static BsonRegularExpression LiteralContains(string text) =>
+        new(Regex.Escape(text), "i");
 }

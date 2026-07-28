@@ -15,6 +15,25 @@ public static class MongoIndexInitializer
         await CreateNotificationIndexesAsync(db);
         await CreateUserTagIndexAsync(db);
         await CreateDealFinderIndexesAsync(db);
+        await CreateRefreshTokenIndexesAsync(db);
+    }
+
+    private static async Task CreateRefreshTokenIndexesAsync(IMongoDatabase db)
+    {
+        var col = db.GetCollection<BsonDocument>("refresh_tokens");
+
+        // TTL — purge refresh tokens once past their Expires timestamp (ExpireAfter zero
+        // means "expire exactly at the Expires value").
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("Expires"),
+            new CreateIndexOptions { ExpireAfter = TimeSpan.Zero, Name = "ttl_refresh_expires" }
+        ));
+
+        // Lookup by hashed token value on refresh/logout.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("Token"),
+            new CreateIndexOptions { Name = "idx_refresh_token" }
+        ));
     }
 
     private static async Task CreateNotificationIndexesAsync(IMongoDatabase db)

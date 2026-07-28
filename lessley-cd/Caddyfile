@@ -1,0 +1,67 @@
+# ── Lessley edge: TLS + SPA host + API proxy (single origin) ──────────────────
+# ONE Caddyfile drives BOTH dev and prod — same operation, same networking. Caddy is
+# the only host-published web edge. It terminates TLS, serves the built React SPA, and
+# reverse-proxies /api + /hubs to the gateway over the private Docker network. Because
+# the SPA and API share one origin, there is no CORS and SameSite=Strict "just works".
+#
+# The only things that differ between dev and prod are env values (not this file):
+#   * DOMAIN=localhost (dev)  → Caddy issues an internal-CA cert automatically (no ACME).
+#     DOMAIN=your.domain (prod) → Caddy gets a Let's Encrypt cert + renews it.
+#   * HSTS_MAX_AGE=max-age=0 (dev) disables HSTS so https://localhost cannot pin other
+#     localhost http projects; prod leaves it unset → the strong default below applies.
+#
+# The SPA files are baked into this image at /srv/frontend (see lessley-frontend/Dockerfile).
+# Required env vars (.env.template): DOMAIN, ACME_EMAIL.
+# Optional: HSTS_MAX_AGE, RABBIT_DOMAIN (+ RABBIT_BASICAUTH_USER / RABBIT_BASICAUTH_HASH).
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+
+	# Security headers applied to every response on this site.
+	# HSTS is env-driven so dev (localhost) can send max-age=0 while prod keeps the
+	# strong default; the directive itself is identical in both environments.
+	header {
+		Strict-Transport-Security "{$HSTS_MAX_AGE:max-age=31536000; includeSubDomains; preload}"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "no-referrer"
+		-Server
+	}
+
+	# API — TLS terminated here; gateway trusts X-Forwarded-Proto via UseForwardedHeaders.
+	handle /api/* {
+		reverse_proxy gateway:5001
+	}
+
+	# SignalR hub — Caddy upgrades the WebSocket automatically.
+	handle /hubs/* {
+		reverse_proxy gateway:5001
+	}
+
+	# Everything else: the SPA, with history-API fallback so client-side routes reload.
+	handle {
+		root * /srv/frontend
+		header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# ── RabbitMQ management UI (optional, admin-only) ─────────────────────────────
+# Kept commented so an unset RABBIT_DOMAIN can never break the edge above. To expose
+# the RabbitMQ UI over TLS: set RABBIT_DOMAIN/RABBIT_BASICAUTH_* in .env, point that
+# subdomain's DNS here, generate the hash with `caddy hash-password`, then UNCOMMENT:
+#
+# {$RABBIT_DOMAIN} {
+# 	basic_auth {
+# 		{$RABBIT_BASICAUTH_USER} {$RABBIT_BASICAUTH_HASH}
+# 	}
+# 	reverse_proxy rabbitmq:15672
+# }
+#
+# (Alternative without exposing it at all: SSH to the host and
+#  `docker compose exec` / a temporary `-p 15672:15672` mapping.)

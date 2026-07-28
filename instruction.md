@@ -33,8 +33,8 @@ MongoDB  (lessley database)
 
 | Service | Language | Port | Role |
 |---|---|---|---|
-| `Lessley.Gateway.Api` | C# .NET 8 | 5001 / 8080 | Auth, REST API, SignalR, MassTransit, proxy to Personalization |
-| `Lessley.Personalization` | Python FastAPI | 8001 | Async engine: spending analysis, recommendations, RabbitMQ consumer |
+| `Lessley.Gateway.Api` | C# .NET 8 | 8001 | Auth, REST API, SignalR, MassTransit, proxy to Personalization |
+| `Lessley.Personalization` | Python FastAPI | 8002 | Async engine: spending analysis, recommendations, RabbitMQ consumer |
 | `Lessley.CategoriesEnricher` | Python FastAPI | — | Enriches transaction categories via RabbitMQ events |
 | `lessley-frontend` | React + Vite + TS | 5173 | SPA client |
 

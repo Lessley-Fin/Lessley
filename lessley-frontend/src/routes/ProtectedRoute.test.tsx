@@ -22,9 +22,8 @@ describe("ProtectedRoute", () => {
   beforeEach(() => {
     localStorage.clear()
     useAuthStore.setState({
+      status: "unauthenticated",
       isAuthenticated: false,
-      accessToken: null,
-      refreshToken: null,
       username: "User",
       userId: "",
       email: "",
@@ -38,9 +37,16 @@ describe("ProtectedRoute", () => {
   })
 
   it("renders children when authenticated", () => {
-    useAuthStore.setState({ isAuthenticated: true, accessToken: "valid" })
+    useAuthStore.setState({ status: "authenticated", isAuthenticated: true })
     render(<TestApp />)
     expect(screen.getByText("Protected Content")).toBeInTheDocument()
+    expect(screen.queryByText("Login Page")).not.toBeInTheDocument()
+  })
+
+  it("renders neither while the auth probe is loading", () => {
+    useAuthStore.setState({ status: "loading", isAuthenticated: false })
+    render(<TestApp />)
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument()
     expect(screen.queryByText("Login Page")).not.toBeInTheDocument()
   })
 })

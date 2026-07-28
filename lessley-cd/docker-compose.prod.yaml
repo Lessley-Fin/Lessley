@@ -1,0 +1,187 @@
+# ── Lessley PRODUCTION deployment ─────────────────────────────────────────────
+# Differences from the dev docker-compose.yaml:
+#   * Caddy is the ONLY service that publishes ports to the host (80/443).
+#   * MongoDB, RabbitMQ, gateway, personalization, loki, grafana are on a PRIVATE
+#     network and are NOT reachable from the host — only via service name.
+#   * mongo-express is removed (not needed in prod).
+#   * ASPNETCORE_ENVIRONMENT / Environment = Production  -> Swagger & /docs disabled.
+#   * Personalization is locked behind X-Gateway-Key (GATEWAY_API_KEY).
+#
+# Usage:  docker compose -f docker-compose.prod.yaml up -d --build
+# Requires a populated .env (see .env.template). DNS for $DOMAIN must point here.
+
+networks:
+  web:        # public edge (Caddy only)
+  backend:    # private; no host port publishing
+    internal: false   # keep false so containers can reach the internet (Let's Encrypt, Open Finance)
+
+services:
+  # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
+  # Built from the frontend Dockerfile so the image bundles the compiled SPA at
+  # /srv/frontend; the Caddyfile (mounted below) serves it and proxies /api + /hubs.
+  caddy:
+    build:
+      context: ../lessley-frontend
+      dockerfile: Dockerfile
+    image: lessley/edge:prod
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+      - RABBIT_DOMAIN=${RABBIT_DOMAIN:-}
+      - RABBIT_BASICAUTH_USER=${RABBIT_BASICAUTH_USER:-}
+      - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+      - backend
+    depends_on:
+      - gateway
+
+  # ── RabbitMQ (no host ports; management only via Caddy if RABBIT_DOMAIN set) ─
+  rabbitmq:
+    image: rabbitmq:4.1.4-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MongoDB (no host ports) ─────────────────────────────────────────────────
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Logging (internal only; reach via SSH tunnel when needed) ───────────────
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/tmp/loki
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - backend
+    depends_on:
+      - loki
+
+  # ── Gateway (the only app reachable from the edge) ──────────────────────────
+  gateway:
+    image: lessley/gateway:prod
+    build:
+      context: ../lessley-backend/Lessley.Gateway.Api
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=5001
+
+      - ConnectionStrings__MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - ConnectionStrings__RabbitMq=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+
+      - JwtConfig__Key=${JWT_KEY}
+      - JwtConfig__Issuer=${JWT_ISSUER}
+      - JwtConfig__Audience=${JWT_AUDIENCE}
+
+      - Bootstrap__Key=${BOOTSTRAP_KEY}
+      - Bootstrap__Username=${BOOTSTRAP_USER}
+      - Bootstrap__Password=${BOOTSTRAP_PASSWORD}
+      - Bootstrap__Email=${BOOTSTRAP_EMAIL}
+
+      - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
+      - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
+
+      # Reach Personalization by service name and authenticate with the shared key.
+      - PersonalizationConfig__BaseUrl=http://personalization:5002
+      - PersonalizationConfig__GatewayApiKey=${GATEWAY_API_KEY}
+
+      # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
+      - AllowedHosts=${DOMAIN}
+
+      - Loki__Url=${LOKI_URL}
+    networks:
+      - backend
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - loki
+
+  # ── Personalization (internal only; gated by X-Gateway-Key) ─────────────────
+  personalization:
+    image: lessley/personalization:prod
+    build:
+      context: ../lessley-backend/Lessley.Personalization
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_PORT=5002
+      - Environment=production
+      - RabbitMQ_Enabled=True
+      - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+      - ConnectionStrings_MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
+      - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
+      - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
+      - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
+      # Reject any request that does not carry X-Gateway-Key: $GATEWAY_API_KEY.
+      - Gateway_ApiKey=${GATEWAY_API_KEY}
+      - Loki_Url=${LOKI_URL}/loki/api/v1/push
+    networks:
+      - backend
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - loki
+
+volumes:
+  rabbitmq_data:
+  mongodb_data:
+  loki_data:
+  caddy_data:
+  caddy_config:

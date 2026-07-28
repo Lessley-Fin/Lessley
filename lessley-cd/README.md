@@ -2,6 +2,27 @@
 
 Welcome to the Lessley Continuous Deployment (CD) repository. This guide covers how to set up the project locally, manage Docker containers using built-in shortcuts, and initialize the database.
 
+> **Just want to run it?** See **[RUNNING.md](RUNNING.md)** for the three modes — local debug, dev docker-compose (same as prod), and production — plus first-time config.
+
+## 🧭 Dev mirrors production
+
+**Dev and prod run the exact same topology and the same Caddy configuration.** In both,
+the browser talks **only to Caddy**, which terminates TLS, serves the built React SPA, and
+reverse-proxies `/api` + `/hubs` to the gateway by service name over a private network. The
+client never addresses the gateway or personalization directly.
+
+The only differences between dev (`docker-compose.yaml`) and prod (`docker-compose.prod.yaml`):
+
+| | Dev | Prod |
+|---|---|---|
+| App URL | `https://localhost` (Caddy internal-CA cert) | `https://<DOMAIN>` (Let's Encrypt) |
+| Swagger `/swagger`, FastAPI `/docs` | **on** (Development) | off (Production) |
+| mongo-express | included | removed |
+| HSTS | `max-age=0` (won't pin localhost) | strong default |
+
+Container ports are identical (gateway `5001`, personalization `5002`) so the single
+`Caddyfile` works unchanged in both. Dev additionally host-publishes ports for tooling.
+
 ## 🚀 Getting Started
 
 Follow these steps to set up and run the environment.
@@ -13,23 +34,38 @@ copy .env.template .env
 ```
 
 ### 2. Configure Secrets
-Carefully configure your secrets, passwords, and other variables in the `.env` file. 
+Carefully configure your secrets, passwords, and other variables in the `.env` file.
 > **Note:** Remember to check other projects for `.env` and `appsettings.json` files and carefully update them as well.
+> For **dev** you can leave `DOMAIN`/`ACME_EMAIL` unset — the dev compose defaults `DOMAIN=localhost`.
 
-### 3. Run Infrastructure
-Start the required infrastructure services (MongoDB, RabbitMQ, Loki, etc.):
+### 3. Run Infrastructure (incl. the Caddy edge)
+Start the infrastructure + edge (MongoDB, RabbitMQ, Loki, Grafana, Mongo Express, **Caddy**):
 ```bash
 .\manage.bat infra up
 ```
 
 ### 4. Run Services
-Build and start the application services (Personalization, Gateway, etc.):
+Build and start the application services (Personalization, Gateway):
 ```bash
 .\manage.bat app build
 ```
 
-### 5. Have Fun! 🎉
-Your Lessley environment should now be up and running.
+### 5. Trust the local HTTPS cert (one time)
+Caddy serves `https://localhost` with its own internal CA. Export that CA once and add it to
+**Windows → Trusted Root Certification Authorities** so Chrome trusts it without warnings:
+```powershell
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .\caddy-local-ca.crt
+# then: double-click caddy-local-ca.crt → Install Certificate → Local Machine → Trusted Root
+```
+(You can skip this and click through the browser warning, but SignalR/fetch are cleaner with the CA trusted.)
+
+### 6. Open the app 🎉
+Browse to **https://localhost**. Dev-only tooling: Swagger `http://localhost:8001/swagger`,
+FastAPI docs `http://localhost:8002/docs`, mongo-express `http://localhost:8081`,
+RabbitMQ UI `http://localhost:15672`, Grafana `http://localhost:3000`.
+
+> **Frontend changes** are baked into the Caddy image. After editing the SPA, rebuild it:
+> `docker compose up -d --build caddy` (or `.\manage.bat infra build`).
 
 ---
 

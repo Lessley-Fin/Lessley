@@ -10,7 +10,6 @@ import { toast } from "sonner"
 
 import { useAuthStore } from "@/features/auth/store"
 import { API_GATEWAY_URL } from "@/lib/api-client"
-import { getValidAccessToken } from "@/lib/auth"
 import { queryKeys } from "@/lib/query-keys"
 import { ROUTES } from "@/lib/routes"
 import { NotificationToast } from "./components/NotificationToast"
@@ -26,8 +25,8 @@ export function useSignalR() {
 
     const connection = new HubConnectionBuilder()
       .withUrl(`${API_GATEWAY_URL}/hubs/notifications`, {
-        accessTokenFactory: () =>
-          getValidAccessToken().then((t) => t ?? ""),
+        // Auth rides the httpOnly cookie; the gateway reads it for /hubs connections.
+        withCredentials: true,
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(LogLevel.Warning)

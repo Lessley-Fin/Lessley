@@ -226,8 +226,23 @@ public class UserController : ControllerBase
     private async Task<IActionResult> ProxyResponse(HttpResponseMessage response, CancellationToken ct)
     {
         var content = await response.Content.ReadAsStringAsync(ct);
-        var json    = JsonSerializer.Deserialize<JsonElement>(content);
-        return StatusCode((int)response.StatusCode, json);
+        try
+        {
+            var json = JsonSerializer.Deserialize<JsonElement>(content);
+            return StatusCode((int)response.StatusCode, json);
+        }
+        catch (JsonException)
+        {
+            // Personalization returned a non-JSON body — e.g. an HTML error page, or (in dev)
+            // another process such as a stray Vite dev server answering on Personalization's
+            // port. Fail cleanly with 502 so the client shows a meaningful error instead of a
+            // cryptic 500, and the real cause is visible in logs.
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                error          = "Personalization returned an unexpected (non-JSON) response.",
+                upstreamStatus = (int)response.StatusCode,
+            });
+        }
     }
 
     private IActionResult MapResult(UserOperationResult result) => result switch

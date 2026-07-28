@@ -38,6 +38,12 @@ Both services share:
 
 ## ⚡ Quick Start: Build & Run
 
+> **Full stack (dev == prod):** use `lessley-cd/` — `manage.bat infra up` then `manage.bat app build`.
+> The app is reached **only through Caddy** at `https://localhost` (dev) / `https://<DOMAIN>` (prod),
+> which serves the SPA and proxies `/api` + `/hubs` to the gateway (`gateway:5001`). The sections
+> below run a single service standalone for focused backend work. Canonical ports: gateway container
+> `5001` (dev host-publishes `8001` for Swagger), personalization container `5002` (dev host `8002`).
+
 ### **Gateway.API** (C#)
 
 ```bash
@@ -48,14 +54,15 @@ dotnet run
 
 # With Docker
 docker build -f Dockerfile -t lessley-gateway:latest .
-docker run -p 8080:8080 \
+docker run -p 8001:8001 \
+  -e ASPNETCORE_HTTP_PORTS=8001 \
   -e ConnectionStrings__MongoDb=mongodb://... \
   -e JwtConfig__Key=your-secret-key \
   lessley-gateway:latest
 
-# Access API
-# Local: http://localhost:5001/swagger
-# Docker: http://localhost:8080/swagger
+# Access API (gateway: 8001 in dev, 5001 in prod)
+# Local: http://localhost:8001/swagger
+# Docker: http://localhost:8001/swagger
 ```
 
 **Configuration**: Edit `appsettings.json` or pass environment variables:
@@ -80,15 +87,15 @@ pip install -r requirements.txt
 
 # Development
 cp .env.template .env  # Edit with credentials
-uvicorn main:app --reload --port 8001
+uvicorn main:app --reload --port 8002
 
 # With Docker
 docker build -t lessley-personalization . .
-docker run -p 8001:8001 --env-file .env lessley-personalization
+docker run -p 8002:8002 --env-file .env lessley-personalization
 
 # Access API & docs
-# http://localhost:8001/docs (Swagger)
-# http://localhost:8001/redoc (ReDoc)
+# http://localhost:8002/docs (Swagger)
+# http://localhost:8002/redoc (ReDoc)
 ```
 
 **Critical Environment Variables**:

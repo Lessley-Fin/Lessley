@@ -1,3 +1,4 @@
+using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Consumers;
 using Lessley.Gateway.Api.Contracts;
 using Lessley.Gateway.Api.Data;
@@ -54,7 +55,13 @@ namespace Lessley.Gateway.Api.Extensions
                     configuration.GetConnectionString("MongoDb")!,
                     "lessley"));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    // Lock an account after repeated failed logins to blunt brute force.
+                    options.Lockout.AllowedForNewUsers      = true;
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.DefaultLockoutTimeSpan  = TimeSpan.FromMinutes(15);
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -73,6 +80,10 @@ namespace Lessley.Gateway.Api.Extensions
 
             if (string.IsNullOrWhiteSpace(jwtKey) || string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
                 throw new InvalidOperationException("JWT configuration is not set.");
+
+            // HS256 needs a high-entropy key; reject anything shorter than 256 bits.
+            if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
+                throw new InvalidOperationException("JwtConfig:Key must be at least 32 bytes (256 bits) for HS256.");
 
             services.AddAuthentication(options =>
             {
@@ -95,11 +106,21 @@ namespace Lessley.Gateway.Api.Extensions
                 {
                     OnMessageReceived = context =>
                     {
+                        // SignalR (WebSockets cannot set an Authorization header) may pass the
+                        // token via query string on the /hubs path.
                         var accessToken = context.Request.Query["access_token"];
                         if (!string.IsNullOrEmpty(accessToken) &&
                             context.Request.Path.StartsWithSegments("/hubs"))
                         {
                             context.Token = accessToken;
+                        }
+                        // Otherwise the SPA sends no Authorization header — the JWT lives in an
+                        // httpOnly cookie set at login. Read it from there.
+                        else if (string.IsNullOrEmpty(context.Request.Headers.Authorization))
+                        {
+                            var cookieToken = context.Request.Cookies[AuthCookieNames.Access];
+                            if (!string.IsNullOrEmpty(cookieToken))
+                                context.Token = cookieToken;
                         }
                         return Task.CompletedTask;
                     }
@@ -118,10 +139,16 @@ namespace Lessley.Gateway.Api.Extensions
                 options.RejectionStatusCode = 429;
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
+                    // Authenticated calls partition by user id; anonymous calls partition by
+                    // client IP (real IP via forwarded headers) so one caller can't share or
+                    // exhaust a single global bucket.
                     var user = httpContext.User.Claims
-                        .FirstOrDefault(d => d.Type == ClaimTypes.NameIdentifier)?.Value ?? "";
+                        .FirstOrDefault(d => d.Type == ClaimTypes.NameIdentifier)?.Value;
+                    var partitionKey = !string.IsNullOrEmpty(user)
+                        ? $"user:{user}"
+                        : $"ip:{httpContext.Connection.RemoteIpAddress}";
 
-                    return RateLimitPartition.GetFixedWindowLimiter(user, _ => new FixedWindowRateLimiterOptions
+                    return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit       = 10,
                         Window            = TimeSpan.FromSeconds(5),
@@ -129,6 +156,19 @@ namespace Lessley.Gateway.Api.Extensions
                         AutoReplenishment = true
                     });
                 });
+
+                // Stricter limiter for the auth endpoints (login/register/refresh) to blunt
+                // brute-force and credential-stuffing: 5 attempts/minute per client IP.
+                options.AddPolicy("auth", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        $"auth:{httpContext.Connection.RemoteIpAddress}",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit       = 5,
+                            Window            = TimeSpan.FromMinutes(1),
+                            QueueLimit        = 0,
+                            AutoReplenishment = true
+                        }));
             });
 
             return services;

@@ -1,85 +1,84 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+
+vi.mock("@/lib/api-client", () => ({ apiFetch: vi.fn() }))
+vi.mock("@/lib/auth", () => ({ logoutRequest: vi.fn() }))
+
 import { useAuthStore } from "./store"
+import { apiFetch } from "@/lib/api-client"
+import { logoutRequest } from "@/lib/auth"
+
+const mockedApiFetch = vi.mocked(apiFetch)
 
 describe("useAuthStore", () => {
   beforeEach(() => {
-    localStorage.clear()
+    vi.clearAllMocks()
     useAuthStore.setState({
+      status: "loading",
       isAuthenticated: false,
-      accessToken: null,
-      refreshToken: null,
       username: "User",
       userId: "",
       email: "",
     })
   })
 
-  it("starts unauthenticated", () => {
-    const state = useAuthStore.getState()
-    expect(state.isAuthenticated).toBe(false)
-    expect(state.accessToken).toBeNull()
+  it("holds no tokens in state (cookie-based auth)", () => {
+    const state = useAuthStore.getState() as unknown as Record<string, unknown>
+    expect(state.accessToken).toBeUndefined()
+    expect(state.refreshToken).toBeUndefined()
   })
 
-  it("login sets auth state and writes to localStorage", () => {
-    useAuthStore.getState().login({
-      accessToken: "test-access",
-      refreshToken: "test-refresh",
-      username: "Yoav",
-      userId: "yoav@test.com",
-      email: "yoav@test.com",
-    })
+  it("login sets authenticated state", () => {
+    useAuthStore.getState().login({ username: "Yoav", userId: "yoav@test.com", email: "yoav@test.com" })
 
     const state = useAuthStore.getState()
+    expect(state.status).toBe("authenticated")
     expect(state.isAuthenticated).toBe(true)
-    expect(state.accessToken).toBe("test-access")
-    expect(state.refreshToken).toBe("test-refresh")
     expect(state.username).toBe("Yoav")
     expect(state.email).toBe("yoav@test.com")
-    expect(localStorage.getItem("lessley_access_token")).toBe("test-access")
-    expect(localStorage.getItem("lessley_poc_session")).toBe("active")
   })
 
-  it("logout clears auth state and localStorage", () => {
-    useAuthStore.getState().login({
-      accessToken: "test-access",
-      refreshToken: "test-refresh",
-      username: "Yoav",
-    })
+  it("logout clears state and calls the server", () => {
+    useAuthStore.getState().login({ username: "Yoav", userId: "y@test.com", email: "y@test.com" })
 
     useAuthStore.getState().logout()
 
     const state = useAuthStore.getState()
+    expect(state.status).toBe("unauthenticated")
     expect(state.isAuthenticated).toBe(false)
-    expect(state.accessToken).toBeNull()
     expect(state.username).toBe("User")
-    expect(localStorage.getItem("lessley_access_token")).toBeNull()
-    expect(localStorage.getItem("lessley_poc_session")).toBeNull()
+    expect(logoutRequest).toHaveBeenCalled()
   })
 
-  it("initialize hydrates from localStorage", () => {
-    localStorage.setItem("lessley_poc_session", "active")
-    localStorage.setItem("lessley_access_token", "stored-token")
-    localStorage.setItem("lessley_refresh_token", "stored-refresh")
-    localStorage.setItem("lessley_username", "StoredUser")
-    localStorage.setItem("lessley_user_email", "stored@test.com")
-    localStorage.setItem("lessley_user_id", "stored@test.com")
+  it("initialize authenticates when the profile probe succeeds", async () => {
+    mockedApiFetch.mockResolvedValueOnce({
+      email: "me@test.com",
+      userName: "Me",
+      roles: [],
+      clubs: [],
+      tags: [],
+      mutedTags: [],
+      matchLevel: null,
+    })
 
-    useAuthStore.getState().initialize()
+    await useAuthStore.getState().initialize()
 
     const state = useAuthStore.getState()
+    expect(state.status).toBe("authenticated")
     expect(state.isAuthenticated).toBe(true)
-    expect(state.accessToken).toBe("stored-token")
-    expect(state.username).toBe("StoredUser")
-    expect(state.email).toBe("stored@test.com")
+    expect(state.email).toBe("me@test.com")
+    expect(state.username).toBe("Me")
+  })
+
+  it("initialize marks unauthenticated when the probe fails", async () => {
+    mockedApiFetch.mockRejectedValueOnce(new Error("401"))
+
+    await useAuthStore.getState().initialize()
+
+    expect(useAuthStore.getState().status).toBe("unauthenticated")
+    expect(useAuthStore.getState().isAuthenticated).toBe(false)
   })
 
   it("setProfile updates profile fields", () => {
-    useAuthStore.getState().login({
-      accessToken: "t",
-      refreshToken: "r",
-      username: "Old",
-    })
-
     useAuthStore.getState().setProfile({
       username: "New",
       userId: "new@test.com",
@@ -89,13 +88,5 @@ describe("useAuthStore", () => {
     const state = useAuthStore.getState()
     expect(state.username).toBe("New")
     expect(state.email).toBe("new@test.com")
-    expect(localStorage.getItem("lessley_username")).toBe("New")
-  })
-
-  it("setAccessToken updates token in state and localStorage", () => {
-    useAuthStore.getState().setAccessToken("new-token")
-
-    expect(useAuthStore.getState().accessToken).toBe("new-token")
-    expect(localStorage.getItem("lessley_access_token")).toBe("new-token")
   })
 })

@@ -36,8 +36,11 @@ AI-driven financial insights and recommendations engine. Analyzes Open Finance t
 1. Clone repository
 2. Create `.env` from `.env.override`
 3. Install dependencies: `pip install -r requirements.txt`
-4. Run: `uvicorn main:app --reload --port 8001`
-5. Update dependencies: `pip freeze > requirements.txt`
+4. Run: `uvicorn main:app --reload --port 8002`  (personalization: 8002 in dev, 5002 in prod)
+5. Update dependencies (write UTF-8 — PowerShell's `pip freeze > requirements.txt` produces
+   UTF-16, which breaks the Docker `pip install`):
+   `pip freeze | Out-File -Encoding utf8 requirements.txt`  (PowerShell)
+   or `pip freeze > requirements.txt`  (bash)
 
 ## Configuration
 

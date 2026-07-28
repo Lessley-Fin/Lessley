@@ -1,35 +1,60 @@
 ---
 name: react-dev
-description: 'Start the Vite dev server for the Lessley React frontend. Use when: developing UI features, testing visual changes, debugging frontend behavior, or verifying that components render correctly.'
-argument-hint: 'react-dev to start the frontend dev server'
+description: 'Run and iterate on the Lessley React frontend. Use when: developing UI features, testing visual changes, debugging frontend behavior, or verifying that components render correctly.'
+argument-hint: 'react-dev to work on the frontend'
 user-invocable: true
 ---
 
-# React Dev Server
+# React Frontend Dev
 
-Start the Lessley frontend development server with hot module replacement.
+**Dev mirrors production.** The integrated app is served by **Caddy at `https://localhost`**,
+which serves the built SPA and reverse-proxies `/api` + `/hubs` to the gateway on one origin —
+exactly like prod. The client talks **only** to Caddy; it never addresses the gateway or the
+Personalization service directly.
 
-## Command
+## Primary flow — run the app like production
 
 ```bash
-cd lessley-frontend && npm run dev
+cd lessley-cd
+.\manage.bat infra up     # brings up Caddy (+ SPA), Mongo, Rabbit, Loki, Grafana, mongo-express
+.\manage.bat app build    # gateway + personalization
 ```
 
-## What it does
+Open **https://localhost** (trust the local Caddy CA once — see `lessley-cd/README.md`).
 
-- Starts Vite dev server on `http://localhost:5173`
-- Enables HMR (hot module replacement) for instant feedback
-- Proxies `/personalization` requests to the Personalization service (default `http://localhost:8002`)
-- Requires the API Gateway to be running at `http://localhost:8001` (or set `VITE_API_GATEWAY_URL`)
+The SPA is baked into the Caddy image, so after editing frontend code rebuild it:
 
-## Environment Variables
+```bash
+cd lessley-cd && docker compose up -d --build caddy
+```
 
-| Variable | Default | Purpose |
+## Fast UI-iteration shortcut (Vite HMR)
+
+For tight visual/UX loops where rebuilding the image each time is too slow, run the Vite dev
+server with hot-module reload. **This bypasses the Caddy edge** (plain http, separate origin),
+so it's for UI work only — always confirm final behavior (auth cookies, CSRF, SignalR) on
+`https://localhost` through Caddy.
+
+```bash
+cd lessley-frontend && npm run dev     # http://localhost:8000, HMR
+```
+
+Vite proxies `/api` + `/hubs` to `VITE_GATEWAY_PROXY_TARGET` (default `http://localhost:8001`,
+the dev-published gateway), so login and API calls work same-origin during iteration.
+
+## Ports (canonical scheme)
+
+| Service | Dev (host) | Prod |
 |---|---|---|
-| `VITE_API_GATEWAY_URL` | `http://localhost:8001` | Gateway API base URL |
-| `VITE_PERSONALIZATION_PROXY_TARGET` | `http://localhost:8002` | Personalization service proxy target |
+| App entry (Caddy) | `https://localhost` (443) | `https://<DOMAIN>` (443) |
+| Gateway container | 5001 (published as **8001** for Swagger) | 5001 (internal only) |
+| Personalization container | 5002 (published as **8002** for /docs) | 5002 (internal only) |
+| Vite HMR shortcut | 8000 | n/a |
+
+Container ports match dev/prod so the single `Caddyfile` (`reverse_proxy gateway:5001`) is
+identical in both. The client never knows about Personalization.
 
 ## Prerequisites
 
-- Run `npm install` in `lessley-frontend/` if `node_modules/` is missing
-- Backend services should be running (see `lessley-cd/` Docker Compose)
+- Run `npm install` in `lessley-frontend/` if `node_modules/` is missing.
+- The Docker stack must be running (see `lessley-cd/README.md`).
