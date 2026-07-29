@@ -57,6 +57,11 @@ namespace Lessley.Gateway.Api.Extensions
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
                 {
+                    // Email is the cross-service user key (personalization, settings, tags) and
+                    // the /me lookup does FindByEmailAsync, which throws on more than one match —
+                    // so reject registering/updating a duplicate email.
+                    options.User.RequireUniqueEmail = true;
+
                     // Lock an account after repeated failed logins to blunt brute force.
                     options.Lockout.AllowedForNewUsers      = true;
                     options.Lockout.MaxFailedAccessAttempts = 5;
