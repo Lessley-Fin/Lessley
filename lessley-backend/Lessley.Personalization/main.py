@@ -3,6 +3,7 @@ import asyncio
 import json
 from fastapi import FastAPI, status, Request
 import aio_pika
+import httpx
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -302,6 +303,32 @@ async def connection_error_handler(request: Request, exc: ConnectionError):
         headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
         content={
             "detail": "External service unavailable",
+            "request_id": getattr(request.state, "request_id", "unknown"),
+        },
+    )
+
+
+@app.exception_handler(httpx.HTTPStatusError)
+async def upstream_http_error_handler(request: Request, exc: httpx.HTTPStatusError):
+    """An upstream API refusing a request is a bad gateway, not an internal fault of ours."""
+    endpoint_logger = logging.getLogger(__name__)
+    upstream_status = exc.response.status_code
+    endpoint_logger.error(
+        f"Upstream service returned {upstream_status} for {exc.request.url}",
+        extra={
+            "reason": "External API call failed",
+            "extra_data": {
+                "error_type": "HTTPStatusError",
+                "upstream_status": upstream_status,
+                "upstream_url": str(exc.request.url),
+            },
+        },
+    )
+    return JSONResponse(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={
+            "detail": f"Upstream service error ({upstream_status})",
             "request_id": getattr(request.state, "request_id", "unknown"),
         },
     )

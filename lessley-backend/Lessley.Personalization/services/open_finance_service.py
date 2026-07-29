@@ -54,8 +54,7 @@ class OpenFinanceService:
         )
 
         try:
-            token = await self.client.get_access_token(user_id)
-            accounts = await self.client.get_accounts(token)
+            accounts = await self.client.get_accounts(user_id)
 
             logger.info(
                 "User accounts retrieved successfully",
@@ -97,17 +96,14 @@ class OpenFinanceService:
         )
 
         try:
-            # 1. Get Token
-            token = await self.client.get_access_token(user_id)
-
-            # 2. Get Transactions for account
+            # 1. Get Transactions for account (the client acquires/refreshes the token itself)
             if is_time_filter:
                 from_date = (datetime.utcnow() - timedelta(days=days)).date()
                 params = {"dateFrom": from_date, "accountId": account_id}
             else:
                 params = {"accountId": account_id}
 
-            transactions = await self.client.get_transactions(token, params)
+            transactions = await self.client.get_transactions(user_id, params)
 
             logger.info(
                 "Transactions retrieved for account",
@@ -152,11 +148,8 @@ class OpenFinanceService:
         )
 
         try:
-            # 1. Get Token
-            token = await self.client.get_access_token(user_id)
-
-            # 2. Get Accounts
-            accounts = await self.client.get_accounts(token)
+            # 1. Get Accounts (the client acquires/refreshes the token itself)
+            accounts = await self.client.get_accounts(user_id)
 
             logger.info(
                 "User accounts fetched",
@@ -166,13 +159,14 @@ class OpenFinanceService:
                 },
             )
 
-            # 3. Get Transactions for each account in parallel
+            # 2. Get Transactions for each account in parallel
             params = {}
             if is_time_filter:
                 params = {"dateFrom": (datetime.utcnow() - timedelta(days=days)).date()}
 
             tasks = [
-                self.client.get_transactions(token, {"accountId": account.get("id"), **params}) for account in accounts
+                self.client.get_transactions(user_id, {"accountId": account.get("id"), **params})
+                for account in accounts
             ]
 
             # Wait for ALL to complete simultaneously
