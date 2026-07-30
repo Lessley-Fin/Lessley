@@ -22,11 +22,11 @@ interface ConnectionInitResponse {
 }
 
 export async function fetchMyProfile(): Promise<MeResponse> {
-  return apiFetch<MeResponse>("/api/User/me")
+  return apiFetch<MeResponse>("/api/v1/User/me")
 }
 
 export async function patchMyProfile(body: PatchMeRequest): Promise<MeResponse> {
-  return apiFetch<MeResponse>("/api/User/me", {
+  return apiFetch<MeResponse>("/api/v1/User/me", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -34,5 +34,5 @@ export async function patchMyProfile(body: PatchMeRequest): Promise<MeResponse> 
 }
 
 export async function initOpenFinanceConnection(): Promise<ConnectionInitResponse> {
-  return apiFetch<ConnectionInitResponse>("/api/User/init", { method: "POST" })
+  return apiFetch<ConnectionInitResponse>("/api/v1/User/init", { method: "POST" })
 }

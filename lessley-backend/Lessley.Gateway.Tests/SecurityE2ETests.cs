@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Lessley.Gateway.Api.Middleware;
 using Xunit;
 
 namespace Lessley.Gateway.Tests;
@@ -45,5 +46,43 @@ public class SecurityE2ETests : IClassFixture<GatewayWebApplicationFactory>
             new { UserName = "abc", Email = "abc@test.com", Password = "short" });
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    // ── Edge verification ─────────────────────────────────────────────────────
+    // The Gateway must only answer requests that arrived through Caddy. This is what stops
+    // a stray published port or a network-policy regression from exposing the service.
+
+    [Fact]
+    public async Task Request_WithoutEdgeKey_Returns403()
+    {
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Remove(EdgeVerificationMiddleware.EdgeKeyHeader);
+
+        var resp = await http.GetAsync("api/user/me");
+
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Request_WithWrongEdgeKey_Returns403()
+    {
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Remove(EdgeVerificationMiddleware.EdgeKeyHeader);
+        http.DefaultRequestHeaders.Add(EdgeVerificationMiddleware.EdgeKeyHeader, "not-the-key");
+
+        var resp = await http.GetAsync("api/user/me");
+
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Health_IsReachableWithoutEdgeKey()
+    {
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Remove(EdgeVerificationMiddleware.EdgeKeyHeader);
+
+        var resp = await http.GetAsync("health");
+
+        Assert.NotEqual(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 }

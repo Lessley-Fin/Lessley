@@ -5,7 +5,7 @@
 #     network and are NOT reachable from the host — only via service name.
 #   * mongo-express is removed (not needed in prod).
 #   * ASPNETCORE_ENVIRONMENT / Environment = Production  -> Swagger & /docs disabled.
-#   * Personalization is locked behind X-Gateway-Key (GATEWAY_API_KEY).
+#   * Gateway and Personalization both reject anything without X-Edge-Key (EDGE_API_KEY).
 #
 # Usage:  docker compose -f docker-compose.prod.yaml up -d --build
 # Requires a populated .env (see .env.template). DNS for $DOMAIN must point here.
@@ -35,6 +35,8 @@ services:
       - RABBIT_DOMAIN=${RABBIT_DOMAIN:-}
       - RABBIT_BASICAUTH_USER=${RABBIT_BASICAUTH_USER:-}
       - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
+      # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
+      - EDGE_API_KEY=${EDGE_API_KEY}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -44,6 +46,7 @@ services:
       - backend
     depends_on:
       - gateway
+      - personalization
 
   # ── RabbitMQ (no host ports; management only via Caddy if RABBIT_DOMAIN set) ─
   rabbitmq:
@@ -136,8 +139,7 @@ services:
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
 
       # Reach Personalization by service name and authenticate with the shared key.
-      - PersonalizationConfig__BaseUrl=http://personalization:5002
-      - PersonalizationConfig__GatewayApiKey=${GATEWAY_API_KEY}
+      - Edge__ApiKey=${EDGE_API_KEY}
 
       # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
       - AllowedHosts=${DOMAIN}
@@ -169,8 +171,8 @@ services:
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
-      # Reject any request that does not carry X-Gateway-Key: $GATEWAY_API_KEY.
-      - Gateway_ApiKey=${GATEWAY_API_KEY}
+      # Reject any request that does not carry X-Edge-Key: $EDGE_API_KEY.
+      - Edge_ApiKey=${EDGE_API_KEY}
       - Loki_Url=${LOKI_URL}/loki/api/v1/push
     networks:
       - backend

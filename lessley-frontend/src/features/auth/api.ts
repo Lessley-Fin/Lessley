@@ -25,7 +25,7 @@ export interface AuthProfileResponse {
 export async function loginWithGateway(
   body: LoginRequest,
 ): Promise<AuthProfileResponse> {
-  return apiFetch<AuthProfileResponse>("/api/auth/login", {
+  return apiFetch<AuthProfileResponse>("/api/v1/auth/login", {
     ...jsonBody(body),
     skipAuth: true,
     errorMessage: "Unable to sign in with provided credentials.",
@@ -33,7 +33,7 @@ export async function loginWithGateway(
 }
 
 export async function registerWithGateway(body: RegisterRequest): Promise<void> {
-  await apiFetch<void>("/api/auth/register", {
+  await apiFetch<void>("/api/v1/auth/register", {
     ...jsonBody(body),
     skipAuth: true,
     errorMessage: "Unable to complete registration.",

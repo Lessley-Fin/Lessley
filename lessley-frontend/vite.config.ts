@@ -5,11 +5,26 @@ import path from 'node:path'
 
 // Ports (canonical scheme):
 //   client 8000 (dev) / 5000 (prod preview) · gateway 8001 (dev) / 5001 (prod)
-// The client talks ONLY to the gateway (relative /api + /hubs, proxied same-origin in dev,
-// served by Caddy in prod). It never knows about the Personalization service.
+//   personalization 8002 (dev) / 5002 (prod)
+// The client talks ONLY to Caddy in prod (relative /api/v1 + /hubs, same-origin). This dev
+// proxy stands in for Caddy: it routes the Personalization-owned prefixes to that service
+// and everything else to the gateway, so the browser sees one origin either way.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const gatewayTarget = env.VITE_GATEWAY_PROXY_TARGET || 'http://localhost:8001'
+  const personalizationTarget = env.VITE_PERSONALIZATION_PROXY_TARGET || 'http://localhost:8002'
+
+  // Mode 1 has no Caddy, so nothing authenticates the caller or injects the verified
+  // identity. Stand in for it here. This lives in the dev-server config only — it is not
+  // part of the built bundle and cannot reach production. The services additionally
+  // require Environment=Development AND their own opt-in flag before honouring it.
+  const devAuthEmail = env.VITE_DEV_AUTH_EMAIL || ''
+  const personalizationProxy = {
+    target: personalizationTarget,
+    changeOrigin: true,
+    rewrite: (p: string) => p.replace(/^\/api\/v1/, ''),
+    headers: devAuthEmail ? { 'X-Auth-Email': devAuthEmail } : undefined,
+  }
 
   return {
     plugins: [react()],
@@ -27,9 +42,16 @@ export default defineConfig(({ mode }) => {
       // no CORS, and Secure/HttpOnly/SameSite cookies behave exactly as in prod. Point
       // VITE_GATEWAY_PROXY_TARGET at the gateway (http://localhost:8001 dotnet / 5001 docker).
       proxy: {
+        // Personalization-owned prefixes FIRST — Vite matches by prefix in declaration
+        // order, so a general '/api' entry above these would swallow them.
+        '/api/v1/insights': personalizationProxy,
+        '/api/v1/open-finance': personalizationProxy,
+        '/api/v1/clubs': personalizationProxy,
         '/api': {
           target: gatewayTarget,
           changeOrigin: true,
+          // Caddy does this rewrite in prod; the gateway's own routes stay at /api/*.
+          rewrite: (p: string) => p.replace(/^\/api\/v1/, '/api'),
         },
         '/hubs': {
           target: gatewayTarget,

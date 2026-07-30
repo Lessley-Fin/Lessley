@@ -1,6 +1,7 @@
 using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Enums;
+using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,9 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Net.Mime;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Lessley.Gateway.Api.Controllers
 {
@@ -178,6 +181,50 @@ namespace Lessley.Gateway.Api.Controllers
 
             ClearAuthCookies();
             return Ok();
+        }
+
+        /// <summary>Edge authentication check — called by Caddy's forward_auth, never by a client.</summary>
+        /// <remarks>
+        /// Caddy issues this as a GET sub-request carrying the original request's cookies and
+        /// headers, then copies <c>X-Auth-Email</c> from the response onto the upstream request.
+        /// This is the single place identity is established for services that sit behind the
+        /// edge — they trust that header and never a client-supplied value.
+        /// </remarks>
+        [HttpGet("verify")]
+        [Authorize]
+        // Runs once per proxied request, so the class-level "auth" policy (5/min) would break
+        // the app almost immediately. The edge already rate-limits the originating request.
+        [DisableRateLimiting]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public IActionResult Verify()
+        {
+            // The sub-request is always a GET, so CsrfProtectionMiddleware skips it. Apply the
+            // same double-submit check here against the *original* method, which Caddy forwards.
+            var originalMethod = Request.Headers["X-Forwarded-Method"].ToString();
+            if (!string.IsNullOrEmpty(originalMethod) &&
+                !CsrfProtectionMiddleware.IsSafeMethod(originalMethod) &&
+                !string.IsNullOrEmpty(Request.Cookies[AuthCookieNames.Access]))
+            {
+                var headerToken = Request.Headers[AuthCookieNames.CsrfHeader].ToString();
+                var cookieToken = Request.Cookies[AuthCookieNames.Csrf];
+
+                if (string.IsNullOrEmpty(headerToken) ||
+                    string.IsNullOrEmpty(cookieToken) ||
+                    !CryptographicOperations.FixedTimeEquals(
+                        Encoding.UTF8.GetBytes(headerToken),
+                        Encoding.UTF8.GetBytes(cookieToken)))
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new { detail = "CSRF validation failed" });
+                }
+            }
+
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+            Response.Headers["X-Auth-Email"] = email;
+            return NoContent();
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

@@ -32,14 +32,46 @@
 		-Server
 	}
 
-	# API — TLS terminated here; gateway trusts X-Forwarded-Proto via UseForwardedHeaders.
-	handle /api/* {
-		reverse_proxy gateway:5001
+	# Nothing outside may assert edge trust or identity. Stripped before any routing so a
+	# client cannot forge either header; the values below are set by us, on the way in.
+	request_header -X-Edge-Key
+	request_header -X-Auth-Email
+
+	# ── Personalization-owned prefixes ──────────────────────────────────────────
+	# These MUST precede the general /api/v1/* handler: `handle` blocks match top-down.
+	# Personalization has no user-level authorization of its own — it trusts X-Auth-Email
+	# — so forward_auth is what makes exposing it safe. Do not add a route here without it.
+	@personalization path /api/v1/insights/* /api/v1/open-finance/* /api/v1/clubs/*
+	handle @personalization {
+		forward_auth gateway:5001 {
+			uri /api/auth/verify
+			copy_headers X-Auth-Email
+			header_up X-Edge-Key {$EDGE_API_KEY}
+		}
+
+		uri strip_prefix /api/v1
+		reverse_proxy personalization:5002 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+			header_up X-Request-ID {http.request.uuid}
+		}
+	}
+
+	# ── Gateway ─────────────────────────────────────────────────────────────────
+	# Rewritten back to /api/* so the Gateway's existing controller routes are unchanged.
+	# Not forward_auth'd: the Gateway authenticates its own requests, as it always has.
+	handle /api/v1/* {
+		uri replace /api/v1/ /api/ 1
+		reverse_proxy gateway:5001 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+			header_up X-Request-ID {http.request.uuid}
+		}
 	}
 
 	# SignalR hub — Caddy upgrades the WebSocket automatically.
 	handle /hubs/* {
-		reverse_proxy gateway:5001
+		reverse_proxy gateway:5001 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+		}
 	}
 
 	# Everything else: the SPA, with history-API fallback so client-side routes reload.

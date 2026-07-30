@@ -24,7 +24,7 @@ from routers import recommendation_controller
 from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
-from middleware.gateway_auth_middleware import GatewayAuthMiddleware
+from middleware.edge_auth_middleware import EdgeAuthMiddleware, dev_bypass_active
 import uuid
 
 # --- RabbitMQ Configuration ---
@@ -355,8 +355,14 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
-app.add_middleware(GatewayAuthMiddleware)     # Enforce gateway-only access
+app.add_middleware(EdgeAuthMiddleware)        # Enforce edge-only access
 app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging context
+
+if dev_bypass_active():
+    logging.getLogger(__name__).warning(
+        "EDGE VERIFICATION BYPASSED — X-Edge-Key is not required and identity falls back to "
+        "Dev_AuthEmail. Development only; never enable Edge_AllowUnverified outside local debugging."
+    )
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)

@@ -5,7 +5,7 @@ Caddy → gateway); Mode 1 is the local debug loop. Pick one:
 
 | Mode | When | How the browser reaches the app |
 |---|---|---|
-| **1. Local debug** | Step through code / fast HMR | `http://localhost:8000` (Vite) → local gateway `:8001` |
+| **1. Local debug** | Step through code / fast HMR | `http://localhost:8000` (Vite proxy stands in for Caddy) |
 | **2. Dev docker-compose** | Run dev exactly like prod | `https://localhost` → Caddy → `gateway:5001` |
 | **3. Production** | Real deployment | `https://<DOMAIN>` → Caddy → `gateway:5001` |
 
@@ -78,7 +78,7 @@ sets `Secure; HttpOnly; SameSite=Strict` cookies, and notifications arrive (Sign
 Same as Mode 2 but with the prod compose and a real domain; **no** Swagger, **no** mongo-express.
 
 1. On the prod host: `copy .env.template .env` and set **all** secrets, plus `DOMAIN`,
-   `ACME_EMAIL`, and `GATEWAY_API_KEY`. Point DNS for `DOMAIN` at this host (ports 80/443 open).
+   `ACME_EMAIL`, and `EDGE_API_KEY`. Point DNS for `DOMAIN` at this host (ports 80/443 open).
 2. Deploy:
    ```bash
    docker compose -f docker-compose.prod.yaml up -d --build
@@ -95,12 +95,27 @@ Same as Mode 2 but with the prod compose and a real domain; **no** Swagger, **no
 1. **`lessley-cd/.env`** — `copy .env.template .env`, then fill `DB_*`, `RABBIT_*`, `JWT_KEY`
    (≥32 chars), `OpenFinanceConfig_*`, `BOOTSTRAP_*`, `GRAFANA_*`. For **dev** you can leave
    `DOMAIN`/`ACME_EMAIL` unset (defaults to `localhost`). For **prod** set `DOMAIN`, `ACME_EMAIL`,
-   and `GATEWAY_API_KEY`.
+   and `EDGE_API_KEY`.
 2. **`lessley-backend/Lessley.Personalization/.env`** — `copy .env.template .env`; for debug use
    `localhost` connections and set `RabbitMQ_Enabled=True` (rabbit is up) or `False` (no broker).
 3. **`lessley-frontend/.env`** — already present (relative API URLs;
    `VITE_GATEWAY_PROXY_TARGET=http://localhost:8001` for Mode 1). No changes needed.
-4. **Local gateway secrets (Mode 1 only).** The committed `appsettings.json` ships these **blank**,
+4. **Mode 1 edge bypass.** Caddy is what authenticates callers and injects identity, so with
+   no Caddy in front both services would reject every request. Enable the bypass — it needs
+   *two* conditions, so production cannot be opened by one stray flag:
+   ```
+   # Gateway
+   ASPNETCORE_ENVIRONMENT=Development   Edge__AllowUnverifiedEdge=true
+   # Personalization .env
+   Environment=Development   Edge_AllowUnverified=True   Dev_AuthEmail=you@example.com
+   # lessley-frontend/.env
+   VITE_DEV_AUTH_EMAIL=you@example.com
+   VITE_PERSONALIZATION_PROXY_TARGET=http://localhost:8002
+   ```
+   Both services log a loud warning at startup while the bypass is active. If you see that
+   warning anywhere but your own machine, something is badly misconfigured.
+
+5. **Local gateway secrets (Mode 1 only).** The committed `appsettings.json` ships these **blank**,
    so provide them via environment variables or `dotnet user-secrets` (values must match your
    `lessley-cd/.env`):
    ```
@@ -111,13 +126,33 @@ Same as Mode 2 but with the prod compose and a real domain; **no** Swagger, **no
    OpenFinanceConfig__ClientId / ClientSecret
    ```
    (Modes 2 & 3 inject these from `.env` automatically — no per-service config needed.)
-5. **Trust the dev HTTPS cert (Mode 2).** Caddy serves `https://localhost` with its own CA:
+6. **Trust the dev HTTPS cert (Mode 2).** Caddy serves `https://localhost` with its own CA:
    ```powershell
    cd lessley-cd
    docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .\caddy-local-ca.crt
    # double-click → Install Certificate → Local Machine → Trusted Root Certification Authorities
    ```
-6. **Seed MongoDB reference data** (mcc/stores/deals/clubs) — see `README.md` → *MongoDB Initialization*.
-7. **Create the first admin** — call the bootstrap endpoint with `Bootstrap__Key` once the gateway is up.
+7. **Seed MongoDB reference data** (mcc/stores/deals/clubs) — see `README.md` → *MongoDB Initialization*.
+8. **Create the first admin** — call the bootstrap endpoint with `Bootstrap__Key` once the gateway is up.
+
+## Adding a client-facing service
+
+The edge is the only public entry point, and it authenticates every request once. A new
+service therefore needs no proxy code anywhere:
+
+1. Add a `handle /api/v1/<prefix>/*` block to `lessley-cd/Caddyfile` with `forward_auth`
+   to `gateway:5001 /api/auth/verify`, `copy_headers X-Auth-Email`, and
+   `header_up X-Edge-Key {$EDGE_API_KEY}`. Put it **above** the general `/api/v1/*` block.
+2. In the service, reject any request without `X-Edge-Key`, and read identity **only** from
+   `X-Auth-Email`. Never accept an `email` parameter — that is the IDOR this design removes.
+3. Add the service to `depends_on` for `caddy` in both compose files.
+
+Two constraints worth knowing before you design around them:
+
+- **Shared database.** Gateway and Personalization share the `lessley` database.
+  Personalization reads `users` **read-only**; every write goes through the Gateway or
+  RabbitMQ. Keep that discipline.
+- **Email is the cross-service key.** It is also what Open Finance keys accounts by, so
+  changing a user's email would orphan their bank data. Email changes are unsupported.
 
 > Deeper reference (architecture, per-service details, DB seeding commands): see `README.md`.

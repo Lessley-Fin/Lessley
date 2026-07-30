@@ -38,7 +38,7 @@ export async function refreshAccessToken(): Promise<boolean> {
       const csrf = readCookie(CSRF_COOKIE)
       if (csrf) headers.set(CSRF_HEADER, csrf)
 
-      const response = await fetch(`${GATEWAY_URL}/api/auth/refresh`, {
+      const response = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
         method: "POST",
         credentials: "include",
         headers,
@@ -61,7 +61,7 @@ export async function logoutRequest(): Promise<void> {
     const csrf = readCookie(CSRF_COOKIE)
     if (csrf) headers.set(CSRF_HEADER, csrf)
 
-    await fetch(`${GATEWAY_URL}/api/auth/logout`, {
+    await fetch(`${GATEWAY_URL}/api/v1/auth/logout`, {
       method: "POST",
       credentials: "include",
       headers,

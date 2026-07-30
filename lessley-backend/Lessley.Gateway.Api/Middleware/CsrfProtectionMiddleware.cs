@@ -18,6 +18,10 @@ namespace Lessley.Gateway.Api.Middleware
         private static readonly HashSet<string> SafeMethods =
             new(StringComparer.OrdinalIgnoreCase) { "GET", "HEAD", "OPTIONS", "TRACE" };
 
+        /// <summary>True for methods CSRF cannot abuse. Shared with AuthController.Verify,
+        /// which applies the same rule to the forwarded method during edge authentication.</summary>
+        public static bool IsSafeMethod(string method) => SafeMethods.Contains(method);
+
         public CsrfProtectionMiddleware(RequestDelegate next) => _next = next;
 
         public async Task InvokeAsync(HttpContext context)

@@ -104,7 +104,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
-    public async Task UpdateUser_MatchLevelChange_TriggersRecalculation()
+    public async Task UpdateUser_MatchLevelChange_MarksInsightsStale()
     {
         var email      = await CreateUserAsync();
         var adminToken = NotificationE2ETests.BuildJwt("admin-recalc", "Admin", email);
@@ -112,15 +112,16 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var before   = _factory.PersonalizationService.RecalculateCallCount;
         var dto      = new UpdateUserDto(null, null, "High");
         var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(_factory.PersonalizationService.RecalculateCallCount > before);
 
+        // The Gateway no longer calls Personalization over HTTP, so nothing is recalculated
+        // here. It reports that cached insights are stale and the client re-fetches them
+        // through the edge.
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.True(body.RootElement.GetProperty("recalculated").GetBoolean());
+        Assert.True(body.RootElement.GetProperty("staleInsights").GetBoolean());
     }
 
     // ── PUT /api/admin/users/{email}/tags ─────────────────────────────────────

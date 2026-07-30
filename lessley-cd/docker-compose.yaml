@@ -49,6 +49,8 @@ services:
       - ACME_EMAIL=${ACME_EMAIL:-dev@lessley.local}
       # Disable HSTS in dev so https://localhost cannot pin other localhost http apps.
       - HSTS_MAX_AGE=max-age=0
+      # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
+      - EDGE_API_KEY=${EDGE_API_KEY:-dev-edge-key}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -58,6 +60,7 @@ services:
       - backend
     depends_on:
       - gateway
+      - personalization
 
   # --- RabbitMQ Service ---
   rabbitmq:
@@ -182,9 +185,9 @@ services:
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
 
-      # Personalization by service name + the same X-Gateway-Key handshake as prod.
-      - PersonalizationConfig__BaseUrl=http://personalization:5002
-      - PersonalizationConfig__GatewayApiKey=${GATEWAY_API_KEY:-dev-gateway-key}
+      # The Gateway never calls Personalization over HTTP. It only needs to recognise the
+      # edge: Caddy stamps X-Edge-Key on every request it forwards here.
+      - Edge__ApiKey=${EDGE_API_KEY:-dev-edge-key}
 
       - Loki__Url=${LOKI_URL}
     networks:
@@ -221,8 +224,8 @@ services:
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
-      # Same X-Gateway-Key gate as prod (must match the gateway's PersonalizationConfig__GatewayApiKey).
-      - Gateway_ApiKey=${GATEWAY_API_KEY:-dev-gateway-key}
+      # Same X-Edge-Key gate as prod: only Caddy may reach this service.
+      - Edge_ApiKey=${EDGE_API_KEY:-dev-edge-key}
       - Loki_Url=${LOKI_URL}/loki/api/v1/push
     networks:
       - backend

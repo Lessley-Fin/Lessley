@@ -54,18 +54,9 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
-builder.Services.AddHttpClient<IPersonalizationProxyService, PersonalizationProxyService>(client =>
-{
-    var section = builder.Configuration.GetSection("PersonalizationConfig");
-    var baseUrl = section["BaseUrl"]
-        ?? throw new InvalidOperationException("Personalization BaseUrl must be configured");
-    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-    var apiKey = section["GatewayApiKey"];
-    if (!string.IsNullOrEmpty(apiKey))
-        client.DefaultRequestHeaders.Add("X-Gateway-Key", apiKey);
-});
-
-builder.Services.Configure<PersonalizationConfig>(builder.Configuration.GetSection("PersonalizationConfig"));
+// No HttpClient to Personalization: the Gateway never calls it over HTTP. Client traffic
+// reaches Personalization through Caddy; server-to-server work goes over RabbitMQ.
+builder.Services.Configure<EdgeConfig>(builder.Configuration.GetSection("Edge"));
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 
 builder.Services.AddHttpContextAccessor();
@@ -157,6 +148,8 @@ app.UseSerilogRequestLogging(options =>
 
 app.UseRouting();
 app.UseCors("DefaultCorsPolicy");
+// Reject anything that did not arrive through the edge, before spending work on auth.
+app.UseMiddleware<EdgeVerificationMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<CsrfProtectionMiddleware>();
 app.UseMiddleware<LogContextMiddleware>();

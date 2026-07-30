@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: async () => {
     set({ status: "loading" })
     try {
-      const profile = await apiFetch<MeResponse>("/api/User/me")
+      const profile = await apiFetch<MeResponse>("/api/v1/User/me")
       const email = profile.email?.trim().toLowerCase() ?? ""
       set({
         status: "authenticated",
