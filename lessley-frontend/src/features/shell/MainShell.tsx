@@ -13,7 +13,7 @@ export function MainShell({ children }: { children: ReactNode }) {
   const username = useAuthStore((s) => s.username)
   const unreadCount = useUnreadCount()
   const { data: profile } = useMyProfile()
-  const isAdmin = profile?.roles.includes("Admin") ?? false
+  const isAdmin = profile?.roles?.includes("Admin") ?? false
   const location = useLocation()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
