@@ -5,7 +5,7 @@ import uuid
 import time
 import logging
 
-from config.settings import settings
+from dependencies.auth import email_from_access_token
 from middleware.edge_auth_middleware import dev_bypass_active
 
 request_id_var = contextvars.ContextVar("request_id", default="N/A")
@@ -25,10 +25,10 @@ class UnifiedContextMiddleware(BaseHTTPMiddleware):
             username = request.headers.get("X-Auth-Email")
         elif hasattr(request.state, "user"):
             username = getattr(request.state.user, "username", "anonymous")
-        elif dev_bypass_active() and settings.Dev_AuthEmail:
+        elif dev_bypass_active():
             # Mode 1: no edge injects the header, so logs would otherwise say "anonymous"
-            # for requests that actually ran as Dev_AuthEmail — confusing while debugging.
-            username = settings.Dev_AuthEmail
+            # for requests that actually ran under the dev bypass — confusing while debugging.
+            username = email_from_access_token(request) or "anonymous"
 
         # 3. Store in request.state for downstream usage
         request.state.request_id = request_id

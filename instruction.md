@@ -156,7 +156,7 @@ drifts.
 | Personalization hangs on startup | RabbitMQ unreachable | Set `RabbitMQ_Enabled=False` for local dev |
 | `await` missing on Beanie ODM call | Silent hang or wrong result | Always `await model.save()` / `await model.insert()` |
 | 403 on all endpoints | `X-Edge-Key` missing or wrong — request bypassed Caddy | Go through Caddy, or match `EDGE_API_KEY` on both sides |
-| 401 on Personalization routes | No `X-Auth-Email`; edge auth did not run | Call via Caddy; in Mode 1 set `Edge_AllowUnverified=True` + `Dev_AuthEmail` |
+| 401 on Personalization routes | No `X-Auth-Email`; edge auth did not run | Call via Caddy; in Mode 1 set `Edge_AllowUnverified=True` and log in via the Gateway so its `access_token` cookie reaches the service |
 | JWT 401 in Gateway | Expired token or key mismatch | Verify `JwtConfig__Key` is identical across all environments |
 | RabbitMQ consumer sees duplicates | At-least-once delivery | Implement idempotency check before processing |
 | Loki blocks startup | Connection timeout on Loki push | Provide valid `Loki_Url` or remove the env var entirely |

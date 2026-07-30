@@ -15,15 +15,13 @@ export default defineConfig(({ mode }) => {
   const personalizationTarget = env.PERSONALIZATION_PROXY_TARGET || 'http://localhost:8002'
 
   // Mode 1 has no Caddy, so nothing authenticates the caller or injects the verified
-  // identity. Stand in for it here. This lives in the dev-server config only — it is not
-  // part of the built bundle and cannot reach production. The services additionally
-  // require Environment=Development AND their own opt-in flag before honouring it.
-  const devAuthEmail = env.DEV_AUTH_EMAIL || ''
+  // identity in front of Personalization. It falls back to decoding the access_token
+  // cookie itself (Environment=Development AND its own opt-in flag are both required) —
+  // that cookie rides along with this proxy unchanged, so nothing extra is needed here.
   const personalizationProxy = {
     target: personalizationTarget,
     changeOrigin: true,
     rewrite: (p: string) => p.replace(/^\/api\/v1/, ''),
-    headers: devAuthEmail ? { 'X-Auth-Email': devAuthEmail } : undefined,
   }
 
   return {

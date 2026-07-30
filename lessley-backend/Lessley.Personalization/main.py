@@ -361,7 +361,8 @@ app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging co
 if dev_bypass_active():
     logging.getLogger(__name__).warning(
         "EDGE VERIFICATION BYPASSED — X-Edge-Key is not required and identity falls back to "
-        "Dev_AuthEmail. Development only; never enable Edge_AllowUnverified outside local debugging."
+        "decoding the access_token cookie directly. Development only; never enable "
+        "Edge_AllowUnverified outside local debugging."
     )
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)

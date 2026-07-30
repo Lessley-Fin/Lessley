@@ -6,13 +6,22 @@ is handed. These tests pin the two rules that make that acceptable — only the 
 reach the service, and identity comes solely from the header the edge injects.
 """
 
+import base64
+import json
+
 import httpx
 import pytest
 from fastapi import Depends, FastAPI
 
 from config.settings import settings
-from dependencies.auth import authenticated_email
+from dependencies.auth import JWT_EMAIL_CLAIM, authenticated_email
 from middleware.edge_auth_middleware import EdgeAuthMiddleware
+
+
+def fake_access_token(email: str) -> str:
+    """An unsigned token shaped like the Gateway's — only the payload segment is read."""
+    payload = base64.urlsafe_b64encode(json.dumps({JWT_EMAIL_CLAIM: email}).encode()).rstrip(b"=")
+    return f"header.{payload.decode()}.signature"
 
 
 def build_app() -> FastAPI:
@@ -98,10 +107,9 @@ async def test_dev_bypass_requires_both_conditions(monkeypatch):
     monkeypatch.setattr(settings, "Edge_ApiKey", "test-edge-key")
     monkeypatch.setattr(settings, "Edge_AllowUnverified", True)
     monkeypatch.setattr(settings, "Environment", "Production")  # not Development
-    monkeypatch.setattr(settings, "Dev_AuthEmail", "dev@local")
 
     async with client(build_app()) as c:
-        resp = await c.get("/whoami")
+        resp = await c.get("/whoami", cookies={"access_token": fake_access_token("dev@local")})
     assert resp.status_code == 403
 
 
@@ -110,9 +118,19 @@ async def test_dev_bypass_supplies_identity_in_development(monkeypatch):
     monkeypatch.setattr(settings, "Edge_ApiKey", "test-edge-key")
     monkeypatch.setattr(settings, "Edge_AllowUnverified", True)
     monkeypatch.setattr(settings, "Environment", "Development")
-    monkeypatch.setattr(settings, "Dev_AuthEmail", "dev@local")
+
+    async with client(build_app()) as c:
+        resp = await c.get("/whoami", cookies={"access_token": fake_access_token("dev@local")})
+    assert resp.status_code == 200
+    assert resp.json() == {"email": "dev@local"}
+
+
+@pytest.mark.asyncio
+async def test_dev_bypass_without_a_cookie_is_still_unauthenticated(monkeypatch):
+    monkeypatch.setattr(settings, "Edge_ApiKey", "test-edge-key")
+    monkeypatch.setattr(settings, "Edge_AllowUnverified", True)
+    monkeypatch.setattr(settings, "Environment", "Development")
 
     async with client(build_app()) as c:
         resp = await c.get("/whoami")
-    assert resp.status_code == 200
-    assert resp.json() == {"email": "dev@local"}
+    assert resp.status_code == 401

@@ -38,9 +38,11 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8002
 ```
 
-Without Caddy in front, nothing injects an identity — set `Environment=Development`,
-`Edge_AllowUnverified=True` and `Dev_AuthEmail=<a real user>` in `.env`, or every
-user-scoped route returns 401. Full setup: [`../../lessley-cd/RUNNING.md`](../../lessley-cd/RUNNING.md).
+Without Caddy in front, nothing injects an identity — set `Environment=Development` and
+`Edge_AllowUnverified=True` in `.env`, or every user-scoped route returns 401. Identity
+while the bypass is active is decoded straight from the Gateway's `access_token` cookie, so
+log in through the Gateway first so that cookie reaches this service. Full setup:
+[`../../lessley-cd/RUNNING.md`](../../lessley-cd/RUNNING.md).
 
 Tests need the extra dev dependencies:
 `pip install -r requirements-dev.txt && pytest`
@@ -58,5 +60,5 @@ Tests need the extra dev dependencies:
 | `RabbitMQ_Enabled` | `False` to start without a broker |
 | `OpenFinanceConfig_BaseUrl` / `_ClientId` / `_ClientSecret` | Open Finance credentials |
 | `Edge_ApiKey` | Shared secret the edge presents as `X-Edge-Key` |
-| `Edge_AllowUnverified` + `Dev_AuthEmail` | Mode 1 bypass; both required, Development only |
+| `Edge_AllowUnverified` | Mode 1 bypass; identity comes from decoding `access_token`, Development only |
 | `Cors_AllowOrigins`, `Loki_Url` | Optional |

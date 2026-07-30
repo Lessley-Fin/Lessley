@@ -19,9 +19,9 @@ class Settings(BaseSettings):
     Edge_ApiKey: str | None = None
     # Mode 1 escape hatch: services run locally with no Caddy in front. Only honoured when
     # Environment is also Development, so production cannot be opened by this flag alone.
+    # Identity while it's active comes from decoding the Gateway's access_token cookie
+    # directly (see dependencies/auth.py:email_from_access_token) rather than a fixed value.
     Edge_AllowUnverified: bool = False
-    # Identity used while the bypass is active, since nothing injects X-Auth-Email locally.
-    Dev_AuthEmail: str | None = None
 
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

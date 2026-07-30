@@ -107,13 +107,16 @@ Same as Mode 2 but with the prod compose and a real domain; **no** Swagger, **no
    # Gateway
    ASPNETCORE_ENVIRONMENT=Development   Edge__AllowUnverifiedEdge=true
    # Personalization .env
-   Environment=Development   Edge_AllowUnverified=True   Dev_AuthEmail=you@example.com
+   Environment=Development   Edge_AllowUnverified=True
    # lessley-frontend/.env
-   VITE_DEV_AUTH_EMAIL=you@example.com
    VITE_PERSONALIZATION_PROXY_TARGET=http://localhost:8002
    ```
    Both services log a loud warning at startup while the bypass is active. If you see that
    warning anywhere but your own machine, something is badly misconfigured.
+
+   Personalization still needs to know who you are — it decodes the email claim straight out
+   of the Gateway's `access_token` cookie (the same cookie your browser already sends it,
+   Caddy or not). Log in through the Gateway first; nothing else to configure.
 
 5. **Local gateway secrets (Mode 1 only).** The committed `appsettings.json` ships these **blank**,
    so provide them via environment variables or `dotnet user-secrets` (values must match your
