@@ -11,14 +11,14 @@ import path from 'node:path'
 // and everything else to the gateway, so the browser sees one origin either way.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const gatewayTarget = env.VITE_GATEWAY_PROXY_TARGET || 'http://localhost:8001'
-  const personalizationTarget = env.VITE_PERSONALIZATION_PROXY_TARGET || 'http://localhost:8002'
+  const gatewayTarget = env.GATEWAY_PROXY_TARGET || 'http://localhost:8001'
+  const personalizationTarget = env.PERSONALIZATION_PROXY_TARGET || 'http://localhost:8002'
 
   // Mode 1 has no Caddy, so nothing authenticates the caller or injects the verified
   // identity. Stand in for it here. This lives in the dev-server config only — it is not
   // part of the built bundle and cannot reach production. The services additionally
   // require Environment=Development AND their own opt-in flag before honouring it.
-  const devAuthEmail = env.VITE_DEV_AUTH_EMAIL || ''
+  const devAuthEmail = env.DEV_AUTH_EMAIL || ''
   const personalizationProxy = {
     target: personalizationTarget,
     changeOrigin: true,
@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       // Proxy the gateway so the browser talks to it SAME-ORIGIN (mirrors Caddy in prod):
       // no CORS, and Secure/HttpOnly/SameSite cookies behave exactly as in prod. Point
-      // VITE_GATEWAY_PROXY_TARGET at the gateway (http://localhost:8001 dotnet / 5001 docker).
+      // GATEWAY_PROXY_TARGET at the gateway (http://localhost:8001 dotnet / 5001 docker).
       proxy: {
         // Personalization-owned prefixes FIRST — Vite matches by prefix in declaration
         // order, so a general '/api' entry above these would swallow them.

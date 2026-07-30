@@ -1,7 +1,7 @@
 # ── Lessley DEVELOPMENT stack ─────────────────────────────────────────────────
 # Dev mirrors production EXACTLY: same Caddy operation and same networking.
 #   * Caddy is the ONLY host-published web edge. It terminates TLS, serves the built
-#     React SPA, and reverse-proxies /api + /hubs to the gateway BY SERVICE NAME over
+#     React SPA, and routes /api/v1 + /hubs to the owning service BY SERVICE NAME over
 #     the private `backend` network — byte-for-byte the same Caddyfile as prod.
 #   * The browser talks ONLY to Caddy (https://localhost). It never addresses the
 #     gateway or personalization directly, and never knows personalization exists.
@@ -31,7 +31,7 @@ networks:
 services:
   # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
   # Built from the frontend Dockerfile so the image bundles the compiled SPA at
-  # /srv/frontend; the Caddyfile (mounted below) serves it and proxies /api + /hubs.
+  # /srv/frontend; the Caddyfile (mounted below) serves it and routes /api/v1 + /hubs.
   # Identical to the prod `caddy` service except DOMAIN=localhost and HSTS disabled.
   caddy:
     build:

@@ -1,40 +1,38 @@
 # Lessley
 
-Lessley is a loyalty optimization platform that helps users track spending, discover matching clubs, and receive personalized deal notifications — all powered by Open Finance data.
+A loyalty optimization platform: tracks spending, finds matching clubs, and sends
+personalized deal notifications from Open Finance data.
 
-## Architecture
+**Running it:** [`lessley-cd/RUNNING.md`](lessley-cd/RUNNING.md) — three modes, first-time setup.
+**Working on it:** [`instruction.md`](instruction.md) — architecture rules and conventions.
 
-### Services
+## Services
 
-| Service | Language | Description |
-|---------|----------|-------------|
-| **Lessley.Gateway.Api** | C# / .NET 8 | Central API gateway — authentication, user management, real-time notifications (SignalR), and admin operations |
-| **Lessley.Personalization** | Python / FastAPI | AI-driven financial insights and recommendations engine |
-| **Lessley.CategoriesEnricher** | Python / FastAPI | LLM-powered transaction category enrichment |
+| Service | Language | Role |
+|---|---|---|
+| Caddy | — | The only public entry point: TLS, SPA, routing, edge authentication |
+| Lessley.Gateway.Api | C# / .NET 8 | Auth authority, users, deals, notifications (SignalR) |
+| Lessley.Personalization | Python / FastAPI | Spending insights and recommendations |
+| Lessley.CategoriesEnricher | Python / FastAPI | LLM-powered transaction category enrichment |
 
-### Communication Patterns
-
-- **Insights** (categories, top-accounts, top-stores) are **HTTP-only** — lightweight, synchronous requests from Gateway to Personalization.
-- **Recommendations** (missed-savings, matching-clubs) use **RabbitMQ** — heavyweight async operations. The Personalization service publishes results back to the Gateway, which stores them as notifications and pushes them via SignalR.
-- **Notifications** are managed exclusively through the Gateway:
-  - **Admin** users can push notifications and change user configuration.
-  - **Deal broadcasts** are published via RabbitMQ from the Personalization service to the Gateway.
-  - **Real-time delivery** uses SignalR with tag-based groups.
-
-### Data Flow
+## How traffic flows
 
 ```
-Client ──► Gateway.Api ──HTTP──► Personalization (insights)
-                │
-                └──RabbitMQ──► Personalization (recommendations)
-                                    │
-                                    └──RabbitMQ──► Gateway.Api ──SignalR──► Client
+Client ──► Caddy ──┬──► Gateway          /api/v1/*
+                   ├──► Personalization  /api/v1/insights|open-finance|clubs/*
+                   └──► Gateway          /hubs/*  (SignalR)
 ```
 
-## Secrets & Environment Files
+Caddy authenticates every request once — validating the JWT cookie and CSRF token against
+the Gateway — then injects the verified identity inward. Services never trust a
+client-supplied identity, and the Gateway never calls Personalization over HTTP.
 
-- **Do not commit** the real environment file `lessley-cd/.env`. Keep secrets out of Git history.
-- **Provide** a template `lessley-cd/.env.template` with placeholder values for contributors.
-- **If a secret was committed**, rotate those secrets immediately and remove the file from Git history using `git filter-repo` or `BFG Repo-Cleaner`.
+Recommendations (missed-savings, matching-clubs) are long-running, so they go over RabbitMQ
+instead: Personalization publishes results back to the Gateway, which stores them as
+notifications and pushes them to the client via SignalR.
 
-Store production secrets in your CI/CD provider or secret manager (GitHub Actions Secrets, Azure Key Vault, AWS Secrets Manager, etc.) rather than in the repository.
+## Secrets
+
+Never commit `lessley-cd/.env` — use `.env.template` as the reference. If a secret is ever
+committed, rotate it and purge it from history (`git filter-repo` / BFG). Production
+secrets belong in your CI/CD secret store, not the repository.

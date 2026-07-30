@@ -1,92 +1,36 @@
-# Lessley Frontend POC
+# Lessley Frontend
 
-Mobile-first React POC built with Tailwind CSS and shadcn/ui.
+Mobile-first React SPA — Vite, TypeScript, Tailwind, shadcn/ui, Zustand, React Query.
 
 ## Run
 
-1. Install dependencies:
-   - `npm install`
-2. Copy env file:
-   - `copy .env.example .env`
-3. Start dev server:
-   - `npm run dev`
-
-## Features
-
-- Login screen with mock authentication and loading state.
-- Dashboard with sticky header, feedback cards, and logout.
-- Floating action button opening a bottom drawer form.
-- Feedback form with category select and integration-ready API service.
-# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+copy .env.example .env
+npm run dev          # http://localhost:8000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+For the full local setup (the gateway and personalization services this talks to), see
+[`../lessley-cd/RUNNING.md`](../lessley-cd/RUNNING.md) — Mode 1.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Script | Purpose |
+|---|---|
+| `npm run dev` | Dev server on 8000, proxying `/api/v1` and `/hubs` |
+| `npm run build` | Production bundle (baked into the Caddy image) |
+| `npm run test` / `test:run` | Vitest, watch / single-run |
+| `npm run typecheck` | `tsc -b --noEmit` |
+| `npm run lint` | ESLint |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Structure
+
+`src/features/` is the unit of organisation — one folder per feature (`auth`, `insights`,
+`deal-finder`, `notifications`, `admin`, `settings`, …), each with its own `api.ts`.
+Shared primitives live in `src/components/ui/` (shadcn — compose these, don't edit them)
+and helpers in `src/lib/`.
+
+## API calls
+
+Every request is **relative** (`/api/v1/...`), because the SPA is always served from the
+same origin as the API — by Caddy in production, by the Vite proxy in dev. There is no
+gateway URL to configure, and no CORS. `src/lib/api-client.ts` adds the CSRF header and
+retries once through a cookie refresh on 401.

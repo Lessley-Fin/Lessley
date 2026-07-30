@@ -1,72 +1,62 @@
-# Lessley Personalization Service
+# Lessley Personalization
 
-## Overview
+Analyzes Open Finance transaction data to produce spending categories, top accounts and
+stores, missed-savings opportunities, and loyalty-club matches.
 
-AI-driven financial insights and recommendations engine. Analyzes Open Finance transaction data to calculate spending categories, identify top accounts/stores, find missed savings opportunities, and match users with relevant loyalty clubs.
+## Trust model — read before adding a route
 
-## Architecture
+This service performs **no user-level authorization of its own**. It acts on whatever
+identity it is handed, so two rules are load-bearing:
 
-- **Insights** (HTTP-only, lightweight): Categories, top accounts, top stores — called synchronously by the Gateway.
-- **Recommendations** (RabbitMQ, heavyweight): Missed savings, matching clubs — triggered via RabbitMQ commands from the Gateway. Results are published back to the Gateway as notification events.
-- **Controllers** (`routers/`): FastAPI route handlers for insights and recommendations.
-- **Services**: Business logic — `InsightsService`, `RecommendationService`, `PublisherService`.
-- **Publishers** (`services/publishers/`): RabbitMQ publishers for user tags, deal broadcasts, and recommendation results.
-- **Clients**: Open Finance API integration.
+- Identity comes from the **`X-Auth-Email` header**, injected by the edge (Caddy) after it
+  validates the caller's JWT. Take it via `dependencies.auth.authenticated_email`.
+- **Never accept an `email` parameter.** Doing so lets any caller read any user's bank data.
 
-## API Endpoints
+`EdgeAuthMiddleware` additionally rejects anything without `X-Edge-Key`, so requests that
+bypassed the edge never reach a route. See [`../../instruction.md`](../../instruction.md).
 
-### Insights (HTTP — synchronous)
-- `GET /insights/categories` — User spending categories
-- `GET /insights/top-accounts` — Top spending accounts
-- `GET /insights/top-stores` — Top spending stores
+## Endpoints
 
-### Recommendations (HTTP trigger — results via RabbitMQ)
-- `POST /recommendations/missed-savings` — Missed savings analysis
-- `POST /recommendations/matching-clubs` — Club recommendations
+Reached by the client through Caddy at `/api/v1/...`; the prefix is stripped before it
+arrives here.
 
-### Open Finance
-- `GET /open-finance/accounts` — User bank accounts
-- `GET /open-finance/transactions` — User transactions
+| Route | Purpose |
+|---|---|
+| `GET /insights/categories\|top-accounts\|top-stores` | Spending analysis |
+| `GET /open-finance/accounts\|transactions\|transactions/by-account` | Raw Open Finance data |
+| `POST /clubs/categories` | Club MCC distribution |
+| `POST /recommendations/missed-savings\|matching-clubs` | Not edge-exposed — driven by RabbitMQ |
 
-### Clubs
-- `POST /clubs/categories` — Club category distribution
+Query parameters: `days` (1–365, default 90), `time_filter` (default true), `use_mock`
+(default false).
 
-## Setup
+## Run locally
 
-1. Clone repository
-2. Create `.env` from `.env.override`
-3. Install dependencies: `pip install -r requirements.txt`
-4. Run: `uvicorn main:app --reload --port 8002`  (personalization: 8002 in dev, 5002 in prod)
-5. Update dependencies (write UTF-8 — PowerShell's `pip freeze > requirements.txt` produces
-   UTF-16, which breaks the Docker `pip install`):
-   `pip freeze | Out-File -Encoding utf8 requirements.txt`  (PowerShell)
-   or `pip freeze > requirements.txt`  (bash)
+```bash
+copy .env.template .env          # then fill it in
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8002
+```
+
+Without Caddy in front, nothing injects an identity — set `Environment=Development`,
+`Edge_AllowUnverified=True` and `Dev_AuthEmail=<a real user>` in `.env`, or every
+user-scoped route returns 401. Full setup: [`../../lessley-cd/RUNNING.md`](../../lessley-cd/RUNNING.md).
+
+Tests need the extra dev dependencies:
+`pip install -r requirements-dev.txt && pytest`
+
+> Regenerating `requirements.txt` in PowerShell: use
+> `pip freeze | Out-File -Encoding utf8 requirements.txt`. A plain `>` redirect writes
+> UTF-16, which breaks `pip install` in the Docker build.
 
 ## Configuration
 
-Required environment variables:
-
 | Variable | Description |
-|----------|-------------|
-| `Environment` | dev / staging / prod |
-| `ConnectionStrings_Rabbit` | RabbitMQ connection string |
-| `ConnectionStrings_MongoDb` | MongoDB connection string |
-| `RabbitMQ_Enabled` | Enable RabbitMQ consumer/publisher |
-| `OpenFinanceConfig_BaseUrl` | Open Finance API URL |
-| `OpenFinanceConfig_ClientId` | Open Finance client ID |
-| `OpenFinanceConfig_ClientSecret` | Open Finance client secret |
-| `Gateway_ApiKey` | Shared API key for Gateway authentication |
-| `Loki_Url` | Grafana Loki URL (optional) |
-
-## Parameters
-
-Insights endpoints accept the following query parameters:
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `email` | string | required | User email |
-| `time_filter` | bool | `true` | Filter transactions by time window |
-| `use_mock` | bool | `false` | Use mock data instead of Open Finance |
-| `days` | int | 90 | Days to analyze (1–365) |
-
-The Gateway hardcodes `time_filter=true` and `use_mock=false` — only `days` is configurable by the client.
+|---|---|
+| `Environment` | `Development` enables `/docs` and permits the edge bypass |
+| `ConnectionStrings_MongoDb` / `_Rabbit` | Infrastructure connection strings |
+| `RabbitMQ_Enabled` | `False` to start without a broker |
+| `OpenFinanceConfig_BaseUrl` / `_ClientId` / `_ClientSecret` | Open Finance credentials |
+| `Edge_ApiKey` | Shared secret the edge presents as `X-Edge-Key` |
+| `Edge_AllowUnverified` + `Dev_AuthEmail` | Mode 1 bypass; both required, Development only |
+| `Cors_AllowOrigins`, `Loki_Url` | Optional |

@@ -2,8 +2,6 @@
 // the browser sends automatically. JavaScript never sees them. This module only holds
 // the CSRF double-submit helper and the cookie-based refresh/logout calls.
 
-const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:8001"
-
 export const CSRF_COOKIE = "XSRF-TOKEN"
 export const CSRF_HEADER = "X-CSRF-TOKEN"
 
@@ -38,7 +36,7 @@ export async function refreshAccessToken(): Promise<boolean> {
       const csrf = readCookie(CSRF_COOKIE)
       if (csrf) headers.set(CSRF_HEADER, csrf)
 
-      const response = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
+      const response = await fetch(`/api/v1/auth/refresh`, {
         method: "POST",
         credentials: "include",
         headers,
@@ -61,7 +59,7 @@ export async function logoutRequest(): Promise<void> {
     const csrf = readCookie(CSRF_COOKIE)
     if (csrf) headers.set(CSRF_HEADER, csrf)
 
-    await fetch(`${GATEWAY_URL}/api/v1/auth/logout`, {
+    await fetch(`/api/v1/auth/logout`, {
       method: "POST",
       credentials: "include",
       headers,

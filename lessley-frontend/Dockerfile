@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY . .
 
-# Production is same-origin (Caddy serves this SPA and proxies /api + /hubs to the
+# Production is same-origin (Caddy serves this SPA and routes /api/v1 + /hubs to the
 # gateway), so API/SignalR calls must be relative. An empty base URL yields "/api/...".
 # .env.production also sets this; the ENV here guarantees it even if that file is absent.
 ENV VITE_API_GATEWAY_URL=""

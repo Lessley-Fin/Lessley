@@ -19,8 +19,11 @@ def dev_bypass_active() -> bool:
 
     Two independent conditions, so neither a stray flag nor a mis-set environment opens
     production on its own. Shared with the identity dependency so the two cannot disagree.
+
+    Case-insensitive to match main.py's check — the compose files use "Development" and
+    "production", and an exact-case test here would silently disable the bypass.
     """
-    return settings.Environment == "Development" and settings.Edge_AllowUnverified
+    return settings.Environment.lower() == "development" and settings.Edge_AllowUnverified
 
 
 class EdgeAuthMiddleware(BaseHTTPMiddleware):

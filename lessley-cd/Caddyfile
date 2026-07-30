@@ -1,8 +1,8 @@
 # ── Lessley edge: TLS + SPA host + API proxy (single origin) ──────────────────
 # ONE Caddyfile drives BOTH dev and prod — same operation, same networking. Caddy is
-# the only host-published web edge. It terminates TLS, serves the built React SPA, and
-# reverse-proxies /api + /hubs to the gateway over the private Docker network. Because
-# the SPA and API share one origin, there is no CORS and SameSite=Strict "just works".
+# the only host-published web edge. It terminates TLS, serves the built React SPA, and routes
+# /api/v1 to whichever service owns the prefix over the private Docker network. Because the
+# SPA and API share one origin, there is no CORS and SameSite=Strict "just works".
 #
 # The only things that differ between dev and prod are env values (not this file):
 #   * DOMAIN=localhost (dev)  → Caddy issues an internal-CA cert automatically (no ACME).

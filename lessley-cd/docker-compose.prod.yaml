@@ -18,7 +18,7 @@ networks:
 services:
   # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
   # Built from the frontend Dockerfile so the image bundles the compiled SPA at
-  # /srv/frontend; the Caddyfile (mounted below) serves it and proxies /api + /hubs.
+  # /srv/frontend; the Caddyfile (mounted below) serves it and routes /api/v1 + /hubs.
   caddy:
     build:
       context: ../lessley-frontend
@@ -138,7 +138,7 @@ services:
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
 
-      # Reach Personalization by service name and authenticate with the shared key.
+      # Reject anything that did not arrive through Caddy.
       - Edge__ApiKey=${EDGE_API_KEY}
 
       # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
@@ -152,7 +152,7 @@ services:
       - rabbitmq
       - loki
 
-  # ── Personalization (internal only; gated by X-Gateway-Key) ─────────────────
+  # ── Personalization (reached only via Caddy; gated by X-Edge-Key) ───────────
   personalization:
     image: lessley/personalization:prod
     build:

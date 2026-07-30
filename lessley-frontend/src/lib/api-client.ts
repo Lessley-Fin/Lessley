@@ -1,8 +1,6 @@
 import { useAuthStore } from "@/features/auth/store"
 import { applyCsrfHeader, refreshAccessToken } from "@/lib/auth"
 
-const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:8001"
-
 function collectMessages(value: unknown): string[] {
   if (typeof value === "string") {
     return value.trim() ? [value.trim()] : []
@@ -52,7 +50,7 @@ export async function apiFetch<T>(
   // Cookies carry auth; credentials:"include" sends them (and receives Set-Cookie).
   // CSRF header is added for state-changing methods.
   const doFetch = () =>
-    fetch(`${API_GATEWAY_URL}${path}`, {
+    fetch(path, {
       ...fetchOptions,
       credentials: "include",
       headers: applyCsrfHeader(new Headers(fetchOptions.headers), fetchOptions.method),
@@ -76,7 +74,7 @@ export async function apiFetch<T>(
     if (error instanceof ApiError) throw error
     if (error instanceof TypeError) {
       throw new ApiError(
-        `Cannot reach API Gateway at ${API_GATEWAY_URL}. Check that the service is running.`,
+        "Cannot reach the API. Check that the edge (Caddy) and gateway are running.",
         0,
       )
     }
@@ -102,5 +100,3 @@ export function jsonBody(data: unknown): RequestInit {
     body: JSON.stringify(data),
   }
 }
-
-export { API_GATEWAY_URL }

@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import { useAuthStore } from "@/features/auth/store"
-import { API_GATEWAY_URL } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { ROUTES } from "@/lib/routes"
 import { NotificationToast } from "./components/NotificationToast"
@@ -24,7 +23,7 @@ export function useSignalR() {
     if (!isAuthenticated) return
 
     const connection = new HubConnectionBuilder()
-      .withUrl(`${API_GATEWAY_URL}/hubs/notifications`, {
+      .withUrl("/hubs/notifications", {
         // Auth rides the httpOnly cookie; the gateway reads it for /hubs connections.
         withCredentials: true,
       })

@@ -141,33 +141,11 @@ Before working on any task, check which MCPs and skills are relevant and use the
 
 ---
 
-## Environment Setup Reference
+## Environment Setup
 
-### Gateway (local)
-```
-ConnectionStrings__MongoDb = mongodb://...
-JwtConfig__Key             = <secret>
-Edge__ApiKey               = <shared edge secret>
-Edge__AllowUnverifiedEdge  = true   # Mode 1 only (no Caddy in front)
-```
-
-### Personalization (local `.env`)
-```
-Environment=dev
-ConnectionStrings_MongoDb=mongodb://...
-ConnectionStrings_Rabbit=amqp://...
-RabbitMQ_Enabled=True
-Edge_ApiKey=<same edge secret as above>
-Edge_AllowUnverified=True      # Mode 1 only (no Caddy in front)
-Dev_AuthEmail=you@example.com  # identity used while the bypass is active
-```
-
-### Infrastructure (Docker Compose via `lessley-cd/manage.bat`)
-```
-manage.bat infra up      # MongoDB, RabbitMQ, Grafana, Loki
-manage.bat app up        # Gateway + Personalization
-manage.bat status        # All containers
-```
+See **[`lessley-cd/RUNNING.md`](lessley-cd/RUNNING.md)** — the three run modes, every
+required variable, and the Mode 1 edge bypass. Do not duplicate that content here; it
+drifts.
 
 ---
 
