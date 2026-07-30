@@ -212,19 +212,16 @@ class TestToRawRecordsFanOut:
         assert "לסניף הרלוונטי" in terms
         assert "<" not in terms and ">" not in terms
 
-    def test_redeem_channels_defaults_physical_store_only(self) -> None:
+    def test_deal_type_is_giftcard_discount_and_has_no_legacy_fields(self) -> None:
         adapter = _make_adapter()
         product = _bulls_product()
         now = datetime.now(timezone.utc)
         _store, deal = adapter._to_raw_records(product, now)[0]
-        assert deal.raw_payload["redeem_channels"] == ["physical_store"]
-
-    def test_redeem_channels_adds_online_when_merchant_site_url_present(self) -> None:
-        adapter = _make_adapter()
-        product = _bulls_product(merchant_site_url="https://bulls.co.il")
-        now = datetime.now(timezone.utc)
-        _store, deal = adapter._to_raw_records(product, now)[0]
-        assert deal.raw_payload["redeem_channels"] == ["physical_store", "online"]
+        assert deal.raw_payload["deal_type"] == "giftcard_discount"
+        assert "constraints" not in deal.raw_payload["discount_logic"]
+        assert "stackable" not in deal.raw_payload
+        assert "redeem_channels" not in deal.raw_payload
+        assert "coupon_code" not in deal.raw_payload
 
     def test_entry_with_missing_prices_is_skipped(self) -> None:
         adapter = _make_adapter()

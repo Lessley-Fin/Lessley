@@ -85,7 +85,9 @@ def deduce_hot_discount_mechanics(
 
     Returns
     -------
-    dict with keys ``condition``, ``reward``, ``constraints``.
+    dict with keys ``condition``, ``reward`` (a capped Spend & Save match
+    puts ``max_discount_amount`` on ``reward`` — see deal-optimizer's
+    ``transform.py::apply_deal``, which reads the cap from there).
     """
     title = str(main.get("title", "") or "")
     desc = str(main.get("description", "") or "")
@@ -107,7 +109,6 @@ def deduce_hot_discount_mechanics(
     # Defaults
     condition: dict[str, Any] = {"type": "min_quantity", "value": 1}
     reward: dict[str, Any] = {"type": "percentage_off", "value": 0.0}
-    constraints: dict[str, Any] = {}
 
     # --- Priority 1: Voucher (1300) with before/after prices ---
     if benefit_type == "1300" and price_before > 0 and price_after > 0:
@@ -156,7 +157,7 @@ def deduce_hot_discount_mechanics(
 
         max_disc = _MAX_DISCOUNT_RE.search(combined_text)
         if max_disc:
-            constraints["max_discount_amount"] = int(
+            reward["max_discount_amount"] = int(
                 max_disc.group(1).replace(",", "")
             )
 
@@ -171,7 +172,6 @@ def deduce_hot_discount_mechanics(
     return {
         "condition": condition,
         "reward": reward,
-        "constraints": constraints,
     }
 
 
@@ -201,12 +201,13 @@ def deduce_mastercard_discount(
             "type": "spend_and_save",
             "condition": {"type": "min_spend", "value": condition_raw},
             "reward": {"type": "fixed_discount_amount", "value": reward_raw},
-            "constraints": {},
             "matched_text": ss.group(0),
         }
         max_disc = _MAX_DISCOUNT_RE.search(clean_text)
         if max_disc:
-            result["constraints"]["max_discount_amount"] = int(
+            # deal-optimizer's transform.py reads this straight off `reward`
+            # (not a nested "constraints" block) — see its apply_deal().
+            result["reward"]["max_discount_amount"] = int(
                 max_disc.group(1).replace(",", "")
             )
         return result
@@ -218,7 +219,6 @@ def deduce_mastercard_discount(
             "type": "percentage",
             "condition": {"type": "min_quantity", "value": 1},
             "reward": {"type": "percentage_off", "value": float(pct.group(1)) / 100.0},
-            "constraints": {},
             "percent": int(pct.group(1)),
             "matched_text": pct.group(0),
         }

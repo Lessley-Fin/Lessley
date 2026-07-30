@@ -168,6 +168,10 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
         store_url = self._store_url(record)
         benefit_url = self._benefit_url(record)
         discount_logic, currency = build_discount_logic(_LOADING_BONUS_PRICE_TEXT)
+        # build_discount_logic's shared shape carries an empty "constraints"
+        # key for the LLM-scraper's sake — not part of this scraper's format.
+        if discount_logic is not None:
+            discount_logic = {k: v for k, v in discount_logic.items() if k != "constraints"}
 
         raw_payload: dict[str, Any] = {
             "source": "hever_gift_card",
@@ -190,9 +194,11 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
             "store_url": store_url,
             "currency": currency,
             "discount_logic": discount_logic,
-            "coupon_code": None,
-            "redeem_channels": ["online", "physical_store"] if record.get("is_online") == "Y" else ["physical_store"],
-            "stackable": False,
+            # Hever's card is a rechargeable/loadable balance, not a one-time
+            # voucher — but for now every hever/pais deal is tagged uniformly
+            # as "giftcard_discount" (deal-optimizer's DealType); a finer
+            # rechargeable-vs-voucher split can follow later.
+            "deal_type": "giftcard_discount",
         }
         internal_link = str(record.get("internal_link") or "").strip()
         if internal_link:

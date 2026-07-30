@@ -241,7 +241,6 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
                 continue
 
             own_constraints = clean_html(constraints_html)
-            redeem_channels = ["physical_store", "online"] if store_url else ["physical_store"]
 
             store = RawStore(
                 id=generate_id(),
@@ -273,7 +272,6 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
                     "type": "percentage",
                     "condition": {"type": "min_quantity", "value": 1},
                     "reward": {"type": "percentage_off", "value": headline_pct / 100.0},
-                    "constraints": {},
                 }
                 tier_label = _TIER_LABELS[tier]
                 price_text = f"{headline_pct}% הנחה בטעינה (עד {max_amount} ₪) - {tier_label}"
@@ -304,9 +302,10 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
                     "store_url": store_url,
                     "currency": "ILS",
                     "discount_logic": discount_logic,
-                    "coupon_code": None,
-                    "redeem_channels": redeem_channels,
-                    "stackable": False,
+                    # Loadable "chit" cards are rechargeable balances, same
+                    # program shape as hever.py — tagged uniformly as
+                    # "giftcard_discount" for now (see hever.py).
+                    "deal_type": "giftcard_discount",
                     "image_url": image_url,
                 }
 

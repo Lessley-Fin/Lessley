@@ -115,6 +115,48 @@ class TestHotAdapter:
         assert deal.url is None
 
 
+class TestHotAdapterDealType:
+    """benefit_type -> deal-optimizer DealType mapping (confirmed against live data)."""
+
+    @pytest.mark.parametrize(
+        ("benefit_type", "expected"),
+        [
+            ("100", "payment_discount"),
+            ("700", "coupon"),
+            ("800", "coupon"),
+            ("1300", "giftcard_discount"),
+        ],
+    )
+    def test_mapped_benefit_types(self, benefit_type: str, expected: str) -> None:
+        adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
+        record = _make_api_record(benefit_type=benefit_type)
+        now = datetime.now(timezone.utc)
+        deal = adapter._to_raw_deal(record, now)
+
+        assert deal.raw_payload["deal_type"] == expected
+
+    @pytest.mark.parametrize("benefit_type", ["300", "1100", "1200", "", "9999"])
+    def test_unmapped_benefit_types_leave_deal_type_none(self, benefit_type: str) -> None:
+        # deal-optimizer's own infer_deal_type() text-based fallback handles
+        # these when deal_type is left unset.
+        adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
+        record = _make_api_record(benefit_type=benefit_type)
+        now = datetime.now(timezone.utc)
+        deal = adapter._to_raw_deal(record, now)
+
+        assert deal.raw_payload["deal_type"] is None
+
+    def test_falls_back_to_type_field_when_benefit_type_absent(self) -> None:
+        # The detail-merged shape carries the same code under "type" instead
+        # of "benefit_type" (see deduce_hot_discount_mechanics's docstring).
+        adapter = HotAdapter(SourceConfig(base_url="https://www.hot.co.il"))
+        record = _make_api_record(type="1300")
+        now = datetime.now(timezone.utc)
+        deal = adapter._to_raw_deal(record, now)
+
+        assert deal.raw_payload["deal_type"] == "giftcard_discount"
+
+
 # ---------------------------------------------------------------------------
 # Inline groups fixture so tests are isolated from the real JSON file
 # ---------------------------------------------------------------------------

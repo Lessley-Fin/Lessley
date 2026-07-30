@@ -195,11 +195,15 @@ class TestHeverTeamimAdapter:
         assert deal.raw_payload["deal_title"] == "אנג'לינה פיצה ופסטה" == deal.store_name
         assert deal.raw_payload["full_description"] == "מסעדה איטלקית"
 
-    def test_to_raw_deal_redeem_channels_is_always_physical_store(self) -> None:
+    def test_to_raw_deal_type_is_giftcard_discount_and_has_no_legacy_fields(self) -> None:
         adapter = HeverTeamimAdapter(SourceConfig(base_url="https://www.hvr.co.il"))
         now = datetime.now(timezone.utc)
         deal = adapter._to_raw_deal([_make_branch(delivery="משלוחים")], now)
-        assert deal.raw_payload["redeem_channels"] == ["physical_store"]
+        assert deal.raw_payload["deal_type"] == "giftcard_discount"
+        assert "constraints" not in deal.raw_payload["discount_logic"]
+        assert "stackable" not in deal.raw_payload
+        assert "redeem_channels" not in deal.raw_payload
+        assert "coupon_code" not in deal.raw_payload
 
     def test_to_raw_deal_fingerprint_description_includes_store_name(self) -> None:
         # RawScrapedRecord.deal_description feeds fingerprint()

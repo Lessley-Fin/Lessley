@@ -235,6 +235,10 @@ class HeverTeamimAdapter(BaseSourceAdapter):
         store_url = self._store_url(branches)
         benefit_url = self._benefit_url(branches)
         discount_logic, currency = build_discount_logic(_LOADING_BONUS_PRICE_TEXT)
+        # build_discount_logic's shared shape carries an empty "constraints"
+        # key for the LLM-scraper's sake — not part of this scraper's format.
+        if discount_logic is not None:
+            discount_logic = {k: v for k, v in discount_logic.items() if k != "constraints"}
 
         raw_payload: dict[str, Any] = {
             "source": "hever_teamim",
@@ -253,12 +257,9 @@ class HeverTeamimAdapter(BaseSourceAdapter):
             "store_url": store_url,
             "currency": currency,
             "discount_logic": discount_logic,
-            "coupon_code": None,
-            # Redemption happens at the physical restaurant regardless of
-            # dine-in/pickup/delivery mode (that mode lives in `delivery`
-            # above) — no online/mobile-app purchase flow to reflect here.
-            "redeem_channels": ["physical_store"],
-            "stackable": False,
+            # Same rechargeable "חבר" loading-bonus card program as hever.py,
+            # tagged uniformly as "giftcard_discount" for now (see hever.py).
+            "deal_type": "giftcard_discount",
         }
         internal_link = self._first_nonempty(branches, "internal_link")
         if internal_link:

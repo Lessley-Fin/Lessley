@@ -296,10 +296,6 @@ class PaisPlusAdapter(BaseSourceAdapter):
         main_image = next((img for img in images if img.get("main_image") == "Y"), None)
         image_url = (main_image or (images[0] if images else {})).get("image_url")
         benefit_url = f"{_BASE_URL}/product/{product_id}"
-        online_hint = bool(product.get("merchant_site_url")) or any(
-            kw in short_description for kw in ("באתר", "באפליקציה")
-        )
-        redeem_channels = ["physical_store", "online"] if online_hint else ["physical_store"]
 
         results: list[tuple[RawStore, RawScrapedRecord]] = []
 
@@ -342,7 +338,6 @@ class PaisPlusAdapter(BaseSourceAdapter):
                         "type": "fixed_discount",
                         "condition": {"type": "min_quantity", "value": 1},
                         "reward": {"type": "fixed_discount_amount", "value": discount_amount},
-                        "constraints": {},
                     }
                     if discount_amount > 0
                     else None
@@ -376,9 +371,10 @@ class PaisPlusAdapter(BaseSourceAdapter):
                     "store_url": None,
                     "currency": "ILS",
                     "discount_logic": discount_logic,
-                    "coupon_code": None,
-                    "redeem_channels": redeem_channels,
-                    "stackable": False,
+                    # These "תו קנייה" (purchase voucher) products are the
+                    # one-time-value counterpart to hever.py's rechargeable
+                    # cards, tagged uniformly as "giftcard_discount" for now.
+                    "deal_type": "giftcard_discount",
                     "image_url": image_url,
                 }
 

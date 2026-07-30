@@ -120,6 +120,16 @@ class TestHeverGiftCardAdapter:
         assert d1.price_text == d2.price_text == "30% הנחה בטעינה (עד 3,000 ₪)"
         assert d1.raw_payload["discount_logic"]["reward"]["value"] == 0.30
 
+    def test_to_raw_deal_type_is_giftcard_discount_and_has_no_legacy_fields(self) -> None:
+        adapter = HeverGiftCardAdapter(SourceConfig(base_url="https://www.hvr.co.il"))
+        now = datetime.now(timezone.utc)
+        deal = adapter._to_raw_deal(_make_record(), now)
+        assert deal.raw_payload["deal_type"] == "giftcard_discount"
+        assert "constraints" not in deal.raw_payload["discount_logic"]
+        assert "stackable" not in deal.raw_payload
+        assert "redeem_channels" not in deal.raw_payload
+        assert "coupon_code" not in deal.raw_payload
+
     def test_to_raw_deal_online_limitations_kept_verbatim_in_raw_payload_only(self) -> None:
         # online_limitations isn't a "limitation" in the terms_and_conditions
         # sense and isn't the store description either — it's preserved

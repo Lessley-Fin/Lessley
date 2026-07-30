@@ -11,11 +11,6 @@ from bs4 import BeautifulSoup, Tag
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
-from lessley_deals.scraping.helpers.discount_parser import (
-    check_stackable,
-    extract_coupon,
-    extract_redeem_channels,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +221,6 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
                     "type": reward_type,
                     "value": reward_value,
                 },
-                "constraints": {}
             }
 
         # Build raw payload (mimicking the schema produced by legacy scraper and adapted slightly)
@@ -241,23 +235,13 @@ class IsracardTopcashAdapter(BaseSourceAdapter):
             "image_url": str(image_url).replace(" ", "%20"),
             "trigger_type": "auto",
             "discount_logic": discount_logic,
-            "is_stackable": True,
-            "redeem_channels": ["online"],
+            # Every TopCash benefit is cashback paid on purchases made through
+            # the TopCash referral link (deal-optimizer's DealType) — never a
+            # store sale, coupon, or gift card.
+            "deal_type": "cashback",
+            "deal_title": f"{reward_text} באתר {title}",
+            "full_description": f"{reward_text} באתר {title}. ההטבה מותנית במעבר דרך לינק הקאשבק.",
         }
-        
-        # also apply the discount parser if relevant
-        combined_text = raw_payload["description"]
-        stackable = check_stackable(combined_text)
-        channels = extract_redeem_channels(combined_text) or ["online"]
-        coupon = extract_coupon(combined_text)
-        
-        raw_payload.update({
-            "stackable": stackable,
-            "redeem_channels": channels,
-            "coupon_code": coupon,
-            "deal_title": raw_payload["title"],
-            "full_description": raw_payload["description"],
-        })
 
         return RawScrapedRecord(
             id=generate_id(),

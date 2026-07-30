@@ -61,11 +61,13 @@ class TestDeduceHotDiscountMechanics:
         assert result["reward"] == {"type": "fixed_discount_amount", "value": 50}
 
     def test_spend_and_save_with_max_discount(self) -> None:
-        """Spend & save with max discount constraint."""
+        """Spend & save with max discount cap — lands on `reward`, matching
+        deal-optimizer's transform.py::apply_deal (no nested "constraints")."""
         main = {"title": "מבצע", "description": ""}
         text = "₪50 הנחה ברכישת מעל ₪250. עד ₪100 הנחה"
         result = deduce_hot_discount_mechanics(main, text)
-        assert result["constraints"]["max_discount_amount"] == 100
+        assert result["reward"]["max_discount_amount"] == 100
+        assert "constraints" not in result
 
     def test_price_fallback(self) -> None:
         """Priority 6: price-based fallback."""
@@ -96,6 +98,20 @@ class TestDeduceMastercardDiscount:
     def test_none_when_no_pattern(self) -> None:
         result = deduce_mastercard_discount("מבצע מיוחד ללקוחות", "מבצע מיוחד")
         assert result is None
+
+    def test_spend_and_save_max_discount_lands_on_reward_not_constraints(self) -> None:
+        # deal-optimizer's transform.py reads the savings cap straight off
+        # `reward["max_discount_amount"]` (see apply_deal()) — there's no
+        # nested "constraints" block in the new schema.
+        result = deduce_mastercard_discount("₪50 הנחה ברכישת מעל ₪250. עד ₪100 הנחה", "50 הנחה")
+        assert result is not None
+        assert result["reward"]["max_discount_amount"] == 100
+        assert "constraints" not in result
+
+    def test_percentage_has_no_constraints_key(self) -> None:
+        result = deduce_mastercard_discount("20% הנחה על כל המוצרים", "20% הנחה")
+        assert result is not None
+        assert "constraints" not in result
 
 
 class TestCheckStackable:

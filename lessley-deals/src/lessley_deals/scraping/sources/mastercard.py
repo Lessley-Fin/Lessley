@@ -14,11 +14,6 @@ from curl_cffi import requests as curl_requests
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
-from lessley_deals.scraping.helpers.discount_parser import (
-    check_stackable,
-    extract_coupon,
-    extract_redeem_channels,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -255,12 +250,6 @@ class MastercardAdapter(BaseSourceAdapter):
 
         price_text = self._extract_price_text(logic)
 
-        # --- Additional fields ---
-        full_text = combined_text
-        stackable = check_stackable(full_text)
-        channels = extract_redeem_channels(full_text)
-        coupon = extract_coupon(full_text)
-
         # --- Determine which category this block belongs to ---
         block_category: str | None = None
         parent = block.parent
@@ -280,9 +269,10 @@ class MastercardAdapter(BaseSourceAdapter):
             "store_url": store_url,
             "category": block_category,
             "discount_logic": logic,
-            "stackable": stackable,
-            "redeem_channels": channels,
-            "coupon_code": coupon,
+            # Every Mastercard Day benefit requires paying with a Mastercard
+            # to unlock it — this is a payment-instrument discount, not a
+            # store sale, coupon, or gift card (deal-optimizer's DealType).
+            "deal_type": "payment_discount",
             "terms_and_conditions": clean_text,
         }
 
@@ -527,7 +517,6 @@ class MastercardAdapter(BaseSourceAdapter):
                 "type": "spend_and_save",
                 "condition": {"type": "min_spend", "value": int(condition_raw)},
                 "reward": {"type": "fixed_discount_amount", "value": int(reward_raw)},
-                "constraints": {},
                 "reward_amount": int(reward_raw),
                 "condition_amount": int(condition_raw),
                 "currency": "ILS",
@@ -540,7 +529,6 @@ class MastercardAdapter(BaseSourceAdapter):
                 "type": "percentage",
                 "condition": {"type": "min_quantity", "value": 1},
                 "reward": {"type": "percentage_off", "value": int(pct.group(1)) / 100.0},
-                "constraints": {},
                 "percent": int(pct.group(1)),
                 "matched_text": pct.group(0),
             }

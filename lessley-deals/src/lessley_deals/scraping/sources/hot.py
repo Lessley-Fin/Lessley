@@ -43,17 +43,25 @@ from lessley_deals.scraping.helpers.brand_utils import (
     resolve_group_store,
 )
 from lessley_deals.scraping.helpers.discount_parser import (
-    check_stackable,
     classify_hot_benefit_type,
     deduce_hot_discount_mechanics,
-    extract_coupon,
-    extract_redeem_channels,
 )
 from lessley_deals.scraping.helpers.html_utils import clean_html
 
 logger = logging.getLogger(__name__)
 
 BENEFIT_TYPES = ("100", "300", "700", "800", "1100", "1200", "1300")
+
+# deal-optimizer's DealType per HOT benefitType code (confirmed against live
+# data: 100 dominates the catalogue, 1300/800/700 are the next largest, 300/
+# 1100/1200 are rare and deliberately left unmapped — deal-optimizer's own
+# infer_deal_type() text-based fallback handles those when deal_type is None.
+_BENEFIT_TYPE_DEAL_TYPE: dict[str, str] = {
+    "100": "payment_discount",
+    "700": "coupon",
+    "800": "coupon",
+    "1300": "giftcard_discount",
+}
 
 _BASE_URL = "https://www.hot.co.il"
 _API_URL = "https://api.hot.co.il/api/website/2.0/getAllBenefits/"
@@ -452,9 +460,6 @@ class HotAdapter(BaseSourceAdapter):
         merged["_details_text"] = details_text
         merged["_dynamic_link"] = main.get("dynamicLink")
         merged["discount_logic"] = deduce_hot_discount_mechanics(main, combined_text)
-        merged["stackable"] = check_stackable(combined_text)
-        merged["redeem_channels"] = extract_redeem_channels(combined_text)
-        merged["coupon_code"] = extract_coupon(combined_text)
         merged["image_url"] = f"https://cdn.hot.co.il{main.get('imagePath', '')}" if main.get('imagePath') else ""
         merged["_locations"] = self._extract_locations(data.get("supplierLocations", {}))
         merged["_benefit_type_classified"] = classify_hot_benefit_type(main if main else record)
@@ -493,8 +498,7 @@ class HotAdapter(BaseSourceAdapter):
         - ``_detail``: full detail response
         - ``_terms_text``: cleaned terms & conditions
         - ``_details_text``: cleaned offer details
-        - ``_discount_mechanics``: condition / reward / constraints
-        - ``_stackable``, ``_redeem_channels``, ``_coupon``
+        - ``discount_logic``: condition / reward
         - ``_locations``: branch addresses
 
         Details are fetched concurrently (up to 5 at a time).
@@ -659,6 +663,8 @@ class HotAdapter(BaseSourceAdapter):
         payload["deal_title"] = title
         payload["full_description"] = deal_description
         payload["benefit_url"] = record.get("_dynamic_link") or record.get("dynamicLink")
+        benefit_type = str(record.get("benefit_type") or record.get("type") or "")
+        payload["deal_type"] = _BENEFIT_TYPE_DEAL_TYPE.get(benefit_type)
 
         # Extract T&C from the record's own information array if detail hasn't
         # already been merged (which sets _terms_text via _merge_detail).

@@ -158,13 +158,14 @@ class Deal:
     currency: str | None = None
     url: str | None = None
     discount_logic: dict[str, Any] | None = None
+    # Which of deal-optimizer's DealType layers this deal belongs to (e.g.
+    # "giftcard_discount"). Optional at scrape time — deal-optimizer's own
+    # adapter.py infers it from text/discount_logic when left unset.
+    deal_type: str | None = None
     # Structured deal terms parsed from ``terms_and_conditions`` (combinability,
     # limits, redemption_channels, eligibility). Populated by the constraints
     # enrichment step; see enrichment/constaints_parser.py for the schema.
     constraints: dict[str, Any] | None = None
-    stackable: bool | None = None
-    redeem_channels: list[str] = field(default_factory=list)
-    coupon_code: str | None = None
     club_id: str | None = None
     # Either a list[str] (legacy: member store names) or list[dict] of
     # {"name", "store_id", "confidence"} (resolved members from group sync).

@@ -130,8 +130,12 @@ class TestTierDiscountDerivation:
         store, deal = adapter._to_raw_records(chit, [], now)[0]
         assert store.name == "קרפור"
         assert store.url is None
-        assert deal.raw_payload["redeem_channels"] == ["physical_store"]
+        assert deal.raw_payload["deal_type"] == "giftcard_discount"
         assert deal.raw_payload["benefit_url"] == "https://paisplus.co.il/cashcards/food-chains"
+        assert "constraints" not in deal.raw_payload["discount_logic"]
+        assert "stackable" not in deal.raw_payload
+        assert "redeem_channels" not in deal.raw_payload
+        assert "coupon_code" not in deal.raw_payload
 
 
 class TestMerchantFanOut:
@@ -159,7 +163,6 @@ class TestMerchantFanOut:
         now = datetime.now(timezone.utc)
         store, deal = adapter._to_raw_records(chit, merchants, now)[0]
         assert store.url == "https://ae.co.il"
-        assert deal.raw_payload["redeem_channels"] == ["physical_store", "online"]
 
     def test_merchant_terms_come_from_limitations_text_not_chit(self) -> None:
         adapter = _make_adapter(PaisPlusNetworksAdapter)
