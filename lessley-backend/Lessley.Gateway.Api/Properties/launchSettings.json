@@ -5,7 +5,8 @@
       "launchBrowser": false,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Edge__AllowUnverifiedEdge": "true"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:8001"
@@ -15,7 +16,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Edge__AllowUnverifiedEdge": "true"
       }
     },
     "Container (Dockerfile)": {

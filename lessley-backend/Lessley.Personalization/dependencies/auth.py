@@ -23,8 +23,19 @@ def authenticated_email(request: Request) -> str:
     if email:
         return email
 
-    if dev_bypass_active() and settings.Dev_AuthEmail:
-        return settings.Dev_AuthEmail
+    if dev_bypass_active():
+        dev_email = (settings.Dev_AuthEmail or "").strip()
+        if dev_email:
+            return dev_email
+        # The bypass is on but has no identity to hand back. Say so explicitly — the
+        # generic 401 below sends people hunting for an auth bug that isn't there.
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                "Dev bypass is active but Dev_AuthEmail is not set. Add "
+                "Dev_AuthEmail=<your user's email> to Lessley.Personalization/.env"
+            ),
+        )
 
     logger.warning(
         "Request reached a user-scoped route without a verified identity",
@@ -33,4 +44,10 @@ def authenticated_email(request: Request) -> str:
             "extra_data": {"path": request.url.path},
         },
     )
-    raise HTTPException(status_code=401, detail="Unauthenticated: no verified identity")
+    raise HTTPException(
+        status_code=401,
+        detail=(
+            "Unauthenticated: no verified identity. Call through Caddy, or for local "
+            "debugging set Environment=Development and Edge_AllowUnverified=True."
+        ),
+    )
