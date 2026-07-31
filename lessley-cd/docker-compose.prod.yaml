@@ -1,11 +1,15 @@
 # ── Lessley PRODUCTION deployment ─────────────────────────────────────────────
-# Differences from the dev docker-compose.yaml:
-#   * Caddy is the ONLY service that publishes ports to the host (80/443).
-#   * MongoDB, RabbitMQ, gateway, personalization, loki, grafana are on a PRIVATE
-#     network and are NOT reachable from the host — only via service name.
-#   * mongo-express is removed (not needed in prod).
-#   * ASPNETCORE_ENVIRONMENT / Environment = Production  -> Swagger & /docs disabled.
-#   * Gateway and Personalization both reject anything without X-Edge-Key (EDGE_API_KEY).
+# The only intentional differences from the dev docker-compose.yaml:
+#   1. Ports    — Caddy is the ONLY service that publishes ports to the host (80/443).
+#                 MongoDB, RabbitMQ, gateway, personalization, loki, grafana are on a
+#                 PRIVATE network and are NOT reachable from the host — only by service name.
+#   2. URLs     — DOMAIN/ACME_EMAIL/EDGE_API_KEY are required here (no dev-only fallback
+#                 default); DNS for $DOMAIN must point here for Let's Encrypt.
+#   3. Swagger / docs — ASPNETCORE_ENVIRONMENT/Environment=Production here -> Swagger
+#                 (/swagger) and FastAPI /docs are OFF; dev runs Development -> ON.
+#   4. mongo-express is removed (not needed in prod).
+# Everything else (networking, depends_on health-gating, env var names) is kept
+# identical to dev on purpose — that's what makes this deployable with confidence.
 #
 # Usage:  docker compose -f docker-compose.prod.yaml up -d --build
 # Requires a populated .env (see .env.template). DNS for $DOMAIN must point here.
@@ -148,9 +152,12 @@ services:
     networks:
       - backend
     depends_on:
-      - mongodb
-      - rabbitmq
-      - loki
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      loki:
+        condition: service_started
 
   # ── Personalization (reached only via Caddy; gated by X-Edge-Key) ───────────
   personalization:
@@ -164,7 +171,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - APP_PORT=5002
-      - Environment=production
+      - Environment=Production
       - RabbitMQ_Enabled=True
       - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
       - ConnectionStrings_MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
@@ -177,9 +184,12 @@ services:
     networks:
       - backend
     depends_on:
-      - rabbitmq
-      - mongodb
-      - loki
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      loki:
+        condition: service_started
 
 volumes:
   rabbitmq_data:
