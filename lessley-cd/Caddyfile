@@ -9,16 +9,32 @@
 #     DOMAIN=your.domain (prod) → Caddy gets a Let's Encrypt cert + renews it.
 #   * HSTS_MAX_AGE=max-age=0 (dev) disables HSTS so https://localhost cannot pin other
 #     localhost http projects; prod leaves it unset → the strong default below applies.
+#   * CADDY_TLS_DIRECTIVE (optional, unset by default) — set to a full `tls` directive to
+#     make Caddy load a pre-issued certificate/key instead of automatic HTTPS, e.g.
+#     `tls /etc/caddy/certs/college.crt /etc/caddy/certs/college.key`. For a private/
+#     local-only DNS name (an internal college or corporate network) where neither Let's
+#     Encrypt (needs public resolution) nor the internal CA (needs client trust
+#     distribution) are options, but you were handed a cert+key already trusted on that
+#     network. See lessley-cd/CUSTOM-CA-CERT.md.
+#     NOTE: this must be a whole-directive placeholder, not e.g. `tls {$CERT} {$KEY}` with
+#     blank defaults — a bare `tls` with empty/no arguments is a Caddyfile PARSE ERROR, not
+#     a no-op. Substituting the entire line (this var empty -> empty line -> truly skipped)
+#     is the only way to make this optional without breaking every other deployment.
 #
 # The SPA files are baked into this image at /srv/frontend (see lessley-frontend/Dockerfile).
 # Required env vars (.env.template): DOMAIN, ACME_EMAIL.
-# Optional: HSTS_MAX_AGE, RABBIT_DOMAIN (+ RABBIT_BASICAUTH_USER / RABBIT_BASICAUTH_HASH).
+# Optional: HSTS_MAX_AGE, RABBIT_DOMAIN (+ RABBIT_BASICAUTH_USER / RABBIT_BASICAUTH_HASH),
+# CADDY_TLS_DIRECTIVE.
 
 {
 	email {$ACME_EMAIL}
 }
 
 {$DOMAIN} {
+	# Empty (the default) expands to a blank line — skipped entirely, so automatic HTTPS
+	# decides ACME vs internal issuance from DOMAIN exactly as before. Set the whole
+	# directive to override; see the CADDY_TLS_DIRECTIVE note above.
+	{$CADDY_TLS_DIRECTIVE:}
 	encode gzip
 
 	# Security headers applied to every response on this site.

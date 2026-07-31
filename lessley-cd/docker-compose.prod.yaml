@@ -41,8 +41,14 @@ services:
       - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
       # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
       - EDGE_API_KEY=${EDGE_API_KEY}
+      # Optional: a full `tls` directive to make Caddy load a pre-issued cert instead of
+      # automatic HTTPS (e.g. one your network/institution already issued for a private DNS
+      # name). File paths in it must resolve inside the container — see the ./certs mount
+      # below and CUSTOM-CA-CERT.md.
+      - CADDY_TLS_DIRECTIVE=${CADDY_TLS_DIRECTIVE:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:

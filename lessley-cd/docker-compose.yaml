@@ -25,8 +25,9 @@
 # First run (trust the local cert): see lessley-cd/README.md.
 
 networks:
-  web: # public edge (Caddy only)
-  backend: # private app/infra network — services reach each other by name
+  web:        # public edge (Caddy only)
+  backend:    # private app/infra network — services reach each other by name
+    internal: false   # keep false so containers can reach the internet (Let's Encrypt, Open Finance)
 
 services:
   # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
@@ -47,12 +48,19 @@ services:
       # localhost → Caddy serves HTTPS with its own internal CA (no Let's Encrypt).
       - DOMAIN=${DOMAIN:-localhost}
       - ACME_EMAIL=${ACME_EMAIL:-dev@lessley.local}
+      - RABBIT_DOMAIN=${RABBIT_DOMAIN:-}
+      - RABBIT_BASICAUTH_USER=${RABBIT_BASICAUTH_USER:-}
+      - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
       # Disable HSTS in dev so https://localhost cannot pin other localhost http apps.
       - HSTS_MAX_AGE=max-age=0
       # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
       - EDGE_API_KEY=${EDGE_API_KEY:-dev-edge-key}
+      # Optional: a full `tls` directive to make Caddy load a pre-issued cert instead of
+      # automatic HTTPS. See ./certs mount below and lessley-cd/CUSTOM-CA-CERT.md.
+      - CADDY_TLS_DIRECTIVE=${CADDY_TLS_DIRECTIVE:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -126,6 +134,7 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
+    restart: always
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -133,11 +142,11 @@ services:
       - loki_data:/tmp/loki
     networks:
       - backend
-    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    restart: always
     env_file:
       - .env
     ports:
@@ -188,6 +197,9 @@ services:
       # The Gateway never calls Personalization over HTTP. It only needs to recognise the
       # edge: Caddy stamps X-Edge-Key on every request it forwards here.
       - Edge__ApiKey=${EDGE_API_KEY:-dev-edge-key}
+
+      # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
+      - AllowedHosts=${DOMAIN:-localhost}
 
       - Loki__Url=${LOKI_URL}
     networks:

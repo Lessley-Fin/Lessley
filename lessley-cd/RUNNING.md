@@ -88,9 +88,9 @@ Same as Mode 2 but with the prod compose and a real domain; **no** Swagger, **no
 ✅ *Works when:* `curl -skI https://<DOMAIN>/` shows a valid cert + HSTS; `GET /swagger` and
 `/docs` return 404; Mongo/RabbitMQ are unreachable from the host (only Caddy publishes ports).
 
-No public domain yet, or want Caddy to self-issue instead of Let's Encrypt? Set `DOMAIN` to a
-non-public name/IP and see [`CUSTOM-CA-CERT.md`](./CUSTOM-CA-CERT.md) to load a specific CA
-root+key into an already-running Caddy container.
+No public domain yet, deployed on a private/institution-only DNS name, or want Caddy to use a
+CA or certificate you already have instead of Let's Encrypt? See
+[`CUSTOM-CA-CERT.md`](./CUSTOM-CA-CERT.md).
 
 ---
 
