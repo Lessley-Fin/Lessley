@@ -119,6 +119,10 @@ class TestHeverGiftCardAdapter:
         # Same program-wide loading bonus for every store, not a per-store number
         assert d1.price_text == d2.price_text == "30% הנחה בטעינה (עד 3,000 ₪)"
         assert d1.raw_payload["discount_logic"]["reward"]["value"] == 0.30
+        # The loading bonus is only 30% for the first 1,000 ₪ loaded (real
+        # terms taper to 25%/20% on higher tiers, up to 3,000 ₪ total) — must
+        # be capped, not applied as an uncapped rate to the whole cart.
+        assert d1.raw_payload["discount_logic"]["reward"]["max_discount_amount"] == 300
 
     def test_to_raw_deal_type_is_giftcard_discount_and_has_no_legacy_fields(self) -> None:
         adapter = HeverGiftCardAdapter(SourceConfig(base_url="https://www.hvr.co.il"))

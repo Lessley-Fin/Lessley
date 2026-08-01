@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any
 
 from .adapter import normalize_deals
@@ -44,7 +45,7 @@ _TENDER_CATEGORIES = ("giftcard_discount", "payment_discount", "cashback")
 
 @dataclass
 class UserContext:
-    member_club_ids: list[str] = field(default_factory=list)
+    member_source_ids: list[str] = field(default_factory=list)
     preferred_store_types: list[str] = field(default_factory=list)  # outlets|online|physical
     uses_this_month: dict[str, int] = field(default_factory=dict)  # {deal_id: uses_in_current_month}
 
@@ -67,21 +68,34 @@ def deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str]
     elig = constraints.get("eligibility", {}) or {}
     limits = constraints.get("limits", {}) or {}
     coverage = constraints.get("store_coverage", {}) or {}
-    club_id = deal.get("club_id")
+    # source_id (which scraper/API this deal came from — hot, mastercard,
+    # hever_gift_card_company, ...) is a required field on every real Deal,
+    # unlike club_id (which needs a separate Club-registry lookup and is
+    # frequently unset). Membership/card-linked eligibility is keyed on it
+    # directly: "does the wallet hold access to this deal's source."
+    source_id = deal.get("source_id")
 
-    # Membership required but user is not a member of the deal's club.
-    if elig.get("membership_required") == "yes":
-        if club_id not in ctx.member_club_ids:
-            return False, f"membership_required=yes, club_id={club_id!r} not in user clubs {ctx.member_club_ids}"
+    # Membership required but user has no access to the deal's source.
+    # Enriched deals carry booleans (True/False); the mock/legacy string
+    # convention uses "yes"/"no"/"unknown" — honor both, matching graph.py's accepts().
+    # No source_id on the deal means nothing to verify against — optimistic
+    # keep (mirrors unknown_as_yes elsewhere; should be rare, since source_id
+    # is populated on every real deal).
+    membership_required = elig.get("membership_required")
+    if membership_required is True or membership_required == "yes":
+        if source_id is not None and source_id not in ctx.member_source_ids:
+            return False, (
+                f"membership_required=yes, source_id={source_id!r} not in user sources {ctx.member_source_ids}"
+            )
 
     # Card-linked deal: requires a specific payment method (free-text), verified via the
-    # deal's club_id against the wallet-resolved club/card id set. No club_id on the deal
+    # deal's source_id against the wallet-resolved source id set. No source_id on the deal
     # means nothing to verify against — optimistic keep (mirrors unknown_as_yes elsewhere).
     pay_req = elig.get("payment_method_required")
-    if pay_req and club_id is not None and club_id not in ctx.member_club_ids:
+    if pay_req and source_id is not None and source_id not in ctx.member_source_ids:
         return False, (
-            f"payment_method_required={pay_req!r}, club_id={club_id!r} "
-            f"not in user clubs/cards {ctx.member_club_ids}"
+            f"payment_method_required={pay_req!r}, source_id={source_id!r} "
+            f"not in user sources {ctx.member_source_ids}"
         )
 
     # Store-type preference: reject only if EVERY preferred store type is explicitly
@@ -385,16 +399,46 @@ def _deal_matches_store(deal: dict[str, Any], target_store_id: str) -> bool:
 def _build_result(cart_total: float, cart_quantity: int, path: list[DealNode], rank: int) -> dict[str, Any]:
     per_step = []
     price = cart_total
+    tender_phase_start: float | None = None
+    cumulative_ils_covered = 0.0
     for node in path:
         price_out = apply_deal(price, cart_quantity, node)
         # path nodes are guaranteed applicable, but guard against None defensively
         price_out = price if price_out is None else price_out
+        savings = price - price_out
+
+        # The slice of the bill this step's discount was computed against: for
+        # tender deals (giftcard/payment/cashback), the ILS routed through that
+        # instrument; for price-level deals (store_sale/coupon/member), the
+        # whole running bill, since those apply to whatever's left.
+        covered = node.ils_covered if node.ils_covered is not None else price
+        discount_rate = (savings / covered) if covered else 0.0
+        amount_paid_on_covered = covered - savings
+
+        # Bill ILS not yet routed to any payment instrument — only meaningful
+        # once tender-phase steps start (None during the price-level chain).
+        remaining_to_allocate = None
+        if node.ils_covered is not None:
+            if tender_phase_start is None:
+                tender_phase_start = price
+            cumulative_ils_covered += node.ils_covered
+            remaining_to_allocate = tender_phase_start - cumulative_ils_covered
+
+        cumulative_savings = cart_total - price_out
+        cumulative_discount_rate = (cumulative_savings / cart_total) if cart_total else 0.0
+
         per_step.append(
             {
                 "deal_id": node.deal_id,
-                "price_in": price,
-                "price_out": price_out,
+                "bill_before": price,
+                "bill_after": price_out,
                 "ils_covered": node.ils_covered,
+                "discount_rate": round(discount_rate, 6),
+                "savings": round(savings, 6),
+                "amount_paid_on_covered": round(amount_paid_on_covered, 6),
+                "remaining_to_allocate": None if remaining_to_allocate is None else round(remaining_to_allocate, 6),
+                "cumulative_savings": round(cumulative_savings, 6),
+                "cumulative_discount_rate": round(cumulative_discount_rate, 6),
             }
         )
         price = price_out
@@ -423,11 +467,32 @@ def optimize(
     like ``{"rank", "path", "starting_price", "final_price", "total_savings",
     "per_step"}``.
 
-    Each ``per_step`` entry includes ``ils_covered`` — for tender deals
-    (giftcard_discount/payment_discount/cashback) this is how much of the
-    bill was routed through that specific instrument; ``None`` for
-    price-level deals (store_sale/member_discount/coupon), which discount the
-    whole running total rather than a specific slice of it.
+    Each ``per_step`` entry has two kinds of fields — whole-cart running state,
+    and this-step-only state — deliberately named apart so they can't be
+    confused (e.g. a card capped at 1000 ILS still shows ``bill_before: 1200``
+    on a 1200 ILS cart; that 1200 is the whole cart's running total at that
+    point, not the amount this specific card touched — see ``ils_covered``
+    for that):
+
+      - ``deal_id``, ``bill_before``, ``bill_after`` — whole-cart running
+        total before/after this step (chains across every step in the path;
+        ``bill_after`` of one step is ``bill_before`` of the next).
+      - ``ils_covered`` — how much of ``bill_before`` THIS step actually
+        touched. For tender deals (giftcard_discount/payment_discount/
+        cashback), the ILS routed through that specific instrument; ``None``
+        for price-level deals (store_sale/member_discount/coupon), which
+        discount the whole running bill rather than a specific slice of it.
+      - ``discount_rate`` — the fraction (0..1) this step saved on the ILS it
+        covered (``ils_covered``, or the whole running bill for price-level deals).
+      - ``savings`` — ILS saved by this step alone.
+      - ``amount_paid_on_covered`` — what you pay, after this step's discount,
+        for the ILS it covered.
+      - ``remaining_to_allocate`` — bill ILS not yet routed to any payment
+        instrument; ``None`` until the first tender-phase step, then counts
+        down to 0 as tender steps are applied.
+      - ``cumulative_savings``/``cumulative_discount_rate`` — running total ILS
+        saved / fraction of the original cart price saved so far, through
+        this step (inclusive).
     """
     paths = find_top_paths(cart_total, cart_quantity, deal_dicts, user_context, unknown_as_yes, top_n=top_n, verbose=verbose)
 
@@ -442,3 +507,34 @@ def optimize(
                 print(f"    {step['deal_id']:<28} {step['price_in']:>10.4f} -> {step['price_out']:<10.4f}{covered}")
 
     return results
+
+
+def build_export_payload(
+    results: list[dict[str, Any]],
+    *,
+    store_id: str,
+    cart_total: float,
+    cart_quantity: int,
+    wallet_id: str | None = None,
+) -> dict[str, Any]:
+    """Build a JSON-serializable envelope of ``optimize()``'s results for an
+    application to consume. Each result's ``path`` (full deal dicts) is
+    reduced to just ``deal_id`` strings, in application order — the
+    application is expected to look up full deal details (title, description,
+    etc.) from its own database by ``deal_id`` rather than have them embedded
+    here. ``per_step`` (deal_id/prices/ils_covered) is left untouched.
+    """
+    slim_results = []
+    for r in results:
+        slim = dict(r)
+        slim["path"] = [deal["id"] for deal in r["path"]]
+        slim_results.append(slim)
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "store_id": store_id,
+        "cart_total": cart_total,
+        "cart_quantity": cart_quantity,
+        "wallet_id": wallet_id,
+        "results": slim_results,
+    }

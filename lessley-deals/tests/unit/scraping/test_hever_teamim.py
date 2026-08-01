@@ -152,6 +152,10 @@ class TestHeverTeamimAdapter:
         d2 = adapter._to_raw_deal([_make_branch(name="Restaurant B")], now)
         assert d1.price_text == d2.price_text == "30% הנחה בטעינה (עד 3,000 ₪)"
         assert d1.raw_payload["discount_logic"]["reward"]["value"] == 0.30
+        # The loading bonus is only 30% for the first 1,000 ₪ loaded (real
+        # terms taper to 25%/20% on higher tiers, up to 3,000 ₪ total) — must
+        # be capped, not applied as an uncapped rate to the whole cart.
+        assert d1.raw_payload["discount_logic"]["reward"]["max_discount_amount"] == 300
 
     def test_to_raw_deal_raw_payload_benefit_url_uses_internal_link(self) -> None:
         adapter = HeverTeamimAdapter(SourceConfig(base_url="https://www.hvr.co.il"))

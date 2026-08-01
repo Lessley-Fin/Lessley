@@ -13,11 +13,20 @@ def _ids(path):
 
 def test_membership_required_filters_non_member():
     deal = mk_deal("m", "member_discount", reward_type="percentage_off", reward_value=0.10,
-                   accepts_all=True, membership_required="yes", club_id="club_hot")
-    # User not in club → deal pruned → empty path.
-    assert find_best_path(100, 1, [deal], UserContext(member_club_ids=[])) == []
-    # User in club → deal applies.
-    assert _ids(find_best_path(100, 1, [deal], UserContext(member_club_ids=["club_hot"]))) == ["m"]
+                   accepts_all=True, membership_required="yes", source_id="hot")
+    # User doesn't have this source → deal pruned → empty path.
+    assert find_best_path(100, 1, [deal], UserContext(member_source_ids=[])) == []
+    # User has this source → deal applies.
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_source_ids=["hot"]))) == ["m"]
+
+
+def test_membership_required_but_no_source_id_is_optimistic_keep():
+    # Every real Deal always carries source_id, but the engine should still
+    # degrade gracefully (rather than perma-prune) if it's ever missing —
+    # mirrors the payment_method_required fallback below.
+    deal = mk_deal("m", "member_discount", reward_type="percentage_off", reward_value=0.10,
+                   accepts_all=True, membership_required="yes", source_id=None)
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_source_ids=[]))) == ["m"]
 
 
 def test_monthly_cap_exhausted_filters_deal():
@@ -45,19 +54,29 @@ def test_store_type_unknown_is_optimistic():
     assert _ids(find_best_path(100, 1, [deal], ctx)) == ["c"]
 
 
-def test_card_required_filters_wallet_without_matching_club_id():
+def test_card_required_filters_wallet_without_matching_source():
     deal = mk_deal("pay", "payment_discount", reward_type="percentage_off", reward_value=0.20,
-                   accepts_all=True, club_id="club_mastercard", payment_method_required="Mastercard credit card")
-    assert find_best_path(100, 1, [deal], UserContext(member_club_ids=[])) == []
+                   accepts_all=True, source_id="mastercard", payment_method_required="Mastercard credit card")
+    assert find_best_path(100, 1, [deal], UserContext(member_source_ids=[])) == []
 
 
-def test_card_required_passes_when_club_id_present_in_context():
+def test_card_required_passes_when_source_present_in_context():
     deal = mk_deal("pay", "payment_discount", reward_type="percentage_off", reward_value=0.20,
-                   accepts_all=True, club_id="club_mastercard", payment_method_required="Mastercard credit card")
-    assert _ids(find_best_path(100, 1, [deal], UserContext(member_club_ids=["club_mastercard"]))) == ["pay"]
+                   accepts_all=True, source_id="mastercard", payment_method_required="Mastercard credit card")
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_source_ids=["mastercard"]))) == ["pay"]
 
 
-def test_card_required_but_no_club_id_is_optimistic_keep():
+def test_card_required_but_no_source_id_is_optimistic_keep():
     deal = mk_deal("pay", "payment_discount", reward_type="percentage_off", reward_value=0.15,
-                   accepts_all=True, club_id=None, payment_method_required="Card X")
-    assert _ids(find_best_path(100, 1, [deal], UserContext(member_club_ids=[]))) == ["pay"]
+                   accepts_all=True, source_id=None, payment_method_required="Card X")
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_source_ids=[]))) == ["pay"]
+
+
+def test_membership_required_boolean_true_is_honored_like_string_yes():
+    # Enriched real-world deals carry membership_required as a JSON boolean
+    # (True/False) rather than the mock/legacy "yes"/"no"/"unknown" strings —
+    # graph.py's combinability check already handles both; this must too.
+    deal = mk_deal("m", "member_discount", reward_type="percentage_off", reward_value=0.10,
+                   accepts_all=True, membership_required=True, source_id="hot")
+    assert find_best_path(100, 1, [deal], UserContext(member_source_ids=[])) == []
+    assert _ids(find_best_path(100, 1, [deal], UserContext(member_source_ids=["hot"]))) == ["m"]

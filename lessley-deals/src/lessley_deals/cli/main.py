@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from pathlib import Path
@@ -1472,8 +1473,8 @@ def optimize_cmd(
     wallet_file: Optional[str] = typer.Option(
         None, "--wallet-file", help="Path to a mock wallets JSON file (required if --wallet-id is passed)"
     ),
-    member_clubs: Optional[str] = typer.Option(
-        None, "--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b"
+    sources: Optional[str] = typer.Option(
+        None, "--sources", help="Comma-separated source_ids the user has access to (loyalty program/card issuer), e.g. hot,mastercard"
     ),
     store_types: Optional[str] = typer.Option(
         None, "--store-types", help="Comma-separated preferred store types, e.g. outlets,online,physical"
@@ -1485,10 +1486,13 @@ def optimize_cmd(
     verbose: bool = typer.Option(
         False, "--verbose", help="Print the eligibility prune, DP-sweep decisions, and exclusion reasons"
     ),
+    output: Optional[str] = typer.Option(
+        None, "--output", "-o", help="Write the ranked results to this JSON file, for an application to load and display"
+    ),
 ) -> None:
     """Find the cheapest legal stack of deals for a store + cart (deal-optimizer engine)."""
     try:
-        from deal_optimizer.engine import UserContext, get_optimal_deal_path
+        from deal_optimizer.engine import UserContext, build_export_payload, get_optimal_deal_path
         from deal_optimizer.wallet import load_wallets, wallet_to_user_context
     except ModuleNotFoundError as exc:
         console.print(
@@ -1511,23 +1515,23 @@ def optimize_cmd(
         wallet_ctx = wallet_to_user_context(wallet)
 
     user_context = None
-    if member_clubs or store_types or monthly_uses or wallet_ctx:
+    if sources or store_types or monthly_uses or wallet_ctx:
         uses_this_month: dict[str, int] = dict(wallet_ctx.uses_this_month) if wallet_ctx else {}
         if monthly_uses:
             for pair in monthly_uses.split(","):
                 deal_id, _, count = pair.partition(":")
                 uses_this_month[deal_id.strip()] = int(count.strip() or 0)
 
-        member_club_ids = list(wallet_ctx.member_club_ids) if wallet_ctx else []
-        if member_clubs:
-            member_club_ids += [c.strip() for c in member_clubs.split(",")]
+        member_source_ids = list(wallet_ctx.member_source_ids) if wallet_ctx else []
+        if sources:
+            member_source_ids += [s.strip() for s in sources.split(",")]
 
         preferred_store_types = list(wallet_ctx.preferred_store_types) if wallet_ctx else []
         if store_types:
             preferred_store_types += [c.strip() for c in store_types.split(",")]
 
         user_context = UserContext(
-            member_club_ids=member_club_ids,
+            member_source_ids=member_source_ids,
             preferred_store_types=preferred_store_types,
             uses_this_month=uses_this_month,
         )
@@ -1542,6 +1546,20 @@ def optimize_cmd(
         top_n=top_n,
         verbose=verbose,
     )
+
+    if output:
+        payload = build_export_payload(
+            results,
+            store_id=store_id,
+            cart_total=cart_total,
+            cart_quantity=quantity,
+            wallet_id=wallet_id,
+        )
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+        console.print(f"[green]Wrote {len(results)} ranked result(s) to {out_path}[/green]")
 
     print(f"\nStore: {store_id}  |  Cart: {cart_total:.2f} ILS  |  Items: {quantity}")
     print(f"Starting price: {cart_total:.2f}")
@@ -1562,8 +1580,15 @@ def optimize_cmd(
             title = deal.get("title") or deal.get("deal_description") or deal.get("id")
             print(f"  {i}. [{deal.get('deal_type', '?')}] {title}")
             if step["ils_covered"] is not None:
-                print(f"     pays for {step['ils_covered']:.2f} ILS of the bill via this instrument")
-            print(f"     {step['price_in']:.2f} -> {step['price_out']:.2f}  (deal {step['deal_id']})")
+                print(
+                    f"     covers {step['ils_covered']:.2f} ILS of the bill at {step['discount_rate']:.0%} off "
+                    f"-> pay {step['amount_paid_on_covered']:.2f} on it (saved {step['savings']:.2f})"
+                )
+                if step["remaining_to_allocate"]:
+                    print(f"     {step['remaining_to_allocate']:.2f} ILS still unallocated after this step")
+            else:
+                print(f"     {step['discount_rate']:.0%} off the whole running bill (saved {step['savings']:.2f})")
+            print(f"     bill: {step['bill_before']:.2f} -> {step['bill_after']:.2f}  (deal {step['deal_id']})")
 
 
 @app.command(name="enrich-constraints")

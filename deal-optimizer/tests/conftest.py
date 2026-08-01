@@ -30,7 +30,7 @@ def mk_deal(
     minimum_purchase: float | None = None,
     membership_required: str = "unknown",
     payment_method_required: str | None = None,
-    club_id: str | None = None,
+    source_id: str | None = None,
     store_coverage: dict[str, str] | None = None,
     store_id: str = "store_default",
     title: str = "",
@@ -73,5 +73,5 @@ def mk_deal(
                 "payment_method_required": payment_method_required,
             },
         },
-        "club_id": club_id,
+        "source_id": source_id,
     }

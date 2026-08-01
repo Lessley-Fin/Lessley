@@ -2,19 +2,25 @@
 
     python -m deal_optimizer.cli <deals.json> <store_id> <cart_total> [--quantity N] [--strict]
         [--verbose] [--top-n N] [--wallet-id user_x --wallet-file mock_wallets.json]
-        [--member-clubs club_a,club_b] [--store-types online,physical]
-        [--monthly-uses deal_id:2,other_deal:1]
+        [--sources hot,mastercard] [--store-types online,physical]
+        [--monthly-uses deal_id:2,other_deal:1] [--output result.json]
 
     A wallet (--wallet-id/--wallet-file) provides a baseline user context loaded
-    from a mock wallets JSON file; --member-clubs/--store-types/--monthly-uses layer
+    from a mock wallets JSON file; --sources/--store-types/--monthly-uses layer
     extra ad-hoc data on top without needing to edit the file.
+
+    --output/-o writes the same ranked results returned by optimize()/
+    get_optimal_deal_path() to a JSON file (wrapped with the query info), for
+    an application to load and display, in addition to the normal console output.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
+from pathlib import Path
 
-from .engine import UserContext, get_optimal_deal_path
+from .engine import UserContext, build_export_payload, get_optimal_deal_path
 from .wallet import load_wallets, wallet_to_user_context
 
 
@@ -29,7 +35,7 @@ def _build_user_context(args: argparse.Namespace) -> UserContext | None:
             raise SystemExit(f"No wallet with user_id={args.wallet_id!r} in {args.wallet_file}")
         wallet_ctx = wallet_to_user_context(wallet)
 
-    if not (args.member_clubs or args.store_types or args.monthly_uses or wallet_ctx):
+    if not (args.sources or args.store_types or args.monthly_uses or wallet_ctx):
         return None
 
     uses_this_month = dict(wallet_ctx.uses_this_month) if wallet_ctx else {}
@@ -38,16 +44,16 @@ def _build_user_context(args: argparse.Namespace) -> UserContext | None:
             deal_id, _, count = pair.partition(":")
             uses_this_month[deal_id.strip()] = int(count.strip() or 0)
 
-    member_clubs = list(wallet_ctx.member_club_ids) if wallet_ctx else []
-    if args.member_clubs:
-        member_clubs += [c.strip() for c in args.member_clubs.split(",")]
+    sources = list(wallet_ctx.member_source_ids) if wallet_ctx else []
+    if args.sources:
+        sources += [s.strip() for s in args.sources.split(",")]
 
     store_types = list(wallet_ctx.preferred_store_types) if wallet_ctx else []
     if args.store_types:
         store_types += [c.strip() for c in args.store_types.split(",")]
 
     return UserContext(
-        member_club_ids=member_clubs, preferred_store_types=store_types, uses_this_month=uses_this_month
+        member_source_ids=sources, preferred_store_types=store_types, uses_this_month=uses_this_month
     )
 
 
@@ -69,7 +75,9 @@ def main() -> None:
     )
     p.add_argument("--wallet-id", help="user_id to load from --wallet-file as a baseline user context")
     p.add_argument("--wallet-file", help="Path to a mock wallets JSON file (required if --wallet-id is passed)")
-    p.add_argument("--member-clubs", help="Comma-separated club_ids the user belongs to, e.g. club_a,club_b")
+    p.add_argument(
+        "--sources", help="Comma-separated source_ids the user has access to (loyalty program/card issuer), e.g. hot,mastercard"
+    )
     p.add_argument(
         "--store-types", help="Comma-separated preferred store types, e.g. outlets,online,physical"
     )
@@ -77,6 +85,9 @@ def main() -> None:
         "--monthly-uses", help="Comma-separated deal_id:count already used this month, e.g. D11_coupon_capped:1"
     )
     p.add_argument("--top-n", type=int, default=5, help="Number of ranked options to show (default 5)")
+    p.add_argument(
+        "--output", "-o", help="Write the ranked results to this JSON file, for an application to load and display"
+    )
     args = p.parse_args()
 
     results = get_optimal_deal_path(
@@ -89,6 +100,20 @@ def main() -> None:
         top_n=args.top_n,
         verbose=args.verbose,
     )
+
+    if args.output:
+        payload = build_export_payload(
+            results,
+            store_id=args.store_id,
+            cart_total=args.cart_total,
+            cart_quantity=args.quantity,
+            wallet_id=args.wallet_id,
+        )
+        out_path = Path(args.output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+        print(f"Wrote {len(results)} ranked result(s) to {out_path}")
 
     print(f"\nStore: {args.store_id}  |  Cart: {args.cart_total:.2f} ILS  |  Items: {args.quantity}")
     print(f"Starting price: {args.cart_total:.2f}")
@@ -106,8 +131,15 @@ def main() -> None:
             title = deal.get("title") or deal.get("deal_description") or deal.get("id")
             print(f"  {i}. [{deal.get('deal_type', '?')}] {title}")
             if step["ils_covered"] is not None:
-                print(f"     pays for {step['ils_covered']:.2f} ILS of the bill via this instrument")
-            print(f"     {step['price_in']:.2f} -> {step['price_out']:.2f}  (deal {step['deal_id']})")
+                print(
+                    f"     covers {step['ils_covered']:.2f} ILS of the bill at {step['discount_rate']:.0%} off "
+                    f"-> pay {step['amount_paid_on_covered']:.2f} on it (saved {step['savings']:.2f})"
+                )
+                if step["remaining_to_allocate"]:
+                    print(f"     {step['remaining_to_allocate']:.2f} ILS still unallocated after this step")
+            else:
+                print(f"     {step['discount_rate']:.0%} off the whole running bill (saved {step['savings']:.2f})")
+            print(f"     bill: {step['bill_before']:.2f} -> {step['bill_after']:.2f}  (deal {step['deal_id']})")
 
 
 if __name__ == "__main__":

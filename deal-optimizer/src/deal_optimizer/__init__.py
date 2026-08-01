@@ -4,7 +4,15 @@ Finds the cheapest legal combination of compatible deals for a cart, modeled as
 a directed acyclic flow graph: START → deals → END.
 """
 
-from .engine import UserContext, deal_eligibility, find_best_path, find_top_paths, get_optimal_deal_path, optimize
+from .engine import (
+    UserContext,
+    build_export_payload,
+    deal_eligibility,
+    find_best_path,
+    find_top_paths,
+    get_optimal_deal_path,
+    optimize,
+)
 from .graph import ACCEPTS_KEY, LAYER_ORDER, DealNode
 from .schema import (
     Combinability,
@@ -21,12 +29,13 @@ from .wallet import (
     WalletCard,
     get_eligible_deals,
     load_wallets,
-    resolved_club_ids,
+    resolved_source_ids,
     wallet_to_user_context,
 )
 
 __all__ = [
     "UserContext",
+    "build_export_payload",
     "deal_eligibility",
     "find_best_path",
     "find_top_paths",

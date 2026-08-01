@@ -110,3 +110,29 @@ def test_top_n_ranks_alternative_tender_combinations():
     prices = [r["final_price"] for r in results]
     assert prices == sorted(prices)
     assert [r["rank"] for r in results] == list(range(1, len(results) + 1))
+
+
+def test_per_step_breakdown_1200_ils_hever_then_behatsdaa():
+    # 1200 ILS: Hever covers 1000 of it at 30% (pay 700 on that slice, 200
+    # left unallocated), then Behatsdaa covers the remaining 200 at 30% (pay
+    # 140 on it, nothing left) — the exact worked example the user gave.
+    res = optimize([_hever(), _behatsdaa()], cart_total=1200, cart_quantity=1)[0]
+    hever_step, behatsdaa_step = res["per_step"]
+
+    assert hever_step["deal_id"] == "hever"
+    assert hever_step["ils_covered"] == pytest.approx(1000.0)
+    assert hever_step["discount_rate"] == pytest.approx(0.30)
+    assert hever_step["savings"] == pytest.approx(300.0)
+    assert hever_step["amount_paid_on_covered"] == pytest.approx(700.0)
+    assert hever_step["remaining_to_allocate"] == pytest.approx(200.0)
+    assert hever_step["cumulative_savings"] == pytest.approx(300.0)
+    assert hever_step["cumulative_discount_rate"] == pytest.approx(0.25)
+
+    assert behatsdaa_step["deal_id"] == "behatsdaa"
+    assert behatsdaa_step["ils_covered"] == pytest.approx(200.0)
+    assert behatsdaa_step["discount_rate"] == pytest.approx(0.30)
+    assert behatsdaa_step["savings"] == pytest.approx(60.0)
+    assert behatsdaa_step["amount_paid_on_covered"] == pytest.approx(140.0)
+    assert behatsdaa_step["remaining_to_allocate"] == pytest.approx(0.0)
+    assert behatsdaa_step["cumulative_savings"] == pytest.approx(360.0)
+    assert behatsdaa_step["cumulative_discount_rate"] == pytest.approx(0.30)

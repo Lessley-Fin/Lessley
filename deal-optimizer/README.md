@@ -46,11 +46,15 @@ runner-up combinations too (e.g. "use only Hever" vs. "split Hever + Behatsdaa
 
 `deal_eligibility` (used internally by `find_top_paths` before any DP runs, and
 publicly by `wallet.py`) prunes deals a given `UserContext` doesn't qualify
-for: club membership (`eligibility.membership_required` vs.
-`ctx.member_club_ids`), a required payment method (`eligibility.
-payment_method_required`, matched via the deal's `club_id` against the same
-`member_club_ids` — a deal with no `club_id` can't be verified and is kept
-optimistically), redemption channel, and monthly usage caps.
+for: membership (`eligibility.membership_required` vs. `ctx.member_source_ids`),
+a required payment method (`eligibility.payment_method_required`, matched via
+the deal's `source_id` against the same `member_source_ids`), preferred store
+type, and monthly usage caps. Both membership and payment-method checks key on
+`source_id` — which scraper/API a deal came from (`hot`, `mastercard`,
+`hever_gift_card_company`, ...) — rather than `club_id`, since `source_id` is a
+required field on every real `Deal` while `club_id` needs a separate
+Club-registry lookup and is often unset; a deal with no `source_id` can't be
+verified and is kept optimistically.
 
 ## Why a separate module
 
@@ -83,22 +87,78 @@ from deal_optimizer import optimize, UserContext
 results = optimize(deals, cart_total=500, cart_quantity=1, top_n=5)
 # → list of up to top_n dicts, cheapest first:
 #   {"rank", "path": [...], "starting_price", "final_price", "total_savings", "per_step": [...]}
-# per_step entries include "ils_covered": how much of the bill that specific
-# deal paid for (tender deals only — None for price-level deals).
 ```
+
+Each `per_step` entry has two kinds of fields, deliberately named apart so
+they can't be confused: **whole-cart running state** (`bill_before`/
+`bill_after` — the running total across the *entire* cart, chained step to
+step) vs. **this-step-only state** (`ils_covered`/`discount_rate`/`savings`/
+`amount_paid_on_covered` — only the slice of the bill this specific deal
+touched). A card capped at 1000 ILS on a 1200 ILS cart still shows
+`bill_before: 1200` — that's the whole cart at that point, not what the card
+itself covered (`ils_covered: 1000` says that).
+
+| Field | Scope | Meaning |
+|---|---|---|
+| `deal_id`, `bill_before`, `bill_after` | whole cart | The running bill total before/after this step (`bill_after` of one step = `bill_before` of the next) |
+| `ils_covered` | this step | For tender deals (giftcard/payment/cashback): how much of `bill_before` was routed through that instrument. `None` for price-level deals (store_sale/coupon/member), which discount whatever's left rather than a specific slice |
+| `discount_rate` | this step | Fraction (0–1) saved on the ILS this step covered |
+| `savings` | this step | ILS saved by this step alone |
+| `amount_paid_on_covered` | this step | What you pay, after this step's discount, for the ILS it covered |
+| `remaining_to_allocate` | whole cart | Bill ILS not yet routed to any payment instrument — `None` until the first tender step, then counts down to 0 |
+| `cumulative_savings` / `cumulative_discount_rate` | whole cart | Running total ILS saved / fraction of the original cart price saved so far, through this step |
+
+E.g. a 1200 ILS cart split Hever (30% off, up to 1000) then Behatsdaa (30% off,
+remaining 200): step 1 has `bill_before: 1200`, covers 1000 of it at 30% (pay
+700 on it, 200 left to allocate, 25% cumulative discount), `bill_after: 900`;
+step 2 has `bill_before: 900`, covers the remaining 200 at 30% (pay 140,
+nothing left, 30% cumulative discount), `bill_after: 840`.
 
 `unknown_as_yes=True` (default, optimistic) treats combinability `"unknown"` as
 `"yes"`; `--strict` / `unknown_as_yes=False` treats it as `"no"`.
 
+## Exporting results for an application
+
+`--output/-o <path>` (both this CLI and `lessley-deals`' `deals optimize`)
+writes the ranked results to a JSON file for an application to load, via
+`build_export_payload()`:
+
+```python
+from deal_optimizer import build_export_payload
+payload = build_export_payload(results, store_id=store_id, cart_total=cart_total,
+                                cart_quantity=quantity, wallet_id=wallet_id)
+```
+
+```json
+{
+  "generated_at": "2026-07-31T09:31:19+00:00",
+  "store_id": "...", "cart_total": 2000, "cart_quantity": 1, "wallet_id": "user_ido_full",
+  "results": [
+    {"rank": 1, "starting_price": 2000, "final_price": 1471.0, "total_savings": 529.0,
+     "path": ["LC04_hever_giftcard_1000", "LC05_behatsdaa_giftcard_500", "..."],
+     "per_step": [{"deal_id": "LC04_hever_giftcard_1000", "bill_before": 2000, "bill_after": 1700.0,
+                   "ils_covered": 1000.0, "discount_rate": 0.3, "savings": 300.0,
+                   "amount_paid_on_covered": 700.0, "remaining_to_allocate": 0.0,
+                   "cumulative_savings": 300.0, "cumulative_discount_rate": 0.15}, "..."]}
+  ]
+}
+```
+
+Unlike the in-memory `optimize()`/`get_optimal_deal_path()` return value (where
+`path` holds the full original deal dict per step), the exported `path` is
+reduced to bare `deal_id` strings — the application is expected to resolve
+those against its own deals database rather than have full deal objects
+duplicated into the export file.
+
 ## User wallets (demo)
 
 A `UserWallet` (`wallet.py`) is a mock struct — generic user info plus the
-loyalty clubs joined and credit cards held — that resolves into a
+loyalty programs joined and credit cards held — that resolves into a
 `UserContext` so the optimizer only considers deals actually available to that
-person. Each `WalletCard` links to the `club_id` a deal's `eligibility` block
+person. Each `WalletCard` links to the `source_id` a deal's `eligibility` block
 checks against, so holding "a Mastercard" is enough to unlock deals gated by
-`payment_method_required`, exactly the same way club membership unlocks deals
-gated by `membership_required`.
+`payment_method_required`, exactly the same way program membership unlocks
+deals gated by `membership_required`.
 
 ```python
 from deal_optimizer.wallet import load_wallets, get_eligible_deals, wallet_to_user_context
@@ -117,8 +177,8 @@ python -m deal_optimizer.cli data/mock_deals.json <store_id> 500 \
     --wallet-id user_ido_full --wallet-file data/mock_wallets.json
 ```
 
-`--wallet-id`/`--wallet-file` provide a baseline context; `--member-clubs`/
-`--channels`/`--monthly-uses` layer extra ad-hoc data on top without editing
+`--wallet-id`/`--wallet-file` provide a baseline context; `--sources`/
+`--store-types`/`--monthly-uses` layer extra ad-hoc data on top without editing
 the wallet file.
 
 ## Docker
@@ -143,6 +203,6 @@ pytest -q          # all Part 5 verification scenarios + adapter + eligibility
 | `graph.py` | `DealNode`, `LAYER_ORDER`, `ACCEPTS_KEY`, edges, vertex expansion (duplicates) |
 | `transform.py` | `apply_deal` price transform (both plan bug fixes baked in) |
 | `tender.py` | `allocate_tender` / `allocate_tender_top_k` — ranked bill-splitting across giftcard/payment/cashback deals |
-| `engine.py` | `UserContext`, `deal_eligibility` prune (club/card/channel/monthly-cap), 2-phase state-DP `find_top_paths` (chain → tender, ranked) + `find_best_path` convenience wrapper, `optimize`, `get_optimal_deal_path` |
+| `engine.py` | `UserContext`, `deal_eligibility` prune (source/card/store-type/monthly-cap), 2-phase state-DP `find_top_paths` (chain → tender, ranked) + `find_best_path` convenience wrapper, `optimize`, `get_optimal_deal_path` |
 | `wallet.py` | `UserWallet`/`WalletCard` mock demo model, `wallet_to_user_context` bridging, `get_eligible_deals()` standalone pre-filter, `load_wallets()` JSON loader |
 | `cli.py` | Command-line entry point |

@@ -3,11 +3,11 @@
     "user_id": "user_ido_full",
     "display_name": "Ido (full wallet demo)",
     "email": "ido.shmerling@gmail.com",
-    "member_clubs": ["club_hot", "club_pais", "club_hever", "club_behatsdaa"],
+    "member_source_ids": ["hot", "pais", "hever_gift_card_company", "behatsdaa"],
     "credit_cards": [
       {
         "card_id": "card_ido_mastercard",
-        "club_id": "club_mastercard",
+        "source_id": "mastercard",
         "brand": "Mastercard",
         "nickname": "Personal Mastercard"
       }
@@ -19,11 +19,11 @@
     "user_id": "user_dana_card_only",
     "display_name": "Dana (card-only demo)",
     "email": null,
-    "member_clubs": [],
+    "member_source_ids": [],
     "credit_cards": [
       {
         "card_id": "card_dana_mastercard",
-        "club_id": "club_mastercard",
+        "source_id": "mastercard",
         "brand": "Mastercard",
         "nickname": "Dana's Mastercard"
       }
@@ -35,7 +35,7 @@
     "user_id": "user_yossi_loyalty_only",
     "display_name": "Yossi (loyalty-clubs-only demo)",
     "email": null,
-    "member_clubs": ["club_pais", "club_hever"],
+    "member_source_ids": ["pais", "hever_gift_card_company"],
     "credit_cards": [],
     "preferred_store_types": [],
     "uses_this_month": {}
@@ -44,11 +44,11 @@
     "user_id": "shmer",
     "display_name": "Shmer (full wallet demo)",
     "email": "ido.shmerling@gmail.com",
-    "member_clubs": ["club_hot", "club_hever", "club_behatsdaa"],
+    "member_source_ids": ["hot", "hever_gift_card_company", "behatsdaa"],
     "credit_cards": [
       {
         "card_id": "card_ido_mastercard",
-        "club_id": "club_mastercard",
+        "source_id": "mastercard",
         "brand": "Mastercard",
         "nickname": "Personal Mastercard"
       }
@@ -60,11 +60,11 @@
     "user_id": "dor",
     "display_name": "Dor (full wallet demo)",
     "email": "dor.habasovg@gmail.com",
-    "member_clubs": ["club_pais", "club_behatsdaa"],
+    "member_source_ids": ["pais", "behatsdaa"],
     "credit_cards": [
       {
         "card_id": "card_dor_mastercard",
-        "club_id": "club_mastercard",
+        "source_id": "mastercard",
         "brand": "Mastercard",
         "nickname": "Personal Mastercard"
       }

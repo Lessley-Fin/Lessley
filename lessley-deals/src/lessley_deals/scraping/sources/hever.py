@@ -32,7 +32,6 @@ import httpx
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
-from lessley_deals.scraping.sources.llm_scraper import build_discount_logic
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +52,24 @@ _LOADING_BONUS_TEXT = (
     '25% הנחה על 1,000 ₪ הבאים ו-20% הנחה על 1,000 ₪ נוספים (עד 3,000 ₪ בסה"כ)'
 )
 _LOADING_BONUS_PRICE_TEXT = "30% הנחה בטעינה (עד 3,000 ₪)"
+
+
+def _loading_bonus_discount_logic() -> dict[str, Any]:
+    """The fixed Hever loading-bonus reward, hand-built rather than parsed
+    from ``_LOADING_BONUS_PRICE_TEXT`` via ``build_discount_logic`` — that
+    generic parser only extracts a single number and drops the "(עד 3,000
+    ₪)" cap entirely. Real terms are 3 tiers (30% on the first 1,000 ₪
+    loaded, 25% on the next 1,000, 20% on the next 1,000, 3,000 ₪ total —
+    see ``_LOADING_BONUS_TEXT``); approximated here as a single flat 30%
+    rate capped at the first 1,000 ₪ tier, since deal_optimizer's reward
+    schema doesn't yet support multi-tier rewards. Returns a fresh dict per
+    call so raw records never share a mutable nested dict by reference.
+    """
+    return {
+        "type": "percentage",
+        "condition": {"type": "min_quantity", "value": 1},
+        "reward": {"type": "percentage_off", "value": 0.3, "max_discount_amount": 300},
+    }
 
 
 class HeverGiftCardAdapter(BaseSourceAdapter):
@@ -167,11 +184,8 @@ class HeverGiftCardAdapter(BaseSourceAdapter):
         terms = f"{limitations} {loading_bonus_sentence}".strip() if limitations else loading_bonus_sentence
         store_url = self._store_url(record)
         benefit_url = self._benefit_url(record)
-        discount_logic, currency = build_discount_logic(_LOADING_BONUS_PRICE_TEXT)
-        # build_discount_logic's shared shape carries an empty "constraints"
-        # key for the LLM-scraper's sake — not part of this scraper's format.
-        if discount_logic is not None:
-            discount_logic = {k: v for k, v in discount_logic.items() if k != "constraints"}
+        discount_logic = _loading_bonus_discount_logic()
+        currency = "ILS"
 
         raw_payload: dict[str, Any] = {
             "source": "hever_gift_card",

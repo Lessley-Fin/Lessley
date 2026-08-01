@@ -26,8 +26,8 @@
     "id": "D02_member",
     "store_id": "store_1",
     "deal_type": "member_discount",
-    "club_id": "club_a",
-    "title": "5% club_a member discount",
+    "source_id": "source_a",
+    "title": "5% source_a member discount",
     "discount_logic": {
       "condition": { "type": "min_spend", "value": 0 },
       "reward": { "type": "percentage_off", "value": 0.05 }
@@ -188,8 +188,8 @@
     "id": "D09_member_wrongclub",
     "store_id": "store_1",
     "deal_type": "member_discount",
-    "club_id": "club_b",
-    "title": "CANARY: 50% club_b member discount (user is not a member)",
+    "source_id": "source_b",
+    "title": "CANARY: 50% source_b member discount (user is not a member)",
     "discount_logic": {
       "condition": { "type": "min_spend", "value": 0 },
       "reward": { "type": "percentage_off", "value": 0.50 }
@@ -259,7 +259,7 @@
     "store_id": "019d209b8101_f9b9017f2ef608d3",
     "deal_type": "giftcard_discount",
     "title": "HOT club: 13% off Lee Cooper gift voucher",
-    "source": "hot",
+    "source_id": "hot",
     "source_url": "https://www.hot.co.il/%D7%94%D7%98%D7%91%D7%94/57329/%D7%AA%D7%95-%D7%A7%D7%A0%D7%99%D7%94-Lee-Cooper",
     "discount_logic": {
       "condition": { "type": "min_quantity", "value": 1 },
@@ -278,7 +278,6 @@
       "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "no", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": "HOT club-linked credit card" }
     },
-    "club_id": "club_hot",
     "coupon_code": null
   },
   {
@@ -286,7 +285,7 @@
     "store_id": "019d209b8101_f9b9017f2ef608d3",
     "deal_type": "payment_discount",
     "title": "Mastercard Day: 20% off leecooper.co.il (code MASTER20)",
-    "source": "mastercard",
+    "source_id": "mastercard",
     "notes": "Valid the 10th of each month, Jan 2026 until further notice (date restriction is informational only — not enforced by the engine).",
     "discount_logic": {
       "condition": { "type": "min_spend", "value": 0 },
@@ -305,7 +304,6 @@
       "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "yes", "is_include_physical_stores": "no" },
       "eligibility": { "membership_required": "no", "payment_method_required": "Mastercard credit card" }
     },
-    "club_id": "club_mastercard",
     "coupon_code": "MASTER20"
   },
   {
@@ -313,7 +311,7 @@
     "store_id": "019d209b8101_f9b9017f2ef608d3",
     "deal_type": "giftcard_discount",
     "title": "Pais club: 200 ILS Lee Cooper voucher for 160 ILS",
-    "source": "pais",
+    "source_id": "pais",
     "discount_logic": {
       "condition": { "type": "exact_spend", "value": 200 },
       "reward": { "type": "fixed_total_amount", "value": 160 }
@@ -331,7 +329,6 @@
       "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "unknown", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     },
-    "club_id": "club_pais",
     "coupon_code": null
   },
   {
@@ -339,7 +336,7 @@
     "store_id": "019d209b8101_f9b9017f2ef608d3",
     "deal_type": "giftcard_discount",
     "title": "Hever card: 30% off, loadable up to 1000 ILS",
-    "source": "hever",
+    "source_id": "hever_gift_card_company",
     "notes": "Illustrative mock values (user-provided verbally, no source link). 1000 ILS is a ceiling, not a fixed voucher amount — any load amount up to it gets 30% off.",
     "discount_logic": {
       "condition": { "type": "min_spend", "value": 0 },
@@ -358,7 +355,6 @@
       "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "yes", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     },
-    "club_id": "club_hever",
     "coupon_code": null
   },
   {
@@ -366,7 +362,7 @@
     "store_id": "019d209b8101_f9b9017f2ef608d3",
     "deal_type": "giftcard_discount",
     "title": "Behatsdaa card: 30% off, loadable up to 500 ILS",
-    "source": "behatsdaa",
+    "source_id": "behatsdaa",
     "notes": "Illustrative mock values (user-provided verbally, no source link). 500 ILS is a ceiling, not a fixed voucher amount — any load amount up to it gets 30% off.",
     "discount_logic": {
       "condition": { "type": "min_spend", "value": 0 },
@@ -385,7 +381,6 @@
       "store_coverage": { "is_include_outlets_stores": "unknown", "is_include_online_stores": "no", "is_include_physical_stores": "yes" },
       "eligibility": { "membership_required": "yes", "payment_method_required": null }
     },
-    "club_id": "club_behatsdaa",
     "coupon_code": null
   }
 ]
