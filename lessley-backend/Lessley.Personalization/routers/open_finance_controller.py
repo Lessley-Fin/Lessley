@@ -155,6 +155,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
         transactions = await service.get_user_transactions_by_account_async(
             req.email, req.account_id, req.time_filter, req.days
         )
+        transactions = service.sort_transactions(transactions)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -218,7 +219,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
     try:
         service = DIContainer.get_open_finance_service()
         transactions = await service.get_user_transactions_async(req.email, req.time_filter, req.days)
-
+        transactions = service.sort_transactions(transactions)
         response_time_ms = (time.time() - start_time) * 1000
 
         logger.info(

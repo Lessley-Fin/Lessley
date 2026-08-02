@@ -13,40 +13,30 @@ public static class MongoIndexInitializer
         var db     = client.GetDatabase(databaseName);
 
         await CreateNotificationIndexesAsync(db);
-        await CreateNotificationReadIndexesAsync(db);
         await CreateUserTagIndexAsync(db);
+        await CreateDealFinderIndexesAsync(db);
     }
 
     private static async Task CreateNotificationIndexesAsync(IMongoDatabase db)
     {
         var col = db.GetCollection<BsonDocument>("notifications");
 
+        // TTL — expire notifications after 90 days
         await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
             Builders<BsonDocument>.IndexKeys.Ascending("SentAt"),
             new CreateIndexOptions { ExpireAfter = Ttl, Name = "ttl_sentAt" }
         ));
-    }
 
-    private static async Task CreateNotificationReadIndexesAsync(IMongoDatabase db)
-    {
-        var col = db.GetCollection<BsonDocument>("notification_reads");
-
-        // TTL — expire read records alongside their parent notification
+        // Primary read path: all notifications for a user, newest first
         await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
-            Builders<BsonDocument>.IndexKeys.Ascending("CreatedAt"),
-            new CreateIndexOptions { ExpireAfter = Ttl, Name = "ttl_createdAt" }
+            Builders<BsonDocument>.IndexKeys.Ascending("UserId").Descending("SentAt"),
+            new CreateIndexOptions { Name = "idx_userId_sentAt" }
         ));
 
-        // Fetch all reads for a user quickly (primary read path)
+        // Mark-as-read lookup: find a specific notification for a user
         await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
-            Builders<BsonDocument>.IndexKeys.Ascending("UserId").Descending("CreatedAt"),
-            new CreateIndexOptions { Name = "idx_userId_createdAt" }
-        ));
-
-        // Look up reads by notification ID (used in MarkAsReadAsync)
-        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
-            Builders<BsonDocument>.IndexKeys.Ascending("NotificationId"),
-            new CreateIndexOptions { Name = "idx_notificationId" }
+            Builders<BsonDocument>.IndexKeys.Ascending("UserId").Ascending("IsRead"),
+            new CreateIndexOptions { Name = "idx_userId_isRead" }
         ));
     }
 
@@ -58,6 +48,36 @@ public static class MongoIndexInitializer
         await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
             Builders<BsonDocument>.IndexKeys.Ascending("Tags"),
             new CreateIndexOptions { Name = "idx_tags" }
+        ));
+    }
+
+    private static async Task CreateDealFinderIndexesAsync(IMongoDatabase db)
+    {
+        var stores = db.GetCollection<BsonDocument>("store_list");
+        var deals  = db.GetCollection<BsonDocument>("deal_list");
+
+        // store_list: MCC $in filter on array field
+        await stores.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("metadata.mcc_codes"),
+            new CreateIndexOptions { Name = "idx_store_mcc_codes" }
+        ));
+
+        // store_list: store name for sort / projection alongside $regex
+        await stores.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("name"),
+            new CreateIndexOptions { Name = "idx_store_name" }
+        ));
+
+        // deal_list: join key for the $in lookup from matching store IDs
+        await deals.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("store_id"),
+            new CreateIndexOptions { Name = "idx_deal_store_id" }
+        ));
+
+        // deal_list: title for $regex deal-text search
+        await deals.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("title"),
+            new CreateIndexOptions { Name = "idx_deal_title" }
         ));
     }
 }

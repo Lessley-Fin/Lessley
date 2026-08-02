@@ -2,6 +2,7 @@
 using Lessley.Gateway.Api.Services.Interfaces;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Lessley.Gateway.Api.Services.Classes
 {
@@ -36,7 +37,7 @@ namespace Lessley.Gateway.Api.Services.Classes
             return res?.AccessToken ?? throw new InvalidOperationException("Failed to extract the access token from the API response.");
         }
 
-        public async Task<ConnectionResponse> InitiateConnectionJourney(string username)
+        public async Task<ConnectionResponse> InitiateConnectionJourney(string username, string? redirectUrl = null)
         {
             var accessToken = await CreateAccessToken(username);
 
@@ -44,12 +45,18 @@ namespace Lessley.Gateway.Api.Services.Classes
             {
                 includeFakeProviders = true,
                 expiryDate = DateTime.UtcNow.AddYears(3).ToString("yyyy-MM-dd"),
-                allowBusiness = true
+                allowBusiness = true,
+                redirectUrl
+            };
+
+            var serializerOptions = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, "v2/connections")
             {
-                Content = JsonContent.Create(payload)
+                Content = JsonContent.Create(payload, options: serializerOptions)
             };
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

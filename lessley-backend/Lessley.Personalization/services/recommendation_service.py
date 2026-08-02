@@ -33,12 +33,12 @@ class RecommendationService:
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
-    def _mcc_codes_from_tags(self, tags: List[str]) -> List[int]:
-        """Convert stored category tags (MCC string labels) to MCC codes."""
-        mcc_set: set[int] = set()
+    def _mcc_codes_from_tags(self, tags: List[str]) -> List[str]:
+        """Convert stored category tags to category name strings."""
+        category_set: set[str] = set()
         for tag in tags:
-            mcc_set.update(self.mcc_service.get_mcc_codes_by_tag(tag))
-        return list(mcc_set)
+            category_set.update(self.mcc_service.get_mcc_codes_by_tag(tag))
+        return list(category_set)
 
     # ── Club matching ─────────────────────────────────────────────────────────
 
@@ -61,6 +61,9 @@ class RecommendationService:
             result = self.recommendation_core_service.get_club_recommendations_by_spending_analysis(
                 user_id, mcc_codes
             )
+
+            if self.publisher_service:
+                await self.publisher_service.publish_matching_clubs_calculated(user_id, result)
 
             logger.info(
                 "Club matching completed",
@@ -111,12 +114,11 @@ class RecommendationService:
                 )
 
             category_tags = [str(mcc) for mcc in categories]
-            for tag in category_tags:
-                await self.publisher_service.publish_group_notification(
-                    group_tag=tag,
-                    message=message,
-                    deal_id=deal_id,
-                )
+            await self.publisher_service.publish_deal_notification(
+                deal_id=deal_id,
+                message=message,
+                categories=category_tags,
+            )
 
             logger.info(
                 "Deal broadcast published",

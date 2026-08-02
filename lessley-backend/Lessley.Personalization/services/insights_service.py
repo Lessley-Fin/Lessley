@@ -106,7 +106,6 @@ class InsightsService:
             # updates the user's profile (and SignalR groups). Other services read them back via
             # UserRepository instead of re-running this calculation.
             mcc_tags = self._extract_mcc_tags(categories)
-            print(self.publisher_service, mcc_tags)
             if self.publisher_service and mcc_tags:
                 await self.publisher_service.publish_user_tag_assigned(user_id, mcc_tags)
 
@@ -245,6 +244,10 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
 
             insights = await self.processing_core_service.calculate_missed_savings_async(transactions)
+
+            if self.publisher_service:
+                serialized = [i.dict() if hasattr(i, "dict") else i for i in insights]
+                await self.publisher_service.publish_missed_savings_calculated(user_id, serialized)
 
             logger.info(
                 "Missed savings calculated successfully",

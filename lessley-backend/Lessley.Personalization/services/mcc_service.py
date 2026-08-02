@@ -41,34 +41,27 @@ class MccService:
         """
         return self._mcc_map.get(str(category_code), "N/A")
 
-    def get_mcc_codes_by_tag(self, tag: str) -> List[int]:
+    def get_mcc_codes_by_tag(self, tag: str) -> List[str]:
         """
-        Convert a user category tag to MCC codes.
+        Convert a user category tag to category name strings.
 
-        Categories are stored as MCC string labels (the MCC code itself), so a tag that is a
-        known MCC code maps directly to that code. A legacy text label falls back to a
-        description substring match. Used by RecommendationService for club-matching without
-        re-running the full spending analysis.
+        Tags are now stored as category names (e.g. "GROCERIES"). A tag that matches
+        a known category name is returned directly. A legacy numeric MCC code is
+        translated via the mcc_map. Used by RecommendationService for club-matching.
         """
         tag = str(tag).strip()
         if not tag:
             return []
 
-        # Primary path: the tag is an MCC code (MCC string label).
-        if tag in self._mcc_map:
-            try:
-                return [int(tag)]
-            except ValueError:
-                pass
+        categories = set(self._mcc_map.values())
 
-        # Fallback: legacy text label → match against MCC descriptions.
-        tag_upper = tag.upper()
-        codes: List[int] = []
-        for mcc_code, description in self._mcc_map.items():
-            desc_upper = description.upper()
-            if tag_upper in desc_upper or desc_upper in tag_upper:
-                try:
-                    codes.append(int(mcc_code))
-                except ValueError:
-                    pass
-        return codes
+        # Primary path: the tag is already a category name.
+        if tag in categories:
+            return [tag]
+
+        # Legacy path: the tag is a numeric MCC code — translate to category name.
+        category = self._mcc_map.get(tag)
+        if category:
+            return [category]
+
+        return []

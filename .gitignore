@@ -53,3 +53,6 @@ lessley-deals/swish_session/
 # Git worktrees
 .worktrees/
 lessley-deals/src/lessley_deals/enrichment/data/*
+
+# Local Claude settings
+.claude/settings.json

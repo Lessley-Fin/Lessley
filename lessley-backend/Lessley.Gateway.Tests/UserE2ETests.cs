@@ -17,19 +17,19 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         _factory = factory;
     }
 
-    // ── PUT /api/user/{email} ──────────────────────────────────────────────────
+    // ── PATCH /api/user/me ────────────────────────────────────────────────────
 
     [Fact]
     public async Task UpdateUser_AsAdmin_UpdatesClubsAndMatchingScore()
     {
         var email      = await CreateUserAsync();
-        var adminToken = NotificationE2ETests.BuildJwt("admin-upd", "Admin");
+        var adminToken = NotificationE2ETests.BuildJwt("admin-upd", "Admin", email);
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto      = new UpdateUserDto(null, new List<string> { "clubA", "clubB" }, 0.85);
-        var response = await http.PatchAsJsonAsync($"api/user/{email}", dto);
+        var dto      = new UpdateUserDto(null, new List<string> { "clubA", "clubB" }, "High");
+        var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -37,20 +37,20 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         var clubs = body.RootElement.GetProperty("clubs").EnumerateArray().Select(c => c.GetString()).ToList();
         Assert.Contains("clubA", clubs);
         Assert.Contains("clubB", clubs);
-        Assert.Equal(0.85, body.RootElement.GetProperty("matchingScore").GetDouble(), 2);
+        Assert.Equal("High", body.RootElement.GetProperty("matchLevel").GetString());
     }
 
     [Fact]
     public async Task UpdateUser_AsAdmin_UpdatesMutedTags()
     {
         var email      = await CreateUserAsync();
-        var adminToken = NotificationE2ETests.BuildJwt("admin-muted", "Admin");
+        var adminToken = NotificationE2ETests.BuildJwt("admin-muted", "Admin", email);
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
         var dto      = new UpdateUserDto(new List<string> { "spam", "ads" }, null, null);
-        var response = await http.PatchAsJsonAsync($"api/user/{email}", dto);
+        var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -64,46 +64,31 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task UpdateUser_NonAdminUpdatingOwnProfile_Returns200()
     {
         var email = await CreateUserAsync();
-        // JWT email claim matches the email being updated
         var viewerToken = NotificationE2ETests.BuildJwt("own-id", "Viewer", email);
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
 
-        var dto      = new UpdateUserDto(null, null, 0.6);
-        var response = await http.PatchAsJsonAsync($"api/user/{email}", dto);
+        var dto      = new UpdateUserDto(null, null, "Medium");
+        var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(0.6, body.RootElement.GetProperty("matchingScore").GetDouble(), 2);
-    }
-
-    [Fact]
-    public async Task UpdateUser_NonAdminUpdatingOtherUser_Returns403()
-    {
-        var email       = await CreateUserAsync();
-        var viewerToken = NotificationE2ETests.BuildJwt("viewer-id", "Viewer", "someone-else@test.com");
-
-        using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
-
-        var dto      = new UpdateUserDto(null, null, 0.5);
-        var response = await http.PatchAsJsonAsync($"api/user/{email}", dto);
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("Medium", body.RootElement.GetProperty("matchLevel").GetString());
     }
 
     [Fact]
     public async Task UpdateUser_UnknownEmail_Returns404()
     {
-        var adminToken = NotificationE2ETests.BuildJwt("admin-404", "Admin");
+        var fakeEmail  = $"nonexistent-{Guid.NewGuid():N}@test.com";
+        var adminToken = NotificationE2ETests.BuildJwt("admin-404", "Admin", fakeEmail);
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var dto      = new UpdateUserDto(null, null, 0.5);
-        var response = await http.PatchAsJsonAsync("api/user/nonexistent@test.com", dto);
+        var dto      = new UpdateUserDto(null, null, "Medium");
+        var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -112,8 +97,8 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task UpdateUser_WithoutToken_Returns401()
     {
         using var http = _factory.CreateClient();
-        var dto        = new UpdateUserDto(null, null, 0.5);
-        var response   = await http.PatchAsJsonAsync("api/user/any@test.com", dto);
+        var dto        = new UpdateUserDto(null, null, "Medium");
+        var response   = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -122,14 +107,14 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task UpdateUser_MatchLevelChange_TriggersRecalculation()
     {
         var email      = await CreateUserAsync();
-        var adminToken = NotificationE2ETests.BuildJwt("admin-recalc", "Admin");
+        var adminToken = NotificationE2ETests.BuildJwt("admin-recalc", "Admin", email);
 
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
         var before   = _factory.PersonalizationService.RecalculateCallCount;
-        var dto      = new UpdateUserDto(null, null, 0.75);
-        var response = await http.PatchAsJsonAsync($"api/user/{email}", dto);
+        var dto      = new UpdateUserDto(null, null, "High");
+        var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.True(_factory.PersonalizationService.RecalculateCallCount > before);
@@ -138,23 +123,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         Assert.True(body.RootElement.GetProperty("recalculated").GetBoolean());
     }
 
-    [Fact]
-    public async Task RecalculateEndpoint_AsAdmin_Returns202AndTriggers()
-    {
-        var email      = await CreateUserAsync();
-        var adminToken = NotificationE2ETests.BuildJwt("admin-recalc-ep", "Admin");
-
-        using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
-
-        var before   = _factory.PersonalizationService.RecalculateCallCount;
-        var response = await http.PostAsync($"api/user/{email}/recalculate", null);
-
-        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        Assert.True(_factory.PersonalizationService.RecalculateCallCount > before);
-    }
-
-    // ── PUT /api/user/{email}/tags ─────────────────────────────────────────────
+    // ── PUT /api/admin/users/{email}/tags ─────────────────────────────────────
 
     [Fact]
     public async Task UpdateUserTags_AsAdmin_UpdatesTags()
@@ -165,7 +134,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var response = await http.PutAsJsonAsync($"api/user/{email}/tags", new[] { "tech", "food" });
+        var response = await http.PutAsJsonAsync($"api/admin/users/{email}/tags", new[] { "tech", "food" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -184,7 +153,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", viewerToken);
 
-        var response = await http.PutAsJsonAsync($"api/user/{email}/tags", new[] { "tech" });
+        var response = await http.PutAsJsonAsync($"api/admin/users/{email}/tags", new[] { "tech" });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -197,7 +166,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var response = await http.PutAsJsonAsync("api/user/no-such-user@test.com/tags", new[] { "tech" });
+        var response = await http.PutAsJsonAsync("api/admin/users/no-such-user@test.com/tags", new[] { "tech" });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -206,7 +175,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task UpdateUserTags_WithoutToken_Returns401()
     {
         using var http = _factory.CreateClient();
-        var response   = await http.PutAsJsonAsync("api/user/any@test.com/tags", new[] { "tech" });
+        var response   = await http.PutAsJsonAsync("api/admin/users/any@test.com/tags", new[] { "tech" });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -248,10 +217,10 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         var user = await userManager.FindByEmailAsync(email);
 
         Assert.NotNull(user);
-        Assert.Equal(0.75, user!.MatchingScore);            // High → drop 75%
+        Assert.Equal(0.75, user!.MatchingScore);
         Assert.Contains("clubX", user.Clubs!);
         Assert.Contains("clubY", user.Clubs!);
-        Assert.Contains("5411", user.MutedTags!);           // muted categories → MutedTags
+        Assert.Contains("5411", user.MutedTags!);
         Assert.Contains("5812", user.MutedTags!);
     }
 
@@ -317,8 +286,6 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    // Creates a user and returns their email (the system-wide primary identifier
-    // used to address users on every route).
     private async Task<string> CreateUserAsync()
     {
         using var scope = _factory.Services.CreateScope();

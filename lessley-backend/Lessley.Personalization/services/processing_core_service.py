@@ -23,7 +23,7 @@ class ProcessingCoreService:
         self.mcc_service = mcc_service  # Inject the MCC service dependency
         self._deals_dict: Dict[str, List[Deal]] = {}  # {store_id: [deals]}
         self._stores_dict: Dict[str, Store] = {}  # {store_id: store}
-        self._stores_by_mcc: Dict[int, List[Store]] = {}  # {mcc_code: [stores]}
+        self._stores_by_mcc: Dict[str, List[Store]] = {}  # {category_name: [stores]}
         self._clubs_dict: Dict[str, Club] = {}  # {club_id: club}
         self._deals_loaded = False
 
@@ -75,7 +75,11 @@ class ProcessingCoreService:
                 aggregations={
                     "total_count": ("amount_spent", "count"),
                     "total_amount": ("amount_spent", "sum"),
-                    "mcc_codes": ("categoryCode", lambda x: list(x.dropna().unique())),
+                    "mcc_codes": ("categoryCode", lambda x: list({
+                        self.mcc_service.get_mcc_by_id(str(code))
+                        for code in x.dropna().unique()
+                        if self.mcc_service.get_mcc_by_id(str(code)) != "N/A"
+                    })),
                 },
                 sort_by=["total_count", "total_amount"],
                 ascending=[False, False],
@@ -301,36 +305,24 @@ class ProcessingCoreService:
         return store_id in self._deals_dict and len(self._deals_dict[store_id]) > 0
 
     def _find_alternative_stores_by_mcc(
-        self, mcc_code: str | int, exclude_store_id: str = None
+        self, category_name: str, exclude_store_id: str = None
     ) -> Dict[str, List[Store]]:
         """
-        Find alternative stores with active deals for a given MCC code.
+        Find alternative stores with active deals for a given category name.
         Groups stores by club.
 
         Args:
-            mcc_code: The MCC code to search for
+            category_name: The category name to search for (e.g. "GROCERIES")
             exclude_store_id: Store ID to exclude from results (the original merchant)
 
         Returns:
             Dictionary mapping club_id -> list of stores with deals (max 10 per club)
         """
-        if not mcc_code:
+        if not category_name:
             return {}
 
-        try:
-            mcc_int = int(mcc_code)
-        except (ValueError, TypeError):
-            logger.debug(
-                f"Invalid MCC code for alternative store search: {mcc_code}",
-                extra={
-                    "reason": "Data validation",
-                    "extra_data": {"mcc_code": str(mcc_code)},
-                },
-            )
-            return {}
-
-        # Find all stores with this MCC code
-        stores_with_mcc = self._stores_by_mcc.get(mcc_int, [])
+        # Find all stores with this category
+        stores_with_mcc = self._stores_by_mcc.get(category_name, [])
 
         # Filter to only stores with active deals, excluding the original merchant
         alternative_stores = [
@@ -441,8 +433,11 @@ class ProcessingCoreService:
 
                 processed_count += 1
 
-                # Find all stores with matching MCC that have active deals
-                stores_by_club = self._find_alternative_stores_by_mcc(transaction.categoryCode)
+                # Translate numeric categoryCode to category name string
+                category_name = self.mcc_service.get_mcc_by_id(transaction.categoryCode)
+
+                # Find all stores with matching category that have active deals
+                stores_by_club = self._find_alternative_stores_by_mcc(category_name)
                 had_discount = len(stores_by_club) > 0
                 missed_stores_list: List[MissedStoreDiscountSchema] = []
 
@@ -458,7 +453,7 @@ class ProcessingCoreService:
                     had_discount=had_discount,
                     missed_store_discont=missed_stores_list,
                     store_name=transaction.merchantName or "N/A",
-                    mcc_code=transaction.categoryCode,
+                    mcc_code=category_name,
                     mcc_description=(
                         transaction.category.sub if transaction.category and transaction.category.sub else "N/A"
                     ),
