@@ -136,3 +136,48 @@ def test_per_step_breakdown_1200_ils_hever_then_behatsdaa():
     assert behatsdaa_step["remaining_to_allocate"] == pytest.approx(0.0)
     assert behatsdaa_step["cumulative_savings"] == pytest.approx(360.0)
     assert behatsdaa_step["cumulative_discount_rate"] == pytest.approx(0.30)
+
+
+# --- max_uses_per_transaction fallback (real deal data usually only states a
+# monthly cap, never a per-transaction one) --------------------------------
+
+def _fox_hot_voucher(**overrides):
+    # Shaped after the real 019fb89cf72a_f7a1337da0714fc9 deal: "spend 500,
+    # pay 200" (300 ILS saved per unit), max_uses_per_transaction unset,
+    # max_uses_per_month: 5.
+    kwargs = dict(
+        reward_type="fixed_total_amount", reward_value=200,
+        cond_type="exact_spend", cond_value=500,
+        accepts_all=True, max_uses_per_month=5,
+    )
+    kwargs.update(overrides)
+    return mk_deal("fox_hot", "giftcard_discount", **kwargs)
+
+
+def test_voucher_repeat_use_falls_back_to_max_uses_per_month_when_unset():
+    # 1200 ILS cart: max_uses_per_transaction is unset, so it falls back to
+    # max_uses_per_month (5) as the ceiling — but only 2 units (1000 ILS)
+    # actually fit in a 1200 ILS cart, so 2 units get used, not 1 and not 5.
+    deal = _fox_hot_voucher()
+    allocation = allocate_tender(1200, 1, [deal], conflicts=lambda a, b: False)
+    assert allocation.total_savings == pytest.approx(600.0)
+    assert allocation.price_after == pytest.approx(600.0)
+    assert [u.ils_covered for u in allocation.used] == [1000.0]
+
+
+def test_voucher_defaults_to_single_use_when_no_limit_stated_at_all():
+    # Neither max_uses_per_transaction nor max_uses_per_month is stated —
+    # still defaults to a single use, same as before this fallback existed.
+    deal = _fox_hot_voucher(max_uses_per_month=None)
+    allocation = allocate_tender(1200, 1, [deal], conflicts=lambda a, b: False)
+    assert allocation.total_savings == pytest.approx(300.0)
+    assert [u.ils_covered for u in allocation.used] == [500.0]
+
+
+def test_voucher_explicit_transaction_limit_takes_priority_over_month():
+    # An explicit max_uses_per_transaction is honored as-is, never overridden
+    # by a (possibly larger) max_uses_per_month.
+    deal = _fox_hot_voucher(max_uses_per_transaction=1, max_uses_per_month=5)
+    allocation = allocate_tender(1200, 1, [deal], conflicts=lambda a, b: False)
+    assert allocation.total_savings == pytest.approx(300.0)
+    assert [u.ils_covered for u in allocation.used] == [500.0]

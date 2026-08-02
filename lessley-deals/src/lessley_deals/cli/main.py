@@ -1487,7 +1487,8 @@ def optimize_cmd(
         False, "--verbose", help="Print the eligibility prune, DP-sweep decisions, and exclusion reasons"
     ),
     output: Optional[str] = typer.Option(
-        None, "--output", "-o", help="Write the ranked results to this JSON file, for an application to load and display"
+        None, "--output", "-o",
+        help="Write the ranked results to <data-dir>/<output> (an application can load and display it)",
     ),
 ) -> None:
     """Find the cheapest legal stack of deals for a store + cart (deal-optimizer engine)."""
@@ -1555,7 +1556,7 @@ def optimize_cmd(
             cart_quantity=quantity,
             wallet_id=wallet_id,
         )
-        out_path = Path(output)
+        out_path = Path(data_dir) / output
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2, ensure_ascii=False)

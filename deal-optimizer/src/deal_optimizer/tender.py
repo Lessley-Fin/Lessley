@@ -91,7 +91,18 @@ def _classify(deal: dict[str, Any]) -> _Voucher | _RateOption | None:
     rt = rew.get("type")
 
     limits = (deal.get("constraints", {}) or {}).get("limits", {}) or {}
-    max_units = limits.get("max_uses_per_transaction") or 1
+    # A null max_uses_per_transaction means the source text never stated a
+    # per-transaction cap (the LLM enrichment prompt is instructed to emit
+    # null rather than guess) — it is NOT a claim of "exactly one". Fall back
+    # to max_uses_per_month as an upper bound instead: a single transaction
+    # can't span two calendar months, so a deal usable up to N times/month
+    # can't be used more than N times in one transaction either. Only default
+    # to 1 when neither limit is stated at all.
+    max_units = limits.get("max_uses_per_transaction")
+    if max_units is None:
+        max_units = limits.get("max_uses_per_month")
+    if max_units is None:
+        max_units = 1
 
     if rt == "fixed_total_amount" and cond_type in _VOUCHER_CONDS:
         return _Voucher(deal["id"], size=cval, savings=cval - rval, max_units=max_units)

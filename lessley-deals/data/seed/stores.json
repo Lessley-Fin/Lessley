@@ -145323,26 +145323,6 @@
     }
   },
   {
-    "id": "019dbe364854_82f699b1a5e1b7a7",
-    "name": "פוקס הום",
-    "name_forms": {
-      "normalized": "פוקס הומ",
-      "compact": "פוקסהומ",
-      "tokens": [
-        "הומ",
-        "פוקס"
-      ]
-    },
-    "created_at": "2026-04-24T12:00:00+00:00",
-    "updated_at": "2026-04-24T12:00:00+00:00",
-    "metadata": {
-      "store_url": "https://paisplus.co.il",
-      "image_urls": [
-        "https://media.dolcemaster.co.il/viper/logos/phpctuj0s7hgfshfksaZCA.jpg"
-      ]
-    }
-  },
-  {
     "id": "019dbe364854_cf095f443fa02f72",
     "name": "נעמן פורצלן",
     "name_forms": {
