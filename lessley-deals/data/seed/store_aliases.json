@@ -5799,7 +5799,9 @@
       "compact": "foxhome",
       "tokens": [
         "fox",
-        "home"
+        "home",
+        "הומ",
+        "פוקס"
       ]
     },
     "source": "review",
@@ -110498,21 +110500,6 @@
       "compact": "קלאסיקה",
       "tokens": [
         "קלאסיקה"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-24T12:00:00.000000+00:00"
-  },
-  {
-    "id": "019dbe364854_3319f1b568a1ca89",
-    "store_id": "019dbe364854_82f699b1a5e1b7a7",
-    "alias": "פוקס הום",
-    "alias_forms": {
-      "normalized": "פוקס הומ",
-      "compact": "פוקסהומ",
-      "tokens": [
-        "הומ",
-        "פוקס"
       ]
     },
     "source": "review",
