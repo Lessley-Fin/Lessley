@@ -222,8 +222,12 @@ services:
     # Host-published for dev tooling only (FastAPI docs at http://localhost:8002/docs).
     ports:
       - "8002:5002"
-    env_file:
-      - .env
+    # No env_file here on purpose: bulk-importing lessley-cd/.env would also inject its
+    # LOKI_URL (bare, no push path) alongside the Loki_Url below (correct, push path
+    # appended) — two different case-sensitive keys that pydantic-settings' case-insensitive
+    # matching resolves non-deterministically (whichever lands in os.environ last wins), so
+    # Personalization could silently bind the wrong one and fail to reach Loki. Every setting
+    # this service needs is already listed explicitly below; keep it that way.
     environment:
       - PYTHONUNBUFFERED=1
       # Same container port as prod.

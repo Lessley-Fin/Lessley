@@ -7,7 +7,11 @@
 #                 default); DNS for $DOMAIN must point here for Let's Encrypt.
 #   3. Swagger / docs — ASPNETCORE_ENVIRONMENT/Environment=Production here -> Swagger
 #                 (/swagger) and FastAPI /docs are OFF; dev runs Development -> ON.
-#   4. mongo-express is removed (not needed in prod).
+#   4. mongo-express, Grafana, and the RabbitMQ management UI are on the private
+#      network like everything else, reached only through Caddy (same domain + cert as
+#      the main site) on ports 8543/8544/8545 below — never host-port-published directly.
+#      Remove the ones you don't want reachable from outside this machine. See the
+#      "Option B" blocks at the bottom of Caddyfile.
 # Everything else (networking, depends_on health-gating, env var names) is kept
 # identical to dev on purpose — that's what makes this deployable with confidence.
 #
@@ -33,12 +37,25 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      # Admin UIs, same domain/cert as above on their own ports (Caddyfile "Option B" —
+      # for a private/institutional DOMAIN where subdomains aren't viable). Remove any of
+      # these lines you don't want reachable from outside this machine.
+      - "8543:8543"   # RabbitMQ management UI
+      - "8544:8544"   # Grafana
+      - "8545:8545"   # mongo-express
     environment:
       - DOMAIN=${DOMAIN}
       - ACME_EMAIL=${ACME_EMAIL}
       - RABBIT_DOMAIN=${RABBIT_DOMAIN:-}
       - RABBIT_BASICAUTH_USER=${RABBIT_BASICAUTH_USER:-}
       - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
+      # Optional admin UIs, same opt-in pattern as RabbitMQ above — see the commented
+      # blocks at the bottom of Caddyfile. Unused unless you set *_DOMAIN AND uncomment
+      # the matching block.
+      - GRAFANA_DOMAIN=${GRAFANA_DOMAIN:-}
+      - MONGOEXPRESS_DOMAIN=${MONGOEXPRESS_DOMAIN:-}
+      - MONGOEXPRESS_BASICAUTH_USER=${MONGOEXPRESS_BASICAUTH_USER:-}
+      - MONGOEXPRESS_BASICAUTH_HASH=${MONGOEXPRESS_BASICAUTH_HASH:-}
       # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
       - EDGE_API_KEY=${EDGE_API_KEY}
       # Optional: a full `tls` directive to make Caddy load a pre-issued cert instead of
@@ -57,6 +74,9 @@ services:
     depends_on:
       - gateway
       - personalization
+      - rabbitmq
+      - grafana
+      - mongo-express
 
   # ── RabbitMQ (no host ports; management only via Caddy if RABBIT_DOMAIN set) ─
   rabbitmq:
@@ -94,6 +114,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ── Mongo Express (no host ports; reachable only via Caddy if MONGOEXPRESS_DOMAIN set) ─
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASS}
+      ME_CONFIG_MONGODB_URL: mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${DB_PASS}
+      ME_CONFIG_REQUEST_SIZE: ${DB_FILE_LIMIT_SIZE}
+    networks:
+      - backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
   # ── Logging (internal only; reach via SSH tunnel when needed) ───────────────
   loki:
@@ -172,8 +210,12 @@ services:
       context: ../lessley-backend/Lessley.Personalization
       dockerfile: Dockerfile
     restart: always
-    env_file:
-      - .env
+    # No env_file here on purpose: bulk-importing lessley-cd/.env would also inject its
+    # LOKI_URL (bare, no push path) alongside the Loki_Url below (correct, push path
+    # appended) — two different case-sensitive keys that pydantic-settings' case-insensitive
+    # matching resolves non-deterministically (whichever lands in os.environ last wins), so
+    # Personalization could silently bind the wrong one and fail to reach Loki. Every setting
+    # this service needs is already listed explicitly below; keep it that way.
     environment:
       - PYTHONUNBUFFERED=1
       - APP_PORT=5002
