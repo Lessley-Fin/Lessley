@@ -1,4 +1,73 @@
+# ── Lessley DEVELOPMENT stack ─────────────────────────────────────────────────
+# Dev mirrors production EXACTLY: same Caddy operation and same networking.
+#   * Caddy is the ONLY host-published web edge. It terminates TLS, serves the built
+#     React SPA, and routes /api/v1 + /hubs to the owning service BY SERVICE NAME over
+#     the private `backend` network — byte-for-byte the same Caddyfile as prod.
+#   * The browser talks ONLY to Caddy (https://localhost). It never addresses the
+#     gateway or personalization directly, and never knows personalization exists.
+#
+# Dev differs from docker-compose.prod.yaml ONLY in the ways tasks.txt allows:
+#   1. URLs           — DOMAIN=localhost (Caddy auto-issues an internal-CA cert) vs our
+#                       college DOMAIN + a pre-issued cert (CADDY_TLS_DIRECTIVE) in prod.
+#                       Same Caddyfile.
+#   2. Swagger / docs  — ASPNETCORE_ENVIRONMENT/Environment=Development here → Swagger
+#                       (/swagger) and FastAPI /docs are ON; prod runs Production → OFF.
+#   3. mongo-express   — present here for DB browsing; removed in prod.
+# Plus dev-only conveniences that DO NOT touch Caddy or the edge networking:
+#   - infra + service ports are also host-published so you can reach Swagger
+#     (localhost:8001/swagger), FastAPI docs (localhost:8002/docs), Mongo (27017),
+#     RabbitMQ (5672/15672), Grafana (3000), mongo-express (8081) from the host.
+#   - HSTS is disabled (max-age=0) so https://localhost does not force other local
+#     http projects to https.
+#
+# Usage:  .\manage.bat infra up   (mongo, rabbit, loki, grafana, mongo-express, caddy)
+#         .\manage.bat app build  (gateway, personalization)
+# Rebuild the SPA after frontend changes:  docker compose up -d --build caddy
+# First run (trust the local cert): see lessley-cd/README.md.
+
+networks:
+  web:        # public edge (Caddy only)
+  backend:    # private app/infra network — services reach each other by name
+    internal: false   # keep false so containers can reach the internet (Let's Encrypt, Open Finance)
+
 services:
+  # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
+  # Built from the frontend Dockerfile so the image bundles the compiled SPA at
+  # /srv/frontend; the Caddyfile (mounted below) serves it and routes /api/v1 + /hubs.
+  # Identical to the prod `caddy` service except DOMAIN=localhost and HSTS disabled.
+  caddy:
+    build:
+      context: ../lessley-frontend
+      dockerfile: Dockerfile
+    image: lessley/edge:dev
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # localhost → Caddy serves HTTPS with its own internal CA (no ACME involved).
+      - DOMAIN=${DOMAIN:-localhost}
+      - ACME_EMAIL=${ACME_EMAIL:-dev@lessley.local}
+      # Disable HSTS in dev so https://localhost cannot pin other localhost http apps.
+      - HSTS_MAX_AGE=max-age=0
+      # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
+      - EDGE_API_KEY=${EDGE_API_KEY:-dev-edge-key}
+      # Optional: a full `tls` directive to make Caddy load a pre-issued cert instead of
+      # automatic HTTPS. See ./certs mount below and lessley-cd/CUSTOM-CA-CERT.md.
+      - CADDY_TLS_DIRECTIVE=${CADDY_TLS_DIRECTIVE:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+      - backend
+    depends_on:
+      - gateway
+      - personalization
+
   # --- RabbitMQ Service ---
   rabbitmq:
     image: rabbitmq:4.1.4-management
@@ -12,6 +81,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -31,13 +102,15 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # --- Mongo Express (MongoDB GUI) ---
+  # --- Mongo Express (MongoDB GUI) — DEV ONLY (removed in prod) ---
   mongo-express:
     image: mongo-express:latest
     container_name: mongo_express
@@ -51,22 +124,27 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: ${DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${DB_PASS}
       ME_CONFIG_REQUEST_SIZE: ${DB_FILE_LIMIT_SIZE}
+    networks:
+      - backend
     depends_on:
       - mongodb
 
   loki:
     image: grafana/loki:latest
     container_name: loki
+    restart: always
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data:/tmp/loki
-    restart: unless-stopped
+    networks:
+      - backend
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    restart: always
     env_file:
       - .env
     ports:
@@ -76,31 +154,36 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
     volumes:
       - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - backend
     depends_on:
       - loki
 
-  # --- Your Microservices ---
+  # --- Gateway (reached from the edge as gateway:5001, same as prod) ---
   gateway:
     image: lessley/gateway:dev
     build:
       context: ../lessley-backend/Lessley.Gateway.Api
       dockerfile: Dockerfile
     restart: always
+    # Host-published for dev tooling only (Swagger at http://localhost:8001/swagger).
+    # Caddy still reaches it privately as gateway:5001 — the edge path is identical to prod.
     ports:
-      - "5001:8080" # Map host 5001 to container 8080
+      - "8001:5001"
     environment:
-      # 1. Development Mode (Enables Swagger)
+      # Development mode → Swagger enabled (the only intended dev/prod behavioural delta).
       - ASPNETCORE_ENVIRONMENT=Development
+      # Same container port as prod so the Caddyfile's `reverse_proxy gateway:5001` is identical.
+      - ASPNETCORE_HTTP_PORTS=5001
 
-      # CRITICAL: Use the service names (rabbitmq, postgres) not localhost
+      # Reach infra by service name over the backend network.
       - ConnectionStrings__MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - ConnectionStrings__RabbitMq=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
 
-      # 2. JWT Config (Using double underscore __ to represent nesting)
       - JwtConfig__Key=${JWT_KEY}
       - JwtConfig__Issuer=${JWT_ISSUER}
       - JwtConfig__Audience=${JWT_AUDIENCE}
 
-      # 3. Bootstrap Config
       - Bootstrap__Key=${BOOTSTRAP_KEY}
       - Bootstrap__Username=${BOOTSTRAP_USER}
       - Bootstrap__Password=${BOOTSTRAP_PASSWORD}
@@ -109,44 +192,69 @@ services:
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
 
-      # 4. RabbitMQ Connection
-      - ConnectionStrings__RabbitMq=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+      # The Gateway never calls Personalization over HTTP. It only needs to recognise the
+      # edge: Caddy stamps X-Edge-Key on every request it forwards here.
+      - Edge__ApiKey=${EDGE_API_KEY:-dev-edge-key}
 
-      # 5. Logging Configuration
+      # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
+      - AllowedHosts=${DOMAIN:-localhost}
+
       - Loki__Url=${LOKI_URL}
+    networks:
+      - backend
     depends_on:
-      - mongodb
-      - rabbitmq
-      - loki
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      loki:
+        condition: service_started
 
-  # --- Lessley Personalization Service ---
+  # --- Personalization (internal only; reached as personalization:5002, same as prod) ---
   personalization:
     image: lessley/personalization:dev
     build:
       context: ../lessley-backend/Lessley.Personalization
       dockerfile: Dockerfile
     restart: always
+    # Host-published for dev tooling only (FastAPI docs at http://localhost:8002/docs).
     ports:
-      - "5002:8001"
-    env_file:
-      - .env
+      - "8002:5002"
+    # No env_file here on purpose: bulk-importing lessley-cd/.env would also inject its
+    # LOKI_URL (bare, no push path) alongside the Loki_Url below (correct, push path
+    # appended) — two different case-sensitive keys that pydantic-settings' case-insensitive
+    # matching resolves non-deterministically (whichever lands in os.environ last wins), so
+    # Personalization could silently bind the wrong one and fail to reach Loki. Every setting
+    # this service needs is already listed explicitly below; keep it that way.
     environment:
       - PYTHONUNBUFFERED=1
-      - ASPNETCORE_ENVIRONMENT=Development
-      - RabbitMQ_Enabled=False
+      # Same container port as prod.
+      - APP_PORT=5002
+      # Development → FastAPI /docs enabled (the only intended dev/prod behavioural delta).
+      - Environment=Development
+      - RabbitMQ_Enabled=True
       - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
       - ConnectionStrings_MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
       - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
       - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
+      # Same X-Edge-Key gate as prod: only Caddy may reach this service.
+      - Edge_ApiKey=${EDGE_API_KEY:-dev-edge-key}
       - Loki_Url=${LOKI_URL}/loki/api/v1/push
+    networks:
+      - backend
     depends_on:
-      - rabbitmq
-      - mongodb
-      - loki
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      loki:
+        condition: service_started
 
 # Defined volumes for persistence
 volumes:
   rabbitmq_data:
   mongodb_data:
   loki_data:
+  caddy_data:
+  caddy_config:

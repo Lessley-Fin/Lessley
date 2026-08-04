@@ -11,12 +11,17 @@ class Settings(BaseSettings):
     OpenFinanceConfig_ClientId: str | None = None
     OpenFinanceConfig_ClientSecret: str | None = None
     OpenFinanceConfig_BaseUrl: str | None = None
-    Loki_Url: str | None = None
-    Gateway_ApiKey: str | None = None
-
-    Loki_Url: str | None = None  # Optional setting for Loki logging  
-    Cors_AllowOrigins: str = "http://localhost:8000,http://127.0.0.1:8000"  # Comma-separated origins
     Loki_Url: str | None = None  # Optional setting for Loki logging
+    Cors_AllowOrigins: str = "http://localhost:8000,http://127.0.0.1:8000"  # Comma-separated origins
+
+    # Shared secret the edge (Caddy) stamps on every inbound request as X-Edge-Key.
+    # Server-only — never shipped to a browser. Blank disables edge verification.
+    Edge_ApiKey: str | None = None
+    # Mode 1 escape hatch: services run locally with no Caddy in front. Only honoured when
+    # Environment is also Development, so production cannot be opened by this flag alone.
+    # Identity while it's active comes from decoding the Gateway's access_token cookie
+    # directly (see dependencies/auth.py:email_from_access_token) rather than a fixed value.
+    Edge_AllowUnverified: bool = False
 
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

@@ -14,7 +14,6 @@ public class UserControllerTests
     private readonly Mock<IUserService> _userService = new();
     private readonly Mock<IOpenFinanceService> _openFinanceService = new();
     private readonly Mock<IPersonalizationService> _personalizationService = new();
-    private readonly Mock<IPersonalizationProxyService> _personalizationProxy = new();
     private readonly Mock<INotificationService> _notificationService = new();
     private readonly UserController _controller;
 
@@ -24,7 +23,6 @@ public class UserControllerTests
             _userService.Object,
             _openFinanceService.Object,
             _personalizationService.Object,
-            _personalizationProxy.Object,
             _notificationService.Object);
 
         SetCallerContext("user@test.com", "Admin");
@@ -141,40 +139,4 @@ public class UserControllerTests
             Times.Once);
     }
 
-    // ── GetInsightsCategories (GET /api/user/insights/categories) ──────────────
-
-    [Fact]
-    public async Task GetInsightsCategories_InvalidDays_Returns400()
-    {
-        var result = await _controller.GetInsightsCategories(days: 0);
-
-        Assert.IsType<BadRequestObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task GetInsightsCategories_DaysOver365_Returns400()
-    {
-        var result = await _controller.GetInsightsCategories(days: 400);
-
-        Assert.IsType<BadRequestObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task GetInsightsCategories_ValidDays_ProxiesToPersonalization()
-    {
-        var fakeResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-        {
-            Content = new StringContent("{\"data\":[]}", System.Text.Encoding.UTF8, "application/json")
-        };
-        _personalizationProxy
-            .Setup(p => p.GetInsightsCategoriesAsync("user@test.com", 30, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(fakeResponse);
-
-        var result = await _controller.GetInsightsCategories(days: 30);
-
-        Assert.IsType<ObjectResult>(result);
-        _personalizationProxy.Verify(
-            p => p.GetInsightsCategoriesAsync("user@test.com", 30, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
 }

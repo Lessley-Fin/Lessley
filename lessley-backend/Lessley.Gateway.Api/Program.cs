@@ -22,6 +22,19 @@ builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomRateLimiting();
 builder.Services.AddMassTransitWithRabbitMq(builder.Configuration, builder.Environment);
 
+// ── Forwarded headers (behind the Caddy TLS-terminating proxy) ──────────────────
+// Honor X-Forwarded-Proto/-For so the app sees the original HTTPS scheme and client
+// IP. The gateway is only reachable via Caddy on the private Docker network, so the
+// proxy is trusted (known-proxy lists cleared).
+builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // ── CORS ───────────────────────────────────────────────────────────────────────
 var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>()
     ?? ["http://localhost:8000"];
@@ -41,18 +54,9 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
     client.BaseAddress = new Uri(baseUrl);
 });
 
-builder.Services.AddHttpClient<IPersonalizationProxyService, PersonalizationProxyService>(client =>
-{
-    var section = builder.Configuration.GetSection("PersonalizationConfig");
-    var baseUrl = section["BaseUrl"]
-        ?? throw new InvalidOperationException("Personalization BaseUrl must be configured");
-    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-    var apiKey = section["GatewayApiKey"];
-    if (!string.IsNullOrEmpty(apiKey))
-        client.DefaultRequestHeaders.Add("X-Gateway-Key", apiKey);
-});
-
-builder.Services.Configure<PersonalizationConfig>(builder.Configuration.GetSection("PersonalizationConfig"));
+// No HttpClient to Personalization: the Gateway never calls it over HTTP. Client traffic
+// reaches Personalization through Caddy; server-to-server work goes over RabbitMQ.
+builder.Services.Configure<EdgeConfig>(builder.Configuration.GetSection("Edge"));
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 
 builder.Services.AddHttpContextAccessor();
@@ -90,14 +94,30 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ── MongoDB indexes (TTL + performance) ────────────────────────────────────────
-var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb")!;
-await MongoIndexInitializer.CreateIndexesAsync(mongoConnectionString, "lessley");
+// Skipped under the in-memory integration-test host, which has no real MongoDB.
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb")!;
+    await MongoIndexInitializer.CreateIndexesAsync(mongoConnectionString, "lessley");
+}
 
 // ── Middleware pipeline ────────────────────────────────────────────────────────
+// Must run before anything that inspects the request scheme or client IP.
+app.UseForwardedHeaders();
+
+// Security headers on every response (defense-in-depth with the Caddy edge headers).
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    // TLS is terminated at Caddy, which also redirects HTTP→HTTPS. The app only needs
+    // to assert HSTS so browsers refuse future plaintext connections.
+    app.UseHsts();
 }
 
 app.UseExceptionHandler(errorApp =>
@@ -128,9 +148,15 @@ app.UseSerilogRequestLogging(options =>
 
 app.UseRouting();
 app.UseCors("DefaultCorsPolicy");
+// Reject anything that did not arrive through the edge, before spending work on auth.
+app.UseMiddleware<EdgeVerificationMiddleware>();
 app.UseAuthentication();
+app.UseMiddleware<CsrfProtectionMiddleware>();
 app.UseMiddleware<LogContextMiddleware>();
-app.UseRateLimiter();
+// Skip rate limiting under the in-memory integration-test host, where every request
+// shares a null client IP and would otherwise collide in one partition.
+if (!app.Environment.IsEnvironment("Testing"))
+    app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();

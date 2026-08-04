@@ -46,8 +46,12 @@ public class AdminController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Bootstrap([FromQuery] string? key = null)
     {
+        // Fail closed: with no key configured, bootstrap is disabled entirely rather than
+        // left open to the first anonymous caller.
         var bootstrapKey = _configuration["Bootstrap:Key"];
-        if (bootstrapKey != null && key != bootstrapKey)
+        if (string.IsNullOrEmpty(bootstrapKey))
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Bootstrap is disabled: no Bootstrap:Key configured.");
+        if (key != bootstrapKey)
             return Unauthorized("Invalid bootstrap key");
 
         var count = await _userManager.Users.CountAsync();

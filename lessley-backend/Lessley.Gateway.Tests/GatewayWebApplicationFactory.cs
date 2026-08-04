@@ -1,4 +1,5 @@
 using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -14,14 +15,6 @@ namespace Lessley.Gateway.Tests;
 /// </summary>
 public sealed class FakePersonalizationService : IPersonalizationService
 {
-    public int RecalculateCallCount;
-
-    public Task RecalculateCategoriesAsync(string userId, CancellationToken ct = default)
-    {
-        Interlocked.Increment(ref RecalculateCallCount);
-        return Task.CompletedTask;
-    }
-
     public Task TriggerCalculateMissedSavingsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
     public Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
 }
@@ -31,15 +24,7 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
     internal const string JwtKey = "e2e-test-secret-key-must-be-at-least-32-chars!!";
     internal const string Issuer = "test-issuer";
     internal const string Audience = "test-audience";
-
-    public GatewayWebApplicationFactory()
-    {
-        Environment.SetEnvironmentVariable("JwtConfig__Key",     JwtKey);
-        Environment.SetEnvironmentVariable("JwtConfig__Issuer",  Issuer);
-        Environment.SetEnvironmentVariable("JwtConfig__Audience", Audience);
-        Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb", "mongodb://localhost:27017");
-        Environment.SetEnvironmentVariable("PersonalizationConfig__BaseUrl", "http://localhost:8001");
-    }
+    internal const string EdgeKey = "test-edge-key";
 
     private readonly string _dbName = $"GatewayE2ETestDb_{Guid.NewGuid():N}";
 
@@ -48,6 +33,17 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        // Per-host settings, NOT process-global environment variables. xUnit runs test
+        // classes in parallel, so a factory clearing globals on dispose used to yank
+        // configuration out from under a host another class was still building — the
+        // cause of the suite's intermittent mass 401 failures.
+        builder.UseSetting("JwtConfig:Key",      JwtKey);
+        builder.UseSetting("JwtConfig:Issuer",   Issuer);
+        builder.UseSetting("JwtConfig:Audience", Audience);
+        builder.UseSetting("ConnectionStrings:MongoDb", "mongodb://localhost:27017");
+        // Exercises the real edge-verification path — ConfigureClient stamps the key
+        // the way Caddy does in production.
+        builder.UseSetting("Edge:ApiKey", EdgeKey);
 
         builder.ConfigureTestServices(services =>
         {
@@ -64,13 +60,11 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    protected override void Dispose(bool disposing)
+    /// <summary>Every test client presents the edge key, standing in for Caddy's header_up.</summary>
+    protected override void ConfigureClient(HttpClient client)
     {
-        Environment.SetEnvironmentVariable("JwtConfig__Key",     null);
-        Environment.SetEnvironmentVariable("JwtConfig__Issuer",  null);
-        Environment.SetEnvironmentVariable("JwtConfig__Audience", null);
-        Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb", null);
-        Environment.SetEnvironmentVariable("PersonalizationConfig__BaseUrl", null);
-        base.Dispose(disposing);
+        client.DefaultRequestHeaders.Add(EdgeVerificationMiddleware.EdgeKeyHeader, EdgeKey);
+        base.ConfigureClient(client);
     }
+
 }

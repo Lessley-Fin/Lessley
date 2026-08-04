@@ -1,7 +1,5 @@
 import { useAuthStore } from "@/features/auth/store"
-import { isTokenExpired, refreshAccessToken } from "@/lib/auth"
-
-const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:8001"
+import { applyCsrfHeader, refreshAccessToken } from "@/lib/auth"
 
 function collectMessages(value: unknown): string[] {
   if (typeof value === "string") {
@@ -48,35 +46,35 @@ export async function apiFetch<T>(
   options?: RequestInit & { skipAuth?: boolean; errorMessage?: string },
 ): Promise<T> {
   const { skipAuth, errorMessage, ...fetchOptions } = options ?? {}
-  const headers = new Headers(fetchOptions.headers)
 
-  if (!skipAuth) {
-    let token = useAuthStore.getState().accessToken
-    if (token && isTokenExpired(token)) {
+  // Cookies carry auth; credentials:"include" sends them (and receives Set-Cookie).
+  // CSRF header is added for state-changing methods.
+  const doFetch = () =>
+    fetch(path, {
+      ...fetchOptions,
+      credentials: "include",
+      headers: applyCsrfHeader(new Headers(fetchOptions.headers), fetchOptions.method),
+    })
+
+  let response: Response
+  try {
+    response = await doFetch()
+
+    // The access cookie may have expired — try a single cookie-based refresh, then retry.
+    if (response.status === 401 && !skipAuth) {
       const refreshed = await refreshAccessToken()
       if (refreshed) {
-        useAuthStore.getState().setAccessToken(refreshed)
-        token = refreshed
+        response = await doFetch()
       } else {
         useAuthStore.getState().logout()
         throw new ApiError("Session expired. Please sign in again.", 401)
       }
     }
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`)
-    }
-  }
-
-  let response: Response
-  try {
-    response = await fetch(`${API_GATEWAY_URL}${path}`, {
-      ...fetchOptions,
-      headers,
-    })
   } catch (error) {
+    if (error instanceof ApiError) throw error
     if (error instanceof TypeError) {
       throw new ApiError(
-        `Cannot reach API Gateway at ${API_GATEWAY_URL}. Check that the service is running.`,
+        "Cannot reach the API. Check that the edge (Caddy) and gateway are running.",
         0,
       )
     }
@@ -102,5 +100,3 @@ export function jsonBody(data: unknown): RequestInit {
     body: JSON.stringify(data),
   }
 }
-
-export { API_GATEWAY_URL }

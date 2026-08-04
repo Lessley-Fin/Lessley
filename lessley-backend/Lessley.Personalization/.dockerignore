@@ -1,0 +1,23 @@
+# Never bake the local (Windows) virtualenv or stale bytecode into the image — they
+# bloat it and can shadow the real source (caused a stale-model crash during testing).
+.venv
+venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
+# Local secrets / env — provided at runtime via compose, not baked in.
+.env
+.env.*
+!.env.template
+
+# Tests and dev cruft
+tests
+test_*.py
+.pytest_cache
+.mypy_cache
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md

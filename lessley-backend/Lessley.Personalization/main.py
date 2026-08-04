@@ -3,6 +3,7 @@ import asyncio
 import json
 from fastapi import FastAPI, status, Request
 import aio_pika
+import httpx
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -23,7 +24,7 @@ from routers import recommendation_controller
 from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
-from middleware.gateway_auth_middleware import GatewayAuthMiddleware
+from middleware.edge_auth_middleware import EdgeAuthMiddleware, dev_bypass_active
 import uuid
 
 # --- RabbitMQ Configuration ---
@@ -307,6 +308,32 @@ async def connection_error_handler(request: Request, exc: ConnectionError):
     )
 
 
+@app.exception_handler(httpx.HTTPStatusError)
+async def upstream_http_error_handler(request: Request, exc: httpx.HTTPStatusError):
+    """An upstream API refusing a request is a bad gateway, not an internal fault of ours."""
+    endpoint_logger = logging.getLogger(__name__)
+    upstream_status = exc.response.status_code
+    endpoint_logger.error(
+        f"Upstream service returned {upstream_status} for {exc.request.url}",
+        extra={
+            "reason": "External API call failed",
+            "extra_data": {
+                "error_type": "HTTPStatusError",
+                "upstream_status": upstream_status,
+                "upstream_url": str(exc.request.url),
+            },
+        },
+    )
+    return JSONResponse(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        headers={"X-Request-ID": getattr(request.state, "request_id", "unknown")},
+        content={
+            "detail": f"Upstream service error ({upstream_status})",
+            "request_id": getattr(request.state, "request_id", "unknown"),
+        },
+    )
+
+
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     endpoint_logger = logging.getLogger(__name__)
@@ -328,8 +355,15 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.state.limiter = limiter
 
 # --- Middleware Registration (order matters) ---
-app.add_middleware(GatewayAuthMiddleware)     # Enforce gateway-only access
+app.add_middleware(EdgeAuthMiddleware)        # Enforce edge-only access
 app.add_middleware(UnifiedContextMiddleware)  # Inject Request ID and logging context
+
+if dev_bypass_active():
+    logging.getLogger(__name__).warning(
+        "EDGE VERIFICATION BYPASSED — X-Edge-Key is not required and identity falls back to "
+        "decoding the access_token cookie directly. Development only; never enable "
+        "Edge_AllowUnverified outside local debugging."
+    )
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)

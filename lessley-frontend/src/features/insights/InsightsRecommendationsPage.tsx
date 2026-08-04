@@ -32,7 +32,7 @@ export function InsightsRecommendationsPage() {
   const initOpenFinance = useInitOpenFinance()
 
   const accountHighlights = topAccounts.slice(0, INSIGHTS_DEFAULTS.ACCOUNT_HIGHLIGHTS_LIMIT)
-  const personalizationError = txError instanceof Error ? txError.message : ""
+  const insightsError = txError instanceof Error ? txError.message : ""
 
   const handleConnectOpenBanking = () => {
     initOpenFinance.mutate(undefined, {
@@ -76,10 +76,10 @@ export function InsightsRecommendationsPage() {
         transactions={transactions}
         categories={categoryInsights}
         isLoading={txLoading}
-        error={personalizationError}
+        error={insightsError}
       />
 
-      {!txLoading && !personalizationError ? (
+      {!txLoading && !insightsError ? (
         <TopStoresCard stores={topStoresRaw} />
       ) : null}
 

@@ -1,0 +1,117 @@
+# ── Lessley edge: TLS + SPA host + API proxy (single origin) ──────────────────
+# ONE Caddyfile drives BOTH dev and prod — same operation, same networking. Caddy is
+# the only host-published web edge. It terminates TLS, serves the built React SPA, and routes
+# /api/v1 to whichever service owns the prefix over the private Docker network. Because the
+# SPA and API share one origin, there is no CORS and SameSite=Strict "just works".
+#
+# The only things that differ between dev and prod are env values (not this file):
+#   * DOMAIN=localhost (dev) → Caddy issues its own internal-CA cert automatically.
+#     DOMAIN=<college host> (prod) → CADDY_TLS_DIRECTIVE below loads our pre-issued cert
+#     instead (required in prod; see CUSTOM-CA-CERT.md). Never ACME either way — the
+#     `email` directive just below is dead weight kept only because Caddy's global
+#     options block requires *some* non-empty value there to parse.
+#   * HSTS_MAX_AGE=max-age=0 (dev) disables HSTS so https://localhost cannot pin other
+#     localhost http projects; prod leaves it unset → the strong default below applies.
+#
+# The SPA files are baked into this image at /srv/frontend (see lessley-frontend/Dockerfile).
+# Required env vars (.env.template): DOMAIN, ACME_EMAIL (unused, see above), CADDY_TLS_DIRECTIVE (prod).
+# Optional: HSTS_MAX_AGE.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	# Dev leaves this empty (blank line, skipped) → Caddy's own internal-CA cert.
+	# Prod sets it to load our pre-issued cert — required there; see CUSTOM-CA-CERT.md.
+	{$CADDY_TLS_DIRECTIVE:}
+	encode gzip
+
+	# Security headers applied to every response on this site.
+	# HSTS is env-driven so dev (localhost) can send max-age=0 while prod keeps the
+	# strong default; the directive itself is identical in both environments.
+	header {
+		Strict-Transport-Security "{$HSTS_MAX_AGE:max-age=31536000; includeSubDomains; preload}"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "no-referrer"
+		-Server
+	}
+
+	# Nothing outside may assert edge trust or identity. Stripped before any routing so a
+	# client cannot forge either header; the values below are set by us, on the way in.
+	request_header -X-Edge-Key
+	request_header -X-Auth-Email
+
+	# ── Personalization-owned prefixes ──────────────────────────────────────────
+	# These MUST precede the general /api/v1/* handler: `handle` blocks match top-down.
+	# Personalization has no user-level authorization of its own — it trusts X-Auth-Email
+	# — so forward_auth is what makes exposing it safe. Do not add a route here without it.
+	@personalization path /api/v1/insights/* /api/v1/open-finance/* /api/v1/clubs/*
+	handle @personalization {
+		forward_auth gateway:5001 {
+			uri /api/auth/verify
+			copy_headers X-Auth-Email
+			header_up X-Edge-Key {$EDGE_API_KEY}
+		}
+
+		uri strip_prefix /api/v1
+		reverse_proxy personalization:5002 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+			header_up X-Request-ID {http.request.uuid}
+		}
+	}
+
+	# ── Gateway ─────────────────────────────────────────────────────────────────
+	# Rewritten back to /api/* so the Gateway's existing controller routes are unchanged.
+	# Not forward_auth'd: the Gateway authenticates its own requests, as it always has.
+	handle /api/v1/* {
+		uri replace /api/v1/ /api/ 1
+		reverse_proxy gateway:5001 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+			header_up X-Request-ID {http.request.uuid}
+		}
+	}
+
+	# SignalR hub — Caddy upgrades the WebSocket automatically.
+	handle /hubs/* {
+		reverse_proxy gateway:5001 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+		}
+	}
+
+	# Everything else: the SPA, with history-API fallback so client-side routes reload.
+	handle {
+		root * /srv/frontend
+		header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# ── Admin UIs: RabbitMQ / Grafana / mongo-express, same hostname on extra ports ─────
+# lessley.cs.colman.ac.il is a private, college-administered DNS name — no self-service
+# subdomains, and our cert (CADDY_TLS_DIRECTIVE, see CUSTOM-CA-CERT.md) is issued for
+# exactly that one hostname, not a wildcard. So: reuse {$DOMAIN} on extra ports instead
+# of a subdomain — TLS validates by hostname, not port, so the existing cert covers all
+# three with no new DNS record and no new certificate. Each app already requires its own
+# login (RabbitMQ/mongo-express/Grafana all do), so no extra basic_auth layer here.
+#
+# Reachable at https://{$DOMAIN}:8543 (RabbitMQ), :8544 (Grafana), :8545 (mongo-express)
+# once the matching host port is published on the caddy service in
+# docker-compose.prod.yaml.
+
+{$DOMAIN}:8543 {
+	{$CADDY_TLS_DIRECTIVE:}
+	reverse_proxy rabbitmq:15672
+}
+
+{$DOMAIN}:8544 {
+	{$CADDY_TLS_DIRECTIVE:}
+	reverse_proxy grafana:3000
+}
+
+{$DOMAIN}:8545 {
+	{$CADDY_TLS_DIRECTIVE:}
+	reverse_proxy mongo-express:8081
+}

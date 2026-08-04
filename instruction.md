@@ -13,28 +13,38 @@ You are working on **Lessley**, a microservices-based fintech/loyalty platform. 
 ## System Architecture
 
 ```
-Client (React/Vite)
-    ↓ HTTPS + JWT
-Gateway.API  (C# .NET 8)          ← ONLY public entry point
-    ↓ HTTP proxy (X-Gateway-Key)
-Personalization  (Python FastAPI)  ← Internal only, never called by the client directly
-    ↓
-RabbitMQ  (lessley_events — topic exchange)
+Client (React/Vite, mobile later)
+    ↓ HTTPS · JWT in HttpOnly cookie (or Bearer) · CSRF token
+Caddy  ← THE ONLY public entry point: TLS, SPA, routing, authentication
+    │   strips inbound X-Edge-Key / X-Auth-Email, then:
+    │   forward_auth → Gateway /api/auth/verify  (validates JWT + CSRF)
+    │   stamps X-Edge-Key + X-Auth-Email + X-Request-ID inward
+    ├── /api/v1/insights|open-finance|clubs/*  →  Personalization (Python FastAPI)
+    ├── /api/v1/*                              →  Gateway.API      (C# .NET 8)
+    └── /hubs/*                                →  Gateway.API      (SignalR)
+
+Gateway ──✗──► Personalization        no HTTP between services, ever
+Gateway ◄── RabbitMQ ──► Personalization   async work only (lessley_events)
     ↓
 MongoDB  (lessley database)
 ```
 
 **Hard rules:**
-- The client NEVER calls Personalization directly. All traffic goes through Gateway.
-- Personalization is protected by `X-Gateway-Key` header. Without it, all requests return 403.
-- Gateway is the sole public entry point and owns auth (JWT, roles, middleware).
+- The client talks ONLY to Caddy. It never addresses a service directly.
+- Identity is established once, at the edge. Services take it from the `X-Auth-Email`
+  header and NEVER from a query parameter or body field. Accepting an `email` parameter
+  would let any caller read any user's data.
+- Every service rejects requests without `X-Edge-Key`, proving they came through the edge.
+- The Gateway never calls Personalization over HTTP. Use RabbitMQ for service-to-service work.
+- Adding a client-facing service = one Caddy route + the two header checks. No proxy glue.
 
 ### Services
 
 | Service | Language | Port | Role |
 |---|---|---|---|
-| `Lessley.Gateway.Api` | C# .NET 8 | 5001 / 8080 | Auth, REST API, SignalR, MassTransit, proxy to Personalization |
-| `Lessley.Personalization` | Python FastAPI | 8001 | Async engine: spending analysis, recommendations, RabbitMQ consumer |
+| `Caddy` | — | 80/443 | TLS, SPA host, routing, edge authentication |
+| `Lessley.Gateway.Api` | C# .NET 8 | 8001 | Auth authority, users/deals/notifications REST, SignalR, MassTransit |
+| `Lessley.Personalization` | Python FastAPI | 8002 | Async engine: spending analysis, recommendations, RabbitMQ consumer |
 | `Lessley.CategoriesEnricher` | Python FastAPI | — | Enriches transaction categories via RabbitMQ events |
 | `lessley-frontend` | React + Vite + TS | 5173 | SPA client |
 
@@ -101,7 +111,7 @@ Before working on any task, check which MCPs and skills are relevant and use the
    - For React: run `tsc --noEmit` and ensure no TypeScript errors.
    - For any logic change: trace through the happy path and at least one failure path manually.
    - If tests exist, run them. If they fail, fix them — do not skip.
-7. **Never expose secrets.** JWT keys, API credentials, MongoDB URIs, and `X-Gateway-Key` values live in environment variables or `.env` files. Never hard-code them. Never commit `.env` files.
+7. **Never expose secrets.** JWT keys, API credentials, MongoDB URIs, and `X-Edge-Key`/`EDGE_API_KEY` values live in environment variables or `.env` files. Never hard-code them, never commit `.env`, and never ship any of them to the browser — anything the SPA holds is public.
 
 ---
 
@@ -131,30 +141,11 @@ Before working on any task, check which MCPs and skills are relevant and use the
 
 ---
 
-## Environment Setup Reference
+## Environment Setup
 
-### Gateway (local)
-```
-ConnectionStrings__MongoDb = mongodb://...
-JwtConfig__Key             = <secret>
-PersonalizationConfig:GatewayApiKey = <key>
-```
-
-### Personalization (local `.env`)
-```
-Environment=dev
-ConnectionStrings_MongoDb=mongodb://...
-ConnectionStrings_Rabbit=amqp://...
-RabbitMQ_Enabled=True
-Gateway_ApiKey=<same key as above>
-```
-
-### Infrastructure (Docker Compose via `lessley-cd/manage.bat`)
-```
-manage.bat infra up      # MongoDB, RabbitMQ, Grafana, Loki
-manage.bat app up        # Gateway + Personalization
-manage.bat status        # All containers
-```
+See **[`lessley-cd/RUNNING.md`](lessley-cd/RUNNING.md)** — the three run modes, every
+required variable, and the Mode 1 edge bypass. Do not duplicate that content here; it
+drifts.
 
 ---
 
@@ -164,7 +155,8 @@ manage.bat status        # All containers
 |---|---|---|
 | Personalization hangs on startup | RabbitMQ unreachable | Set `RabbitMQ_Enabled=False` for local dev |
 | `await` missing on Beanie ODM call | Silent hang or wrong result | Always `await model.save()` / `await model.insert()` |
-| 403 on all Personalization endpoints | `X-Gateway-Key` header missing or wrong | Match `Gateway_ApiKey` env var on both sides |
+| 403 on all endpoints | `X-Edge-Key` missing or wrong — request bypassed Caddy | Go through Caddy, or match `EDGE_API_KEY` on both sides |
+| 401 on Personalization routes | No `X-Auth-Email`; edge auth did not run | Call via Caddy; in Mode 1 set `Edge_AllowUnverified=True` and log in via the Gateway so its `access_token` cookie reaches the service |
 | JWT 401 in Gateway | Expired token or key mismatch | Verify `JwtConfig__Key` is identical across all environments |
 | RabbitMQ consumer sees duplicates | At-least-once delivery | Implement idempotency check before processing |
 | Loki blocks startup | Connection timeout on Loki push | Provide valid `Loki_Url` or remove the env var entirely |

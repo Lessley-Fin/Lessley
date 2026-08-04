@@ -20,19 +20,21 @@ public class RealInfraWebApplicationFactory : WebApplicationFactory<Program>
 
     private readonly string _dbName = $"GatewayE2ERealDb_{Guid.NewGuid():N}";
 
-    public RealInfraWebApplicationFactory()
-    {
-        Environment.SetEnvironmentVariable("JwtConfig__Key",      GatewayWebApplicationFactory.JwtKey);
-        Environment.SetEnvironmentVariable("JwtConfig__Issuer",   GatewayWebApplicationFactory.Issuer);
-        Environment.SetEnvironmentVariable("JwtConfig__Audience",  GatewayWebApplicationFactory.Audience);
-        Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb",  MongoUrl);
-        Environment.SetEnvironmentVariable("ConnectionStrings__RabbitMq", RabbitUrl);
-    }
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // "RealInfra" is not "Testing", so MassTransit IS wired to real RabbitMQ.
         builder.UseEnvironment("RealInfra");
+
+        // Per-host settings, NOT process-global environment variables. xUnit runs test
+        // classes in parallel, so a factory clearing globals on dispose used to yank
+        // configuration out from under a host another class was still building — the
+        // cause of the suite's intermittent mass 401 failures.
+        builder.UseSetting("JwtConfig:Key",      GatewayWebApplicationFactory.JwtKey);
+        builder.UseSetting("JwtConfig:Issuer",   GatewayWebApplicationFactory.Issuer);
+        builder.UseSetting("JwtConfig:Audience", GatewayWebApplicationFactory.Audience);
+        builder.UseSetting("ConnectionStrings:MongoDb",  MongoUrl);
+        builder.UseSetting("ConnectionStrings:RabbitMq", RabbitUrl);
+        builder.UseSetting("Edge:ApiKey", GatewayWebApplicationFactory.EdgeKey);
 
         builder.ConfigureTestServices(services =>
         {
@@ -48,13 +50,12 @@ public class RealInfraWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    protected override void Dispose(bool disposing)
+    /// <summary>Every test client presents the edge key, standing in for Caddy's header_up.</summary>
+    protected override void ConfigureClient(HttpClient client)
     {
-        Environment.SetEnvironmentVariable("JwtConfig__Key",      null);
-        Environment.SetEnvironmentVariable("JwtConfig__Issuer",   null);
-        Environment.SetEnvironmentVariable("JwtConfig__Audience",  null);
-        Environment.SetEnvironmentVariable("ConnectionStrings__MongoDb",  null);
-        Environment.SetEnvironmentVariable("ConnectionStrings__RabbitMq", null);
-        base.Dispose(disposing);
+        client.DefaultRequestHeaders.Add(
+            Lessley.Gateway.Api.Middleware.EdgeVerificationMiddleware.EdgeKeyHeader,
+            GatewayWebApplicationFactory.EdgeKey);
+        base.ConfigureClient(client);
     }
 }

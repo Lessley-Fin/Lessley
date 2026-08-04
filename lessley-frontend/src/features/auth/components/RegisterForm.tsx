@@ -41,12 +41,7 @@ export function RegisterForm() {
         mutedCategories: values.mutedCategories?.length ? values.mutedCategories : undefined,
       })
       const data = await loginWithGateway({ userName: values.userName, password: values.password })
-      await postAuth({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        userName: values.userName,
-        email: values.email,
-      })
+      await postAuth({ userName: data.userName ?? values.userName, email: data.email ?? values.email })
     } catch (error) {
       form.setError("root", {
         message: error instanceof Error ? error.message : "Registration failed. Please try again.",

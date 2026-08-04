@@ -13,7 +13,6 @@ client = OpenAI(
 )
 
 
-# 1. Define DTOs for store classification
 class StoreCategory(BaseModel):
     official_name: str
     mcc_codes: List[str] = Field(
@@ -22,7 +21,6 @@ class StoreCategory(BaseModel):
     confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
 
 
-# 2. Define DTOs for deal classification
 class DealCategory(BaseModel):
     category: str
     subcategory: str
@@ -30,7 +28,6 @@ class DealCategory(BaseModel):
     confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
 
 
-# 3. Classification function for stores
 def get_store_category(store_name: str) -> StoreCategory:
     """
     Classifies a store by name and returns its primary category and MCC code.
@@ -79,7 +76,6 @@ def get_store_category(store_name: str) -> StoreCategory:
     return completion.choices[0].message.parsed
 
 
-# 4. Classification function for deals
 def get_deal_category(deal_name: str, deal_description: str | None = None) -> DealCategory:
     """
     Classifies a deal/promotion and returns its category and relevance.

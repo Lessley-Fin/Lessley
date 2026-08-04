@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from dependencies.auth import authenticated_email
 from services.di_container import DIContainer
 from .schemas import InsightsCalcRequests
 from .responses import PaginatedResponse
@@ -11,7 +12,11 @@ router = APIRouter(prefix="/insights", tags=["Insights"])
 
 
 @router.get("/categories")
-async def calculate_user_categories(request: Request, req: InsightsCalcRequests = Depends()):
+async def calculate_user_categories(
+    request: Request,
+    req: InsightsCalcRequests = Depends(),
+    email: str = Depends(authenticated_email),
+):
     """
     Triggers the calculation of optimal categories based on Open Finance data.
     """
@@ -22,7 +27,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "use_mock": req.use_mock,
@@ -34,7 +39,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
 
     try:
         service = DIContainer.get_insights_service()
-        categories = await service.calculate_user_categories_async(req.email, req.time_filter, req.days, req.use_mock)
+        categories = await service.calculate_user_categories_async(email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -43,7 +48,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "use_mock": req.use_mock,
@@ -64,7 +69,7 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -74,7 +79,11 @@ async def calculate_user_categories(request: Request, req: InsightsCalcRequests 
 
 
 @router.get("/top-accounts")
-async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = Depends()):
+async def calculate_top_accounts(
+    request: Request,
+    req: InsightsCalcRequests = Depends(),
+    email: str = Depends(authenticated_email),
+):
     """
     Triggers the calculation of top accounts based on Open Finance data.
     """
@@ -85,7 +94,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = D
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "use_mock": req.use_mock,
@@ -97,7 +106,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = D
 
     try:
         service = DIContainer.get_insights_service()
-        accounts = await service.calculate_top_accounts_async(req.email, req.time_filter, req.days, req.use_mock)
+        accounts = await service.calculate_top_accounts_async(email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -106,7 +115,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = D
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "use_mock": req.use_mock,
@@ -127,7 +136,7 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = D
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -137,7 +146,11 @@ async def calculate_top_accounts(request: Request, req: InsightsCalcRequests = D
 
 
 @router.get("/top-stores")
-async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Depends()):
+async def calculate_top_stores(
+    request: Request,
+    req: InsightsCalcRequests = Depends(),
+    email: str = Depends(authenticated_email),
+):
     """
     Triggers the calculation of top stores based on Open Finance data.
     """
@@ -148,7 +161,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Dep
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "use_mock": req.use_mock,
@@ -160,7 +173,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Dep
 
     try:
         service = DIContainer.get_insights_service()
-        stores = await service.calculate_top_stores_async(req.email, req.time_filter, req.days, req.use_mock)
+        stores = await service.calculate_top_stores_async(email, req.time_filter, req.days, req.use_mock)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -169,7 +182,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Dep
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "use_mock": req.use_mock,
@@ -190,7 +203,7 @@ async def calculate_top_stores(request: Request, req: InsightsCalcRequests = Dep
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
