@@ -5,35 +5,25 @@
 # SPA and API share one origin, there is no CORS and SameSite=Strict "just works".
 #
 # The only things that differ between dev and prod are env values (not this file):
-#   * DOMAIN=localhost (dev)  → Caddy issues an internal-CA cert automatically (no ACME).
-#     DOMAIN=your.domain (prod) → Caddy gets a Let's Encrypt cert + renews it.
+#   * DOMAIN=localhost (dev) → Caddy issues its own internal-CA cert automatically.
+#     DOMAIN=<college host> (prod) → CADDY_TLS_DIRECTIVE below loads our pre-issued cert
+#     instead (required in prod; see CUSTOM-CA-CERT.md). Never ACME either way — the
+#     `email` directive just below is dead weight kept only because Caddy's global
+#     options block requires *some* non-empty value there to parse.
 #   * HSTS_MAX_AGE=max-age=0 (dev) disables HSTS so https://localhost cannot pin other
 #     localhost http projects; prod leaves it unset → the strong default below applies.
-#   * CADDY_TLS_DIRECTIVE (optional, unset by default) — set to a full `tls` directive to
-#     make Caddy load a pre-issued certificate/key instead of automatic HTTPS, e.g.
-#     `tls /etc/caddy/certs/college.crt /etc/caddy/certs/college.key`. For a private/
-#     local-only DNS name (an internal college or corporate network) where neither Let's
-#     Encrypt (needs public resolution) nor the internal CA (needs client trust
-#     distribution) are options, but you were handed a cert+key already trusted on that
-#     network. See lessley-cd/CUSTOM-CA-CERT.md.
-#     NOTE: this must be a whole-directive placeholder, not e.g. `tls {$CERT} {$KEY}` with
-#     blank defaults — a bare `tls` with empty/no arguments is a Caddyfile PARSE ERROR, not
-#     a no-op. Substituting the entire line (this var empty -> empty line -> truly skipped)
-#     is the only way to make this optional without breaking every other deployment.
 #
 # The SPA files are baked into this image at /srv/frontend (see lessley-frontend/Dockerfile).
-# Required env vars (.env.template): DOMAIN, ACME_EMAIL.
-# Optional: HSTS_MAX_AGE, RABBIT_DOMAIN (+ RABBIT_BASICAUTH_USER / RABBIT_BASICAUTH_HASH),
-# CADDY_TLS_DIRECTIVE.
+# Required env vars (.env.template): DOMAIN, ACME_EMAIL (unused, see above), CADDY_TLS_DIRECTIVE (prod).
+# Optional: HSTS_MAX_AGE.
 
 {
 	email {$ACME_EMAIL}
 }
 
 {$DOMAIN} {
-	# Empty (the default) expands to a blank line — skipped entirely, so automatic HTTPS
-	# decides ACME vs internal issuance from DOMAIN exactly as before. Set the whole
-	# directive to override; see the CADDY_TLS_DIRECTIVE note above.
+	# Dev leaves this empty (blank line, skipped) → Caddy's own internal-CA cert.
+	# Prod sets it to load our pre-issued cert — required there; see CUSTOM-CA-CERT.md.
 	{$CADDY_TLS_DIRECTIVE:}
 	encode gzip
 
@@ -99,59 +89,17 @@
 	}
 }
 
-# ── Admin UIs, Option A: separate subdomains (needs a public/self-service DNS zone) ──
-# Each block is its own site, on its own subdomain, guarded by HTTP basic auth (Grafana
-# has its own login instead, so no extra basic_auth layer there). Only viable if you can
-# both create the subdomain's DNS record yourself AND get/automate a certificate for it
-# — doesn't work against a single institution-issued cert for one exact hostname (see
-# CUSTOM-CA-CERT.md); use Option B below for that case instead.
+# ── Admin UIs: RabbitMQ / Grafana / mongo-express, same hostname on extra ports ─────
+# lessley.cs.colman.ac.il is a private, college-administered DNS name — no self-service
+# subdomains, and our cert (CADDY_TLS_DIRECTIVE, see CUSTOM-CA-CERT.md) is issued for
+# exactly that one hostname, not a wildcard. So: reuse {$DOMAIN} on extra ports instead
+# of a subdomain — TLS validates by hostname, not port, so the existing cert covers all
+# three with no new DNS record and no new certificate. Each app already requires its own
+# login (RabbitMQ/mongo-express/Grafana all do), so no extra basic_auth layer here.
 #
-# IMPORTANT — these MUST stay commented unless their *_DOMAIN var is actually set.
-# Caddy env substitution in a site ADDRESS has no `:default` fallback (unlike the
-# HSTS_MAX_AGE/CADDY_TLS_DIRECTIVE placeholders above, which are inside directive
-# values, not addresses): an empty {$RABBIT_DOMAIN} collapses the block to a bare
-# `{ ... }`, which Caddy parses as a second *global options* block and refuses to
-# start — taking down the whole edge (main site included), not just this route.
-# Verified with `caddy validate`. So: uncomment ONLY the block(s) you're enabling,
-# and only after setting its env vars — never uncomment one whose *_DOMAIN is unset.
-#
-# To expose one: set its *_DOMAIN (+ *_BASICAUTH_* where applicable) in .env, point
-# that subdomain's DNS A record at this host, generate any password hash with
-# `docker run --rm caddy:2-alpine caddy hash-password --plaintext 'your-pass'`,
-# then uncomment its block below.
-
-# {$RABBIT_DOMAIN} {
-# 	basic_auth {
-# 		{$RABBIT_BASICAUTH_USER} {$RABBIT_BASICAUTH_HASH}
-# 	}
-# 	reverse_proxy rabbitmq:15672
-# }
-
-# {$GRAFANA_DOMAIN} {
-# 	reverse_proxy grafana:3000
-# }
-
-# {$MONGOEXPRESS_DOMAIN} {
-# 	basic_auth {
-# 		{$MONGOEXPRESS_BASICAUTH_USER} {$MONGOEXPRESS_BASICAUTH_HASH}
-# 	}
-# 	reverse_proxy mongo-express:8081
-# }
-
-# ── Admin UIs, Option B: same hostname, different ports ────────────────────────────
-# For a private/institutional DOMAIN like a college network (e.g. lessley.cs.colman.ac.il)
-# where you don't control DNS beyond the one name you were given, and your cert (via
-# CADDY_TLS_DIRECTIVE, see CUSTOM-CA-CERT.md) was issued for exactly that hostname, not a
-# wildcard. TLS validates by hostname, not port, so reusing {$DOMAIN} on extra ports needs
-# no new DNS record and no new certificate — the existing one covers all of these too.
-# Each app already requires its own login (RabbitMQ/mongo-express/Grafana all do), so no
-# extra basic_auth layer. Safe to leave active always: {$DOMAIN} is a required var (never
-# empty) and {$CADDY_TLS_DIRECTIVE:} is the same proven-safe empty-default placeholder used
-# on the main site above — unlike Option A, nothing here breaks when unused.
-#
-# Inert until you publish the matching host port on the caddy service in
-# docker-compose.prod.yaml — add "8543:8543" / "8544:8544" / "8545:8545" to its `ports:`
-# list for whichever of these you want reachable.
+# Reachable at https://{$DOMAIN}:8543 (RabbitMQ), :8544 (Grafana), :8545 (mongo-express)
+# once the matching host port is published on the caddy service in
+# docker-compose.prod.yaml.
 
 {$DOMAIN}:8543 {
 	{$CADDY_TLS_DIRECTIVE:}
@@ -167,6 +115,3 @@
 	{$CADDY_TLS_DIRECTIVE:}
 	reverse_proxy mongo-express:8081
 }
-
-# (Alternative without exposing anything at all: SSH to the host and
-#  `docker compose exec`, or a temporary `-p 15672:15672` style mapping.)

@@ -7,8 +7,9 @@
 #     gateway or personalization directly, and never knows personalization exists.
 #
 # Dev differs from docker-compose.prod.yaml ONLY in the ways tasks.txt allows:
-#   1. URLs           — DOMAIN=localhost (Caddy auto-issues an internal-CA cert) vs a
-#                       real public domain + Let's Encrypt in prod. Same Caddyfile.
+#   1. URLs           — DOMAIN=localhost (Caddy auto-issues an internal-CA cert) vs our
+#                       college DOMAIN + a pre-issued cert (CADDY_TLS_DIRECTIVE) in prod.
+#                       Same Caddyfile.
 #   2. Swagger / docs  — ASPNETCORE_ENVIRONMENT/Environment=Development here → Swagger
 #                       (/swagger) and FastAPI /docs are ON; prod runs Production → OFF.
 #   3. mongo-express   — present here for DB browsing; removed in prod.
@@ -45,12 +46,9 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # localhost → Caddy serves HTTPS with its own internal CA (no Let's Encrypt).
+      # localhost → Caddy serves HTTPS with its own internal CA (no ACME involved).
       - DOMAIN=${DOMAIN:-localhost}
       - ACME_EMAIL=${ACME_EMAIL:-dev@lessley.local}
-      - RABBIT_DOMAIN=${RABBIT_DOMAIN:-}
-      - RABBIT_BASICAUTH_USER=${RABBIT_BASICAUTH_USER:-}
-      - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
       # Disable HSTS in dev so https://localhost cannot pin other localhost http apps.
       - HSTS_MAX_AGE=max-age=0
       # Stamped onto every request Caddy forwards, so services can prove it came from the edge.

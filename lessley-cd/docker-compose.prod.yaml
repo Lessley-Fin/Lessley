@@ -4,24 +4,26 @@
 #                 MongoDB, RabbitMQ, gateway, personalization, loki, grafana are on a
 #                 PRIVATE network and are NOT reachable from the host — only by service name.
 #   2. URLs     — DOMAIN/ACME_EMAIL/EDGE_API_KEY are required here (no dev-only fallback
-#                 default); DNS for $DOMAIN must point here for Let's Encrypt.
+#                 default). DOMAIN is our private college DNS name; CADDY_TLS_DIRECTIVE
+#                 (required, see CUSTOM-CA-CERT.md) loads our pre-issued cert for it — no
+#                 ACME/Let's Encrypt involved.
 #   3. Swagger / docs — ASPNETCORE_ENVIRONMENT/Environment=Production here -> Swagger
 #                 (/swagger) and FastAPI /docs are OFF; dev runs Development -> ON.
 #   4. mongo-express, Grafana, and the RabbitMQ management UI are on the private
 #      network like everything else, reached only through Caddy (same domain + cert as
 #      the main site) on ports 8543/8544/8545 below — never host-port-published directly.
-#      Remove the ones you don't want reachable from outside this machine. See the
-#      "Option B" blocks at the bottom of Caddyfile.
+#      Remove the ones you don't want reachable from outside this machine. See the bottom
+#      of Caddyfile.
 # Everything else (networking, depends_on health-gating, env var names) is kept
 # identical to dev on purpose — that's what makes this deployable with confidence.
 #
 # Usage:  docker compose -f docker-compose.prod.yaml up -d --build
-# Requires a populated .env (see .env.template). DNS for $DOMAIN must point here.
+# Requires a populated .env (see .env.template).
 
 networks:
   web:        # public edge (Caddy only)
   backend:    # private; no host port publishing
-    internal: false   # keep false so containers can reach the internet (Let's Encrypt, Open Finance)
+    internal: false   # keep false so containers can reach the internet (Open Finance)
 
 services:
   # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
@@ -37,32 +39,19 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      # Admin UIs, same domain/cert as above on their own ports (Caddyfile "Option B" —
-      # for a private/institutional DOMAIN where subdomains aren't viable). Remove any of
-      # these lines you don't want reachable from outside this machine.
+      # Admin UIs, same domain/cert as above on their own ports. Remove any of these
+      # lines you don't want reachable from outside this machine.
       - "8543:8543"   # RabbitMQ management UI
       - "8544:8544"   # Grafana
       - "8545:8545"   # mongo-express
     environment:
       - DOMAIN=${DOMAIN}
       - ACME_EMAIL=${ACME_EMAIL}
-      - RABBIT_DOMAIN=${RABBIT_DOMAIN:-}
-      - RABBIT_BASICAUTH_USER=${RABBIT_BASICAUTH_USER:-}
-      - RABBIT_BASICAUTH_HASH=${RABBIT_BASICAUTH_HASH:-}
-      # Optional admin UIs, same opt-in pattern as RabbitMQ above — see the commented
-      # blocks at the bottom of Caddyfile. Unused unless you set *_DOMAIN AND uncomment
-      # the matching block.
-      - GRAFANA_DOMAIN=${GRAFANA_DOMAIN:-}
-      - MONGOEXPRESS_DOMAIN=${MONGOEXPRESS_DOMAIN:-}
-      - MONGOEXPRESS_BASICAUTH_USER=${MONGOEXPRESS_BASICAUTH_USER:-}
-      - MONGOEXPRESS_BASICAUTH_HASH=${MONGOEXPRESS_BASICAUTH_HASH:-}
       # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
       - EDGE_API_KEY=${EDGE_API_KEY}
-      # Optional: a full `tls` directive to make Caddy load a pre-issued cert instead of
-      # automatic HTTPS (e.g. one your network/institution already issued for a private DNS
-      # name). File paths in it must resolve inside the container — see the ./certs mount
-      # below and CUSTOM-CA-CERT.md.
-      - CADDY_TLS_DIRECTIVE=${CADDY_TLS_DIRECTIVE:-}
+      # Our pre-issued cert for DOMAIN — required (see CUSTOM-CA-CERT.md). File paths in
+      # it must resolve inside the container — see the ./certs mount below.
+      - CADDY_TLS_DIRECTIVE=${CADDY_TLS_DIRECTIVE}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./certs:/etc/caddy/certs:ro
@@ -78,7 +67,7 @@ services:
       - grafana
       - mongo-express
 
-  # ── RabbitMQ (no host ports; management only via Caddy if RABBIT_DOMAIN set) ─
+  # ── RabbitMQ (no host ports; management UI only via Caddy on :8543) ─────────
   rabbitmq:
     image: rabbitmq:4.1.4-management
     container_name: rabbitmq
@@ -115,7 +104,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Mongo Express (no host ports; reachable only via Caddy if MONGOEXPRESS_DOMAIN set) ─
+  # ── Mongo Express (no host ports; reachable only via Caddy on :8545) ────────
   mongo-express:
     image: mongo-express:latest
     container_name: mongo_express
