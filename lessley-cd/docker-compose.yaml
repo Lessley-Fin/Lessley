@@ -114,10 +114,14 @@ services:
 
       # 5. Logging Configuration
       - Loki__Url=${LOKI_URL}
+
+      # 6. Deal Optimizer (service name, not localhost)
+      - OptimizerConfig__BaseUrl=http://deal-optimizer:8003
     depends_on:
       - mongodb
       - rabbitmq
       - loki
+      - deal-optimizer
 
   
   # --- Deals Pipeline (on-demand) ---
@@ -141,6 +145,67 @@ services:
         condition: service_healthy
     entrypoint: ["python", "-m", "lessley_deals.cli.main"]
     command: ["scrape", "--all", "--hot-fetch-details"]
+
+  # --- Deals Worker (long-running scraper scheduler) ---
+  # Owns the whole loop: schedule → scrape → normalize → match → version →
+  # persist, one independent asyncio task per source. Schedules come from
+  # lessley-deals/data/seed/schedules.json (biweekly: 1st + 15th), overridable
+  # per source at runtime with DEALS_SCHEDULE_<SOURCE>=off|<cron>|<interval>.
+  deals-worker:
+    image: lessley/deals:worker
+    build:
+      context: ../lessley-deals
+      target: worker
+    restart: always
+    env_file:
+      - .env
+    environment:
+      # Explicit values win over env_file — .env's MONGO_URI points at the host.
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DB=${DB_NAME}
+      - DEALS_STORAGE=mongo
+      - DEALS_DATA_DIR=/app/data
+      - DEALS_VERSIONING=1
+      - DEALS_MAX_CONCURRENCY=3
+      - DEALS_SHUTDOWN_GRACE=60
+      - DEALS_LOG_LEVEL=${DEALS_LOG_LEVEL:-INFO}
+      - DEALS_AUTO_MATCH_THRESHOLD=${DEALS_AUTO_MATCH_THRESHOLD:-0.90}
+      - DEALS_REVIEW_THRESHOLD=${DEALS_REVIEW_THRESHOLD:-0.50}
+      # Parse each deal's terms into a structured `constraints` block — this is
+      # what gives deal-optimizer real combinability instead of "unknown".
+      # Costs one LLM call per deal that has terms, and needs
+      # COLLEGE_API_BASE/COLLEGE_MODEL_* or OPENAI_API_KEY; without those every
+      # parse is logged and skipped (never fatal), so this stays a no-op until
+      # credentials are added to .env.
+      - DEALS_ENRICH_CONSTRAINTS=1
+      # Fetch each HOT benefit's detail page. All 7 benefit types are scraped
+      # either way (the adapter's own default) — details are what carry
+      # terms_and_conditions, which the constraints stage above needs.
+      - HOT_FETCH_DETAILS=1
+      - HOT_REQUEST_DELAY=${HOT_REQUEST_DELAY:-1.5}
+      - HOT_DETAILS_DELAY=${HOT_DETAILS_DELAY:-2.0}
+      # The llm:* scraper sources are separate from constraints enrichment above
+      # and stay off: they need the same credentials and would fail every run.
+      - DEALS_LLM_SOURCES=0
+    volumes:
+      # Raw payloads and the review queue stay on disk for replay/auditing.
+      - deals_worker_data:/app/data
+      # The whole seed dir bound read-only on top of the volume. Docker only
+      # copies the image's content into a named volume when that volume is first
+      # created, so without this an edited — or newly added — seed file (clubs,
+      # schedules, stores) never reaches an existing deployment. Now a restart
+      # is enough, and the repo stays the single source of truth.
+      - ../lessley-deals/data/seed:/app/data/seed:ro
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    # SIGTERM triggers a cooperative drain; must exceed DEALS_SHUTDOWN_GRACE.
+    stop_grace_period: 90s
+    deploy:
+      resources:
+        limits:
+          # Chromium is the memory hog; raise alongside DEALS_MAX_CONCURRENCY.
+          memory: 2G
 
   # --- Deals Review CLI (interactive) ---
   deals-review:
@@ -184,6 +249,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - ASPNETCORE_ENVIRONMENT=Development
+      # Required (no default) by config/settings.py::Settings — the service
+      # refuses to start without it.
+      - Environment=Development
       - RabbitMQ_Enabled=False
       - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
       - ConnectionStrings_MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
@@ -196,10 +264,34 @@ services:
       - mongodb
       - loki
 
+  # --- Deal Optimizer (layered-DAG stacking engine, HTTP) ---
+  deal-optimizer:
+    image: lessley/deal-optimizer:dev
+    build:
+      context: ../deal-optimizer
+      target: service
+    restart: always
+    ports:
+      - "5003:8003"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Reads the same deals collection the deals-pipeline writes to.
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DB=${DB_NAME}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
 # Defined volumes for persistence
 volumes:
   rabbitmq_data:
   mongodb_data:
   deals_data:
+  deals_worker_data:
   deals_test_data:
   loki_data:

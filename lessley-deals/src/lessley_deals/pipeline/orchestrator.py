@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 from lessley_deals.domain.models import NormalizedRecord, PipelineRecord
 from lessley_deals.domain.protocols import AliasRepository, CanonicalStoreRepository
 from lessley_deals.matching.index import AliasIndex
 from lessley_deals.pipeline.constraints_stage import ConstraintsStage
 from lessley_deals.pipeline.context import PipelineContext
+from lessley_deals.pipeline.ingest_stage import IngestStage, IngestSummary
 from lessley_deals.pipeline.match_stage import MatchStage
 from lessley_deals.pipeline.normalize_stage import NormalizeStage
 from lessley_deals.pipeline.persist_stage import PersistStage
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class PipelineOrchestrator:
-    """Top-level entry point: scrape -> normalize -> match -> persist."""
+    """Top-level entry point: scrape -> normalize -> match -> persist -> ingest."""
 
     def __init__(
         self,
@@ -29,6 +30,8 @@ class PipelineOrchestrator:
         store_repo: CanonicalStoreRepository,
         alias_repo: AliasRepository,
         constraints_stage: ConstraintsStage | None = None,
+        ingest_stage: IngestStage | None = None,
+        publish: Callable[[], Any] | None = None,
     ) -> None:
         self._scrape = scrape_stage
         self._normalize = normalize_stage
@@ -37,13 +40,22 @@ class PipelineOrchestrator:
         self._store_repo = store_repo
         self._alias_repo = alias_repo
         self._constraints = constraints_stage
+        self._ingest = ingest_stage
+        self._publish = publish
+        """Optional post-ingest hook that refreshes the Gateway's read model.
+        Runs after ingestion so it publishes the state this run just produced."""
 
-    async def run(self, source_ids: Sequence[str] | None = None) -> PipelineReport:
+    async def run(
+        self,
+        source_ids: Sequence[str] | None = None,
+        run_id: str | None = None,
+    ) -> PipelineReport:
         ctx = PipelineContext()
 
         # Stage 1: Scrape
         logger.info("Starting scrape stage...")
-        _stores, deals = await self._scrape.run(source_ids)
+        scrape = await self._scrape.run_detailed(source_ids)
+        deals = scrape.new_deals
 
         # Add raw deals to context
         pipeline_records: list[PipelineRecord] = []
@@ -52,9 +64,16 @@ class PipelineOrchestrator:
             pipeline_records.append(prec)
 
         if not deals:
+            # Still ingest: a run that scraped known-unchanged records must
+            # refresh last_seen_at, and a source that dropped a deal must be
+            # able to expire it even when nothing new came in.
+            if self._ingest is not None:
+                empty_run = await self._ingest.run([], scrape, run_id=run_id)
+                ctx.finish()
+                return PipelineReport.from_context(ctx, scrape=scrape, ingest=empty_run)
             logger.info("No new deals scraped, pipeline complete.")
             ctx.finish()
-            return PipelineReport.from_context(ctx)
+            return PipelineReport.from_context(ctx, scrape=scrape)
 
         # Stage 2: Normalize
         logger.info("Starting normalize stage...")
@@ -78,9 +97,27 @@ class PipelineOrchestrator:
 
         # Stage 4: Persist
         logger.info("Starting persist stage...")
-        await self._persist.run(pipeline_records, normalized_map, verdict_map, constraints_map)
+        built_deals = await self._persist.run(
+            pipeline_records, normalized_map, verdict_map, constraints_map
+        )
+
+        # Stage 5: Version & ingest (optional)
+        summary: IngestSummary | None = None
+        if self._ingest is not None:
+            logger.info("Starting ingestion stage...")
+            summary = await self._ingest.run(built_deals, scrape, run_id=run_id)
+
+        # Stage 6: publish the Gateway read model (optional).
+        # Never fatal: the scrape and its version history are already durable, so
+        # a projection failure must not fail the run — the next one republishes.
+        if self._publish is not None:
+            try:
+                logger.info("Publishing gateway view...")
+                self._publish()
+            except Exception:  # noqa: BLE001
+                logger.exception("Publishing the gateway view failed — data is safe, view is stale")
 
         ctx.finish()
-        report = PipelineReport.from_context(ctx)
+        report = PipelineReport.from_context(ctx, scrape=scrape, ingest=summary)
         logger.info(report.summary())
         return report

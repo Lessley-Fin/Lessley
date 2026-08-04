@@ -1,0 +1,85 @@
+[
+  { "_comment": "Biweekly cadence — every source runs on the 1st and 15th at its own slot. Day-of-month cron rather than a 14d interval on purpose: interval schedules are anchored on process start (the scheduler recomputes now + interval each loop and persists nothing), so a worker restarting more often than 14 days would never fire. Cron is wall-clock anchored and survives restarts. Times stay staggered so ten sources don't hit the network at once." },
+  {
+    "source_id": "hot",
+    "cron": "0 2 1,15 * *",
+    "timeout_seconds": 3600,
+    "jitter_seconds": 120,
+    "retry": { "max_attempts": 3, "base_delay_seconds": 30, "max_delay_seconds": 600 }
+  },
+  {
+    "source_id": "mastercard",
+    "cron": "20 2 1,15 * *",
+    "timeout_seconds": 1800,
+    "jitter_seconds": 120
+  },
+  {
+    "source_id": "behatsdaa",
+    "cron": "40 2 1,15 * *",
+    "timeout_seconds": 1800,
+    "jitter_seconds": 120
+  },
+  {
+    "source_id": "topcash",
+    "cron": "0 3 1,15 * *",
+    "timeout_seconds": 1800,
+    "jitter_seconds": 120
+  },
+  {
+    "source_id": "hever_gift_card_company",
+    "cron": "20 3 1,15 * *",
+    "timeout_seconds": 900
+  },
+  {
+    "source_id": "hever_teamim_card_store",
+    "cron": "30 3 1,15 * *",
+    "timeout_seconds": 900
+  },
+  {
+    "source_id": "paisplus",
+    "cron": "40 3 1,15 * *",
+    "timeout_seconds": 1200
+  },
+  {
+    "source_id": "paisplus_food_chains",
+    "cron": "50 3 1,15 * *",
+    "timeout_seconds": 1200
+  },
+  {
+    "source_id": "paisplus_networks",
+    "cron": "55 3 1,15 * *",
+    "timeout_seconds": 1200
+  },
+  {
+    "source_id": "swish",
+    "cron": "0 4 1,15 * *",
+    "timeout_seconds": 5400,
+    "retry": { "max_attempts": 2, "base_delay_seconds": 120, "max_delay_seconds": 900 }
+  },
+
+  { "_comment": "LLM-backed sources cost money per run — same biweekly slots, off-peak, low retry. They need COLLEGE_API_BASE/COLLEGE_MODEL_* or OPENAI_API_KEY; the worker ships with DEALS_LLM_SOURCES=0 until those exist." },
+  {
+    "source_id": "llm:paisplus",
+    "cron": "0 5 1,15 * *",
+    "timeout_seconds": 3600,
+    "retry": { "max_attempts": 2, "base_delay_seconds": 60 }
+  },
+  {
+    "source_id": "llm:max",
+    "cron": "30 5 1,15 * *",
+    "timeout_seconds": 3600,
+    "retry": { "max_attempts": 2, "base_delay_seconds": 60 }
+  },
+  {
+    "source_id": "llm:mastercard-day",
+    "cron": "0 6 1,15 * *",
+    "timeout_seconds": 3600,
+    "retry": { "max_attempts": 2, "base_delay_seconds": 60 }
+  },
+  {
+    "source_id": "llm:topcash",
+    "cron": "30 6 1,15 * *",
+    "timeout_seconds": 3600,
+    "retry": { "max_attempts": 2, "base_delay_seconds": 60 }
+  }
+]

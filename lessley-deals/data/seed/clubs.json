@@ -1,0 +1,82 @@
+[
+  {
+    "id": "club_hot",
+    "name": "HOT Israel",
+    "source_id": "hot",
+    "description": "HOT Israel — cable TV & internet member benefits",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_mastercard",
+    "name": "Mastercard Israel",
+    "source_id": "mastercard",
+    "description": "Mastercard Israel credit card benefits",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_topcash",
+    "name": "Isracard TopCash",
+    "source_id": "topcash",
+    "description": "Isracard TopCash cashback benefits",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_behatsdaa",
+    "name": "Behatsdaa",
+    "source_id": "behatsdaa",
+    "description": "Behatsdaa deals aggregator",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_swish",
+    "name": "Swish (נפשונית)",
+    "source_id": "swish",
+    "description": "Swish gift-card catalogue — group gift cards redeemable across member stores",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_hever_gift_card_company",
+    "name": "Hever (חבר) — Gift Cards",
+    "source_id": "hever_gift_card_company",
+    "description": "Hever gift-card store directory — loading bonus on gift cards",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_hever_teamim_card_store",
+    "name": "Hever (חבר) — טעמים",
+    "source_id": "hever_teamim_card_store",
+    "description": "Hever \"Ta'amim\" restaurant card — loading bonus, redeemable at member restaurants",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_paisplus",
+    "name": "PaisPlus",
+    "source_id": "paisplus",
+    "description": "PaisPlus — Mifal HaPais subscriber benefits",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_paisplus_food_chains",
+    "name": "PaisPlus — Food Chains Cash Card",
+    "source_id": "paisplus_food_chains",
+    "description": "PaisPlus loadable chit card for food chains — program-wide discount on the load",
+    "metadata": {},
+    "stores": []
+  },
+  {
+    "id": "club_paisplus_networks",
+    "name": "PaisPlus — Networks Cash Card",
+    "source_id": "paisplus_networks",
+    "description": "PaisPlus loadable chit card for retail networks — program-wide discount on the load",
+    "metadata": {},
+    "stores": []
+  }
+]

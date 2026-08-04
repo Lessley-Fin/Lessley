@@ -8,6 +8,8 @@ from typing import Any
 
 from lessley_deals.domain.enums import (
     AliasSource,
+    DealChangeType,
+    DealLifecycleStatus,
     MatchDecision,
     RecordFate,
     ReviewAction,
@@ -197,6 +199,65 @@ class ExternalReference:
     system: str
     external_id: str
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Deal history (SCD Type 2)
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class DealVersion:
+    """One immutable row in the Slowly-Changing-Dimension (Type 2) history.
+
+    Every time a deal is first seen, changes, expires or comes back, a new
+    ``DealVersion`` is appended.  Rows are never updated in place except for
+    *closing* them (``valid_to`` / ``is_current`` / ``status``), which is what
+    makes the "what did this deal look like on date X" query possible.
+    """
+
+    id: str
+    deal_key: str          # stable business key — same across all versions
+    version: int           # 1-based, monotonic per deal_key
+    store_id: str
+    source_id: str
+    content_hash: str      # hash of the semantic fields only (see versioning.hashing)
+    change_type: DealChangeType
+    status: DealLifecycleStatus
+    valid_from: datetime
+    valid_to: datetime | None      # None => still the current version
+    is_current: bool
+    snapshot: dict[str, Any]       # full serialized Deal as observed at valid_from
+    run_id: str | None = None      # scrape run that produced this version
+    changed_fields: tuple[str, ...] = ()
+    source_expires_at: datetime | None = None  # end date declared by the source itself
+
+
+@dataclass
+class CurrentDeal:
+    """Head record — exactly one per ``deal_key``, always the latest state.
+
+    This is the collection product code should read (filtered on
+    ``status == ACTIVE``).  ``DealVersion`` is the audit trail behind it.
+    """
+
+    deal_key: str
+    deal_id: str           # stable Deal.id — assigned on version 1, never changes
+    store_id: str
+    source_id: str
+    version: int
+    content_hash: str
+    status: DealLifecycleStatus
+    first_seen_at: datetime
+    last_seen_at: datetime
+    valid_from: datetime
+    valid_to: datetime | None = None
+    # Anti-flapping bookkeeping: a deal missing from one run is not expired
+    # immediately (a source may paginate badly or rate-limit us).
+    missing_runs: int = 0
+    missing_since: datetime | None = None
+    source_expires_at: datetime | None = None
+    raw_fingerprint: str | None = None  # last raw record fingerprint that produced it
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------

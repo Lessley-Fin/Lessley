@@ -247,7 +247,7 @@ def test_clubs_json_has_a_matching_entry_for_hever_gift_card_company() -> None:
     """PersistStage sets Deal.club_id by looking up Club.source_id (not
     anything in raw_payload) — a clubs.json entry is what actually gives
     Hever deals a club_id, same mechanism as club_topcash etc."""
-    clubs_path = Path(__file__).resolve().parents[3] / "data" / "clubs.json"
+    clubs_path = Path(__file__).resolve().parents[3] / "data" / "seed" / "clubs.json"
     clubs = json.loads(clubs_path.read_text(encoding="utf-8"))
     hever_club = next((c for c in clubs if c["source_id"] == "hever_gift_card_company"), None)
     assert hever_club is not None
@@ -255,7 +255,7 @@ def test_clubs_json_has_a_matching_entry_for_hever_gift_card_company() -> None:
 
 
 def test_clubs_json_has_a_matching_entry_for_hever_teamim_card_store() -> None:
-    clubs_path = Path(__file__).resolve().parents[3] / "data" / "clubs.json"
+    clubs_path = Path(__file__).resolve().parents[3] / "data" / "seed" / "clubs.json"
     clubs = json.loads(clubs_path.read_text(encoding="utf-8"))
     teamim_club = next((c for c in clubs if c["source_id"] == "hever_teamim_card_store"), None)
     assert teamim_club is not None

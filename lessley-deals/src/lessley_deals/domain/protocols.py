@@ -5,7 +5,9 @@ from typing import Protocol, Sequence
 from lessley_deals.domain.models import (
     CanonicalStore,
     Club,
+    CurrentDeal,
     Deal,
+    DealVersion,
     ExternalReference,
     MatchVerdict,
     NormalizedRecord,
@@ -71,6 +73,38 @@ class DealRepository(Protocol):
     def exists_by_fingerprint(self, fingerprint: str) -> bool: ...
     def get_by_store(self, store_id: str) -> list[Deal]: ...
     def get_all(self) -> list[Deal]: ...
+
+
+class DealVersionRepository(Protocol):
+    """Append-only SCD Type 2 history of deals."""
+
+    def append_many(self, versions: Sequence[DealVersion]) -> None: ...
+
+    def close_current(self, closures: Sequence[tuple[str, object]]) -> None:
+        """Close the current row of each ``deal_key``: ``(deal_key, valid_to)``.
+
+        The row stops being current and gains an end date.  Its ``status`` is
+        left untouched — it records what the deal *was* during that window, and
+        point-in-time queries depend on that staying true.
+
+        Idempotent: closing an already-closed row is a no-op, which makes a
+        crashed run safe to replay.
+        """
+        ...
+
+    def get_current(self, deal_key: str) -> DealVersion | None: ...
+    def get_history(self, deal_key: str) -> list[DealVersion]: ...
+    def next_version(self, deal_key: str) -> int: ...
+
+
+class CurrentDealRepository(Protocol):
+    """Head table — one row per business key, always the latest state."""
+
+    def bulk_upsert(self, heads: Sequence[CurrentDeal]) -> None: ...
+    def get(self, deal_key: str) -> CurrentDeal | None: ...
+    def get_by_source(self, source_id: str) -> list[CurrentDeal]: ...
+    def get_active(self, store_id: str | None = None) -> list[CurrentDeal]: ...
+    def count_active(self, source_id: str) -> int: ...
 
 
 class ReviewRepository(Protocol):

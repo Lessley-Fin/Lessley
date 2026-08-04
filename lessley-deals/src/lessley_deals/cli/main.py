@@ -108,57 +108,13 @@ def _make_repos(data_dir: str) -> SimpleNamespace:
 def _auto_seed_mongo_if_empty(db: object, data_dir: str) -> None:  # type: ignore[type-arg]
     """Seed stores, aliases and clubs from the seed JSON files when MongoDB is empty.
 
-    This is idempotent — uses $setOnInsert so existing documents are never
-    overwritten.  Runs silently on every startup; the actual DB round-trip is
-    negligible because count_documents returns quickly when the collection is
-    non-empty.
+    Thin wrapper kept for the CLI's call site — the implementation is shared with
+    the worker's composition root (``pipeline.factory``), which needs the exact
+    same behaviour on a fresh deployment.
     """
-    import json
-    import logging as _logging
+    from lessley_deals.persistence.seeding import seed_mongo_if_empty
 
-    _log = _logging.getLogger(__name__)
-
-    # Check if stores already exist — if so, skip (fast path).
-    if db["stores"].count_documents({}, limit=1) > 0:  # type: ignore[index]
-        return
-
-    _log.info("MongoDB stores collection is empty — seeding from seed files…")
-
-    # Prefer data/seed/ directory; fall back to data/ for stores/aliases.
-    seed_candidates = [Path("data/seed"), Path(data_dir)]
-    _CLUBS = [
-        {"_id": "club_hot",        "name": "HOT Israel",       "source_id": "hot",        "description": "HOT Israel — cable TV & internet member benefits",   "metadata": {}, "stores": []},
-        {"_id": "club_mastercard", "name": "Mastercard Israel", "source_id": "mastercard", "description": "Mastercard Israel credit card benefits",              "metadata": {}, "stores": []},
-        {"_id": "club_topcash",    "name": "Isracard TopCash",  "source_id": "topcash",    "description": "Isracard TopCash cashback benefits",                  "metadata": {}, "stores": []},
-        {"_id": "club_behatsdaa",  "name": "Behatsdaa",         "source_id": "behatsdaa",  "description": "Behatsdaa deals aggregator",                          "metadata": {}, "stores": []},
-    ]
-
-    def _upsert_file(collection: str, path: Path) -> int:
-        if not path.exists():
-            return 0
-        items = json.loads(path.read_text(encoding="utf-8"))
-        inserted = 0
-        for d in items:
-            doc = dict(d)
-            doc_id = doc.pop("id", None) or doc.pop("_id", None)
-            doc["_id"] = doc_id
-            result = db[collection].update_one({"_id": doc_id}, {"$setOnInsert": doc}, upsert=True)  # type: ignore[index]
-            if result.upserted_id is not None:
-                inserted += 1
-        return inserted
-
-    for seed_dir_path in seed_candidates:
-        stores_file = seed_dir_path / "stores.json"
-        aliases_file = seed_dir_path / "store_aliases.json"
-        if stores_file.exists():
-            n = _upsert_file("stores", stores_file)
-            _log.info("Auto-seeded %d stores from %s", n, stores_file)
-            _upsert_file("store_aliases", aliases_file)
-            break  # found and seeded — done
-
-    # Clubs are always seeded (they're hardcoded, not from a file)
-    for club_doc in _CLUBS:
-        db["clubs"].update_one({"_id": club_doc["_id"]}, {"$setOnInsert": club_doc}, upsert=True)  # type: ignore[index]
+    seed_mongo_if_empty(db, data_dir)
 
 
 def _setup_logging(log_level: str) -> None:
@@ -1624,6 +1580,204 @@ def enrich_constraints_cmd(
         f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']}"
         + (" [yellow](dry-run)[/yellow]" if dry_run else "")
     )
+
+
+# ---------------------------------------------------------------------------
+# Orchestration: worker process, schedule inspection, deal history
+# ---------------------------------------------------------------------------
+
+@app.command()
+def serve(
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Run the long-lived scraper worker: scheduled, concurrent, self-retrying.
+
+    Reads schedules from data/seed/schedules.json (overridable per source with
+    DEALS_SCHEDULE_<SOURCE>).  This is the container entrypoint in production.
+    """
+    os.environ.setdefault("DEALS_LOG_LEVEL", log_level)
+
+    from lessley_deals.scheduling.service import run_service
+
+    raise typer.Exit(code=asyncio.run(run_service()))
+
+
+@app.command(name="schedules")
+def schedules_cmd(
+    log_level: str = typer.Option("WARNING", "--log-level", "-l"),
+) -> None:
+    """Show the resolved schedule for every source and its next firing time."""
+    _setup_logging(log_level)
+
+    from datetime import datetime, timezone
+
+    from lessley_deals.scheduling.config import load_schedules
+
+    registry = SourceRegistry()
+    registry.register_defaults()
+    specs = load_schedules(registry.list_all())
+    now = datetime.now(timezone.utc)
+
+    console.print(f"[bold]{len(specs)} source(s)[/bold] (times in UTC)\n")
+    for spec in specs:
+        if not spec.enabled:
+            console.print(f"  [dim]{spec.source_id:<32} disabled[/dim]")
+            continue
+        when = spec.cron or f"every {spec.interval_seconds:.0f}s"
+        nxt = spec.next_fire_at(now).isoformat(timespec="seconds")
+        console.print(f"  [cyan]{spec.source_id:<32}[/cyan] {when:<18} next: {nxt}")
+
+
+@app.command(name="run-source")
+def run_source_cmd(
+    source: str = typer.Argument(..., help="source_id to run once, through the full pipeline"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Run one source once, exactly as the scheduler would (versioning included)."""
+    _setup_logging(log_level)
+
+    from lessley_deals.persistence.id_gen import generate_id
+    from lessley_deals.pipeline.factory import build_pipeline
+
+    bundle = build_pipeline()
+    if source not in bundle.source_ids:
+        console.print(f"[red]Unknown source {source!r}.[/red] Known: {', '.join(bundle.source_ids)}")
+        raise typer.Exit(code=1)
+
+    report = asyncio.run(bundle.pipeline.run([source], run_id=generate_id()))
+    console.print(report.summary())
+
+
+@app.command(name="run-all")
+def run_all_cmd(
+    exclude: Optional[str] = typer.Option(
+        None, "--exclude", help="Comma-separated source_ids to skip, e.g. swish,llm:max"
+    ),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Run every registered source once, exactly as the scheduler would.
+
+    Same pipeline as ``run-source`` (scrape → normalize → match → version →
+    persist) but across the whole registry, so a fresh database can be filled in
+    one command instead of one invocation per scraper. Which sources are
+    registered still follows ``DEALS_LLM_SOURCES``.
+    """
+    _setup_logging(log_level)
+
+    from lessley_deals.persistence.id_gen import generate_id
+    from lessley_deals.pipeline.factory import build_pipeline
+
+    bundle = build_pipeline()
+    skip = {s.strip() for s in exclude.split(",")} if exclude else set()
+    sources = [s for s in bundle.source_ids if s not in skip]
+
+    if not sources:
+        console.print("[red]No sources left to run.[/red]")
+        raise typer.Exit(code=1)
+
+    console.print(f"[bold]Running {len(sources)} source(s):[/bold] {', '.join(sources)}")
+    if skip:
+        console.print(f"[dim]Skipping: {', '.join(sorted(skip))}[/dim]")
+
+    report = asyncio.run(bundle.pipeline.run(sources, run_id=generate_id()))
+    console.print(report.summary())
+
+    if report.failed_sources:
+        console.print(f"[red]Failed sources: {', '.join(sorted(report.failed_sources))}[/red]")
+        raise typer.Exit(code=1)
+
+
+@app.command(name="publish-gateway-view")
+def publish_gateway_view_cmd(
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Rebuild ``deal_list``/``store_list`` — the collections the Gateway reads.
+
+    Runs automatically after every scrape; this is for republishing on demand,
+    e.g. after a manual edit or to backfill a database scraped before the
+    projection existed. Idempotent.
+    """
+    _setup_logging(log_level)
+
+    storage = os.environ.get("DEALS_STORAGE", "json").lower()
+    if storage != "mongo":
+        console.print("[red]publish-gateway-view requires DEALS_STORAGE=mongo.[/red]")
+        raise typer.Exit(code=1)
+
+    from lessley_deals.persistence.gateway_view import sync_gateway_view
+    from lessley_deals.persistence.mongo_client import get_database
+
+    result = sync_gateway_view(get_database())
+    for collection, counts in result.items():
+        console.print(
+            f"  [bold]{collection}[/bold]: {counts['written']} written, {counts['removed']} removed"
+        )
+
+
+@app.command(name="deal-history")
+def deal_history_cmd(
+    deal_key: str = typer.Argument(..., help="deal_key to show the full version history for"),
+    log_level: str = typer.Option("WARNING", "--log-level", "-l"),
+) -> None:
+    """Print every version of a deal — what changed, when, and what is live now."""
+    _setup_logging(log_level)
+
+    from lessley_deals.pipeline.factory import build_pipeline
+
+    bundle = build_pipeline()
+    if bundle.version_repo is None:
+        console.print("[red]Versioning is disabled (DEALS_VERSIONING=0).[/red]")
+        raise typer.Exit(code=1)
+
+    versions = bundle.version_repo.get_history(deal_key)
+    if not versions:
+        console.print(f"[yellow]No history for deal_key={deal_key}[/yellow]")
+        raise typer.Exit(code=1)
+
+    console.print(f"[bold]{len(versions)} version(s) for {deal_key}[/bold]\n")
+    for version in versions:
+        marker = "[green]● current[/green]" if version.is_current else "[dim]○[/dim]"
+        valid_to = version.valid_to.isoformat(timespec="seconds") if version.valid_to else "—"
+        console.print(
+            f"  {marker} v{version.version} [{version.change_type}/{version.status}] "
+            f"{version.valid_from.isoformat(timespec='seconds')} → {valid_to}"
+        )
+        if version.changed_fields:
+            console.print(f"      changed: {', '.join(version.changed_fields)}")
+        title = version.snapshot.get("title") or version.snapshot.get("deal_description") or ""
+        if title:
+            console.print(f"      [dim]{get_display(str(title)[:100])}[/dim]")
+
+
+@app.command(name="run-history")
+def run_history_cmd(
+    source: Optional[str] = typer.Option(None, "--source", "-s", help="Filter to one source"),
+    limit: int = typer.Option(20, "--limit", "-n"),
+    log_level: str = typer.Option("WARNING", "--log-level", "-l"),
+) -> None:
+    """Show recent scheduled runs from the run journal (status, duration, counts)."""
+    _setup_logging(log_level)
+
+    from lessley_deals.pipeline.factory import build_pipeline
+    from lessley_deals.scheduling.service import build_journal
+
+    rows = build_journal(build_pipeline()).recent(source_id=source, limit=limit)
+    if not rows:
+        console.print("[yellow]No runs recorded yet.[/yellow]")
+        return
+
+    for row in rows:
+        colour = {"success": "green", "partial": "yellow", "failed": "red"}.get(
+            str(row.get("status")), "white"
+        )
+        console.print(
+            f"  [{colour}]{str(row.get('status')):<8}[/{colour}] "
+            f"{row.get('source_id'):<28} {row.get('started_at')} "
+            f"({row.get('duration_seconds', 0):.0f}s, attempt {row.get('attempt')}) "
+            f"new={row.get('deals_new', 0)} upd={row.get('deals_updated', 0)} "
+            f"exp={row.get('deals_expired', 0)}"
+            + (f"  [red]{row.get('error')}[/red]" if row.get("error") else "")
+        )
 
 
 if __name__ == "__main__":

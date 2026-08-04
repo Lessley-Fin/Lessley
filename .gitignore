@@ -56,3 +56,6 @@ lessley-deals/src/lessley_deals/enrichment/data/*
 
 # Local Claude settings
 .claude/settings.json
+
+# Backups of env files — these hold the same secrets as the originals
+.env.bak*

@@ -9,6 +9,8 @@ from typing import Any
 
 from lessley_deals.domain.enums import (
     AliasSource,
+    DealChangeType,
+    DealLifecycleStatus,
     MatchDecision,
     RecordFate,
     ReviewAction,
@@ -17,7 +19,9 @@ from lessley_deals.domain.enums import (
 from lessley_deals.domain.models import (
     CanonicalStore,
     Club,
+    CurrentDeal,
     Deal,
+    DealVersion,
     Explanation,
     ExternalReference,
     MatchCandidate,
@@ -37,6 +41,8 @@ _ENUM_MAP = {
     "ReviewAction": ReviewAction,
     "AliasSource": AliasSource,
     "RecordFate": RecordFate,
+    "DealLifecycleStatus": DealLifecycleStatus,
+    "DealChangeType": DealChangeType,
 }
 
 
@@ -214,6 +220,47 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         club_id=d.get("club_id"),
         group_member_stores=d.get("group_member_stores") or None,
         group_member_store_ids=d.get("group_member_store_ids") or None,
+    )
+
+
+def deal_version_from_dict(d: dict[str, Any]) -> DealVersion:
+    return DealVersion(
+        id=d["id"],
+        deal_key=d["deal_key"],
+        version=int(d["version"]),
+        store_id=d["store_id"],
+        source_id=d["source_id"],
+        content_hash=d["content_hash"],
+        change_type=DealChangeType(d["change_type"]),
+        status=DealLifecycleStatus(d["status"]),
+        valid_from=_parse_datetime(d["valid_from"]),  # type: ignore[arg-type]
+        valid_to=_parse_datetime(d.get("valid_to")),
+        is_current=bool(d["is_current"]),
+        snapshot=d.get("snapshot", {}),
+        run_id=d.get("run_id"),
+        changed_fields=tuple(d.get("changed_fields", ())),
+        source_expires_at=_parse_datetime(d.get("source_expires_at")),
+    )
+
+
+def current_deal_from_dict(d: dict[str, Any]) -> CurrentDeal:
+    return CurrentDeal(
+        deal_key=d["deal_key"],
+        deal_id=d["deal_id"],
+        store_id=d["store_id"],
+        source_id=d["source_id"],
+        version=int(d["version"]),
+        content_hash=d["content_hash"],
+        status=DealLifecycleStatus(d["status"]),
+        first_seen_at=_parse_datetime(d["first_seen_at"]),  # type: ignore[arg-type]
+        last_seen_at=_parse_datetime(d["last_seen_at"]),  # type: ignore[arg-type]
+        valid_from=_parse_datetime(d["valid_from"]),  # type: ignore[arg-type]
+        valid_to=_parse_datetime(d.get("valid_to")),
+        missing_runs=int(d.get("missing_runs", 0)),
+        missing_since=_parse_datetime(d.get("missing_since")),
+        source_expires_at=_parse_datetime(d.get("source_expires_at")),
+        raw_fingerprint=d.get("raw_fingerprint"),
+        snapshot=d.get("snapshot", {}),
     )
 
 

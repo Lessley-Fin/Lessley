@@ -278,7 +278,7 @@ class TestScrape:
 
 
 def test_clubs_json_has_matching_entries_for_both_cashcard_sources() -> None:
-    clubs_path = Path(__file__).resolve().parents[3] / "data" / "clubs.json"
+    clubs_path = Path(__file__).resolve().parents[3] / "data" / "seed" / "clubs.json"
     clubs = json.loads(clubs_path.read_text(encoding="utf-8"))
 
     food_club = next((c for c in clubs if c["source_id"] == "paisplus_food_chains"), None)

@@ -335,7 +335,7 @@ class TestScrape:
 
 
 def test_clubs_json_has_a_matching_entry_for_paisplus() -> None:
-    clubs_path = Path(__file__).resolve().parents[3] / "data" / "clubs.json"
+    clubs_path = Path(__file__).resolve().parents[3] / "data" / "seed" / "clubs.json"
     clubs = json.loads(clubs_path.read_text(encoding="utf-8"))
     club = next((c for c in clubs if c["source_id"] == "paisplus"), None)
     assert club is not None

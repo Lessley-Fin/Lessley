@@ -17,6 +17,11 @@ pip install -e ".[dev]"
 
 ### Running the pipeline
 ```bash
+python -m deals serve                                # Long-running scheduled worker (production)
+python -m deals schedules                            # Resolved schedules + next firing times
+python -m deals run-source hot                       # One source once, as the scheduler would
+python -m deals run-history --source hot             # Recent scheduled runs from the journal
+python -m deals deal-history <deal_key>              # Full version history of one deal
 python -m deals scrape --all                         # Scrape all sources
 python -m deals scrape --source hot                  # Scrape one source
 python -m deals process                              # Normalize + match raw data
@@ -43,15 +48,18 @@ ruff format src/ tests/     # Format
 
 ## Architecture
 
-The system is a four-stage pipeline: **Scrape → Normalize → Match → Persist**.
+The system is a five-stage pipeline: **Scrape → Normalize → Match → Persist → Ingest**,
+driven by a scheduler that runs every source independently and concurrently.
 
 ### Data Flow
 ```
-Sources (HTTP/Browser)
+SchedulerService (one asyncio loop per source, cron/interval)
+    → SourceRunner      → lease lock, timeout, retry w/ backoff, run journal
     → ScrapeStage       → RawScrapedRecord, RawStore (verbatim, frozen)
     → NormalizeStage    → NormalizedRecord with NameForms {normalized, compact, tokens}
     → MatchStage        → MatchVerdict (AUTO_MATCH | REVIEW | NO_MATCH)
-    → PersistStage/ReviewQueue → JSON files or MongoDB
+    → PersistStage/ReviewQueue → deals or review queue
+    → IngestStage       → SCD Type 2 history (deal_versions + deals_current)
 ```
 
 ### Key Subsystems
@@ -74,7 +82,13 @@ Thresholds from `MatchConfig`: auto-accept ≥ 0.90, send to review ≥ 0.50, di
 
 **`src/lessley_deals/review/`** — Interactive TUI for human review of uncertain matches. `Learner` feeds approved matches back as aliases, so they auto-match on the next run.
 
-**`src/lessley_deals/pipeline/`** — `PipelineOrchestrator` wires `scrape_stage.py`, `normalize_stage.py`, `match_stage.py`, `persist_stage.py` via a shared `context.py`. Each stage is independently testable.
+**`src/lessley_deals/pipeline/`** — `PipelineOrchestrator` wires `scrape_stage.py`, `normalize_stage.py`, `match_stage.py`, `persist_stage.py`, `ingest_stage.py` via a shared `context.py`. Each stage is independently testable. `factory.py` is the **composition root** — the single place that decides JSON vs MongoDB, which sources are registered, and whether versioning is on. Both the CLI and the worker build from it.
+
+**`src/lessley_deals/scheduling/`** — the worker process. One `asyncio` loop per source (`scheduler.py`), each wrapped by `runner.py` (Mongo lease lock → run journal → hard timeout → exponential backoff + jitter). Schedules come from `data/seed/schedules.json`, overridable per source with `DEALS_SCHEDULE_<SOURCE>` (`off` / cron / `15m`). Cron is parsed in-repo (`schedule.py`) — no `croniter` dependency. Entrypoint: `scheduling/service.py`. See `docs/orchestration.md`.
+
+**`src/lessley_deals/versioning/`** — SCD Type 2 deal history. **Data is never overwritten**: every change appends an immutable `DealVersion`, and a `CurrentDeal` head row (collection `deals_current`, filter `status: "active"`) holds the latest state. Two distinct hashes: `deal_key` (stable identity — must survive edits) and `content_hash` (semantic fields only — must ignore timestamps and URL tracking params). `ingestion.py::plan_ingestion` is a **pure function**, so classification (new/updated/unchanged/expired/reactivated) is fully unit-testable; `IngestionService` only loads, plans and bulk-writes.
+
+  Expiry is guarded on purpose — a deal is only expired when the run had no errors, covered ≥50% of the known active deals, and the deal has been missing for ≥2 runs *and* ≥24h. Never weaken these without reading `docs/orchestration.md#3` first; under-expiring is recoverable, mass false expiry is not.
 
 **Group gift cards** — HOT deals are classified as either store-specific or group-wide gift cards (e.g. "קבוצת גולף"). Group deals embed `group_member_stores` on the record so query-time fan-out can surface them for any member.
 
@@ -86,12 +100,22 @@ The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json`
 - Default: JSON files in `data/` (configurable via `DEALS_DATA_DIR`)
 - Optional: MongoDB (set `DEALS_STORAGE=mongo`, `MONGO_URI`, `MONGO_DB_NAME`)
 - Raw scraped data is always preserved verbatim for auditability and replay
+- Deal state lives in `deals_current` (head, one row per deal) + `deal_versions`
+  (append-only history). The legacy append-only `deals` collection is only
+  written when `DEALS_WRITE_LEGACY=1` — see the migration notes in
+  `docs/orchestration.md#5`.
+- Operational collections: `scrape_runs` (run journal, 90-day TTL) and
+  `scheduler_locks` (lease locks for multi-replica workers)
 
 ### Adding a new scraper
 1. Create `src/lessley_deals/scraping/sources/my_source.py` extending `BaseSourceAdapter`
 2. Implement `source_id` property and `async def scrape() -> list[RawScrapedRecord]`
 3. Register in `src/lessley_deals/scraping/registry.py`
 4. Add tests in `tests/unit/scraping/`
+5. Optionally add an entry to `data/seed/schedules.json` (otherwise it defaults
+   to `0 3 * * *`), and register an identity extractor in
+   `pipeline/factory.py::build_identity_resolver` if the source exposes a stable
+   primary key — that keeps deal history intact across wording changes.
 
 Existing sources: `hot.py`, `mastercard.py`, `behatsdaa.py`, `isracard_topcash.py`,
 `hever.py` (`HeverGiftCardAdapter`, source_id `hever_gift_card_company`) and
@@ -147,7 +171,15 @@ in messy freeform text; skip it when they're already named JSON/HTML fields.
 | `LLM_SCRAPER_VERBOSE` | — | When set (any value), the AI scraper logs the cleaned DOM preview and each extracted deal at INFO. The engine also logs a WARNING when a page looks blocked (captcha/empty/anti-bot markers) |
 | `MONGO_URI` | — | MongoDB connection string |
 | `MONGO_DB_NAME` | — | MongoDB database name |
+| `DEALS_VERSIONING` | `1` | SCD Type 2 deal history (see `docs/orchestration.md`) |
+| `DEALS_WRITE_LEGACY` | `0` | Also write the old append-only `deals` collection |
+| `DEALS_MAX_CONCURRENCY` | `3` | Sources scraped in parallel by the worker |
+| `DEALS_SCHEDULE_<SOURCE>` | — | Per-source override: `off`, a cron string, or `15m`/`6h` |
+| `DEALS_ABSENCE_THRESHOLD` / `DEALS_ABSENCE_GRACE_HOURS` | `2` / `24` | Misses + wall-clock before a deal expires |
+| `DEALS_MIN_COVERAGE_RATIO` | `0.5` | Skip the expiry sweep on partial scrapes |
 
 ## Docker
 
-The `Dockerfile` has three stages: `base` (core deps), `test` (adds dev deps, runs pytest), `browser` (adds Playwright + Chromium for JS-heavy sources). See `docs/container.md`.
+The `Dockerfile` has three stages: `base` (core deps), `test` (adds dev deps, runs pytest), `browser` (adds Playwright + Chromium for JS-heavy sources). See `docs/container.md`.  A fourth stage, `worker`, is the scheduled scraper
+service (`docker-compose.worker.yml`); it runs non-root and handles SIGTERM
+gracefully.  See `docs/orchestration.md`.

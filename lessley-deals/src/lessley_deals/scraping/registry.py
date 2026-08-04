@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
-from typing import Type
+from typing import Any, Type
 
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
 
@@ -64,6 +65,35 @@ def _coerce_max_len(value: object, default: int = 6000) -> int:
     return n if n > 0 else default
 
 
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _adapter_kwargs(adapter_class: Type[BaseSourceAdapter]) -> dict[str, Any]:
+    """Env-driven constructor options for adapters that have any.
+
+    HOT is the only one today. It always scrapes every benefit type (that is
+    the adapter's own default); what is optional is fetching each benefit's
+    detail page, which is where ``terms_and_conditions`` comes from — and
+    therefore what the constraints enrichment stage has to work with. The CLI
+    exposes this as ``--hot-fetch-details``; reading it from the environment
+    here is what lets the long-running worker turn it on too, since the worker
+    never parses CLI flags.
+    """
+    from lessley_deals.scraping.sources.hot import HotAdapter
+
+    if adapter_class is HotAdapter:
+        return {
+            "fetch_details": _env_flag("HOT_FETCH_DETAILS"),
+            "details_delay_seconds": _coerce_float(os.environ.get("HOT_DETAILS_DELAY"), 2.0),
+            "request_delay_seconds": _coerce_float(os.environ.get("HOT_REQUEST_DELAY"), 1.5),
+        }
+    return {}
+
+
 class SourceRegistry:
     """Central registry that maps *source_id* strings to adapter instances."""
 
@@ -74,17 +104,21 @@ class SourceRegistry:
         self,
         adapter_class: Type[BaseSourceAdapter],
         config: SourceConfig,
+        **kwargs: Any,
     ) -> None:
         """Instantiate *adapter_class* with *config* and register it.
 
-        The ``source_id`` is read from the newly created instance.
+        The ``source_id`` is read from the newly created instance. Extra
+        *kwargs* are forwarded to the adapter's constructor, so a source with
+        tunable behaviour (HOT's detail fetching, for one) can be configured
+        here instead of callers reaching into ``_adapters`` to swap instances.
 
         Raises
         ------
         ValueError
             If a source with the same *source_id* is already registered.
         """
-        instance = adapter_class(config)
+        instance = adapter_class(config, **kwargs)
         sid = instance.source_id
         if sid in self._adapters:
             raise ValueError(f"Source '{sid}' is already registered")
@@ -180,7 +214,7 @@ class SourceRegistry:
         ]
         for cls, url in defaults:
             try:
-                self.register(cls, SourceConfig(base_url=url))
+                self.register(cls, SourceConfig(base_url=url), **_adapter_kwargs(cls))
             except ValueError:
                 pass  # already registered
 

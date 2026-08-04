@@ -20,6 +20,10 @@ dependencies = [
     "python-dotenv>=1.0,<2.0",
     "openai>=1.40,<2.0",
     "pydantic>=2.0,<3.0",
+    # Hebrew RTL shaping. Imported at module scope by cli/main.py (the `deals`
+    # console script), review/display.py and optimizer/optimizer_utils.py, so a
+    # clean install without it cannot even start the CLI.
+    "python-bidi>=0.6,<1.0",
 ]
 
 [project.optional-dependencies]

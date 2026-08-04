@@ -43,12 +43,16 @@ class PersistStage:
         store_repo: CanonicalStoreRepository,
         review_no_match: bool = False,
         club_repo: Any = None,
+        write_deals: bool = True,
     ) -> None:
         self._deal_repo = deal_repo
         self._review_repo = review_repo
         self._store_repo = store_repo
         self._review_no_match = review_no_match
         self._club_repo = club_repo
+        # When the versioning layer is wired in it owns the deal collections;
+        # writing here as well would produce two competing sources of truth.
+        self._write_deals = write_deals
         # Build source_id → club_id map once at init (small dataset)
         self._club_map: dict[str, str] = {}
         if club_repo is not None:
@@ -68,7 +72,12 @@ class PersistStage:
         normalized_map: dict[str, NormalizedRecord],
         verdict_map: dict[str, MatchVerdict],
         constraints_map: dict[str, dict[str, Any]] | None = None,
-    ) -> None:
+    ) -> list[Deal]:
+        """Route records to deals / review queue and return the built deals.
+
+        The returned list is what the ingestion stage versions — see
+        :mod:`lessley_deals.pipeline.ingest_stage`.
+        """
         now = datetime.now(timezone.utc)
         constraints_map = constraints_map or {}
 
@@ -158,7 +167,8 @@ class PersistStage:
                         if changed:
                             self._store_repo.save(store)
 
-                self._deal_repo.save(deal)
+                if self._write_deals:
+                    self._deal_repo.save(deal)
                 self._update_club_stores(deal.club_id, deal.store_id)
                 prec.fate = RecordFate.AUTO_MATCHED
             await asyncio.sleep(0)  # yield control between batches
@@ -167,12 +177,13 @@ class PersistStage:
         # Persist review items in batches.                                   #
         # ------------------------------------------------------------------ #
         for i in range(0, len(review_batch), _BATCH_SIZE):
-            chunk = review_batch[i : i + _BATCH_SIZE]
-            for prec, review_item in chunk:
+            review_chunk = review_batch[i : i + _BATCH_SIZE]
+            for review_prec, review_item in review_chunk:
                 self._review_repo.save(review_item)
-                prec.fate = RecordFate.SENT_TO_REVIEW
+                review_prec.fate = RecordFate.SENT_TO_REVIEW
             await asyncio.sleep(0)
 
         auto = sum(1 for r in pipeline_records if r.fate == RecordFate.AUTO_MATCHED)
         review = sum(1 for r in pipeline_records if r.fate == RecordFate.SENT_TO_REVIEW)
         logger.info("Persist stage: %d deals created, %d sent to review", auto, review)
+        return [deal for _, deal in auto_match_batch]

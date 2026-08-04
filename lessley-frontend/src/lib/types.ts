@@ -163,3 +163,60 @@ export interface TopStoreInsight {
     transaction_amount?: number
   }>
 }
+
+// ── Deal optimizer ─────────────────────────────────────────────────────────────
+// The optimizer service speaks snake_case and the Gateway passes its envelope
+// through untouched, so these mirror deal-optimizer's own field names.
+
+/**
+ * One deal applied along a path. Fields split into whole-cart running state
+ * (`bill_before`/`bill_after`) and this-step-only state (`ils_covered`,
+ * `discount_rate`, `savings`) — a card capped at 1000 on a 1200 cart still
+ * reports `bill_before: 1200`; `ils_covered` is what that card actually touched.
+ */
+export interface OptimizerStep {
+  deal_id: string
+  bill_before: number
+  bill_after: number
+  /** ILS routed through this payment instrument; null for price-level deals. */
+  ils_covered: number | null
+  discount_rate: number
+  savings: number
+  amount_paid_on_covered: number
+  /** Bill ILS not yet routed to an instrument; null until the first tender step. */
+  remaining_to_allocate: number | null
+  cumulative_savings: number
+  cumulative_discount_rate: number
+}
+
+export interface OptimizerResult {
+  rank: number
+  /** Deal ids in application order — resolve against `deals` for display. */
+  path: string[]
+  starting_price: number
+  final_price: number
+  total_savings: number
+  per_step: OptimizerStep[]
+}
+
+export interface OptimizerDealSummary {
+  deal_id: string
+  title?: string | null
+  description?: string | null
+  deal_type?: string | null
+  source_id?: string | null
+  club_id?: string | null
+  url?: string | null
+}
+
+export interface OptimizeResponse {
+  generated_at: string
+  store_id: string
+  cart_total: number
+  cart_quantity: number
+  wallet_id: string | null
+  /** Ranked cheapest-first; `results[0]` is the winning stack. */
+  results: OptimizerResult[]
+  deals: Record<string, OptimizerDealSummary>
+  deals_considered: number
+}

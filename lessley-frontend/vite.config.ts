@@ -12,6 +12,12 @@ export default defineConfig({
     },
   },
   server: {
+    // The Gateway's CorsOrigins allows http://localhost:8000, so the dev server
+    // has to serve from that origin or every API call is blocked by CORS.
+    // strictPort makes a taken port fail loudly instead of silently falling back
+    // to another port that the Gateway would then reject.
+    port: 8000,
+    strictPort: true,
     proxy: {
       '/personalization': {
         target: process.env.VITE_PERSONALIZATION_PROXY_TARGET ?? 'http://localhost:8002',
