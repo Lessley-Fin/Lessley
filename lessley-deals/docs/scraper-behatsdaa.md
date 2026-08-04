@@ -2,90 +2,98 @@
 
 ## Overview
 
-Scrapes wallet and chain data from the **Behatsdaa** discount card API.  Unlike HOT and Mastercard which provide *deals*, Behatsdaa provides *discount wallets* — prepaid wallets loaded at a discount, each mapped to a set of retail chains where the card is accepted.
+Scrapes Behatsdaa's per-wallet giftcard discounts. Behatsdaa provides
+*discount wallets* — monthly-loadable giftcards, each with its own flat
+discount rate and monthly deposit cap (e.g. "load up to 500 ₪/month, get
+15% off"), each accepted at a set of retail chains.
 
 **Source ID:** `behatsdaa`
 
+## Why file-based, not live
+
+The Behatsdaa site requires a fresh login every time — there's no stable API
+key, and a bare live-API adapter (fetching `GetCardGeneralInfo` /
+`GetWalletChain` with an `AccessToken` header) can't authenticate without one.
+Instead, this adapter reads **locally saved** copies of each wallet's own
+`GetWalletChain` response, refreshed by hand after logging in.
+
 ## How It Works
 
-### Authentication
+### Files
 
-- **Base URL:** `https://back.behatsdaa.org.il`
-- **Required headers:** `organizationid` (default `"20"`), `native` (default `"true"`)
-- **Optional headers:** `AccessToken`, `cookie` (for authenticated endpoints)
-- **Origin/Referer:** `https://www.behatsdaa.org.il`
+- `data/behatsdaa_snapshots/behatsdaa_giftcards_config.json` — one entry per wallet, keyed by
+  wallet id, giving the economics that aren't in the chains response itself:
 
-### API Endpoints
+  ```json
+  {
+    "2110": {
+      "file": "behatsdaa_15_perc_2110.json",
+      "name": "15% ארנק",
+      "discount_percent": 15,
+      "max_deposit_per_month": 500,
+      "currency": "ILS",
+      "active": true,
+      "notes": ""
+    }
+  }
+  ```
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/cards/GetCardGeneralInfo` | GET | List all wallets |
-| `/api/cards/GetWalletChain?walletId=X` | GET | List chains for a wallet |
+  - `file` — the wallet's saved chains JSON, resolved relative to this
+    config file's own directory (currently `data/behatsdaa_snapshots/`).
+  - `discount_percent` is required; entries missing it are skipped with a
+    warning (not an error), so a partially-filled-in config doesn't break
+    `scrape --all`.
+  - `max_deposit_per_month` is optional — omit/null it for an uncapped
+    wallet.
+  - `active: false` disables a wallet without deleting its entry/file.
+  - Keys starting with `_` (e.g. `_comment`, `_example`) are treated as
+    comments and skipped — same convention as
+    `scraping/config/hot_store_groups.json`.
 
-### Data Model
+- Each wallet's own JSON file (also in `data/behatsdaa_snapshots/`) — a **verbatim saved response** of
+  `GET https://back.behatsdaa.org.il/api/cards/GetWalletChain?walletId=<id>`:
 
-**Wallet** = a prepaid discount card category:
-```json
-{
-  "walletID": "123",
-  "walletName": "ארנק מזון",
-  "discountRate": 7.5,
-  "maxDepositForMonth": 2000,
-  "walletBalance": 500.0
-}
-```
+  ```json
+  {
+    "status": true,
+    "data": [
+      {
+        "tagName": "רשתות שיווק מזון ופארמה",
+        "walletChainData": [
+          {"chainID": "107", "chainName": "קינג סטור", "webSite": "https://www.kingstore.co.il", "logoURL": "..."}
+        ]
+      }
+    ]
+  }
+  ```
 
-**Chain** = a retail chain where the wallet is accepted:
-```json
-{
-  "chainID": "456",
-  "chainName": "שופרסל",
-  "webSite": "www.shufersal.co.il"
-}
-```
+### Refreshing a wallet's chain list
+
+1. Log in on behatsdaa.org.il.
+2. Open devtools → Network, find the `GetWalletChain?walletId=<id>` request.
+3. Save the response body over the matching file in `data/behatsdaa_snapshots/`.
+4. Re-run `deals scrape --source behatsdaa`.
 
 ### Mapping to Domain
 
-- Each **chain** → `RawStore` (deduplicated by name)
-- Each **wallet × chain** → `RawScrapedRecord` (the discount relationship)
-- Description: "הנחה 7.5% בשופרסל" (discount rate at chain)
-- Price text: "7.5%" (the wallet discount rate)
-- Generic brands filtered: "בהצדעה", "behatsdaa"
+- Each **chain** → `RawStore` (deduplicated by cleaned chain name — a chain
+  shared by multiple wallets is still a single store).
+- Each **wallet × chain** → `RawScrapedRecord` (one deal per wallet a chain
+  is accepted under — different wallets are different discount economics,
+  not duplicates).
+- `discount_logic.reward.value` = `discount_percent / 100`; `max_discount_amount`
+  (when a deposit cap is set) = the real max monthly benefit, `max_deposit_per_month * discount_percent / 100`.
+- Generic brand names filtered via `is_generic_behatsdaa_brand` (e.g. "בהצדעה" itself).
 
 ## CLI Usage
 
 ```bash
-# Scrape Behatsdaa (requires access token)
 deals scrape --source behatsdaa
 ```
 
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BEHATSDAA_ACCESS_TOKEN` | *(empty)* | API authentication token |
-| `BEHATSDAA_COOKIE` | *(empty)* | Session cookie if required |
-| `BEHATSDAA_ORGANIZATION_ID` | `20` | Organization header |
-| `BEHATSDAA_NATIVE` | `true` | Native header flag |
-| `BEHATSDAA_ORIGIN` | `https://www.behatsdaa.org.il` | Origin header |
-| `BEHATSDAA_REFERER` | `https://www.behatsdaa.org.il/` | Referer header |
-
-## Known Quirks
-
-1. **Authentication required:** Most endpoints need a valid `AccessToken`
-2. **Session timeout:** Sessions expire — legacy code had a keepalive ping mechanism
-3. **Nested chain data:** Chains are nested inside `walletChainData` arrays within group objects
-4. **Wallet balance is user-specific:** The `walletBalance` field reflects the authenticated user's balance
-
-## Extension Points
-
-- Implement keepalive ping (`/api/category/GetCategoryHeader`) for long-running sessions
-- Add wallet balance tracking for user-specific features
-- Map chains to existing canonical stores via website domain matching
-
 ## Legacy Code Lineage
 
-| New Module | Legacy Source |
-|-----------|--------------|
-| `behatsdaa.py` | `behatsdaa/behatsdaa_scraper.py` |
-| `brand_utils.py` | `import_businesses.py :: BehatsdaaBusinessImporter` |
+An earlier version of this module (`behatsdaa.py`) called the live API
+directly with an `AccessToken` header. It was never actually wired up to a
+real token anywhere in the codebase and its club had 0 stores — replaced by
+this file-based adapter. See git history for the old implementation.
