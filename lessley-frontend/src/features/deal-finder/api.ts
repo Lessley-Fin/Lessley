@@ -16,11 +16,11 @@ export interface DealSearchParams {
 }
 
 export function fetchMccCategories(): Promise<MccCategoryDto[]> {
-  return apiFetch<MccCategoryDto[]>("/api/mcc/categories")
+  return apiFetch<MccCategoryDto[]>("/api/v1/mcc/categories")
 }
 
 export function fetchDealById(dealId: string): Promise<DealSearchResultItem> {
-  return apiFetch<DealSearchResultItem>(`/api/deals/${encodeURIComponent(dealId)}`)
+  return apiFetch<DealSearchResultItem>(`/api/v1/deals/${encodeURIComponent(dealId)}`)
 }
 
 export async function searchDeals(params: DealSearchParams): Promise<PagedDealSearchResult> {
@@ -31,5 +31,5 @@ export async function searchDeals(params: DealSearchParams): Promise<PagedDealSe
   query.set("page", String(params.page))
   query.set("pageSize", String(params.pageSize))
 
-  return apiFetch<PagedDealSearchResult>(`/api/deals/search?${query.toString()}`)
+  return apiFetch<PagedDealSearchResult>(`/api/v1/deals/search?${query.toString()}`)
 }

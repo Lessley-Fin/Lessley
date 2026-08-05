@@ -15,6 +15,25 @@ public static class MongoIndexInitializer
         await CreateNotificationIndexesAsync(db);
         await CreateUserTagIndexAsync(db);
         await CreateDealFinderIndexesAsync(db);
+        await CreateRefreshTokenIndexesAsync(db);
+    }
+
+    private static async Task CreateRefreshTokenIndexesAsync(IMongoDatabase db)
+    {
+        var col = db.GetCollection<BsonDocument>("refresh_tokens");
+
+        // TTL — purge refresh tokens once past their Expires timestamp (ExpireAfter zero
+        // means "expire exactly at the Expires value").
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("Expires"),
+            new CreateIndexOptions { ExpireAfter = TimeSpan.Zero, Name = "ttl_refresh_expires" }
+        ));
+
+        // Lookup by hashed token value on refresh/logout.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("Token"),
+            new CreateIndexOptions { Name = "idx_refresh_token" }
+        ));
     }
 
     private static async Task CreateNotificationIndexesAsync(IMongoDatabase db)
@@ -42,12 +61,26 @@ public static class MongoIndexInitializer
 
     private static async Task CreateUserTagIndexAsync(IMongoDatabase db)
     {
-        // Speeds up the fanout query in SendToGroupAsync: find all users with a given tag
         var col = db.GetCollection<BsonDocument>("users");
 
+        // Speeds up the fanout query in SendToGroupAsync: find all users with a given tag
         await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
             Builders<BsonDocument>.IndexKeys.Ascending("Tags"),
             new CreateIndexOptions { Name = "idx_tags" }
+        ));
+
+        // Enforce one account per email at the DB level (defense-in-depth with Identity's
+        // RequireUniqueEmail): FindByEmailAsync does a SingleOrDefault, so a second user with
+        // the same email would 500 every email-keyed lookup (/me, settings, tags). Partial
+        // filter so users without a NormalizedEmail don't collide on a shared null.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("NormalizedEmail"),
+            new CreateIndexOptions<BsonDocument>
+            {
+                Name                    = "uq_users_normalizedEmail",
+                Unique                  = true,
+                PartialFilterExpression = Builders<BsonDocument>.Filter.Exists("NormalizedEmail"),
+            }
         ));
     }
 

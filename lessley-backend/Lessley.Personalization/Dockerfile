@@ -13,8 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
-# Expose the port
-EXPOSE 8001
+# Port is environment-driven: 8002 (dev) / 5002 (prod). Overridable via APP_PORT.
+ENV APP_PORT=8002
+EXPOSE 8002
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${APP_PORT}"]

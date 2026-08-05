@@ -11,22 +11,16 @@ public class UserService : IUserService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserTagService _userTagService;
-    private readonly IPersonalizationService _personalizationService;
     private readonly ApplicationDbContext _db;
-    private readonly ILogger<UserService> _logger;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
-        IPersonalizationService personalizationService,
-        ApplicationDbContext db,
-        ILogger<UserService> logger)
+        ApplicationDbContext db)
     {
-        _userManager            = userManager;
-        _userTagService         = userTagService;
-        _personalizationService = personalizationService;
-        _db                     = db;
-        _logger                 = logger;
+        _userManager    = userManager;
+        _userTagService = userTagService;
+        _db             = db;
     }
 
     public async Task<UserOperationResult> UpdateAsync(
@@ -55,18 +49,9 @@ public class UserService : IUserService
         if (mutedChanged)
             await _userTagService.SyncGroupsAsync(email, user.Tags ?? new List<string>(), ct);
 
-        if (matchChanged || mutedChanged)
-        {
-            try
-            {
-                await _personalizationService.RecalculateCategoriesAsync(email, ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Category recalculation failed for {Email} — DB changes are saved", email);
-            }
-        }
-
+        // Categories are no longer recalculated eagerly here — the Gateway does not call
+        // Personalization over HTTP. They are recomputed on the next
+        // GET /api/v1/insights/categories, which the client issues through the edge.
         return UserOperationResult.Ok(new
         {
             email      = user.Email,
@@ -75,18 +60,10 @@ public class UserService : IUserService
             mutedTags  = user.MutedTags ?? new List<string>(),
             clubs      = user.Clubs    ?? new List<string>(),
             matchLevel = user.MatchingScore.ToMatchLevel(),
-            recalculated = matchChanged || mutedChanged,
+            // True when the change invalidates cached categories, so the client knows to
+            // re-fetch insights. It no longer means "recalculation already happened".
+            staleInsights = matchChanged || mutedChanged,
         });
-    }
-
-    public async Task<UserOperationResult> RecalculateCategoriesAsync(string email, CancellationToken ct = default)
-    {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return UserOperationResult.NotFound();
-
-        await _personalizationService.RecalculateCategoriesAsync(email, ct);
-        return UserOperationResult.Ok(new { });
     }
 
     public async Task<UserOperationResult> AssignTagsAsync(string email, string[] tags, CancellationToken ct = default)

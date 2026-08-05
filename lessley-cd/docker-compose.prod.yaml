@@ -1,0 +1,236 @@
+# ── Lessley PRODUCTION deployment ─────────────────────────────────────────────
+# The only intentional differences from the dev docker-compose.yaml:
+#   1. Ports    — Caddy is the ONLY service that publishes ports to the host (80/443).
+#                 MongoDB, RabbitMQ, gateway, personalization, loki, grafana are on a
+#                 PRIVATE network and are NOT reachable from the host — only by service name.
+#   2. URLs     — DOMAIN/ACME_EMAIL/EDGE_API_KEY are required here (no dev-only fallback
+#                 default). DOMAIN is our private college DNS name; CADDY_TLS_DIRECTIVE
+#                 (required, see CUSTOM-CA-CERT.md) loads our pre-issued cert for it — no
+#                 ACME/Let's Encrypt involved.
+#   3. Swagger / docs — ASPNETCORE_ENVIRONMENT/Environment=Production here -> Swagger
+#                 (/swagger) and FastAPI /docs are OFF; dev runs Development -> ON.
+#   4. mongo-express, Grafana, and the RabbitMQ management UI are on the private
+#      network like everything else, reached only through Caddy (same domain + cert as
+#      the main site) on ports 8543/8544/8545 below — never host-port-published directly.
+#      Remove the ones you don't want reachable from outside this machine. See the bottom
+#      of Caddyfile.
+# Everything else (networking, depends_on health-gating, env var names) is kept
+# identical to dev on purpose — that's what makes this deployable with confidence.
+#
+# Usage:  docker compose -f docker-compose.prod.yaml up -d --build
+# Requires a populated .env (see .env.template).
+
+networks:
+  web:        # public edge (Caddy only)
+  backend:    # private; no host port publishing
+    internal: false   # keep false so containers can reach the internet (Open Finance)
+
+services:
+  # ── Edge: TLS termination + SPA host + API reverse proxy ────────────────────
+  # Built from the frontend Dockerfile so the image bundles the compiled SPA at
+  # /srv/frontend; the Caddyfile (mounted below) serves it and routes /api/v1 + /hubs.
+  caddy:
+    build:
+      context: ../lessley-frontend
+      dockerfile: Dockerfile
+    image: lessley/edge:prod
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      # Admin UIs, same domain/cert as above on their own ports. Remove any of these
+      # lines you don't want reachable from outside this machine.
+      - "8543:8543"   # RabbitMQ management UI
+      - "8544:8544"   # Grafana
+      - "8545:8545"   # mongo-express
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+      # Stamped onto every request Caddy forwards, so services can prove it came from the edge.
+      - EDGE_API_KEY=${EDGE_API_KEY}
+      # Our pre-issued cert for DOMAIN — required (see CUSTOM-CA-CERT.md). File paths in
+      # it must resolve inside the container — see the ./certs mount below.
+      - CADDY_TLS_DIRECTIVE=${CADDY_TLS_DIRECTIVE}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+      - backend
+    depends_on:
+      - gateway
+      - personalization
+      - rabbitmq
+      - grafana
+      - mongo-express
+
+  # ── RabbitMQ (no host ports; management UI only via Caddy on :8543) ─────────
+  rabbitmq:
+    image: rabbitmq:4.1.4-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MongoDB (no host ports) ─────────────────────────────────────────────────
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Mongo Express (no host ports; reachable only via Caddy on :8545) ────────
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASS}
+      ME_CONFIG_MONGODB_URL: mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${DB_PASS}
+      ME_CONFIG_REQUEST_SIZE: ${DB_FILE_LIMIT_SIZE}
+    networks:
+      - backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # ── Logging (internal only; reach via SSH tunnel when needed) ───────────────
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/tmp/loki
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}
+    volumes:
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - backend
+    depends_on:
+      - loki
+
+  # ── Gateway (the only app reachable from the edge) ──────────────────────────
+  gateway:
+    image: lessley/gateway:prod
+    build:
+      context: ../lessley-backend/Lessley.Gateway.Api
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=5001
+
+      - ConnectionStrings__MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - ConnectionStrings__RabbitMq=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+
+      - JwtConfig__Key=${JWT_KEY}
+      - JwtConfig__Issuer=${JWT_ISSUER}
+      - JwtConfig__Audience=${JWT_AUDIENCE}
+
+      - Bootstrap__Key=${BOOTSTRAP_KEY}
+      - Bootstrap__Username=${BOOTSTRAP_USER}
+      - Bootstrap__Password=${BOOTSTRAP_PASSWORD}
+      - Bootstrap__Email=${BOOTSTRAP_EMAIL}
+
+      - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
+      - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
+
+      # Reject anything that did not arrive through Caddy.
+      - Edge__ApiKey=${EDGE_API_KEY}
+
+      # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
+      - AllowedHosts=${DOMAIN}
+
+      - Loki__Url=${LOKI_URL}
+    networks:
+      - backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      loki:
+        condition: service_started
+
+  # ── Personalization (reached only via Caddy; gated by X-Edge-Key) ───────────
+  personalization:
+    image: lessley/personalization:prod
+    build:
+      context: ../lessley-backend/Lessley.Personalization
+      dockerfile: Dockerfile
+    restart: always
+    # No env_file here on purpose: bulk-importing lessley-cd/.env would also inject its
+    # LOKI_URL (bare, no push path) alongside the Loki_Url below (correct, push path
+    # appended) — two different case-sensitive keys that pydantic-settings' case-insensitive
+    # matching resolves non-deterministically (whichever lands in os.environ last wins), so
+    # Personalization could silently bind the wrong one and fail to reach Loki. Every setting
+    # this service needs is already listed explicitly below; keep it that way.
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_PORT=5002
+      - Environment=Production
+      - RabbitMQ_Enabled=True
+      - CONNECTIONSTRINGS_RABBIT=amqp://${RABBIT_USER}:${RABBIT_PASS}@rabbitmq:5672/
+      - ConnectionStrings_MongoDb=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/
+      - OpenFinanceConfig_ClientId=${OpenFinanceConfig_ClientId}
+      - OpenFinanceConfig_ClientSecret=${OpenFinanceConfig_ClientSecret}
+      - OpenFinanceConfig_BaseUrl=https://api.open-finance.ai
+      # Reject any request that does not carry X-Edge-Key: $EDGE_API_KEY.
+      - Edge_ApiKey=${EDGE_API_KEY}
+      - Loki_Url=${LOKI_URL}/loki/api/v1/push
+    networks:
+      - backend
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      loki:
+        condition: service_started
+
+volumes:
+  rabbitmq_data:
+  mongodb_data:
+  loki_data:
+  caddy_data:
+  caddy_config:

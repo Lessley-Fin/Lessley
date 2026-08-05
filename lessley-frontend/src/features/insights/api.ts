@@ -16,7 +16,7 @@ interface ConnectionInitResponse {
 export async function checkHasConnection(): Promise<boolean> {
   try {
     const payload = await apiFetch<PaginatedApiResponse<Record<string, unknown>> | null>(
-      "/api/User/me/accounts",
+      "/api/v1/open-finance/accounts",
     )
     return Array.isArray(payload?.data) && payload.data.length > 0
   } catch {
@@ -25,7 +25,7 @@ export async function checkHasConnection(): Promise<boolean> {
 }
 
 export async function initOpenFinanceConnection(): Promise<ConnectionInitResponse> {
-  return apiFetch<ConnectionInitResponse>("/api/User/init", { method: "POST" })
+  return apiFetch<ConnectionInitResponse>("/api/v1/User/init", { method: "POST" })
 }
 
 export async function fetchTransactions(
@@ -33,7 +33,7 @@ export async function fetchTransactions(
 ): Promise<PersonalizationTransaction[]> {
   const params = new URLSearchParams({ days: String(days) })
   const payload = await apiFetch<PaginatedApiResponse<PersonalizationTransaction>>(
-    `/api/User/me/transactions?${params.toString()}`,
+    `/api/v1/open-finance/transactions?${params.toString()}`,
   )
   return Array.isArray(payload.data) ? payload.data : []
 }
@@ -43,7 +43,7 @@ export async function fetchCategoryInsights(
 ): Promise<SpendingCategoryInsight[]> {
   const params = new URLSearchParams({ days: String(days) })
   const payload = await apiFetch<PaginatedApiResponse<SpendingCategoryInsight>>(
-    `/api/User/insights/categories?${params.toString()}`,
+    `/api/v1/insights/categories?${params.toString()}`,
   )
   return Array.isArray(payload.data) ? payload.data : []
 }
@@ -53,7 +53,7 @@ export async function fetchTopAccountInsights(
 ): Promise<TopAccountInsight[]> {
   const params = new URLSearchParams({ days: String(days) })
   const payload = await apiFetch<PaginatedApiResponse<TopAccountInsight>>(
-    `/api/User/insights/top-accounts?${params.toString()}`,
+    `/api/v1/insights/top-accounts?${params.toString()}`,
   )
   return Array.isArray(payload.data) ? payload.data : []
 }
@@ -63,23 +63,23 @@ export async function fetchTopStoreInsights(
 ): Promise<TopStoreInsight[]> {
   const params = new URLSearchParams({ days: String(days) })
   const payload = await apiFetch<PaginatedApiResponse<TopStoreInsight>>(
-    `/api/User/insights/top-stores?${params.toString()}`,
+    `/api/v1/insights/top-stores?${params.toString()}`,
   )
   return Array.isArray(payload.data) ? payload.data : []
 }
 
 export async function fetchRecommendations(): Promise<RecommendationsResponse> {
-  return apiFetch<RecommendationsResponse>("/api/User/recommendations")
+  return apiFetch<RecommendationsResponse>("/api/v1/User/recommendations")
 }
 
 export async function triggerMatchingClubs(): Promise<void> {
-  await apiFetch("/api/User/recommendations/matching-clubs", {
+  await apiFetch("/api/v1/User/recommendations/matching-clubs", {
     method: "POST",
   })
 }
 
 export async function triggerMissedSavings(): Promise<void> {
-  await apiFetch("/api/User/recommendations/missed-savings", {
+  await apiFetch("/api/v1/User/recommendations/missed-savings", {
     method: "POST",
   })
 }

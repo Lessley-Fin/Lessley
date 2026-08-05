@@ -2,7 +2,6 @@ from datetime import date, datetime
 from pydantic import BaseModel, field_validator
 
 
-# 1. Define the nested structures first
 class AmountDetail(BaseModel):
     amount: float | None = None
     currency: str | None = None
@@ -45,7 +44,6 @@ class MerchantAddress(BaseModel):
     townName: str | None = None
 
 
-# 2. Define the main Transaction model
 class Transaction(BaseModel):
     id: str | None = None
     userId: str | None = None

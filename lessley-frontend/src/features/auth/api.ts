@@ -14,15 +14,18 @@ export interface RegisterRequest {
   mutedCategories?: string[]
 }
 
-export interface LoginResponse {
-  accessToken: string
-  refreshToken: string
+// Tokens now arrive as httpOnly cookies; the body carries only non-sensitive profile info.
+export interface AuthProfileResponse {
+  userName: string
+  email: string
+  userId: string
+  roles: string[]
 }
 
 export async function loginWithGateway(
   body: LoginRequest,
-): Promise<LoginResponse> {
-  return apiFetch<LoginResponse>("/api/Auth/login", {
+): Promise<AuthProfileResponse> {
+  return apiFetch<AuthProfileResponse>("/api/v1/auth/login", {
     ...jsonBody(body),
     skipAuth: true,
     errorMessage: "Unable to sign in with provided credentials.",
@@ -30,7 +33,7 @@ export async function loginWithGateway(
 }
 
 export async function registerWithGateway(body: RegisterRequest): Promise<void> {
-  await apiFetch<void>("/api/Auth/register", {
+  await apiFetch<void>("/api/v1/auth/register", {
     ...jsonBody(body),
     skipAuth: true,
     errorMessage: "Unable to complete registration.",

@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Models;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Identity;
@@ -346,6 +347,10 @@ public class NotificationE2ETests : IClassFixture<GatewayWebApplicationFactory>
                 options.Transports = HttpTransportType.LongPolling;
                 options.HttpMessageHandlerFactory = _ => _factory.Server.CreateHandler();
                 options.AccessTokenProvider = () => Task.FromResult<string?>(token);
+                // HubConnection builds its own client for /negotiate, so it does not inherit
+                // the factory's default headers. Caddy stamps this on /hubs/* in production.
+                options.Headers[EdgeVerificationMiddleware.EdgeKeyHeader] =
+                    GatewayWebApplicationFactory.EdgeKey;
             })
             .Build();
 

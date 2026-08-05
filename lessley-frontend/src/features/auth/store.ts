@@ -1,96 +1,69 @@
 import { create } from "zustand"
-import {
-  SESSION_KEYS,
-  clearSession,
-  getAccessToken,
-  getEmailFromToken,
-  getRefreshToken,
-  isAuthenticated as checkStoredAuth,
-  storeSession,
-  type SessionData,
-} from "@/lib/auth"
 
-interface AuthState {
-  isAuthenticated: boolean
-  accessToken: string | null
-  refreshToken: string | null
+import { apiFetch } from "@/lib/api-client"
+import { logoutRequest } from "@/lib/auth"
+import type { MeResponse } from "@/features/user/api"
+
+// "loading" until the initial server probe resolves — route guards must wait for it so a
+// page reload (where auth lives only in cookies) doesn't bounce the user to /login.
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated"
+
+interface Profile {
   username: string
   userId: string
   email: string
+}
 
-  initialize: () => void
-  login: (session: SessionData) => void
+interface AuthState extends Profile {
+  status: AuthStatus
+  isAuthenticated: boolean
+
+  initialize: () => Promise<void>
+  login: (profile: Profile) => void
   logout: () => void
-  setProfile: (profile: {
-    username: string
-    userId: string
-    email: string
-  }) => void
-  setAccessToken: (token: string) => void
+  setProfile: (profile: Profile) => void
+}
+
+const ANON = {
+  status: "unauthenticated" as AuthStatus,
+  isAuthenticated: false,
+  username: "User",
+  userId: "",
+  email: "",
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
+  status: "loading",
   isAuthenticated: false,
-  accessToken: null,
-  refreshToken: null,
   username: "User",
   userId: "",
   email: "",
 
-  initialize: () => {
-    const authenticated = checkStoredAuth()
-    if (!authenticated) return
-
-    const accessToken = getAccessToken()
-    const refreshToken = getRefreshToken()
-    const email =
-      localStorage.getItem(SESSION_KEYS.email) ??
-      (accessToken ? getEmailFromToken(accessToken) : "")
-
-    set({
-      isAuthenticated: true,
-      accessToken,
-      refreshToken,
-      username: localStorage.getItem(SESSION_KEYS.username) ?? "User",
-      userId: localStorage.getItem(SESSION_KEYS.userId) ?? "",
-      email,
-    })
+  // Probe the server: if the auth cookie is valid (or refreshable) we get the profile.
+  initialize: async () => {
+    set({ status: "loading" })
+    try {
+      const profile = await apiFetch<MeResponse>("/api/v1/User/me")
+      const email = profile.email?.trim().toLowerCase() ?? ""
+      set({
+        status: "authenticated",
+        isAuthenticated: true,
+        username: profile.userName || "User",
+        userId: email,
+        email,
+      })
+    } catch {
+      set({ ...ANON })
+    }
   },
 
-  login: (session: SessionData) => {
-    storeSession(session)
-
-    set({
-      isAuthenticated: true,
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      username: session.username ?? "User",
-      userId: session.userId ?? "",
-      email: session.email ?? "",
-    })
-  },
+  login: ({ username, userId, email }) =>
+    set({ status: "authenticated", isAuthenticated: true, username, userId, email }),
 
   logout: () => {
-    clearSession()
-    set({
-      isAuthenticated: false,
-      accessToken: null,
-      refreshToken: null,
-      username: "User",
-      userId: "",
-      email: "",
-    })
+    void logoutRequest()
+    set({ ...ANON })
   },
 
-  setProfile: ({ username, userId, email }) => {
-    localStorage.setItem(SESSION_KEYS.username, username)
-    localStorage.setItem(SESSION_KEYS.userId, userId)
-    localStorage.setItem(SESSION_KEYS.email, email)
-    set({ username, userId, email })
-  },
-
-  setAccessToken: (token: string) => {
-    localStorage.setItem(SESSION_KEYS.accessToken, token)
-    set({ accessToken: token })
-  },
+  setProfile: ({ username, userId, email }) => set({ username, userId, email }),
 }))

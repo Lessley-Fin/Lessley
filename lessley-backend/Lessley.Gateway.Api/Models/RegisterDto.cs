@@ -1,13 +1,22 @@
 using Lessley.Gateway.Api.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace Lessley.Gateway.Api.Models
 {
     public class RegisterDto
     {
+        [Required]
+        [StringLength(256, MinimumLength = 3)]
         public string UserName { get; set; } = string.Empty;
 
         // Email is the system-wide primary identifier and must be linked to Open Finance.
+        [Required]
+        [EmailAddress]
+        [StringLength(320)]
         public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(128, MinimumLength = 8)]
         public string Password { get; set; } = string.Empty;
 
         // Loyalty clubs the user belongs to.

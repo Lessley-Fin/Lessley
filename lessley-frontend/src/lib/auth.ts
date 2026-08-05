@@ -1,112 +1,49 @@
-const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:8001"
+// Auth is cookie-based: the access and refresh tokens live in Secure/HttpOnly cookies
+// the browser sends automatically. JavaScript never sees them. This module only holds
+// the CSRF double-submit helper and the cookie-based refresh/logout calls.
 
-export const SESSION_KEYS = {
-  session: "lessley_poc_session",
-  accessToken: "lessley_access_token",
-  refreshToken: "lessley_refresh_token",
-  username: "lessley_username",
-  userId: "lessley_user_id",
-  email: "lessley_user_email",
-} as const
+export const CSRF_COOKIE = "XSRF-TOKEN"
+export const CSRF_HEADER = "X-CSRF-TOKEN"
 
-export interface SessionData {
-  accessToken: string
-  refreshToken: string
-  username?: string
-  userId?: string
-  email?: string
+const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
+
+/** Reads a readable (non-httpOnly) cookie value, or null. */
+export function readCookie(name: string): string | null {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const match = document.cookie.match(new RegExp("(?:^|; )" + escaped + "=([^;]*)"))
+  return match ? decodeURIComponent(match[1]) : null
 }
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const part = token.split(".")[1]
-    if (!part) return null
-    const normalized = part.replace(/-/g, "+").replace(/_/g, "/")
-    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4)
-    return JSON.parse(atob(padded)) as Record<string, unknown>
-  } catch {
-    return null
+/** Adds the X-CSRF-TOKEN header (echoing the XSRF-TOKEN cookie) for state-changing methods. */
+export function applyCsrfHeader(headers: Headers, method?: string): Headers {
+  if (UNSAFE_METHODS.has((method ?? "GET").toUpperCase())) {
+    const token = readCookie(CSRF_COOKIE)
+    if (token) headers.set(CSRF_HEADER, token)
   }
+  return headers
 }
 
-export function getEmailFromToken(token: string): string {
-  const payload = decodeJwtPayload(token)
-  if (!payload) return ""
-  const candidates = [
-    payload.email,
-    payload.upn,
-    payload.preferred_username,
-    payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
-  ]
-  const match = candidates.find((c) => typeof c === "string" && c.includes("@"))
-  return typeof match === "string" ? match.trim().toLowerCase() : ""
-}
+// Singleton promise so several concurrent 401s trigger only one refresh round-trip.
+let _refreshPromise: Promise<boolean> | null = null
 
-// Returns true if the JWT has expired (or will expire within bufferSeconds).
-export function isTokenExpired(token: string, bufferSeconds = 60): boolean {
-  const payload = decodeJwtPayload(token)
-  if (!payload) return true
-  const exp = payload.exp
-  if (typeof exp !== "number") return true
-  return Date.now() / 1000 > exp - bufferSeconds
-}
-
-export function isAuthenticated(): boolean {
-  return localStorage.getItem(SESSION_KEYS.session) === "active"
-}
-
-export function getAccessToken(): string | null {
-  return localStorage.getItem(SESSION_KEYS.accessToken)
-}
-
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(SESSION_KEYS.refreshToken)
-}
-
-export function storeSession(data: SessionData): void {
-  localStorage.setItem(SESSION_KEYS.session, "active")
-  localStorage.setItem(SESSION_KEYS.accessToken, data.accessToken)
-  localStorage.setItem(SESSION_KEYS.refreshToken, data.refreshToken)
-  if (data.username) localStorage.setItem(SESSION_KEYS.username, data.username)
-  if (data.userId) localStorage.setItem(SESSION_KEYS.userId, data.userId)
-  if (data.email) localStorage.setItem(SESSION_KEYS.email, data.email)
-}
-
-export function clearSession(): void {
-  Object.values(SESSION_KEYS).forEach((key) => localStorage.removeItem(key))
-}
-
-// Singleton promise — deduplicates concurrent refresh calls so only one
-// in-flight request runs at a time even if multiple API calls trigger refresh.
-let _refreshPromise: Promise<string | null> | null = null
-
-export async function refreshAccessToken(): Promise<string | null> {
+/** Exchanges the refresh cookie for fresh auth cookies. Returns whether it succeeded. */
+export async function refreshAccessToken(): Promise<boolean> {
   if (_refreshPromise) return _refreshPromise
 
   _refreshPromise = (async () => {
     try {
-      const token = getRefreshToken()
-      if (!token) return null
+      const headers = new Headers()
+      const csrf = readCookie(CSRF_COOKIE)
+      if (csrf) headers.set(CSRF_HEADER, csrf)
 
-      const response = await fetch(`${GATEWAY_URL}/api/Auth/refresh`, {
+      const response = await fetch(`/api/v1/auth/refresh`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken: token }),
+        credentials: "include",
+        headers,
       })
-
-      if (!response.ok) {
-        clearSession()
-        return null
-      }
-
-      const data = (await response.json()) as { accessToken: string; refreshToken?: string }
-      localStorage.setItem(SESSION_KEYS.accessToken, data.accessToken)
-      if (data.refreshToken) {
-        localStorage.setItem(SESSION_KEYS.refreshToken, data.refreshToken)
-      }
-      return data.accessToken
+      return response.ok
     } catch {
-      return null
+      return false
     } finally {
       _refreshPromise = null
     }
@@ -115,10 +52,19 @@ export async function refreshAccessToken(): Promise<string | null> {
   return _refreshPromise
 }
 
-// Returns a valid (non-expired) access token, automatically refreshing if needed.
-export async function getValidAccessToken(): Promise<string | null> {
-  const token = getAccessToken()
-  if (!token) return null
-  if (!isTokenExpired(token)) return token
-  return refreshAccessToken()
+/** Best-effort server logout: revokes the refresh token and clears the auth cookies. */
+export async function logoutRequest(): Promise<void> {
+  try {
+    const headers = new Headers()
+    const csrf = readCookie(CSRF_COOKIE)
+    if (csrf) headers.set(CSRF_HEADER, csrf)
+
+    await fetch(`/api/v1/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+    })
+  } catch {
+    // State is cleared regardless; the cookies expire on their own if this fails.
+  }
 }

@@ -8,7 +8,7 @@ export function AdminRoute() {
 
   if (isLoading) return null
 
-  if (!profile?.roles.includes("Admin")) {
+  if (!profile?.roles?.includes("Admin")) {
     return <Navigate to={ROUTES.OPTIMIZER} replace />
   }
 

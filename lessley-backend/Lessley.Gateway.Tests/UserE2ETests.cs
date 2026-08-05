@@ -104,7 +104,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
-    public async Task UpdateUser_MatchLevelChange_TriggersRecalculation()
+    public async Task UpdateUser_MatchLevelChange_MarksInsightsStale()
     {
         var email      = await CreateUserAsync();
         var adminToken = NotificationE2ETests.BuildJwt("admin-recalc", "Admin", email);
@@ -112,15 +112,16 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-        var before   = _factory.PersonalizationService.RecalculateCallCount;
         var dto      = new UpdateUserDto(null, null, "High");
         var response = await http.PatchAsJsonAsync("api/user/me", dto);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(_factory.PersonalizationService.RecalculateCallCount > before);
 
+        // The Gateway no longer calls Personalization over HTTP, so nothing is recalculated
+        // here. It reports that cached insights are stale and the client re-fetches them
+        // through the edge.
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.True(body.RootElement.GetProperty("recalculated").GetBoolean());
+        Assert.True(body.RootElement.GetProperty("staleInsights").GetBoolean());
     }
 
     // ── PUT /api/admin/users/{email}/tags ─────────────────────────────────────
@@ -225,7 +226,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Login_ValidCredentials_ReturnsTokens()
+    public async Task Login_ValidCredentials_SetsAuthCookies()
     {
         var username = $"login-{Guid.NewGuid():N}";
         using var http = _factory.CreateClient();
@@ -237,9 +238,16 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
             new { UserName = username, Password = "Test1234!" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        // Tokens are delivered as httpOnly cookies, never in the body.
+        var setCookies = response.Headers.TryGetValues("Set-Cookie", out var values)
+            ? values.ToList() : new List<string>();
+        Assert.Contains(setCookies, c => c.StartsWith("access_token="));
+        Assert.Contains(setCookies, c => c.StartsWith("refresh_token="));
+
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.True(body.RootElement.TryGetProperty("accessToken", out _));
-        Assert.True(body.RootElement.TryGetProperty("refreshToken", out _));
+        Assert.False(body.RootElement.TryGetProperty("accessToken", out _));
+        Assert.Equal(username, body.RootElement.GetProperty("userName").GetString());
     }
 
     [Fact]
@@ -253,7 +261,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetMe_WithValidToken_ReturnsUserInfo()
+    public async Task GetMe_WithValidCookie_ReturnsUserInfo()
     {
         var username = $"me-{Guid.NewGuid():N}";
         using var http = _factory.CreateClient();
@@ -263,11 +271,11 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
         var loginResp = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });
-        var loginBody = JsonDocument.Parse(await loginResp.Content.ReadAsStringAsync());
-        var token     = loginBody.RootElement.GetProperty("accessToken").GetString()!;
+        Assert.Equal(HttpStatusCode.OK, loginResp.StatusCode);
 
-        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
-        var meResp = await http.GetAsync("api/auth/me");
+        // The auth cookies set at login flow automatically on the same client
+        // (WebApplicationFactory enables cookie handling by default).
+        var meResp = await http.GetAsync("api/user/me");
 
         Assert.Equal(HttpStatusCode.OK, meResp.StatusCode);
         var meBody = JsonDocument.Parse(await meResp.Content.ReadAsStringAsync());
@@ -279,7 +287,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task GetMe_WithoutToken_Returns401()
     {
         using var http = _factory.CreateClient();
-        var response   = await http.GetAsync("api/auth/me");
+        var response   = await http.GetAsync("api/user/me");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }

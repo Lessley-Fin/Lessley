@@ -32,11 +32,7 @@ export function LoginForm() {
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
       const data = await loginWithGateway({ userName: values.userName, password: values.password })
-      await postAuth({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        userName: values.userName,
-      })
+      await postAuth({ userName: data.userName ?? values.userName, email: data.email })
     } catch (error) {
       form.setError("root", {
         message: error instanceof Error ? error.message : "Sign-in failed. Please try again.",

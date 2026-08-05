@@ -7,7 +7,7 @@ export interface MccCategory {
 }
 
 export async function fetchMccCategories(): Promise<MccCategory[]> {
-  return apiFetch<MccCategory[]>("/api/mcc/categories")
+  return apiFetch<MccCategory[]>("/api/v1/mcc/categories")
 }
 
 export interface SendNotificationPayload {
@@ -16,13 +16,13 @@ export interface SendNotificationPayload {
 }
 
 export async function changeUserRole(email: string, role: UserRole): Promise<string> {
-  return apiFetch<string>(`/api/admin/role/${encodeURIComponent(email)}/${role}`, {
+  return apiFetch<string>(`/api/v1/admin/role/${encodeURIComponent(email)}/${role}`, {
     method: "PUT",
   })
 }
 
 export async function updateUserTags(email: string, tags: string[]): Promise<unknown> {
-  return apiFetch(`/api/admin/users/${encodeURIComponent(email)}/tags`, {
+  return apiFetch(`/api/v1/admin/users/${encodeURIComponent(email)}/tags`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(tags),
@@ -33,7 +33,7 @@ export async function sendNotificationToUser(
   email: string,
   payload: SendNotificationPayload,
 ): Promise<unknown> {
-  return apiFetch(`/api/admin/notifications/user/${encodeURIComponent(email)}`, {
+  return apiFetch(`/api/v1/admin/notifications/user/${encodeURIComponent(email)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -44,7 +44,7 @@ export async function sendNotificationToGroup(
   tag: string,
   payload: SendNotificationPayload,
 ): Promise<unknown> {
-  return apiFetch(`/api/admin/notifications/group/${encodeURIComponent(tag)}`, {
+  return apiFetch(`/api/v1/admin/notifications/group/${encodeURIComponent(tag)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

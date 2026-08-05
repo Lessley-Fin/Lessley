@@ -13,7 +13,7 @@ export interface OptimizeParams {
 
 export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> {
   return apiFetch<OptimizeResponse>(
-    "/api/optimizer/optimize",
+    "/api/v1/optimizer/optimize",
     {
       ...jsonBody({
         storeId: params.storeId,

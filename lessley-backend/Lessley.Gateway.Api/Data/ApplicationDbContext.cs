@@ -28,6 +28,7 @@ namespace Lessley.Gateway.Api.Data
             builder.Entity<IdentityRoleClaim<string>>().ToCollection("role_claims");
             builder.Entity<IdentityUserToken<string>>().ToCollection("user_tokens");
             builder.Entity<Notification>().ToCollection("notifications");
+            builder.Entity<RefreshToken>().ToCollection("refresh_tokens");
         }
     }
 }

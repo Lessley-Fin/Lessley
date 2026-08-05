@@ -62,24 +62,35 @@ namespace Lessley.Gateway.Api.Services.Classes
                 issuer: _jwtConfig.Issuer,
                 audience: _jwtConfig.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(_authConfig.AccessTimeoutHours),
+                expires: DateTime.UtcNow.AddMinutes(_authConfig.AccessTimeoutMinutes),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public RefreshToken GenerateRefreshToken(string userId)
+        public (string RawToken, RefreshToken Entity) GenerateRefreshToken(string userId)
         {
             var randomBytes = RandomNumberGenerator.GetBytes(64);
+            var rawToken = Convert.ToBase64String(randomBytes);
             DateTime now = DateTime.UtcNow;
-            return new RefreshToken
+
+            // Persist only the hash: a database leak then yields no usable refresh tokens.
+            var entity = new RefreshToken
             {
-                Token = Convert.ToBase64String(randomBytes),
+                Token = HashToken(rawToken),
                 UserId = userId,
                 Expires = now.AddHours(_authConfig.RefreshTimeoutHours),
                 Created = now
             };
+
+            return (rawToken, entity);
+        }
+
+        public string HashToken(string rawToken)
+        {
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
+            return Convert.ToBase64String(hash);
         }
     }
 }

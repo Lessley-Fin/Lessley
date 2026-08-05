@@ -47,7 +47,7 @@ if /I "%~2"=="status" (
     goto end
 )
 
-echo [X] Invalid action. Try: manage.bat infra up, manage.bat infra down, or manage.bat infra down -v or manage.bat infra status
+echo [X] Invalid action. Try: manage.bat infra up, manage.bat infra down, manage.bat infra down -v or manage.bat infra status
 goto end
 
 
@@ -92,7 +92,7 @@ echo.
 echo Available commands:
 echo   manage.bat status          - Shows the status of ALL containers
 echo.
-echo Infrastructure (RabbitMQ, Grafana, Loki, MongoDB):
+echo Infrastructure (RabbitMQ, Grafana, Loki, MongoDB, Mongo Express):
 echo   manage.bat infra up        - Starts infrastructure containers
 echo   manage.bat infra down      - Removes containers (-v to wipe volumes)
 echo   manage.bat infra status    - Shows status of infrastructure

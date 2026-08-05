@@ -1,8 +1,9 @@
 import logging
 import time
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
+from dependencies.auth import authenticated_email
 from services.di_container import DIContainer
-from .schemas import UserRequests, GetTransactionsRequest, GetTransactionsByAccountRequest
+from .schemas import GetTransactionsRequest, GetTransactionsByAccountRequest
 from .responses import PaginatedResponse, BasicResponse
 
 router = APIRouter(prefix="/open-finance", tags=["Open Finance"])
@@ -12,10 +13,10 @@ logger = logging.getLogger(__name__)
 @router.get("/access-token")
 async def get_user_access_token(
     request: Request,
-    req: UserRequests = Query(),
+    email: str = Depends(authenticated_email),
 ):
     """
-    Retrieves user access token for the given user ID.
+    Retrieves user access token for the authenticated user.
     """
     start_time = time.time()
 
@@ -24,7 +25,7 @@ async def get_user_access_token(
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -33,7 +34,7 @@ async def get_user_access_token(
 
     try:
         service = DIContainer.get_open_finance_service()
-        token = await service.get_access_token_async(req.email)
+        token = await service.get_access_token_async(email)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -42,7 +43,7 @@ async def get_user_access_token(
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
@@ -59,7 +60,7 @@ async def get_user_access_token(
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -71,10 +72,10 @@ async def get_user_access_token(
 @router.get("/accounts")
 async def get_user_accounts(
     request: Request,
-    req: UserRequests = Query(),
+    email: str = Depends(authenticated_email),
 ):
     """
-    Retrieves user accounts for the given user ID.
+    Retrieves bank accounts for the authenticated user.
     """
     start_time = time.time()
 
@@ -83,7 +84,7 @@ async def get_user_accounts(
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -92,7 +93,7 @@ async def get_user_accounts(
 
     try:
         service = DIContainer.get_open_finance_service()
-        accounts = await service.get_user_accounts_async(req.email)
+        accounts = await service.get_user_accounts_async(email)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -101,7 +102,7 @@ async def get_user_accounts(
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
@@ -119,7 +120,7 @@ async def get_user_accounts(
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
@@ -129,9 +130,13 @@ async def get_user_accounts(
 
 
 @router.get("/transactions/by-account")
-async def get_user_transactions_by_account(request: Request, req: GetTransactionsByAccountRequest = Query()):
+async def get_user_transactions_by_account(
+    request: Request,
+    req: GetTransactionsByAccountRequest = Query(),
+    email: str = Depends(authenticated_email),
+):
     """
-    Triggers the calculation of optimal clubs based on the last 3 months of Open Finance data.
+    Returns the authenticated user's transactions for a specific bank account.
     """
     start_time = time.time()
 
@@ -140,7 +145,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "account_id": req.account_id,
                 "time_filter": req.time_filter,
                 "days": req.days,
@@ -153,7 +158,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
     try:
         service = DIContainer.get_open_finance_service()
         transactions = await service.get_user_transactions_by_account_async(
-            req.email, req.account_id, req.time_filter, req.days
+            email, req.account_id, req.time_filter, req.days
         )
         transactions = service.sort_transactions(transactions)
 
@@ -164,7 +169,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "account_id": req.account_id,
                     "time_filter": req.time_filter,
                     "days": req.days,
@@ -185,7 +190,7 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "account_id": req.account_id,
                     "method": request.method,
                     "endpoint": request.url.path,
@@ -196,9 +201,13 @@ async def get_user_transactions_by_account(request: Request, req: GetTransaction
 
 
 @router.get("/transactions")
-async def get_user_transactions(request: Request, req: GetTransactionsRequest = Query()):
+async def get_user_transactions(
+    request: Request,
+    req: GetTransactionsRequest = Query(),
+    email: str = Depends(authenticated_email),
+):
     """
-    Triggers the calculation of optimal clubs based on the last 3 months of Open Finance data.
+    Returns the authenticated user's transactions across all of their accounts.
     """
     start_time = time.time()
 
@@ -207,7 +216,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
         extra={
             "reason": "Request received",
             "extra_data": {
-                "email": req.email,
+                "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
                 "method": request.method,
@@ -218,7 +227,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
 
     try:
         service = DIContainer.get_open_finance_service()
-        transactions = await service.get_user_transactions_async(req.email, req.time_filter, req.days)
+        transactions = await service.get_user_transactions_async(email, req.time_filter, req.days)
         transactions = service.sort_transactions(transactions)
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -227,7 +236,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
             extra={
                 "reason": "Request completed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
                     "method": request.method,
@@ -247,7 +256,7 @@ async def get_user_transactions(request: Request, req: GetTransactionsRequest = 
             extra={
                 "reason": "Service call failed",
                 "extra_data": {
-                    "email": req.email,
+                    "email": email,
                     "method": request.method,
                     "endpoint": request.url.path,
                 },

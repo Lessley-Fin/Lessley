@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.gitignore
+# Never bake the local dev env (points at http://localhost) into the prod image.
+.env
+.env.local
+.env.*.local
+Dockerfile
+.dockerignore

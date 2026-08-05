@@ -2,29 +2,23 @@ import { useNavigate } from "react-router-dom"
 
 import { useAuthStore } from "@/features/auth/store"
 import { fetchMyProfile } from "@/features/user/api"
-import { getEmailFromToken } from "@/lib/auth"
 import { ROUTES } from "@/lib/routes"
 
 export function usePostAuth() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
 
-  return async (session: { accessToken: string; refreshToken: string; userName: string; email?: string }) => {
-    const tokenEmail = session.email ?? getEmailFromToken(session.accessToken)
+  return async (profile: { userName: string; email: string }) => {
+    const email = profile.email?.trim().toLowerCase() ?? ""
 
-    login({
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      username: session.userName,
-      userId: tokenEmail,
-      email: tokenEmail,
-    })
+    login({ username: profile.userName, userId: email, email })
 
-    const profile = await fetchMyProfile().catch(() => null)
-    if (profile) {
-      const resolvedEmail = profile.email?.trim().toLowerCase() || tokenEmail
+    // Enrich with the full profile (cookies are already set, so this is authenticated).
+    const full = await fetchMyProfile().catch(() => null)
+    if (full) {
+      const resolvedEmail = full.email?.trim().toLowerCase() || email
       useAuthStore.getState().setProfile({
-        username: profile.userName,
+        username: full.userName,
         userId: resolvedEmail,
         email: resolvedEmail,
       })
