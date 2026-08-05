@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from typing import Dict, List
 import pandas as pd
 
@@ -215,6 +216,100 @@ class ProcessingCoreService:
                 limit=limit,
             )
         )
+
+    DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+    @staticmethod
+    def _resolve_transaction_date(transaction: Transaction):
+        """Best available date for a transaction, same fallback order used for sorting."""
+        if not transaction.date:
+            return None
+        return transaction.date.transactionDate or transaction.date.bookingDate or transaction.date.valueDate
+
+    @staticmethod
+    def _amount_spent(transaction: Transaction) -> float:
+        """Plain-Python equivalent of normalize_amount_spent: abs(charged, falling back to original)."""
+        amount = transaction.amount
+        if amount and amount.chargedAmount and amount.chargedAmount.amount is not None:
+            return abs(amount.chargedAmount.amount)
+        if amount and amount.originalAmount and amount.originalAmount.amount is not None:
+            return abs(amount.originalAmount.amount)
+        return 0.0
+
+    @staticmethod
+    def _amount_saved(transaction: Transaction) -> float:
+        """abs(chargedAmount - originalAmount), with safe access to possibly-missing amounts."""
+        amount = transaction.amount
+        charged = amount.chargedAmount.amount if amount and amount.chargedAmount else None
+        original = amount.originalAmount.amount if amount and amount.originalAmount else None
+        return abs((charged or 0.0) - (original or 0.0))
+
+    def get_spending_by_day_of_week(self, transactions: list[Transaction]) -> list[dict]:
+        """
+        Sums spending per weekday (Sunday..Saturday) across the given transactions.
+        Transactions without a resolvable date are skipped.
+        """
+        totals = {day: 0.0 for day in self.DAY_NAMES}
+
+        for transaction in transactions:
+            tx_date = self._resolve_transaction_date(transaction)
+            if tx_date is None:
+                continue
+            day_name = self.DAY_NAMES[(tx_date.weekday() + 1) % 7]
+            totals[day_name] += self._amount_spent(transaction)
+
+        return [{"day": day, "total_amount": totals[day]} for day in self.DAY_NAMES]
+
+    def get_spending_difference_between_two_periods(self, transactions: list[Transaction], days: int) -> dict:
+        """
+        Splits transactions into "current" (last `days` days) and "previous" (the `days` before
+        that) by date, and returns the total spend in each plus the difference between them.
+        """
+        cutoff = (datetime.utcnow() - timedelta(days=days)).date()
+        current_total = 0.0
+        previous_total = 0.0
+
+        for transaction in transactions:
+            tx_date = self._resolve_transaction_date(transaction)
+            if tx_date is None:
+                continue
+            if tx_date >= cutoff:
+                current_total += self._amount_spent(transaction)
+            else:
+                previous_total += self._amount_spent(transaction)
+
+        return {
+            "current_period_total": current_total,
+            "previous_period_total": previous_total,
+            "difference": current_total - previous_total,
+        }
+
+    def get_spending_saved(self, transactions: list[Transaction]) -> float:
+        """
+        Sums abs(chargedAmount - originalAmount) across all transactions.
+        """
+        return sum(self._amount_saved(transaction) for transaction in transactions)
+
+    def get_spending_saved_by_account(self, transactions: list[Transaction]) -> list[dict]:
+        """
+        Same as get_spending_saved, grouped by accountId, sorted by total_saved descending.
+        """
+        totals: Dict[str, float] = {}
+        account_numbers: Dict[str, str | None] = {}
+
+        for transaction in transactions:
+            account_id = transaction.accountId
+            if not account_id:
+                continue
+            totals[account_id] = totals.get(account_id, 0.0) + self._amount_saved(transaction)
+            account_numbers.setdefault(account_id, transaction.accountNumber)
+
+        results = [
+            {"accountId": account_id, "accountNumber": account_numbers.get(account_id), "total_saved": total}
+            for account_id, total in totals.items()
+        ]
+        results.sort(key=lambda row: row["total_saved"], reverse=True)
+        return results
 
     async def _load_deals_and_stores_async(self) -> None:
         """

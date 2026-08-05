@@ -46,6 +46,20 @@ class RecommendationByCategoryRequestSchema(BaseModel):
         return v
 
 
+class MissedSavingsRequestSchema(BaseModel):
+    """Missed-savings request — accepts a caller-supplied analysis period (default: a week)."""
+
+    email: str = Field(..., min_length=1, max_length=255, description="User email")
+    time_filter: bool = Field(True, description="Filter by time")
+    days: int = Field(7, ge=1, le=365, description="Days to analyze (1-365, default: a week)")
+
+    @validator("email")
+    def validate_email(cls, v):
+        if not v.strip():
+            raise ValueError("email cannot be empty")
+        return v
+
+
 class BroadcastDealRequest(BaseModel):
     """
     Request to broadcast a deal. The deal's category is resolved from its store, so only the

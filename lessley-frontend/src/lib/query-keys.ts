@@ -13,6 +13,12 @@ export const queryKeys = {
     categories: (days: number) => [...queryKeys.insights.all, "categories", days] as const,
     topAccounts: (days: number) => [...queryKeys.insights.all, "top-accounts", days] as const,
     topStores: (days: number) => [...queryKeys.insights.all, "top-stores", days] as const,
+    spendingByDay: (days: number) => [...queryKeys.insights.all, "spending-by-day", days] as const,
+    spendingPeriodComparison: (days: number) =>
+      [...queryKeys.insights.all, "spending-period-comparison", days] as const,
+    spendingSaved: (days: number) => [...queryKeys.insights.all, "spending-saved", days] as const,
+    spendingSavedByAccount: (days: number) =>
+      [...queryKeys.insights.all, "spending-saved-by-account", days] as const,
   },
   recommendations: {
     all: ["recommendations"] as const,

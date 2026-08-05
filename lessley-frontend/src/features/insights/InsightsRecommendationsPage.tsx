@@ -8,12 +8,19 @@ import { AnalysisPeriodCard } from "./components/AnalysisPeriodCard"
 import { ConnectBankCard } from "./components/ConnectBankCard"
 import { ConnectionCheck } from "./components/ConnectionCheck"
 import { RecentTransactionsCard } from "./components/RecentTransactionsCard"
+import { SpendingByDayCard } from "./components/SpendingByDayCard"
+import { SpendingComparisonCard } from "./components/SpendingComparisonCard"
 import { SpendingOverviewCard } from "./components/SpendingOverviewCard"
+import { SpendingSavedCard } from "./components/SpendingSavedCard"
 import { TopStoresCard } from "./components/TopStoresCard"
 import {
   useCategoryInsights,
   useHasConnection,
   useInitOpenFinance,
+  useSpendingByDay,
+  useSpendingPeriodComparison,
+  useSpendingSaved,
+  useSpendingSavedByAccount,
   useTopAccounts,
   useTopStores,
   useTransactions,
@@ -29,6 +36,10 @@ export function InsightsRecommendationsPage() {
   const { data: categoryInsights = [] } = useCategoryInsights(timeRangeDays, connected)
   const { data: topAccounts = [] } = useTopAccounts(timeRangeDays, connected)
   const { data: topStoresRaw = [] } = useTopStores(timeRangeDays, connected)
+  const { data: spendingByDay = [] } = useSpendingByDay(timeRangeDays, connected)
+  const { data: spendingComparison = null } = useSpendingPeriodComparison(timeRangeDays, connected)
+  const { data: spendingSaved = null } = useSpendingSaved(timeRangeDays, connected)
+  const { data: spendingSavedByAccount = [] } = useSpendingSavedByAccount(timeRangeDays, connected)
   const initOpenFinance = useInitOpenFinance()
 
   const accountHighlights = topAccounts.slice(0, INSIGHTS_DEFAULTS.ACCOUNT_HIGHLIGHTS_LIMIT)
@@ -81,6 +92,14 @@ export function InsightsRecommendationsPage() {
 
       {!txLoading && !insightsError ? (
         <TopStoresCard stores={topStoresRaw} />
+      ) : null}
+
+      {!txLoading && !insightsError ? (
+        <>
+          <SpendingByDayCard spendingByDay={spendingByDay} />
+          <SpendingComparisonCard comparison={spendingComparison} />
+          <SpendingSavedCard totalSaved={spendingSaved} savedByAccount={spendingSavedByAccount} />
+        </>
       ) : null}
 
       <RecentTransactionsCard transactions={transactions} isLoading={txLoading} />

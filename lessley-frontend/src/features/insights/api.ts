@@ -1,9 +1,14 @@
 import { apiFetch } from "@/lib/api-client"
 import type {
+  BasicApiResponse,
   PaginatedApiResponse,
   PersonalizationTransaction,
   RecommendationsResponse,
+  SpendingByDayInsight,
   SpendingCategoryInsight,
+  SpendingPeriodComparison,
+  SpendingSavedByAccountInsight,
+  SpendingSavedInsight,
   TopAccountInsight,
   TopStoreInsight,
 } from "@/lib/types"
@@ -64,6 +69,46 @@ export async function fetchTopStoreInsights(
   const params = new URLSearchParams({ days: String(days) })
   const payload = await apiFetch<PaginatedApiResponse<TopStoreInsight>>(
     `/api/v1/insights/top-stores?${params.toString()}`,
+  )
+  return Array.isArray(payload.data) ? payload.data : []
+}
+
+export async function fetchSpendingByDayInsights(
+  days: number = 90,
+): Promise<SpendingByDayInsight[]> {
+  const params = new URLSearchParams({ days: String(days) })
+  const payload = await apiFetch<PaginatedApiResponse<SpendingByDayInsight>>(
+    `/api/v1/insights/spending-by-day-in-week?${params.toString()}`,
+  )
+  return Array.isArray(payload.data) ? payload.data : []
+}
+
+export async function fetchSpendingPeriodComparison(
+  days: number = 90,
+): Promise<SpendingPeriodComparison | null> {
+  const params = new URLSearchParams({ days: String(days) })
+  const payload = await apiFetch<BasicApiResponse<SpendingPeriodComparison>>(
+    `/api/v1/insights/spending-difference-between-two-periods?${params.toString()}`,
+  )
+  return payload.data ?? null
+}
+
+export async function fetchSpendingSaved(
+  days: number = 90,
+): Promise<SpendingSavedInsight | null> {
+  const params = new URLSearchParams({ days: String(days) })
+  const payload = await apiFetch<BasicApiResponse<SpendingSavedInsight>>(
+    `/api/v1/insights/spending-saved?${params.toString()}`,
+  )
+  return payload.data ?? null
+}
+
+export async function fetchSpendingSavedByAccount(
+  days: number = 90,
+): Promise<SpendingSavedByAccountInsight[]> {
+  const params = new URLSearchParams({ days: String(days) })
+  const payload = await apiFetch<PaginatedApiResponse<SpendingSavedByAccountInsight>>(
+    `/api/v1/insights/spending-saved-by-account?${params.toString()}`,
   )
   return Array.isArray(payload.data) ? payload.data : []
 }
