@@ -21,7 +21,6 @@ from routers import open_finance_controller
 from routers import mcc_controller
 from routers import insights_controller
 from routers import recommendation_controller
-from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 from middleware.edge_auth_middleware import EdgeAuthMiddleware, dev_bypass_active
@@ -370,4 +369,3 @@ app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
 app.include_router(recommendation_controller.router)
-app.include_router(club_controller.router)

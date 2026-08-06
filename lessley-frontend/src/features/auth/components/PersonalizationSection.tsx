@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CLUBS, MATCH_LEVELS, MCC_CATEGORIES, formatCategoryLabel } from "@/lib/constants"
+import { MATCH_LEVELS, MCC_CATEGORIES, formatCategoryLabel } from "@/lib/constants"
 import { cn, toggleArrayValue } from "@/lib/utils"
+import { useClubs } from "@/features/clubs/hooks"
 import type { RegisterValues } from "../schemas"
 
 interface PersonalizationSectionProps {
@@ -24,6 +25,8 @@ interface PersonalizationSectionProps {
 }
 
 export function PersonalizationSection({ form, isLoading }: PersonalizationSectionProps) {
+  const { data: clubs = [] } = useClubs()
+
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200/60 bg-slate-50/60 p-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -37,7 +40,7 @@ export function PersonalizationSection({ form, isLoading }: PersonalizationSecti
           <FormItem>
             <FormLabel className="text-sm">Loyalty clubs</FormLabel>
             <div className="grid grid-cols-2 gap-1.5">
-              {CLUBS.map((club) => (
+              {clubs.map((club) => (
                 <label
                   key={club.id}
                   className={cn(

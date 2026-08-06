@@ -25,9 +25,10 @@ import {
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { LoadingCard } from "@/components/shared/LoadingCard"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { CLUBS, MATCH_LEVELS, formatCategoryLabel } from "@/lib/constants"
+import { MATCH_LEVELS, formatCategoryLabel } from "@/lib/constants"
 import { fintech } from "@/lib/fintech-styles"
 import { cn, toggleArrayValue } from "@/lib/utils"
+import { useClubs } from "@/features/clubs/hooks"
 import { useInitOpenFinance, useMyProfile, useUpdateMyProfile } from "@/features/user/hooks"
 
 const settingsSchema = z.object({
@@ -41,6 +42,7 @@ type SettingsValues = z.infer<typeof settingsSchema>
 export function SettingsPage() {
   const navigate = useNavigate()
   const { data: profile, isLoading, error } = useMyProfile()
+  const { data: clubs = [] } = useClubs()
   const updateProfile = useUpdateMyProfile()
   const initOpenFinance = useInitOpenFinance()
 
@@ -111,7 +113,7 @@ export function SettingsPage() {
                         <FormItem>
                           <FormLabel className="text-sm">Loyalty clubs</FormLabel>
                           <div className="grid grid-cols-2 gap-1.5">
-                            {CLUBS.map((club) => (
+                            {clubs.map((club) => (
                               <label
                                 key={club.id}
                                 className={cn(

@@ -118,6 +118,11 @@ export interface MccCategoryDto {
   category: string
 }
 
+export interface ClubDto {
+  id: string
+  name: string
+}
+
 export interface DealDocument {
   dealId: string
   storeId: string

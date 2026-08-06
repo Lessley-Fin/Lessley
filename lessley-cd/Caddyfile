@@ -47,7 +47,7 @@
 	# These MUST precede the general /api/v1/* handler: `handle` blocks match top-down.
 	# Personalization has no user-level authorization of its own — it trusts X-Auth-Email
 	# — so forward_auth is what makes exposing it safe. Do not add a route here without it.
-	@personalization path /api/v1/insights/* /api/v1/open-finance/* /api/v1/clubs/*
+	@personalization path /api/v1/insights/* /api/v1/open-finance/*
 	handle @personalization {
 		forward_auth gateway:5001 {
 			uri /api/auth/verify

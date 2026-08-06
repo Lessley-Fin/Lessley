@@ -40,4 +40,7 @@ export const queryKeys = {
   mcc: {
     categories: () => ["mcc", "categories"] as const,
   },
+  clubs: {
+    all: () => ["clubs"] as const,
+  },
 }

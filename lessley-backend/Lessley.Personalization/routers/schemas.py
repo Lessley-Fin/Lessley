@@ -13,16 +13,6 @@ class InsightsCalcRequests(BaseModel):
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
 
 
-class ClubCalcRequests(BaseModel):
-    club_id: str = Field(..., min_length=1, max_length=255, description="Club ID")
-
-    @validator("club_id")
-    def validate_club_id(cls, v):
-        if not v.strip():
-            raise ValueError("club_id cannot be empty")
-        return v
-
-
 class GetTransactionsByAccountRequest(BaseModel):
     account_id: str = Field(..., min_length=1, max_length=255, description="Account ID")
     time_filter: bool = Field(True, description="Filter by time")

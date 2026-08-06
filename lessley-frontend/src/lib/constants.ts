@@ -1,13 +1,3 @@
-// Sourced from MongoDB club_list and mcc_list collections.
-// Keep in sync with the database when clubs or categories are added.
-
-export const CLUBS = [
-  { id: "club_behatsdaa", name: "Behatsdaa" },
-  { id: "club_mastercard", name: "Mastercard Israel" },
-  { id: "club_topcash", name: "Isracard TopCash" },
-  { id: "club_hot", name: "HOT Israel" },
-] as const
-
 export const MATCH_LEVELS = ["Low", "Medium", "High"] as const
 
 export const MCC_CATEGORIES = [

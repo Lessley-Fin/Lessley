@@ -4,6 +4,7 @@ import { CardHeaderWithIcon } from "@/components/shared/CardHeaderWithIcon"
 import { MissedSavingsList } from "@/components/shared/MissedSavingsList"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useClubs } from "@/features/clubs/hooks"
 import type { TransactionInsight } from "@/lib/types"
 
 const MISSED_OPPORTUNITIES_LIMIT = 5
@@ -16,6 +17,8 @@ interface MissedOpportunitiesCardProps {
 }
 
 export function MissedOpportunitiesCard({ insights, onTrigger, isPending, isSuccess }: MissedOpportunitiesCardProps) {
+  const { data: clubs = [] } = useClubs()
+
   return (
     <Card className="fintech-card border-0">
       <CardHeaderWithIcon
@@ -25,7 +28,7 @@ export function MissedOpportunitiesCard({ insights, onTrigger, isPending, isSucc
         subtitle="Where you could have saved"
       />
       <CardContent className="space-y-3 px-5 pb-5 pt-0">
-        <MissedSavingsList items={insights} limit={MISSED_OPPORTUNITIES_LIMIT} />
+        <MissedSavingsList items={insights} clubs={clubs} limit={MISSED_OPPORTUNITIES_LIMIT} />
 
         <div className="flex items-center gap-3 pt-1">
           <Button

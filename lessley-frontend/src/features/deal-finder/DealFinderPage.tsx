@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/shared/EmptyState"
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { LoadingCard } from "@/components/shared/LoadingCard"
 import { fintech } from "@/lib/fintech-styles"
+import { useClubs } from "@/features/clubs/hooks"
 import { DealCard } from "./components/DealCard"
 import { DealFilters } from "./components/DealFilters"
 import { useDealSearch, useMccCategories } from "./hooks"
@@ -17,6 +18,7 @@ export function DealFinderPage() {
   const [page, setPage] = useState(1)
 
   const { data: mccCategories = [], isLoading: isLoadingCategories } = useMccCategories()
+  const { data: clubs = [] } = useClubs()
 
   const enabled = submittedParams !== null
   const queryParams: DealSearchParams = submittedParams
@@ -65,7 +67,7 @@ export function DealFinderPage() {
 
           <div className="space-y-3">
             {data.items.map((item) => (
-              <DealCard key={item.deal.dealId} item={item} />
+              <DealCard key={item.deal.dealId} item={item} clubs={clubs} />
             ))}
           </div>
 
