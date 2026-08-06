@@ -67,8 +67,6 @@ export const INSIGHTS_DEFAULTS = {
   DEFAULT_TIME_RANGE_DAYS: 90,
 } as const
 
-export const NOTIFICATION_POLL_INTERVAL_MS = 15_000
-
 export function formatCategoryLabel(value: string): string {
   return value
     .split("_")
