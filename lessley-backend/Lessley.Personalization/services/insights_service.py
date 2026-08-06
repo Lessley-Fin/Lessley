@@ -396,7 +396,10 @@ class InsightsService:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
                 transactions = self.open_finance_service.sort_transactions(transactions)
 
-            insights = await self.processing_core_service.calculate_missed_savings_async(transactions)
+            user_club_ids = await self.user_repository.get_user_clubs(user_id)
+            insights = await self.processing_core_service.calculate_missed_savings_async(
+                transactions, user_club_ids=user_club_ids
+            )
 
             if self.publisher_service:
                 serialized = [i.dict() if hasattr(i, "dict") else i for i in insights]

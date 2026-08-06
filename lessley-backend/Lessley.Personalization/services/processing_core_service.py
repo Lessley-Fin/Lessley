@@ -400,7 +400,7 @@ class ProcessingCoreService:
         return store_id in self._deals_dict and len(self._deals_dict[store_id]) > 0
 
     def _find_alternative_stores_by_mcc(
-        self, category_name: str, exclude_store_id: str = None
+        self, category_name: str, exclude_store_id: str = None, user_club_ids: List[str] | None = None
     ) -> Dict[str, List[Store]]:
         """
         Find alternative stores with active deals for a given category name.
@@ -409,6 +409,7 @@ class ProcessingCoreService:
         Args:
             category_name: The category name to search for (e.g. "GROCERIES")
             exclude_store_id: Store ID to exclude from results (the original merchant)
+            user_club_ids: If provided, restrict results to only these club IDs (the user's own clubs)
 
         Returns:
             Dictionary mapping club_id -> list of stores with deals (max 10 per club)
@@ -429,9 +430,17 @@ class ProcessingCoreService:
         if not alternative_stores:
             return {}
 
+        # Restrict to the user's own clubs when known, instead of scanning every club
+        if user_club_ids is not None:
+            clubs_to_check = {
+                club_id: club for club_id, club in self._clubs_dict.items() if club_id in set(user_club_ids)
+            }
+        else:
+            clubs_to_check = self._clubs_dict
+
         # Group alternative stores by club (max 10 per club)
         stores_by_club: Dict[str, List[Store]] = {}
-        for club_id, club in self._clubs_dict.items():
+        for club_id, club in clubs_to_check.items():
             club_stores = [store for store in alternative_stores if store.store_id in (club.stores or [])]
             if club_stores:
                 # Cap at 10 stores per club
@@ -471,7 +480,9 @@ class ProcessingCoreService:
 
         return missed_store_discounts
 
-    async def calculate_missed_savings_async(self, transactions: list[Transaction]) -> list[TransactionInsightSchema]:
+    async def calculate_missed_savings_async(
+        self, transactions: list[Transaction], user_club_ids: List[str] | None = None
+    ) -> list[TransactionInsightSchema]:
         """
         Analyzes user transactions to identify missed savings opportunities.
         For each transaction, finds deals available for stores matching the transaction's MCC code.
@@ -481,11 +492,13 @@ class ProcessingCoreService:
         2. For each transaction with MCC code X:
            a. Find all stores with MCC code X that have active deals
            b. had_discount = true if any deal exists for MCC X
-           c. Group alternative stores by club (max 10 per club)
+           c. Group alternative stores by club (max 10 per club), restricted to the user's own
+              clubs when user_club_ids is provided
            d. Build and return TransactionInsightSchema
 
         Args:
             transactions: List of transaction objects to analyze
+            user_club_ids: If provided, only consider clubs the user is a member of
 
         Returns:
             List of TransactionInsightSchema objects with missed savings analysis
@@ -532,7 +545,7 @@ class ProcessingCoreService:
                 category_name = self.mcc_service.get_mcc_by_id(transaction.categoryCode)
 
                 # Find all stores with matching category that have active deals
-                stores_by_club = self._find_alternative_stores_by_mcc(category_name)
+                stores_by_club = self._find_alternative_stores_by_mcc(category_name, user_club_ids=user_club_ids)
                 had_discount = len(stores_by_club) > 0
                 missed_stores_list: List[MissedStoreDiscountSchema] = []
 

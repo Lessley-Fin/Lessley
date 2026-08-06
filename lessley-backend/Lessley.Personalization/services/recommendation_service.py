@@ -57,9 +57,10 @@ class RecommendationService:
         try:
             tags = await self.user_repository.get_user_tags(user_id)
             mcc_codes = self._mcc_codes_from_tags(tags)
+            user_club_ids = await self.user_repository.get_user_clubs(user_id)
 
             result = self.recommendation_core_service.get_club_recommendations_by_spending_analysis(
-                user_id, mcc_codes
+                user_id, mcc_codes, user_club_ids=user_club_ids
             )
 
             if self.publisher_service:

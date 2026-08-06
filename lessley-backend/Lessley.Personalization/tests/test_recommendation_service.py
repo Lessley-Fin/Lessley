@@ -36,6 +36,7 @@ async def test_calculate_matching_clubs_returns_recommendations():
 
     user_repo = MagicMock()
     user_repo.get_user_tags = AsyncMock(return_value=["GROCERIES"])
+    user_repo.get_user_clubs = AsyncMock(return_value=["c1"])
 
     publisher = MagicMock()
     publisher.publish_matching_clubs_calculated = AsyncMock()
@@ -52,6 +53,7 @@ async def test_calculate_matching_clubs_returns_recommendations():
     assert rec["total_stores"] == 2
     assert rec["fit_score"] == 0.5
     assert rec["is_recommended"] is True
+    assert rec["is_member"] is True        # user_repo reports "c1" as an owned club
 
 
 async def test_calculate_matching_clubs_no_matching_codes_gives_zero_hits():
@@ -61,6 +63,7 @@ async def test_calculate_matching_clubs_no_matching_codes_gives_zero_hits():
 
     user_repo = MagicMock()
     user_repo.get_user_tags = AsyncMock(return_value=["RESTAURANT"])
+    user_repo.get_user_clubs = AsyncMock(return_value=[])
 
     publisher = MagicMock()
     publisher.publish_matching_clubs_calculated = AsyncMock()
