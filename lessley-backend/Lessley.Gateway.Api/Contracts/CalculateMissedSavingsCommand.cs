@@ -1,3 +1,3 @@
 namespace Lessley.Gateway.Api.Contracts;
 
-public record CalculateMissedSavingsCommand(string UserId, bool TimeFilter = false, int Days = 90);
+public record CalculateMissedSavingsCommand(string UserId, bool TimeFilter = true, int Days = 7);

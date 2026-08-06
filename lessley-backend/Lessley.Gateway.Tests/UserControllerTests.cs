@@ -90,11 +90,11 @@ public class UserControllerTests
             .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { "5411" });
 
-        var result = await _controller.TriggerMissedSavings(CancellationToken.None);
+        var result = await _controller.TriggerMissedSavings(ct: CancellationToken.None);
 
         Assert.IsType<AcceptedResult>(result);
         _personalizationService.Verify(
-            s => s.TriggerCalculateMissedSavingsAsync("user@test.com", It.IsAny<CancellationToken>()),
+            s => s.TriggerCalculateMissedSavingsAsync("user@test.com", true, 7, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -105,7 +105,7 @@ public class UserControllerTests
             .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync((List<string>?)null);
 
-        var result = await _controller.TriggerMissedSavings(CancellationToken.None);
+        var result = await _controller.TriggerMissedSavings(ct: CancellationToken.None);
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -117,7 +117,7 @@ public class UserControllerTests
             .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string>());
 
-        var result = await _controller.TriggerMissedSavings(CancellationToken.None);
+        var result = await _controller.TriggerMissedSavings(ct: CancellationToken.None);
 
         Assert.IsType<UnprocessableEntityObjectResult>(result);
     }

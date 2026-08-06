@@ -15,7 +15,7 @@ namespace Lessley.Gateway.Tests;
 /// </summary>
 public sealed class FakePersonalizationService : IPersonalizationService
 {
-    public Task TriggerCalculateMissedSavingsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
+    public Task TriggerCalculateMissedSavingsAsync(string userId, bool timeFilter = true, int days = 7, CancellationToken ct = default) => Task.CompletedTask;
     public Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
 }
 

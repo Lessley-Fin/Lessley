@@ -100,11 +100,13 @@ async def _handle_gateway_command(routing_key: str, data: dict) -> None:
     club_id = data.get("ClubId") or data.get("clubId") or data.get("club_id")
 
     if routing_key == "Gateway.calculate_missed_savings":
+        time_filter = data.get("TimeFilter", True)
+        days = data.get("Days") or 7
         service = DIContainer.get_insights_service()
         await service.calculate_missed_savings_async(
             user_id,
-            time_filter=True,
-            days=90,
+            time_filter=time_filter,
+            days=days,
             use_mock=False,
         )
     elif routing_key == "Gateway.calculate_matching_clubs":

@@ -48,11 +48,11 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> TriggerMissedSavings(CancellationToken ct)
+    public async Task<IActionResult> TriggerMissedSavings([FromQuery] bool timeFilter = true, [FromQuery] int days = 7, CancellationToken ct = default)
     {
         var check = await CheckUserHasCategories(ct);
         if (check is not null) return check;
-        await _personalizationService.TriggerCalculateMissedSavingsAsync(CallerEmail(), ct);
+        await _personalizationService.TriggerCalculateMissedSavingsAsync(CallerEmail(), timeFilter, days, ct);
         return Accepted();
     }
 

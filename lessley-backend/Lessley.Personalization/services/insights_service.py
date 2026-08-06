@@ -213,6 +213,158 @@ class InsightsService:
             )
             raise
 
+    async def calculate_spending_by_day_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> list[dict]:
+        """
+        Calculates total spending per day of week (Sunday..Saturday) from transactions.
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            if use_mock:
+                transactions = self.files_service.read_json("transactions_roee_all.json")
+            else:
+                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+
+            spending_by_day = self.processing_core_service.get_spending_by_day_of_week(transactions)
+
+            logger.info(
+                "Spending by day of week calculated successfully",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, "day_count": len(spending_by_day)},
+                },
+            )
+            return spending_by_day
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
+    async def calculate_spending_difference_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> dict:
+        """
+        Calculates the spending difference between the current period (last `days` days) and the
+        previous period of equal length, from a single fetch covering both periods.
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            if use_mock:
+                transactions = self.files_service.read_json("transactions_roee_all.json")
+            else:
+                transactions = await self.open_finance_service.get_user_transactions_async(
+                    user_id, time_filter, days * 2
+                )
+
+            difference = self.processing_core_service.get_spending_difference_between_two_periods(
+                transactions, days
+            )
+
+            logger.info(
+                "Spending difference between two periods calculated successfully",
+                extra={"reason": "Business logic complete", "extra_data": {"user_id": user_id, **difference}},
+            )
+            return difference
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
+    async def calculate_spending_saved_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> float:
+        """
+        Calculates total spending saved (abs difference between charged and original amounts).
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            if use_mock:
+                transactions = self.files_service.read_json("transactions_roee_all.json")
+            else:
+                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+
+            total_saved = self.processing_core_service.get_spending_saved(transactions)
+
+            logger.info(
+                "Spending saved calculated successfully",
+                extra={"reason": "Business logic complete", "extra_data": {"user_id": user_id, "total_saved": total_saved}},
+            )
+            return total_saved
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
+    async def calculate_spending_saved_by_account_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> list[dict]:
+        """
+        Calculates total spending saved (abs difference between charged and original amounts),
+        grouped by account.
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            if use_mock:
+                transactions = self.files_service.read_json("transactions_roee_all.json")
+            else:
+                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+
+            saved_by_account = self.processing_core_service.get_spending_saved_by_account(transactions)
+
+            logger.info(
+                "Spending saved by account calculated successfully",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, "account_count": len(saved_by_account)},
+                },
+            )
+            return saved_by_account
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
     async def calculate_missed_savings_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
     ) -> list[TransactionInsightSchema]:
@@ -242,6 +394,7 @@ class InsightsService:
                 transactions = self.files_service.read_json("transactions_roee_all.json")
             else:
                 transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+                transactions = self.open_finance_service.sort_transactions(transactions)
 
             insights = await self.processing_core_service.calculate_missed_savings_async(transactions)
 
