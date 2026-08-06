@@ -135,7 +135,7 @@ def _insights_service(open_finance) -> InsightsService:
         files_service=MagicMock(),
         processing_core_service=MagicMock(calculate_missed_savings_async=AsyncMock(return_value=[])),
         publisher_service=MagicMock(publish_missed_savings_calculated=AsyncMock()),
-        user_repository=None,
+        user_repository=MagicMock(get_user_clubs=AsyncMock(return_value=["c1"])),
     )
 
 
@@ -152,7 +152,9 @@ async def test_missed_savings_sorts_real_transactions_before_building_insights()
     await service.calculate_missed_savings_async("user@test.com", time_filter=True, days=7, use_mock=False)
 
     open_finance.sort_transactions.assert_called_once_with(fetched)
-    service.processing_core_service.calculate_missed_savings_async.assert_awaited_once_with(sorted_transactions)
+    service.processing_core_service.calculate_missed_savings_async.assert_awaited_once_with(
+        sorted_transactions, user_club_ids=["c1"]
+    )
 
 
 async def test_missed_savings_does_not_sort_mock_data():

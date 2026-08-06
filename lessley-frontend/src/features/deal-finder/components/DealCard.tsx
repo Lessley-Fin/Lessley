@@ -2,23 +2,22 @@ import { useState } from "react"
 import { Calendar, ChevronDown, ChevronUp, ExternalLink } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { CLUBS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
-import type { DealSearchResultItem } from "@/lib/types"
+import type { ClubDto, DealSearchResultItem } from "@/lib/types"
 
-function getClubName(clubId: string): string {
-  return CLUBS.find((c) => c.id === clubId)?.name ?? clubId
+function getClubName(clubs: ClubDto[], clubId: string): string {
+  return clubs.find((c) => c.id === clubId)?.name ?? clubId
 }
 
-function ClubBadge({ clubId }: { clubId: string }) {
+function ClubBadge({ clubs, clubId }: { clubs: ClubDto[]; clubId: string }) {
   return (
     <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
-      {getClubName(clubId)}
+      {getClubName(clubs, clubId)}
     </span>
   )
 }
 
-export function DealCard({ item }: { item: DealSearchResultItem }) {
+export function DealCard({ item, clubs = [] }: { item: DealSearchResultItem; clubs?: ClubDto[] }) {
   const [expanded, setExpanded] = useState(false)
   const { deal, store } = item
 
@@ -36,7 +35,7 @@ export function DealCard({ item }: { item: DealSearchResultItem }) {
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex flex-wrap items-center gap-1.5">
                 <span className="truncate text-sm font-semibold text-slate-800">{store.name}</span>
-                <ClubBadge clubId={deal.clubId} />
+                <ClubBadge clubs={clubs} clubId={deal.clubId} />
                 {deal.redeemChannels.map((ch) => (
                   <span
                     key={ch}

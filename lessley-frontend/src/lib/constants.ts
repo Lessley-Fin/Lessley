@@ -1,13 +1,3 @@
-// Sourced from MongoDB club_list and mcc_list collections.
-// Keep in sync with the database when clubs or categories are added.
-
-export const CLUBS = [
-  { id: "club_behatsdaa", name: "Behatsdaa" },
-  { id: "club_mastercard", name: "Mastercard Israel" },
-  { id: "club_topcash", name: "Isracard TopCash" },
-  { id: "club_hot", name: "HOT Israel" },
-] as const
-
 export const MATCH_LEVELS = ["Low", "Medium", "High"] as const
 
 export const MCC_CATEGORIES = [
@@ -76,8 +66,6 @@ export const INSIGHTS_DEFAULTS = {
   TOP_CLUB_RECOMMENDATIONS_LIMIT: 3,
   DEFAULT_TIME_RANGE_DAYS: 90,
 } as const
-
-export const NOTIFICATION_POLL_INTERVAL_MS = 15_000
 
 export function formatCategoryLabel(value: string): string {
   return value

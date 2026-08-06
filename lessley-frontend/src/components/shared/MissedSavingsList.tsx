@@ -1,8 +1,8 @@
 import { Lightbulb, Store, TrendingDown } from "lucide-react"
 
-import { CLUBS } from "@/lib/constants"
 import { fintech } from "@/lib/fintech-styles"
 import { formatAmount } from "@/lib/formatters"
+import type { ClubDto } from "@/lib/types"
 
 export interface MissedSavingsEntry {
   transaction_id?: string
@@ -17,15 +17,16 @@ export interface MissedSavingsEntry {
 
 interface MissedSavingsListProps {
   items: MissedSavingsEntry[]
+  clubs?: ClubDto[]
   compact?: boolean
   limit?: number
 }
 
-function resolveClubName(clubId: string): string {
-  return CLUBS.find((c) => c.id === clubId)?.name ?? clubId
+function resolveClubName(clubs: ClubDto[], clubId: string): string {
+  return clubs.find((c) => c.id === clubId)?.name ?? clubId
 }
 
-export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedSavingsListProps) {
+export function MissedSavingsList({ items, clubs = [], compact = false, limit = 5 }: MissedSavingsListProps) {
   const relevant = items.filter((i) => (i.missed_store_discont?.length ?? 0) > 0).slice(0, limit)
 
   if (relevant.length === 0) {
@@ -43,7 +44,7 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
       <div className="space-y-2">
         {relevant.map((item, idx) => {
           const topDiscount = item.missed_store_discont?.[0]
-          const clubName = topDiscount?.club_id ? resolveClubName(topDiscount.club_id) : null
+          const clubName = topDiscount?.club_id ? resolveClubName(clubs, topDiscount.club_id) : null
           const altStores = topDiscount?.missed_store?.slice(0, 3).map((s) => s.store_name).join(", ")
 
           return (
@@ -80,7 +81,7 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
     <>
       {relevant.map((item, idx) => {
         const topDiscount = item.missed_store_discont?.[0]
-        const clubName = topDiscount?.club_id ? resolveClubName(topDiscount.club_id) : null
+        const clubName = topDiscount?.club_id ? resolveClubName(clubs, topDiscount.club_id) : null
         const altStoreNames = topDiscount?.missed_store?.slice(0, 3).map((s) => s.store_name).join(", ")
         const extraClubs = (item.missed_store_discont?.length ?? 0) - 1
 

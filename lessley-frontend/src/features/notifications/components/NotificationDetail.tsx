@@ -2,7 +2,9 @@ import { MatchingClubsList, type MatchingClubEntry } from "@/components/shared/M
 import { MissedSavingsList } from "@/components/shared/MissedSavingsList"
 import { DealCard } from "@/features/deal-finder/components/DealCard"
 import { useDealById } from "@/features/deal-finder/hooks"
+import { useClubs } from "@/features/clubs/hooks"
 import { fintech } from "@/lib/fintech-styles"
+import type { ClubDto } from "@/lib/types"
 import type { NotificationDto } from "../notificationTypes"
 
 function tryParseJson(data: string | null): unknown {
@@ -29,7 +31,7 @@ function CategoriesDetail({ categories }: { categories: string[] }) {
   )
 }
 
-function DealDetail({ dealId }: { dealId: string }) {
+function DealDetail({ dealId, clubs }: { dealId: string; clubs: ClubDto[] }) {
   const { data, isLoading } = useDealById(dealId)
 
   if (isLoading) {
@@ -40,7 +42,7 @@ function DealDetail({ dealId }: { dealId: string }) {
     return <p className="text-xs text-slate-400">Deal · {dealId}</p>
   }
 
-  return <DealCard item={data} />
+  return <DealCard item={data} clubs={clubs} />
 }
 
 interface NotificationDetailProps {
@@ -49,13 +51,14 @@ interface NotificationDetailProps {
 
 export function NotificationDetail({ item }: NotificationDetailProps) {
   const parsed = tryParseJson(item.data)
+  const { data: clubs = [] } = useClubs()
 
   return (
     <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
       {item.calcType === "missed-savings" && Array.isArray(parsed) ? (
         <>
           <p className={fintech.sectionEyebrow}>Missed savings analysis</p>
-          <MissedSavingsList compact items={parsed} limit={3} />
+          <MissedSavingsList compact items={parsed} clubs={clubs} limit={3} />
         </>
       ) : item.calcType === "matching-clubs" && parsed && typeof parsed === "object" ? (
         <>
@@ -71,7 +74,7 @@ export function NotificationDetail({ item }: NotificationDetailProps) {
       {item.dealId ? (
         <>
           <p className={fintech.sectionEyebrow}>Deal</p>
-          <DealDetail dealId={item.dealId} />
+          <DealDetail dealId={item.dealId} clubs={clubs} />
         </>
       ) : null}
 

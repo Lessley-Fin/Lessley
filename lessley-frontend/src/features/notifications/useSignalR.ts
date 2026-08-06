@@ -38,11 +38,11 @@ export function useSignalR() {
         dealId: payload.dealId ?? null,
         sentAt: payload.timestamp,
         type: payload.type,
-        calcType: null,
+        calcType: payload.calcType ?? null,
         data: null,
         isRead: false,
         readAt: null,
-        categories: null,
+        categories: payload.categories ?? null,
       }
       queryClient.setQueryData<NotificationDto[]>(
         queryKeys.notifications.list(),

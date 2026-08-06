@@ -24,7 +24,6 @@ arrives here.
 |---|---|
 | `GET /insights/categories\|top-accounts\|top-stores` | Spending analysis |
 | `GET /open-finance/accounts\|transactions\|transactions/by-account` | Raw Open Finance data |
-| `POST /clubs/categories` | Club MCC distribution |
 | `POST /recommendations/missed-savings\|matching-clubs` | Not edge-exposed — driven by RabbitMQ |
 
 Query parameters: `days` (1–365, default 90), `time_filter` (default true), `use_mock`

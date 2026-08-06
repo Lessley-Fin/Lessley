@@ -42,6 +42,11 @@ class UserRepository:
         user = await self.get_user(user_id)
         return user.get("Tags") or []
 
+    async def get_user_clubs(self, user_id: str) -> List[str]:
+        """Return the club IDs the user is a member of."""
+        user = await self.get_user(user_id)
+        return user.get("Clubs") or []
+
     async def get_user_matching_score(self, user_id: str) -> Optional[float]:
         """Return the user's overall club-matching score."""
         user = await self.get_user(user_id)
