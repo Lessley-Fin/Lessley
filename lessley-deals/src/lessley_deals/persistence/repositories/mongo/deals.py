@@ -10,7 +10,12 @@ from lessley_deals.persistence.serialization import deal_from_dict, to_dict
 class DealMongoRepository:
     def __init__(self, db: Database) -> None:  # type: ignore[type-arg]
         self._col: Collection = db["deals"]  # type: ignore[type-arg]
-        self._col.create_index("fingerprint", unique=True)
+        # No ``fingerprint`` index. It used to be unique, which this collection
+        # cannot satisfy: rows imported from data/deals.json carry no such field
+        # at all, and store+source+description+currency genuinely repeats across
+        # distinct deals (404 groups today, the largest 10 rows deep). Nothing
+        # queries the field either — the pipeline dedups against the *raw* repo
+        # in ScrapeStage — so a plain index would only cost write throughput.
         self._col.create_index("store_id")
 
     def save(self, deal: Deal) -> None:

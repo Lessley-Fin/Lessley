@@ -108,6 +108,44 @@ The reviewer is unsure and wants to revisit this item later.
 - The item remains in the queue and will appear again in future review sessions
 - No changes to the store database or alias table
 
+### SET MCC
+
+Tag a canonical store with its MCC categories. Unlike the four actions above
+this is **not a decision** -- it does not resolve the review item or change its
+status, it edits the store behind it and returns you to the same item so you can
+still approve, link, create, discard or skip.
+
+- Writes `metadata.mcc_codes` on the store as a ranked list of canonical
+  category names, plus `mcc_confidence: "HIGH"` and `mcc_source: "review:<user>"`
+  so a human decision is never overwritten silently by the LLM enricher
+- Targets the item's best candidate store; when the item has no candidates it
+  asks you to search for the store to tag
+- Also runs automatically right after CREATE_NEW (a brand-new store has no
+  categories yet). Turn that off with `deals review --no-mcc-on-create`
+
+#### The category vocabulary
+
+`metadata.mcc_codes` holds **category names** (`GROCERIES`, `RESTAURANT`,
+`CLOTHES_&_ACCESSORIES`, …), not the 4-digit ISO 18245 numbers. The closed set of
+46 names lives in `enrichment/mcc_catalog.py`; the same module keeps the
+numeric-MCC → category mapping so older rows that stored raw numbers still read
+back as categories.
+
+At the `MCC:` prompt you can enter:
+
+| Input | Meaning |
+|---|---|
+| `GROCERIES, RESTAURANT` | Category names, any casing or spacing |
+| `22, 39` | Catalog numbers as printed by `?` |
+| `5411, 5812` | 4-digit MCCs, resolved through the saved mapping |
+| `?` | Print the numbered catalog |
+| `s` | Ask the LLM to classify the store, then `y` to accept |
+| *(empty)* | Cancel, leaving the store's categories untouched |
+
+Entries are de-duplicated, kept in the order you typed them (the list is ranked
+most-specific first) and truncated to three. If nothing you typed resolves to a
+canonical category the store is left alone and the prompt repeats.
+
 ---
 
 ## Alias Learning (`learner.py`)
@@ -180,7 +218,9 @@ Explanation:
 
 Actions:
   [a] Approve best match (רמי לוי)
+  [l] Link to an existing store
   [c] Create new store
+  [m] Set MCC categories
   [d] Discard
   [s] Skip
   [q] Quit session
@@ -197,6 +237,10 @@ Actions:
 - **Filter by source**: Review only items from a specific data source.
   ```
   deals review --source shufersal
+  ```
+- **Skip the MCC prompt after CREATE_NEW**: leave new stores untagged.
+  ```
+  deals review --no-mcc-on-create
   ```
 
 ### Statistics
@@ -282,7 +326,9 @@ Explanation:
 
 Actions:
   [a] Approve best match (רמי לוי)
+  [l] Link to an existing store
   [c] Create new store
+  [m] Set MCC categories
   [d] Discard
   [s] Skip
   [q] Quit session

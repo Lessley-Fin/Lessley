@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from lessley_deals.domain.enums import AliasSource, ReviewAction, ReviewStatus
 from lessley_deals.domain.models import (
@@ -13,6 +14,7 @@ from lessley_deals.domain.models import (
     ReviewItem,
     StoreAlias,
 )
+from lessley_deals.enrichment.mcc_catalog import normalize_mcc_codes
 from lessley_deals.normalization.hebrew_utils import normalize_hebrew
 from lessley_deals.normalization.text import collapse_whitespace
 from lessley_deals.persistence.id_gen import generate_id
@@ -20,6 +22,11 @@ from lessley_deals.persistence.repositories.aliases import AliasJsonRepository
 from lessley_deals.persistence.repositories.deals import DealJsonRepository
 from lessley_deals.persistence.repositories.reviews import ReviewJsonRepository
 from lessley_deals.persistence.repositories.stores import CanonicalStoreJsonRepository
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from lessley_deals.enrichment.llm_client import StoreCategory
 
 logger = logging.getLogger(__name__)
 
@@ -261,6 +268,51 @@ class ReviewActions:
 
         self._review_repo.update(item)
         return item
+
+    def set_store_mcc(
+        self,
+        store_id: str,
+        mcc_codes: Sequence[str],
+        reviewed_by: str = "cli_user",
+    ) -> CanonicalStore:
+        """Write ``metadata.mcc_codes`` on a canonical store.
+
+        Values are pushed through the canonical vocabulary, so a numeric MCC or
+        a loosely-spelled category name is accepted and stored as the canonical
+        name. Raises when nothing resolves — a review action that silently
+        stored no categories would look like it had worked.
+        """
+        store = self._store_repo.get_by_id(store_id)
+        if store is None:
+            raise ValueError(f"Unknown store {store_id!r}")
+
+        canonical = normalize_mcc_codes(mcc_codes)
+        if not canonical:
+            raise ValueError(f"No canonical MCC category resolved from {list(mcc_codes)!r}")
+
+        store.metadata["mcc_codes"] = canonical
+        store.metadata["mcc_confidence"] = "HIGH"
+        store.metadata["mcc_source"] = f"review:{reviewed_by}"
+        store.updated_at = datetime.now(timezone.utc)
+        self._store_repo.save(store)
+
+        logger.info("Set mcc_codes for store %s (%s) -> %s", store.id, store.name, canonical)
+        return store
+
+    def suggest_store_mcc(self, store: CanonicalStore) -> StoreCategory | None:
+        """Ask the LLM to classify a store; None when the call fails.
+
+        Imported lazily so a review session on a machine with no LLM
+        credentials still starts — the suggestion is optional, manual entry is
+        always available.
+        """
+        from lessley_deals.enrichment.llm_client import get_store_category
+
+        try:
+            return get_store_category(store.name, store_url=store.metadata.get("store_url"))
+        except Exception as exc:
+            logger.warning("MCC suggestion failed for %s: %s", store.name, exc)
+            return None
 
     def skip(self, item: ReviewItem) -> ReviewItem:
         """Skip: defer review for later."""

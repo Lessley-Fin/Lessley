@@ -1,20 +1,25 @@
 """Project the pipeline's collections into the read model the Gateway queries.
 
-The scraper owns ``deals_current`` / ``stores``; ``Lessley.Gateway.Api`` reads
+The scraper owns ``deals`` / ``stores``; ``Lessley.Gateway.Api`` reads
 ``deal_list`` / ``store_list`` (see ``DealFinderRepository``). They are not the
 same documents, so this is a projection rather than a rename:
 
-* the Gateway's ``DealDocument``/``StoreDocument`` bind ``[BsonId]`` to an
-  **ObjectId** and carry the business key in a separate ``id`` field, while the
-  pipeline uses the business key as ``_id`` directly;
-* ``scraped_at``/``resolved_at`` are ISO **strings** inside a head's snapshot,
-  and the C# driver needs real BSON dates to bind them to ``DateTime``;
-* ``metadata.mcc_codes`` are **numbers** in ``stores``, but the Gateway filters
-  them with ``AnyIn(..., List<string>)``, which never matches an int.
+* ``scraped_at``/``resolved_at`` are ISO **strings** in ``deals``, and the C#
+  driver needs real BSON dates to bind them to ``DateTime``;
+* ``metadata.mcc_codes`` are canonical category names today, but older rows may
+  still hold the raw 4-digit **numbers**, and the Gateway filters them with
+  ``AnyIn(..., List<string>)``, which never matches an int;
+* the Gateway's ``StoreDocument`` binds ``[BsonId]`` to an **ObjectId** and
+  carries the business key in a separate ``id`` field, while ``stores`` uses
+  the business key as ``_id`` directly.
 
-Only ``status: "active"`` deals are published — an expired deal must disappear
-from search. Writes are upserts keyed on ``id`` and stale rows are pruned after,
-so the view is rebuilt in place and never observed empty by a live reader.
+``deals`` is the source of truth (see ``deal-optimizer``'s ``deals_source``),
+so every row is published. Unlike ``deals_current`` it has no ``status``, which
+means **there is no expiry filter here** — a deal disappears from search only
+when it is deleted from ``deals``.
+
+Writes are upserts keyed on ``id`` and stale rows are pruned after, so the view
+is rebuilt in place and never observed empty by a live reader.
 """
 
 from __future__ import annotations
@@ -26,8 +31,6 @@ from typing import Any, Iterable
 from pymongo import UpdateOne
 
 logger = logging.getLogger(__name__)
-
-ACTIVE_STATUS = "active"
 
 # The value each channel maps to when the constraints parser marked it available.
 _TRUTHY = ("yes", "true", True, 1)
@@ -58,26 +61,27 @@ def _redeem_channels(constraints: Any) -> list[str]:
     return [name for name, available in channels.items() if available in _TRUTHY]
 
 
-def deal_list_document(head: dict[str, Any]) -> dict[str, Any] | None:
-    """One ``deals_current`` head -> one ``deal_list`` document."""
-    snapshot = head.get("snapshot") or {}
-    deal_id = snapshot.get("id") or head.get("deal_id")
-    store_id = snapshot.get("store_id") or head.get("store_id")
+def deal_list_document(deal: dict[str, Any]) -> dict[str, Any] | None:
+    """One ``deals`` row -> one ``deal_list`` document."""
+    # Imported rows keep an ObjectId ``_id`` plus the business key in ``id``;
+    # rows written by DealMongoRepository put the business key in ``_id``.
+    deal_id = deal.get("id") or deal.get("_id")
+    store_id = deal.get("store_id")
     if not deal_id or not store_id:
         return None
 
     return {
-        "id": deal_id,
+        "id": str(deal_id),
         "store_id": store_id,
-        "title": snapshot.get("title") or "",
-        "deal_description": snapshot.get("deal_description"),
-        "club_id": snapshot.get("club_id") or "",
-        "scraped_at": _as_datetime(snapshot.get("scraped_at")),
-        "resolved_at": _as_datetime(snapshot.get("resolved_at")),
-        "benefit_url": snapshot.get("benefit_url"),
-        "url": snapshot.get("url"),
-        "redeem_channels": _redeem_channels(snapshot.get("constraints")),
-        "coupon_code": snapshot.get("coupon_code"),
+        "title": deal.get("title") or "",
+        "deal_description": deal.get("deal_description"),
+        "club_id": deal.get("club_id") or "",
+        "scraped_at": _as_datetime(deal.get("scraped_at")),
+        "resolved_at": _as_datetime(deal.get("resolved_at")),
+        "benefit_url": deal.get("benefit_url"),
+        "url": deal.get("url"),
+        "redeem_channels": _redeem_channels(deal.get("constraints")),
+        "coupon_code": deal.get("coupon_code"),
     }
 
 
@@ -120,7 +124,7 @@ def sync_gateway_view(db: Any) -> dict[str, dict[str, int]]:
     deals = _sync_collection(
         db,
         "deal_list",
-        (deal_list_document(h) for h in db["deals_current"].find({"status": ACTIVE_STATUS})),
+        (deal_list_document(d) for d in db["deals"].find({})),
     )
     stores = _sync_collection(
         db,

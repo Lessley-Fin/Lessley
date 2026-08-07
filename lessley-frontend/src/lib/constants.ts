@@ -1,11 +1,18 @@
-// Sourced from MongoDB club_list and mcc_list collections.
-// Keep in sync with the database when clubs or categories are added.
+// Sourced from MongoDB clubs and mcc_list collections.
+// Keep in sync with the database when clubs or categories are added
+// (lessley-deals/data/seed/clubs.json is the source of truth).
 
 export const CLUBS = [
   { id: "club_behatsdaa", name: "Behatsdaa" },
   { id: "club_mastercard", name: "Mastercard Israel" },
   { id: "club_topcash", name: "Isracard TopCash" },
   { id: "club_hot", name: "HOT Israel" },
+  { id: "club_swish", name: "Swish (נפשונית)" },
+  { id: "club_hever_gift_card_company", name: "Hever (חבר) — Gift Cards" },
+  { id: "club_hever_teamim_card_store", name: "Hever (חבר) — טעמים" },
+  { id: "club_paisplus", name: "PaisPlus" },
+  { id: "club_paisplus_food_chains", name: "PaisPlus — Food Chains Cash Card" },
+  { id: "club_paisplus_networks", name: "PaisPlus — Networks Cash Card" },
 ] as const
 
 export const MATCH_LEVELS = ["Low", "Medium", "High"] as const

@@ -219,3 +219,74 @@ class TestDiscard:
         assert store_repo.get_all() == []
         assert alias_repo.get_all() == []
         assert deal_repo.get_all() == []
+
+
+class TestSetStoreMcc:
+    def test_writes_canonical_names(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+        store = make_store(name="Shufersal")
+        store_repo.save(store)
+
+        updated = actions.set_store_mcc(store.id, ["groceries", 5812])
+
+        assert updated.metadata["mcc_codes"] == ["GROCERIES", "RESTAURANT"]
+        assert updated.metadata["mcc_confidence"] == "HIGH"
+        assert updated.metadata["mcc_source"] == "review:cli_user"
+
+    def test_persists_through_the_repository(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+        store = make_store(name="Shufersal")
+        store_repo.save(store)
+
+        actions.set_store_mcc(store.id, ["GROCERIES"])
+
+        reloaded = store_repo.get_by_id(store.id)
+        assert reloaded is not None
+        assert reloaded.metadata["mcc_codes"] == ["GROCERIES"]
+
+    def test_keeps_other_metadata(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+        store = make_store(
+            name="Shufersal",
+            metadata={"store_url": "https://shufersal.co.il", "image_urls": ["a.png"]},
+        )
+        store_repo.save(store)
+
+        updated = actions.set_store_mcc(store.id, ["GROCERIES"])
+
+        assert updated.metadata["store_url"] == "https://shufersal.co.il"
+        assert updated.metadata["image_urls"] == ["a.png"]
+
+    def test_bumps_updated_at(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+        store = make_store(name="Shufersal")
+        store_repo.save(store)
+        before = store.updated_at
+
+        updated = actions.set_store_mcc(store.id, ["GROCERIES"])
+
+        assert updated.updated_at >= before
+
+    def test_rejects_unknown_store(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+
+        with pytest.raises(ValueError, match="Unknown store"):
+            actions.set_store_mcc("nope", ["GROCERIES"])
+
+    def test_rejects_input_with_no_resolvable_category(self, tmp_path: Path) -> None:
+        review_repo, store_repo, alias_repo, deal_repo = _make_repos(tmp_path)
+        actions = ReviewActions(review_repo, store_repo, alias_repo, deal_repo)
+        store = make_store(name="Shufersal")
+        store_repo.save(store)
+
+        with pytest.raises(ValueError, match="No canonical MCC category"):
+            actions.set_store_mcc(store.id, ["banana"])
+
+        reloaded = store_repo.get_by_id(store.id)
+        assert reloaded is not None
+        assert "mcc_codes" not in reloaded.metadata

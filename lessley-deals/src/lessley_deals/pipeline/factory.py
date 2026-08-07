@@ -64,9 +64,12 @@ class PipelineConfig:
     enrich_constraints: bool = field(default_factory=lambda: _env_flag("DEALS_ENRICH_CONSTRAINTS", False))
     constraints_concurrency: int = field(default_factory=lambda: _env_int("DEALS_CONSTRAINTS_CONCURRENCY", 5))
     review_no_match: bool = field(default_factory=lambda: _env_flag("DEALS_REVIEW_NO_MATCH", False))
-    write_legacy_deals: bool = field(default_factory=lambda: _env_flag("DEALS_WRITE_LEGACY", False))
-    """Keep writing the append-only ``deals`` collection alongside the versioned
-    one.  Enable only while migrating consumers to ``deals_current``."""
+    write_deals: bool = field(default_factory=lambda: _env_flag("DEALS_WRITE_LEGACY", True))
+    """Write the ``deals`` collection — the source of truth every consumer reads
+    (``deal-optimizer``'s ``deals_source``, and ``gateway_view``'s projection
+    into ``deal_list``).  ``deals_current``/``deal_versions`` are still written
+    when versioning is on, but as history only.  Turning this off leaves both
+    consumers reading whatever was in ``deals`` before the run."""
     publish_gateway_view: bool = field(
         default_factory=lambda: _env_flag("DEALS_PUBLISH_GATEWAY_VIEW", True)
     )
@@ -164,6 +167,11 @@ def build_repositories(config: PipelineConfig) -> tuple[dict[str, Any], Any]:
     from lessley_deals.persistence.repositories.raw_deals import RawDealJsonRepository
     from lessley_deals.persistence.repositories.raw_stores import RawStoreJsonRepository
     from lessley_deals.persistence.repositories.stores import CanonicalStoreJsonRepository
+    from lessley_deals.persistence.seeding import seed_clubs_json
+
+    # Same reason the Mongo branch seeds clubs: PersistStage stamps club_id from
+    # this repo, so an absent file silently produces deals with club_id = None.
+    seed_clubs_json(persistence.clubs_path, config.data_dir)
 
     base = config.data_dir
     return (
@@ -231,8 +239,7 @@ def build_pipeline(config: PipelineConfig | None = None) -> PipelineBundle:
         repos["store_repo"],
         review_no_match=config.review_no_match,
         club_repo=repos["club_repo"],
-        # With versioning on, ``deals_current`` is the source of truth.
-        write_deals=config.write_legacy_deals or not config.enable_versioning,
+        write_deals=config.write_deals,
     )
 
     constraints_stage = None

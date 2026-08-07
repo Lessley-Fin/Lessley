@@ -3,11 +3,13 @@ from __future__ import annotations
 import logging
 
 from bidi.algorithm import get_display
+from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from lessley_deals.domain.models import ReviewItem
+from lessley_deals.domain.models import CanonicalStore, ReviewItem
+from lessley_deals.enrichment.mcc_catalog import MCC_CATEGORIES
 from lessley_deals.review.queue import QueueStats
 
 logger = logging.getLogger(__name__)
@@ -72,6 +74,7 @@ class ReviewDisplay:
         table.add_row("[green]a[/green]", "approve",       "[dim]— approves the top candidate (no input)[/dim]")
         table.add_row("[cyan]l[/cyan]",   "link existing", "[dim]search: <query>  →  select #[/dim]")
         table.add_row("[yellow]c[/yellow]", "create new",  "[dim]name: <store name>  (Enter = use input name)[/dim]")
+        table.add_row("[magenta]m[/magenta]", "set MCC",   "[dim]tag a store's categories (stays on this item)[/dim]")
         table.add_row("[red]d[/red]",     "discard",       "[dim]reason: <optional note>[/dim]")
         table.add_row("[blue]s[/blue]",   "skip",          "[dim]— defers to next session (no input)[/dim]")
         table.add_row("[dim]q[/dim]",     "quit",          "[dim]— ends the session[/dim]")
@@ -97,6 +100,37 @@ class ReviewDisplay:
             alias_str = ", ".join(get_display(a) for a in aliases) if aliases else "[dim]—[/dim]"
             table.add_row(str(i), get_display(store.name), alias_str)
         self._console.print(table)
+
+    def show_store_mcc(self, store: CanonicalStore) -> None:
+        """Show a store's current MCC categories before they are edited."""
+        codes = store.metadata.get("mcc_codes") or []
+        current = ", ".join(str(c) for c in codes) if codes else "[dim]— none —[/dim]"
+        self._console.print(
+            f"\n[bold]Store:[/bold] {get_display(store.name)}   "
+            f"[bold]MCC:[/bold] {current}"
+        )
+
+    def show_mcc_catalog(self) -> None:
+        """List the canonical categories with the numbers used to select them.
+
+        Rendered with ``Columns`` rather than a fixed-width table: the longest
+        category name is 28 characters, so a table wide enough for three of them
+        gets squeezed on an 80-column terminal and rich drops the number column —
+        exactly the part the reviewer types.
+        """
+        entries = [
+            f"[dim]{i:>2}[/dim] [cyan]{name}[/cyan]"
+            for i, name in enumerate(MCC_CATEGORIES, 1)
+        ]
+        self._console.print("\n[bold]MCC categories:[/bold]")
+        self._console.print(Columns(entries, padding=(0, 2), equal=True, column_first=True))
+
+    def show_mcc_suggestion(self, official_name: str, codes: list[str], confidence: str) -> None:
+        """Show what the LLM proposed for a store."""
+        self._console.print(
+            f"[bold]Suggested:[/bold] {', '.join(codes) or '—'}   "
+            f"[dim](official name: {get_display(official_name)}, confidence: {confidence})[/dim]"
+        )
 
     def show_stats(self, stats: QueueStats) -> None:
         """Display queue statistics."""

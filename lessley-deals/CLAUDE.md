@@ -80,7 +80,9 @@ Thresholds from `MatchConfig`: auto-accept ≥ 0.90, send to review ≥ 0.50, di
 
 **`src/lessley_deals/persistence/`** — Repository pattern with `typing.Protocol` interfaces. JSON and MongoDB implementations are interchangeable. JSON files use atomic writes (`os.replace()`). Seed data lives in `data/seed/`.
 
-**`src/lessley_deals/review/`** — Interactive TUI for human review of uncertain matches. `Learner` feeds approved matches back as aliases, so they auto-match on the next run.
+**`src/lessley_deals/review/`** — Interactive TUI for human review of uncertain matches. `Learner` feeds approved matches back as aliases, so they auto-match on the next run. The `[m]` action tags the store behind an item with MCC categories without resolving the item, and the same prompt fires automatically after `[c]`reate (`--no-mcc-on-create` to skip). See `docs/review.md`.
+
+**MCC categories** — a store's `metadata.mcc_codes` is a ranked list of **category names** (`GROCERIES`, `RESTAURANT`, `CLOTHES_&_ACCESSORIES`, …), never the 4-digit numbers. The closed set of 46 names and the numeric-MCC → category mapping live in `enrichment/mcc_catalog.py`; run everything that writes the field through `normalize_mcc_codes()` so legacy numeric rows and loose spellings resolve to the canonical name. `deals enrich-stores` classifies missing ones via the LLM and converts already-numeric ones without spending a call.
 
 **`src/lessley_deals/pipeline/`** — `PipelineOrchestrator` wires `scrape_stage.py`, `normalize_stage.py`, `match_stage.py`, `persist_stage.py`, `ingest_stage.py` via a shared `context.py`. Each stage is independently testable. `factory.py` is the **composition root** — the single place that decides JSON vs MongoDB, which sources are registered, and whether versioning is on. Both the CLI and the worker build from it.
 

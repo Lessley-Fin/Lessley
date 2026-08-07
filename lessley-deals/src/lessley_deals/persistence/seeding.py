@@ -94,6 +94,31 @@ def seed_clubs(db: Any, data_dir: str | Path = "data") -> int:
     return inserted
 
 
+def seed_clubs_json(clubs_path: Path, data_dir: str | Path = "data") -> int:
+    """Materialise ``clubs.json`` next to the other JSON stores; return how many
+    clubs were written (0 if it already exists).
+
+    The JSON backend's counterpart to :func:`seed_clubs`. Without it
+    ``ClubJsonRepository`` points at a file nobody creates, ``PersistStage``
+    builds an empty ``source_id -> club_id`` map, and **every** deal a JSON-mode
+    run produces gets ``club_id = None`` — which is exactly how the 8,262 deals
+    in ``data/deals.json`` ended up with no club.
+
+    Only ever creates the file. Once it exists it is the live store — ``save()``
+    appends member stores to it — so re-seeding would clobber that.
+    """
+    if clubs_path.exists():
+        return 0
+    clubs = [
+        {**{k: v for k, v in club.items() if k != "_id"}, "id": club["_id"]}
+        for club in load_clubs(data_dir)
+    ]
+    clubs_path.parent.mkdir(parents=True, exist_ok=True)
+    clubs_path.write_text(json.dumps(clubs, ensure_ascii=False, indent=2), encoding="utf-8")
+    logger.info("Seeded %d club(s) into %s", len(clubs), clubs_path)
+    return len(clubs)
+
+
 def seed_mongo_if_empty(db: Any, data_dir: str | Path = "data") -> None:
     """Seed stores and aliases when the ``stores`` collection is empty; always
     reconcile clubs.

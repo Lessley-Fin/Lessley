@@ -8,6 +8,13 @@ import httpx
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
+from lessley_deals.enrichment.mcc_catalog import (
+    FALLBACK_CATEGORY,
+    MCC_CATEGORIES,
+    normalize_mcc_codes,
+    unresolvable_codes,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,14 +69,44 @@ def _get_client() -> tuple[OpenAI, str]:
 
 class StoreCategory(BaseModel):
     official_name: str
-    mcc_codes: List[int] = Field(
-        description="A ranked list of the 1 to 3 most accurate MCC codes, from most specific to least specific."
+    mcc_codes: List[str] = Field(
+        description=(
+            "A ranked list of the 1 to 3 most relevant category names from the canonical set "
+            "(e.g. GROCERIES, RESTAURANT, ELECTRONICS, CLOTHES_&_ACCESSORIES)."
+        )
     )
     confidence_level: Literal["HIGH", "MEDIUM", "LOW"]
 
 
+_STORE_CLASSIFIER_PROMPT = (
+    "You are an expert data normalization and financial classification engine for the Israeli brands and retail "
+    "market. Assume that the store exists but have typos or inconsistencies. Try to identify the official store name. "
+    "Process raw, messy store strings (typos, hyphens, missing spaces, domain extensions) and perform Entity "
+    "Resolution. "
+    "When a store_url is provided, use the domain and path to confirm or improve the classification. "
+    "1. Return the official name of the store if you can identify it. If not, return the cleaned name with typos "
+    "corrected and extraneous characters removed. "
+    "2. Provide an array of the top 1 to 3 most relevant category names from this canonical set: "
+    + ", ".join(MCC_CATEGORIES)
+    + ". Use these exact spellings and nothing outside this set. "
+    "Rank the array from most specific/likely to least specific/likely. "
+    "3. Provide a confidence_level of HIGH, MEDIUM, or LOW based on how certain you are. Use HIGH if you're very "
+    "certain and found a clear match, MEDIUM if fairly certain, LOW if uncertain. If you cannot classify, return LOW. "
+    "EXAMPLES: "
+    "a) Input: name='nikestore' -> official_name: 'Nike', "
+    "mcc_codes: ['HOBBY_&_SPORTS_EQUIPMENT', 'CLOTHES_&_ACCESSORIES']. "
+    "b) Input: name='shufersal-deal' -> official_name: 'Shufersal', mcc_codes: ['GROCERIES']. "
+    "c) Input: name='ksp.co.il', store_url='https://ksp.co.il' -> official_name: 'KSP', mcc_codes: ['ELECTRONICS']."
+)
+
+
 def get_store_category(store_name: str, store_url: str | None = None) -> StoreCategory:
-    """Classify a store by name (and optional URL) and return official name, MCC codes, and confidence."""
+    """Classify a store by name (and optional URL) into canonical MCC categories.
+
+    ``mcc_codes`` comes back as canonical category names (see
+    :data:`lessley_deals.enrichment.mcc_catalog.MCC_CATEGORIES`), already
+    filtered so anything the model invented outside the set is dropped.
+    """
     logger.debug("Classifying store: %s (url=%s)", store_name.strip(), store_url)
 
     user_content = f"Analyze and classify this store: name={store_name.strip()!r}"
@@ -80,22 +117,7 @@ def get_store_category(store_name: str, store_url: str | None = None) -> StoreCa
     completion = client.beta.chat.completions.parse(
         model=model,
         messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert data normalization and financial classification engine for the Israeli brands and retail market. "
-                    "Assume that the store exists but have typos or inconsistencies. Try to identify the official store name. "
-                    "Process raw, messy store strings (typos, hyphens, missing spaces, domain extensions) and perform Entity Resolution. "
-                    "When a store_url is provided, use the domain and path to confirm or improve the classification. "
-                    "1. Return the official name of the store if you can identify it. If not, return the cleaned name with typos corrected and extraneous characters removed. "
-                    "2. Provide an array of the top 1 to 3 most applicable 4-digit Merchant Category Codes (MCC). Rank the array from most specific/likely to least specific/likely. "
-                    "3. Provide a confidence_level of HIGH, MEDIUM, or LOW based on how certain you are. Use HIGH if you're very certain and found a clear match, MEDIUM if fairly certain, LOW if uncertain. If you cannot classify, return LOW. "
-                    "EXAMPLES: "
-                    "a) Input: name='nikestore' -> official_name: 'Nike', mcc_codes: [5941, 5661, 5651]. "
-                    "b) Input: name='shufersal-deal' -> official_name: 'Shufersal', mcc_codes: [5411, 5310]. "
-                    "c) Input: name='ksp.co.il', store_url='https://ksp.co.il' -> official_name: 'KSP', mcc_codes: [5732, 5722]"
-                ),
-            },
+            {"role": "system", "content": _STORE_CLASSIFIER_PROMPT},
             {"role": "user", "content": user_content},
         ],
         response_format=StoreCategory,
@@ -103,7 +125,15 @@ def get_store_category(store_name: str, store_url: str | None = None) -> StoreCa
         seed=42,
     )
 
-    return completion.choices[0].message.parsed
+    result = completion.choices[0].message.parsed
+    if result is None:
+        raise RuntimeError(f"LLM returned no parsed StoreCategory for {store_name!r}")
+
+    rejected = unresolvable_codes(result.mcc_codes)
+    if rejected:
+        logger.warning("Dropping off-vocabulary categories for %s: %s", store_name, rejected)
+    result.mcc_codes = normalize_mcc_codes(result.mcc_codes, fallback=FALLBACK_CATEGORY)
+    return result
 
 
 class ExtractedDeal(BaseModel):

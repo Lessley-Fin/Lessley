@@ -1,14 +1,23 @@
 """Load deal dicts for the engine out of ``lessley-deals``' MongoDB.
 
-Reads ``deals_current`` — the SCD Type 2 *head* collection, one row per deal,
-which is what product code is meant to read (filtered on ``status: "active"``).
-The older append-only ``deals`` collection is deliberately **not** used: with
-``DEALS_VERSIONING`` on (the default) the pipeline stops writing it entirely
-unless ``DEALS_WRITE_LEGACY=1``, so reading it would silently return nothing.
+Reads ``deals`` — the collection holding every deal the pipeline has resolved,
+in the same flat shape as ``lessley-deals``' ``data/deals.json``. That file is
+the reference format: one document per deal, with ``discount_logic`` and
+``constraints`` embedded, which is already the plain-dict shape ``adapter.py``
+accepts — so there is no unwrapping to do.
 
-Each head carries the full serialized ``Deal`` under ``snapshot`` (with ``id``
-set to the stable deal id), which is already the plain-dict shape ``adapter.py``
-accepts from a deals JSON file — so unwrapping that field is the whole mapping.
+``deals_current``/``deal_versions`` are still written by the pipeline's
+versioning layer, but they are history rather than the read path: they carry a
+``snapshot`` sub-document instead of the flat deal, and only cover the sources
+of whichever run last populated them. Reading them is what previously hid every
+HOT deal from the optimizer.
+
+Two consequences of ``deals`` being the source of truth, both deliberate:
+
+* there is no ``status`` field to filter on, so an expired deal keeps being
+  returned until it is deleted — the collection has no lifecycle of its own;
+* the business key lives in ``id``, not ``_id`` (``_id`` is an ObjectId on
+  imported rows), so it has to be read off the field rather than the key.
 
 Store matching happens in the query rather than via ``engine._deal_matches_store``
 so group-wide deals are caught in all the shapes the pipeline produces:
@@ -29,8 +38,8 @@ from pymongo.database import Database
 DEFAULT_MONGO_URI = "mongodb://guest:guest@localhost:27017/lessley?authSource=admin"
 DEFAULT_MONGO_DB = "lessley"
 
-# DealLifecycleStatus.ACTIVE, as lessley-deals writes it (a StrEnum value).
-ACTIVE_STATUS = "active"
+# Set by the repository layer, never part of the deal itself.
+_INTERNAL_FIELDS = ("_id", "fingerprint")
 
 
 @lru_cache(maxsize=1)
@@ -43,32 +52,30 @@ def get_database() -> Database:  # type: ignore[type-arg]
 
 
 def _to_engine_dict(doc: dict[str, Any]) -> dict[str, Any]:
-    """Unwrap a ``deals_current`` head into the deal dict the engine reads."""
-    deal = dict(doc.get("snapshot") or {})
-    # ``snapshot`` already carries the stable ``id``; fall back to the head's
-    # own deal_id/deal_key for rows written before that was the case, since the
-    # engine keys every path and per_step entry on it.
+    """Strip the storage-level fields off a ``deals`` row."""
+    deal = {k: v for k, v in doc.items() if k not in _INTERNAL_FIELDS}
+    # Rows written by DealMongoRepository put the business key in ``_id`` and
+    # carry no ``id``; imported rows keep an ObjectId ``_id`` plus a real
+    # ``id``. The engine keys every path and per_step entry on it, so it must
+    # resolve to the business key either way.
     if not deal.get("id"):
-        deal["id"] = doc.get("deal_id") or doc.get("_id")
-    deal.setdefault("store_id", doc.get("store_id"))
-    deal.setdefault("source_id", doc.get("source_id"))
+        deal["id"] = str(doc.get("_id"))
     return deal
 
 
 def load_store_deals(store_id: str, db: Database | None = None) -> list[dict[str, Any]]:  # type: ignore[type-arg]
-    """Every active deal redeemable at ``store_id``, including group-wide ones."""
-    collection = (db if db is not None else get_database())["deals_current"]
+    """Every deal redeemable at ``store_id``, including group-wide ones."""
+    collection = (db if db is not None else get_database())["deals"]
     cursor = collection.find(
         {
-            # Leads with status so the (store_id, status) / (status, last_seen_at)
-            # indexes on the collection are usable.
-            "status": ACTIVE_STATUS,
             "$or": [
+                # Indexed; the group fields are not, but they only ever match a
+                # handful of rows and the collection is small enough to scan.
                 {"store_id": store_id},
-                {"snapshot.group_member_store_ids": store_id},
-                {"snapshot.group_member_stores": store_id},
-                {"snapshot.group_member_stores.store_id": store_id},
-            ],
+                {"group_member_store_ids": store_id},
+                {"group_member_stores": store_id},
+                {"group_member_stores.store_id": store_id},
+            ]
         }
     )
     return [_to_engine_dict(doc) for doc in cursor]

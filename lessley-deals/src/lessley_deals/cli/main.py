@@ -268,7 +268,8 @@ def scrape(
         stats = _enrich(data_dir=data_dir)
         console.print(
             f"[green]Enrichment done.[/green] total={stats['total']} "
-            f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']}"
+            f"processed={stats['processed']} converted={stats['converted']} "
+            f"skipped={stats['skipped']} failed={stats['failed']}"
         )
 
 
@@ -551,6 +552,11 @@ def review(
         "--continuous",
         help="After the queue empties, wait 30 s and reload. Loop until Ctrl+C.",
     ),
+    mcc_on_create: bool = typer.Option(
+        True,
+        "--mcc-on-create/--no-mcc-on-create",
+        help="After [c]reate, prompt for the new store's MCC categories.",
+    ),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
     """Start an interactive review session for uncertain matches."""
@@ -572,6 +578,7 @@ def review(
         batch_size=batch,
         source_filter=source,
         continuous=continuous,
+        mcc_on_create=mcc_on_create,
     )
 
 
@@ -1380,7 +1387,7 @@ def enrich_stores_cmd(
     force: bool = typer.Option(False, "--force", help="Re-enrich stores that already have mcc_codes"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
-    """Add `metadata.mcc_codes` to each store in stores.json using the LLM classifier."""
+    """Add `metadata.mcc_codes` (canonical category names) to each store in stores.json."""
     logging.basicConfig(level=log_level.upper(), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
     from lessley_deals.enrichment.enrich_stores import enrich_stores
@@ -1388,7 +1395,8 @@ def enrich_stores_cmd(
     stats = enrich_stores(data_dir=data_dir, limit=limit, dry_run=dry_run, force=force)
     console.print(
         f"[green]Done.[/green] total={stats['total']} "
-        f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']}"
+        f"processed={stats['processed']} converted={stats['converted']} "
+        f"skipped={stats['skipped']} failed={stats['failed']}"
         + (" [yellow](dry-run)[/yellow]" if dry_run else "")
     )
 
