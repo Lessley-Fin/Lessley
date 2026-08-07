@@ -5,7 +5,7 @@ from lessley_deals.pipeline.constraints_stage import ConstraintsStage
 from tests.factories import make_raw_deal
 
 
-def _fixed_parser(_terms: str) -> DealConstraints:
+def _fixed_parser(_terms: str, _source_id: str | None = None) -> DealConstraints:
     return DealConstraints()
 
 
@@ -36,7 +36,7 @@ async def test_skips_deals_without_terms() -> None:
 
 
 async def test_parser_failure_is_skipped_not_fatal() -> None:
-    def _flaky(terms: str) -> DealConstraints:
+    def _flaky(terms: str, _source_id: str | None = None) -> DealConstraints:
         if "boom" in terms:
             raise RuntimeError("Request timed out.")
         return DealConstraints()
@@ -56,3 +56,21 @@ async def test_parser_failure_is_skipped_not_fatal() -> None:
 async def test_empty_input_returns_empty_map() -> None:
     stage = ConstraintsStage(parser=_fixed_parser)
     assert await stage.run([]) == {}
+
+
+async def test_each_deals_source_id_reaches_the_parser() -> None:
+    # The parser picks the source's terminology block off this argument, so a
+    # dropped source_id would silently degrade every deal to the generic prompt.
+    seen: list[tuple[str, str | None]] = []
+
+    def _recording(terms: str, source_id: str | None = None) -> DealConstraints:
+        seen.append((terms, source_id))
+        return DealConstraints()
+
+    deals = [
+        make_raw_deal(id="b1", source_id="behatsdaa", raw_payload={"terms_and_conditions": "א"}),
+        make_raw_deal(id="h1", source_id="hot", raw_payload={"terms_and_conditions": "ב"}),
+    ]
+    await ConstraintsStage(parser=_recording).run(deals)
+
+    assert sorted(seen) == [("א", "behatsdaa"), ("ב", "hot")]

@@ -61,7 +61,7 @@ def enrich_deal_constraints(
             continue
 
         try:
-            result = parse_deal_constraints(terms)
+            result = parse_deal_constraints(terms, deal.source_id)
         except Exception as exc:
             stats["failed"] += 1
             logger.warning("Constraints parse failed for %s: %s", deal.id, exc)

@@ -185,9 +185,24 @@ def _to_public(llm: _LlmDealConstraints) -> DealConstraints:
 
 # ---------------------------------------------------------------------------
 # System prompt
+#
+# Assembled from three parts by :func:`build_system_prompt`:
+#
+#   _BASE_SYSTEM_PROMPT  — the schema, the rules, and the Hebrew vocabulary
+#                          every Israeli source shares.
+#   _SOURCE_PROMPTS[id]  — one source's own terminology and quirks. Every site
+#                          words the same restriction differently and leans on
+#                          its own instrument (voucher / loadable card / club
+#                          card), so the generic mapping alone either misses
+#                          fields or mis-assigns them.
+#   _FINAL_REMINDER      — output discipline, kept last so it is the closest
+#                          instruction to the model's turn.
+#
+# A source with no entry in _SOURCE_PROMPTS just gets base + reminder, i.e.
+# exactly the behaviour that existed before per-source blocks were added.
 # ---------------------------------------------------------------------------
 
-_SYSTEM_PROMPT = """\
+_BASE_SYSTEM_PROMPT = """\
 You are a precise Hebrew-language deal terms analyzer. Your task is to parse Hebrew text containing terms and conditions of a promotional deal, coupon, or offer from an Israeli retailer, loyalty club, or credit-card benefits program (e.g. HOT / מועדון הוט, Mastercard, Behatsdaa / בהצדעה, Isracard) and extract structured information about how it may be combined with other discounts, its usage limits, which store types it covers, and who is eligible.
 
 ## Your Responsibilities
@@ -282,7 +297,199 @@ Mapping:
 - "לחברי מועדון בלבד" / voucher purchasable only with the club-linked card → membership_required: yes
 - "בלעדי למשלמים בכרטיס אשראי X" / "בכרטיס האשראי המשויך למועדון X" → payment_method_required: describe the card/club in English using the ACTUAL name in the text (e.g. "HOT club-linked credit card", "Isracard", "Mastercard"), AND membership_required: yes when club membership is implied.
 - If no specific payment instrument is required → payment_method_required: null.
+"""
 
+
+_BEHATSDAA_PROMPT = """\
+# SOURCE-SPECIFIC RULES — Behatsdaa / בהצדעה (loadable wallet)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+Behatsdaa is a closed members' club. The benefit is not a voucher — it is a
+**loadable prepaid card** (``הכרטיס הנטען`` / ``ארנק``): the member loads money
+onto a wallet, receives a flat percentage off the load, and then spends the
+loaded balance at the accepting chain. So "the card" and "the payment method"
+are the same object, and the discount is already realised at load time.
+
+The terms text you receive has up to four blocks, in this order:
+
+1. ``הגבלות והחרגות כלליות (הכרטיס הנטען):`` — the card's site-wide rules.
+   These apply to EVERY Behatsdaa deal.
+2. ``מגבלות ספציפיות לרשת <chain>:`` — that one chain's own rules. **Present
+   only for some chains, and always wins over block 1 on any field it
+   addresses.**
+3. Free-text wallet notes (usually absent).
+4. A closing sentence: ``ניתן לטעון עד <N> ₪ לחודש דרך ארנק "<wallet>" ולקבל
+   <P>% הנחה, לשימוש ברשת <chain>.`` This is the deal's **economics**, not a
+   restriction. Read it only for the wallet name and the chain name.
+
+## Baseline from block 1 (assume these unless block 2 says otherwise)
+
+Block 1 is boilerplate and will be near-identical on every deal. Resolve it
+once, like this — these are known facts for this source, not guesses:
+
+| Block-1 phrase | Field | Value |
+|---|---|---|
+| ``לא כולל חנויות עודפים`` | is_include_outlets_stores | no |
+| ``הכסף הנטען אינו מיועד לרכישה באתרי הרשתות ... אלא רק בסניפי הרשתות`` | is_include_online_stores | no |
+| (same phrase, ``רק בסניפי הרשתות``) | is_include_physical_stores | yes |
+| ``הכרטיס כולל כפל מבצעים והנחות (גם בסוף עונה)`` | stackable_with_store_sale | yes |
+| ``לא כולל הנחות חברי מועדון`` | stackable_with_member_discounts | no |
+| ``וצבירת נקודות של הרשת`` | stackable_with_cashback | no |
+| ``לא ניתן לרכוש כרטיסי גיפט כארד באמצעות הכרטיס הנטען`` | stackable_with_giftcards | no |
+
+Also always true for this source:
+- membership_required: yes — the wallet is only loadable by a Behatsdaa member.
+- payment_method_required: "Behatsdaa prepaid wallet". If the wallet name in
+  the closing sentence names a specific card (e.g. ``כרטיס פייטר``), use that
+  instead: "Behatsdaa Fighter card".
+
+Leave stackable_with_coupons and stackable_with_payment_discounts as "unknown"
+unless the text actually mentions coupons / a billing-time discount. Block 1
+says nothing about either.
+
+## Block-2 overrides (chain-specific — these WIN)
+
+Stacking:
+- ``כולל כפל מבצעים לחברי מועדון`` / ``כולל חברי מועדון`` /
+  ``כולל מבצעים ומבצעי מועדון (לחברי מועדון)`` → stackable_with_member_discounts: **yes**
+- ``אין כפל הנחות מועדונים`` / ``לא כולל מבצעי מועדון`` /
+  ``לא כולל מבצעים לחברי מועדון הרשת`` → stackable_with_member_discounts: no
+- ``לא כולל כפל מבצעים`` / ``אין כפל מבצעים`` / ``ללא כפל הנחות ומבצעים`` →
+  stackable_with_store_sale: **no** (this reverses the block-1 baseline)
+- ``ממחיר מחירון`` ("off list price" — typical for culture venues) →
+  stackable_with_store_sale: no. Combined with
+  ``לא כולל כפל מבצעים והנחות`` → also stackable_with_coupons: no.
+- ``כולל כפל מבצעי ספקים`` → stackable_with_store_sale: yes
+- ``לא ניתן לרכוש תווי שי`` / ``לא כולל רכישה/טעינה של כרטיס מתנה`` /
+  ``קניית שוברי מתנה`` excluded → stackable_with_giftcards: no
+
+Store coverage:
+- ``בסניפי עודפים ניתן לממש על קולקציה חדשה בלבד`` → is_include_outlets_stores:
+  **yes**. Outlet branches ARE in scope here; the sentence only narrows *what*
+  may be bought there. Same for ``תקף לכל סניפי הרשת כולל עודפים``.
+- ``לא כולל חנויות עודפים`` (restated per chain) → is_include_outlets_stores: no
+- ``אתר + סניפים`` / ``ניתן לרכוש ... גם באתר האונליין`` /
+  ``הפעילות דרך האתר הייעודי בלבד`` → is_include_online_stores: **yes**
+- ``לא כולל אתר הסחר האלקטרוני`` / ``לא כולל אתר הסחר`` /
+  ``לא ניתן לקנות ב-ON LINE`` / ``לא תקף באתר אונליין`` /
+  ``לא ניתן לרכוש דרך האתר`` / ``הזמנות און ליין באתר`` excluded →
+  is_include_online_stores: no
+- ``תקף בסניפי הרשת בלבד`` / ``תקף לסניפים בלבד`` → is_include_physical_stores:
+  yes; is_include_online_stores: no
+
+**Online-chain exception (important).** Some wallets and chains are explicitly
+online: the wallet may be named ``בהצדעה - מזון + אתרי אונליין``, or the chain
+name in the closing sentence may end in ``אונליין`` / ``און ליין`` / ``online``
+(e.g. ``ויקטורי אונליין``, ``נעמן אונליין``, ``SIMMONS online``). When either
+is true, the deal IS for the web shop: is_include_online_stores: **yes**, and
+is_include_physical_stores: "unknown" unless the text names branches too. Do
+not let block 1's ``רק בסניפי הרשתות`` override the chain's own identity.
+
+## Limits — shekel ceilings are NOT limits (read this twice)
+
+This source's single most common restriction is a **per-transaction spend
+ceiling**. There is NO field for it. Every one of these leaves ALL THREE
+numeric fields null:
+
+- ``עד 1,000 ש"ח לעסקה`` · ``עד 1000 שח לעסקה`` · ``עד 750 ₪ לעסקה``
+- ``סכום מקסימלי למימוש בעסקה - 500 ₪``
+- ``מוגבל למימוש עד 2,000 ₪ בעסקה`` · ``מוגבל ל-1,000 ₪ בקנייה``
+- ``ניתן לממש עד לסכום של 1,000 ש"ח`` · ``ניתן לנצל עד 600 ₪ בעסקה``
+- ``ניתן לפרוק עד 1000 ₪ לעסקה`` · ``ניתן לממש עד 500 ₪ ברשת``
+- ``ניתן להשתמש בכרטיס עד 50% משווי העסקה``
+- ``מגבלת שימוש של 500 שח בכרטיס בהזמנה``
+
+A shekel amount is a CEILING on spend. It is never max_uses_per_transaction
+(which counts cards/vouchers, not shekels) and never minimum_purchase (which
+is a floor the customer must reach). If in doubt about a shekel figure: null.
+
+Likewise the wallet's monthly load cap in the closing sentence —
+``ניתן לטעון עד 1000 ₪ לחודש`` — is how much may be LOADED, not how many times
+the deal may be used and not a required spend. max_uses_per_month: null,
+minimum_purchase: null.
+
+Genuine counts DO map:
+- ``ניתן לממש 2 שוברים בלבד לשולחן/עסקה`` → max_uses_per_transaction: 2
+- ``ניתן לממש שובר אחד בלבד לשולחן`` → max_uses_per_transaction: 1
+- ``לא ניתן לממש יותר מכרטיס אחד לעסקה`` → max_uses_per_transaction: 1
+- ``ניתן לשלם עם כרטיס אחד פר עסקה`` → max_uses_per_transaction: 1
+- ``לא ניתן לממש מספר כרטיסים באותה הזמנה`` → max_uses_per_transaction: 1
+
+## Has no field — do NOT force these anywhere
+
+This page is full of operational detail that the schema does not model. Record
+nothing for it; in particular do not bend it into store_coverage or limits.
+
+- Meal/timing exclusions: ``לא כולל עסקיות`` · ``ארוחות עסקיות`` ·
+  ``לא תקף ב-HAPPY HOUR`` · ``שעות שמחות`` · ``ארוחת ילדים`` ·
+  ``אכול כפי יכולתך`` · ``חול המועד`` · ``ערבי חג``
+- Channel/venue detail that is NOT the retailer's web shop:
+  ``לא תקף במשלוחים`` · ``TAKE AWAY`` · ``תקף בישיבה בלבד`` ·
+  ``לא ניתן לפצל שולחנות`` · ``הזמנות טלפוניות``. Delivery and take-away are
+  not "online stores" — leave is_include_online_stores alone for these.
+- Kashrut: ``כשר`` · ``כשר מהדרין``
+- Named branch inclusions/exclusions: ``לא תקף בסניף רמון`` ·
+  ``תקף לסניפים: קצרין, צפת, נהריה`` · ``לא תקף בסניפי זכיין``. A franchise
+  branch (``זכיין``) is NOT an outlet store — do not touch
+  is_include_outlets_stores for it.
+- Product-category exclusions: ``לא כולל מחלקת חשמל`` · ``מוצרי פיינל סייל`` ·
+  ``שטיחים`` · ``מוצרי LIMITED`` · ``גיימינג`` · ``סיגריות ואלכוהול`` ·
+  ``ספרי לימוד`` · ``רכישת סדרות מעצבים``
+- Booking mechanics and policies: ``לאחר רכישה חובה ליצור קשר`` ·
+  ``בתיאום מראש בלבד`` · ``לא תקף דרך סוכנים כדוגמת בוקינג`` ·
+  ``מדיניות ביטולים`` · ``בכפוף להצגת תעודה מזהה``
+- Quantity floors that are not money: ``מינימום הזמנה הוא לזוג`` →
+  minimum_purchase stays null.
+
+## Worked example
+
+Terms::
+
+    הגבלות והחרגות כלליות (הכרטיס הנטען):
+    - לא כולל חנויות עודפים
+    - הכרטיס כולל כפל מבצעים והנחות (גם בסוף עונה) לא כולל הנחות חברי מועדון וצבירת נקודות של הרשת
+    - הכסף הנטען אינו מיועד לרכישה באתרי הרשתות המופיעות ברשימה, אלא רק בסניפי הרשתות
+    - לא ניתן לרכוש כרטיסי גיפט כארד באמצעות הכרטיס הנטען
+
+    מגבלות ספציפיות לרשת ACE:
+    - אין כפל הנחות מועדונים.
+    - לא כולל : אתר הסחר האלקטרוני, שטיחים, אלקטרוניקה, מוצרי LIMITED.
+    - סכום מקסימלי למימוש בעסקה- 500 ₪
+
+    ניתן לטעון עד 1000 ₪ לחודש דרך ארנק "רשתות בהצדעה 15%" ולקבל 15% הנחה, לשימוש ברשת ACE.
+
+Correct output::
+
+    {"combinability": {"stackable_with_store_sale": "yes",
+                       "stackable_with_member_discounts": "no",
+                       "stackable_with_coupons": "unknown",
+                       "stackable_with_payment_discounts": "unknown",
+                       "stackable_with_giftcards": "no",
+                       "stackable_with_cashback": "no"},
+     "limits": {"max_uses_per_transaction": null,
+                "max_uses_per_month": null,
+                "minimum_purchase": null},
+     "store_coverage": {"is_include_outlets_stores": "no",
+                        "is_include_online_stores": "no",
+                        "is_include_physical_stores": "yes"},
+     "eligibility": {"membership_required": "yes",
+                     "payment_method_required": "Behatsdaa prepaid wallet"}}
+
+Note what is absent: the 500 ₪ ceiling, the 1000 ₪ monthly load cap, and the
+excluded product categories produce no numbers at all.
+"""
+
+
+# Keyed by ``source_id`` as registered in ``scraping/registry.py``.
+_SOURCE_PROMPTS: dict[str, str] = {
+    "behatsdaa": _BEHATSDAA_PROMPT,
+}
+
+
+_FINAL_REMINDER = """\
 ## Final Reminder
 
 - Return ONLY the JSON object. No ```json fences, no explanations.
@@ -294,20 +501,44 @@ Mapping:
 # Public API
 # ---------------------------------------------------------------------------
 
-def parse_deal_constraints(deal_terms: str) -> DealConstraints:
+def build_system_prompt(source_id: str | None = None) -> str:
+    """Assemble the system prompt, adding *source_id*'s terminology block.
+
+    An unknown or missing ``source_id`` yields base + reminder, so a new
+    scraper works before anyone writes a block for it.
+    """
+    source_block = _SOURCE_PROMPTS.get(source_id or "")
+    parts = [_BASE_SYSTEM_PROMPT, source_block, _FINAL_REMINDER]
+    return "\n".join(p for p in parts if p)
+
+
+def supported_source_prompts() -> tuple[str, ...]:
+    """Source ids that have their own terminology block."""
+    return tuple(sorted(_SOURCE_PROMPTS))
+
+
+def parse_deal_constraints(deal_terms: str, source_id: str | None = None) -> DealConstraints:
     """Parse Hebrew deal terms and conditions into structured constraint data.
 
     The LLM emits yes/no/unknown enums; the result is converted into the
     boolean public :class:`DealConstraints` schema (True / False / "unknown"
     for tri-state fields, positive-int or None for limits).
+
+    Args:
+        deal_terms: The raw Hebrew terms text.
+        source_id: Scraper source the deal came from. Selects that source's
+            terminology block; ``None`` or unknown falls back to the generic
+            prompt.
     """
-    logger.debug("Parsing deal constraints (%d chars)", len(deal_terms))
+    logger.debug(
+        "Parsing deal constraints (%d chars, source=%s)", len(deal_terms), source_id or "generic"
+    )
 
     client, model = _get_client()
     completion = client.beta.chat.completions.parse(
         model=model,
         messages=[
-            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "system", "content": build_system_prompt(source_id)},
             {"role": "user", "content": deal_terms},
         ],
         response_format=_LlmDealConstraints,
@@ -336,16 +567,27 @@ def main() -> None:
       - a list of deals       [{ "terms_and_conditions": "..." }, ...]
         → all items are processed; those without terms_and_conditions are skipped
 
+    Each deal's ``source_id`` (when present) selects that source's terminology
+    block; pass one explicitly as the second argument to override it, which is
+    the quickest way to A/B a source block against the generic prompt::
+
+        python -m lessley_deals.enrichment.constaints_parser deal.json behatsdaa
+
     Constraints are written into a top-level "constraints" field on each deal
     object and the file is saved in-place.
     """
     load_dotenv()
 
     if len(sys.argv) < 2:
-        print("Usage: python -m lessley_deals.enrichment.constaints_parser <path/to/deal.json>")
+        print(
+            "Usage: python -m lessley_deals.enrichment.constaints_parser "
+            "<path/to/deal.json> [source_id]"
+        )
+        print(f"Sources with their own prompt block: {', '.join(supported_source_prompts())}")
         sys.exit(1)
 
     path = sys.argv[1]
+    source_override = sys.argv[2] if len(sys.argv) > 2 else None
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 
@@ -358,10 +600,12 @@ def main() -> None:
             print(f"Skipping deal (no terms_and_conditions): {deal.get('title') or deal.get('id', '?')}")
             continue
 
+        source_id = source_override or deal.get("source_id")
         print(f"Parsing deal: {deal.get('title') or deal.get('deal_description') or deal.get('id', '?')}")
+        print(f"Source: {source_id or 'generic'}")
         print(f"Terms ({len(terms)} chars):\n{terms}\n")
 
-        result = parse_deal_constraints(terms)
+        result = parse_deal_constraints(terms, source_id)
         deal["constraints"] = result.model_dump()
 
     with open(path, "w", encoding="utf-8") as f:

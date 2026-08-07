@@ -14,8 +14,10 @@ from lessley_deals.enrichment.constaints_parser import (
     _LlmLimits,
     _LlmStoreCoverage,
     _to_public,
+    build_system_prompt,
     empty_constraints,
     parse_deal_constraints,
+    supported_source_prompts,
 )
 
 # --------------------------------------------------------------------------- #
@@ -152,8 +154,68 @@ def test_to_public_maps_enums_to_booleans() -> None:
 
 
 # --------------------------------------------------------------------------- #
+# Per-source prompt assembly                                                  #
+# --------------------------------------------------------------------------- #
+
+def test_generic_prompt_carries_schema_and_output_discipline() -> None:
+    prompt = build_system_prompt()
+    assert "stackable_with_store_sale" in prompt
+    assert "Return ONLY the JSON object" in prompt
+    assert "SOURCE-SPECIFIC RULES" not in prompt
+
+
+def test_unknown_source_falls_back_to_the_generic_prompt() -> None:
+    assert build_system_prompt("no_such_source") == build_system_prompt()
+    assert build_system_prompt("") == build_system_prompt(None)
+
+
+def test_behatsdaa_block_is_inserted_before_the_final_reminder() -> None:
+    prompt = build_system_prompt("behatsdaa")
+    assert "SOURCE-SPECIFIC RULES — Behatsdaa" in prompt
+    # Output discipline must stay the last thing the model reads.
+    assert prompt.index("SOURCE-SPECIFIC RULES") < prompt.index("Return ONLY the JSON object")
+    # And the shared schema must still be there.
+    assert "is_include_outlets_stores" in prompt
+
+
+def test_behatsdaa_block_pins_the_rules_this_source_gets_wrong_by_default() -> None:
+    prompt = build_system_prompt("behatsdaa")
+    # A shekel ceiling has no field in the schema — the most likely failure is
+    # it leaking into max_uses_per_transaction or minimum_purchase.
+    assert "סכום מקסימלי למימוש בעסקה" in prompt
+    assert "never max_uses_per_transaction" in prompt
+    # The wallet's monthly load cap is not a monthly usage count.
+    assert "ניתן לטעון עד 1000 ₪ לחודש" in prompt
+    # Outlet branches are in scope when only the assortment is narrowed.
+    assert "בסניפי עודפים ניתן לממש על קולקציה חדשה בלבד" in prompt
+    # Delivery/take-away must not be read as the retailer's web shop.
+    assert "not \"online stores\"" in prompt
+
+
+def test_behatsdaa_is_a_supported_source() -> None:
+    assert "behatsdaa" in supported_source_prompts()
+
+
+# --------------------------------------------------------------------------- #
 # End-to-end (LLM mocked)                                                     #
 # --------------------------------------------------------------------------- #
+
+def test_parse_deal_constraints_sends_the_sources_prompt() -> None:
+    completion = MagicMock()
+    completion.choices = [MagicMock(message=MagicMock(parsed=_llm_constraints()))]
+    client = MagicMock()
+    client.beta.chat.completions.parse.return_value = completion
+
+    with patch(
+        "lessley_deals.enrichment.constaints_parser._get_client",
+        return_value=(client, "test-model"),
+    ):
+        parse_deal_constraints("תנאים", "behatsdaa")
+
+    _, kwargs = client.beta.chat.completions.parse.call_args
+    system, user = kwargs["messages"]
+    assert "SOURCE-SPECIFIC RULES — Behatsdaa" in system["content"]
+    assert user["content"] == "תנאים"
 
 def test_parse_deal_constraints_uses_deterministic_params_and_converts() -> None:
     fake_parsed = _llm_constraints()

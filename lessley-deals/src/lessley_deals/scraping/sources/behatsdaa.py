@@ -29,6 +29,13 @@ Files
   ``{"status": true, "data": [{"walletChainData": [{"chainID", "chainName",
   "webSite", "logoURL", ...}, ...]}, ...]}``.
 
+- ``data/behatsdaa_snapshots/behatsdaa_chain_limitations.html`` — a saved copy
+  of the loadable card's public limitations page, parsed by
+  ``scraping/helpers/behatsdaa_limitations.py``. ``GetWalletChain`` carries no
+  redemption rules at all, so without this file every Behatsdaa deal reaches
+  the constraints LLM with nothing but its own loading economics. No login
+  needed for this one — see that module's docstring for the refresh command.
+
 To refresh: log in on behatsdaa.org.il, hit that endpoint for each wallet
 (devtools network tab), and overwrite the matching file in
 ``data/behatsdaa_snapshots/``.
@@ -46,6 +53,10 @@ from typing import Any
 from lessley_deals.domain.models import RawScrapedRecord, RawStore
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.scraping.base import BaseSourceAdapter, SourceConfig
+from lessley_deals.scraping.helpers.behatsdaa_limitations import (
+    BehatsdaaLimitations,
+    load_limitations,
+)
 from lessley_deals.scraping.helpers.brand_utils import (
     clean_brand,
     is_generic_behatsdaa_brand,
@@ -64,6 +75,10 @@ def _lessley_deals_root() -> Path:
 
 def _default_config_path() -> Path:
     return _lessley_deals_root() / "data" / "behatsdaa_snapshots" / "behatsdaa_giftcards_config.json"
+
+
+def _default_limitations_path() -> Path:
+    return _lessley_deals_root() / "data" / "behatsdaa_snapshots" / "behatsdaa_chain_limitations.html"
 
 
 @dataclass(frozen=True)
@@ -93,10 +108,14 @@ class BehatsdaaAdapter(BaseSourceAdapter):
         config: SourceConfig | None = None,
         *,
         giftcards_config_path: Path | str | None = None,
+        limitations_path: Path | str | None = None,
     ) -> None:
         super().__init__(config or SourceConfig(base_url=_SITE_URL))
         self._giftcards_config_path = (
             Path(giftcards_config_path) if giftcards_config_path else _default_config_path()
+        )
+        self._limitations_path = (
+            Path(limitations_path) if limitations_path else _default_limitations_path()
         )
 
     @property
@@ -113,10 +132,13 @@ class BehatsdaaAdapter(BaseSourceAdapter):
             )
             return [], []
 
+        limitations = load_limitations(self._limitations_path)
+
         now = datetime.now(timezone.utc)
         seen_stores: dict[str, RawStore] = {}
         stores: list[RawStore] = []
         deals: list[RawScrapedRecord] = []
+        documented = 0
 
         for spec in specs:
             chains = self._load_chain_file(spec.file)
@@ -130,7 +152,9 @@ class BehatsdaaAdapter(BaseSourceAdapter):
                     seen_stores[chain_name] = store
                     stores.append(store)
 
-                deals.append(self._to_raw_deal(chain, chain_name, spec, now))
+                if limitations.lookup(chain_name):
+                    documented += 1
+                deals.append(self._to_raw_deal(chain, chain_name, spec, now, limitations))
 
             logger.debug(
                 "[%s] giftcard '%s' (%s): %d chains from %s",
@@ -138,8 +162,11 @@ class BehatsdaaAdapter(BaseSourceAdapter):
             )
 
         logger.info(
-            "[%s] Parsed %d stores, %d deals from %d giftcard file(s)",
+            "[%s] Parsed %d stores, %d deals from %d giftcard file(s); "
+            "%d/%d deals carry chain-specific limitations "
+            "(the rest get the general block only — the page documents %d chains)",
             self.source_id, len(stores), len(deals), len(specs),
+            documented, len(deals), len(limitations.by_chain),
         )
         return stores, deals
 
@@ -281,7 +308,12 @@ class BehatsdaaAdapter(BaseSourceAdapter):
         )
 
     def _to_raw_deal(
-        self, chain: dict[str, Any], chain_name: str, spec: _GiftcardSpec, now: datetime
+        self,
+        chain: dict[str, Any],
+        chain_name: str,
+        spec: _GiftcardSpec,
+        now: datetime,
+        limitations: BehatsdaaLimitations | None = None,
     ) -> RawScrapedRecord:
         website = normalize_website(chain.get("webSite"))
         store_url = f"https://{website}" if website else None
@@ -297,9 +329,22 @@ class BehatsdaaAdapter(BaseSourceAdapter):
             if max_text
             else f'ניתן לטעון דרך ארנק "{spec.name}" ולקבל {spec.discount_percent:g}% הנחה, לשימוש ברשת {chain_name}.'
         )
-        # Own notes first, then the fixed bonus sentence -- same order as
-        # hever.py / paisplus_cashcards.py's terms_and_conditions convention.
-        terms = f"{spec.notes} {bonus_sentence}".strip() if spec.notes else bonus_sentence
+        # terms_and_conditions is the only thing the constraints LLM sees, and
+        # the wallet's own economics carry almost no constraint signal -- the
+        # real rules live on the loadable card's limitations page. Order runs
+        # general -> chain-specific -> own notes -> the fixed bonus sentence,
+        # keeping the hever.py / paisplus_cashcards.py convention of ending on
+        # the bonus sentence. Verbatim source text throughout; nothing inferred.
+        chain_limits = limitations.lookup(chain_name) if limitations else None
+        sections: list[str] = []
+        if limitations and limitations.general:
+            sections.append(f"הגבלות והחרגות כלליות (הכרטיס הנטען):\n{limitations.general}")
+        if chain_limits:
+            sections.append(f"מגבלות ספציפיות לרשת {chain_name}:\n{chain_limits}")
+        if spec.notes:
+            sections.append(spec.notes)
+        sections.append(bonus_sentence)
+        terms = "\n\n".join(sections)
 
         reward: dict[str, Any] = {"type": "percentage_off", "value": spec.discount_percent / 100.0}
         if spec.max_deposit_per_month:

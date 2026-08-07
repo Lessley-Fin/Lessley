@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Sequence
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, Protocol
 
 from lessley_deals.domain.models import RawScrapedRecord
 from lessley_deals.enrichment.constaints_parser import DealConstraints, parse_deal_constraints
 
 logger = logging.getLogger(__name__)
+
+
+class ConstraintsParser(Protocol):
+    """Callable that turns terms text into constraints, given the source it came from."""
+
+    def __call__(self, deal_terms: str, source_id: str | None = None, /) -> DealConstraints: ...
 
 
 def _terms_of(deal: RawScrapedRecord) -> str | None:
@@ -26,11 +32,14 @@ class ConstraintsStage:
     constraints are produced for EVERY source uniformly — no scraper needs to
     know about the LLM. Deals without terms text are skipped; a parse failure
     (timeout, bad output, no LLM configured) is logged and skipped, never fatal.
+
+    Each deal's ``source_id`` is handed to the parser so it can apply that
+    site's terminology — the same restriction is worded differently per source.
     """
 
     def __init__(
         self,
-        parser: Callable[[str], DealConstraints] = parse_deal_constraints,
+        parser: ConstraintsParser = parse_deal_constraints,
         *,
         max_concurrency: int = 5,
     ) -> None:
@@ -39,8 +48,8 @@ class ConstraintsStage:
 
     async def run(self, deals: Sequence[RawScrapedRecord]) -> dict[str, dict[str, Any]]:
         """Return ``{raw_id: constraints_dict}`` for every deal we could parse."""
-        targets = [(d.id, _terms_of(d)) for d in deals]
-        parseable = [(rid, terms) for rid, terms in targets if terms is not None]
+        targets = [(d.id, _terms_of(d), d.source_id) for d in deals]
+        parseable = [(rid, terms, src) for rid, terms, src in targets if terms is not None]
 
         skipped_no_terms = len(targets) - len(parseable)
         if not parseable:
@@ -52,16 +61,18 @@ class ConstraintsStage:
         semaphore = asyncio.Semaphore(self._max_concurrency)
         loop = asyncio.get_event_loop()
 
-        async def _one(raw_id: str, terms: str) -> tuple[str, dict[str, Any] | None]:
+        async def _one(
+            raw_id: str, terms: str, source_id: str | None
+        ) -> tuple[str, dict[str, Any] | None]:
             async with semaphore:
                 try:
-                    result = await loop.run_in_executor(None, self._parser, terms)
+                    result = await loop.run_in_executor(None, self._parser, terms, source_id)
                 except Exception as exc:  # noqa: BLE001 — never let one deal kill the run
                     logger.warning("Constraints parse failed for %s: %s", raw_id, exc)
                     return raw_id, None
                 return raw_id, result.model_dump()
 
-        pairs = await asyncio.gather(*(_one(rid, terms) for rid, terms in parseable))
+        pairs = await asyncio.gather(*(_one(rid, terms, src) for rid, terms, src in parseable))
         constraints_map = {rid: c for rid, c in pairs if c is not None}
 
         logger.info(
