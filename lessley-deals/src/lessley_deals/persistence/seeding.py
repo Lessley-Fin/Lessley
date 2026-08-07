@@ -119,14 +119,60 @@ def seed_clubs_json(clubs_path: Path, data_dir: str | Path = "data") -> int:
     return len(clubs)
 
 
-def seed_mongo_if_empty(db: Any, data_dir: str | Path = "data") -> None:
-    """Seed stores and aliases when the ``stores`` collection is empty; always
-    reconcile clubs.
+def seed_mcc_list(db: Any, data_dir: str | Path = "data") -> int:
+    """Upsert the MCC category catalogue into ``mcc_list``; return how many were new.
 
-    Cheap to call on every startup: the stores guard is a single indexed count
-    that returns immediately once anything has been seeded.
+    Keyed on ``mcc`` rather than routed through :func:`upsert_seed_file`, because
+    this collection is read by two services that both bind ``_id`` to a real
+    **ObjectId** (the Gateway's ``MccRepository`` and Personalization's
+    ``MccCode``).  Promoting the catalogue's own numeric ``id`` into ``_id`` — as
+    ``upsert_seed_file`` does — would make every row fail Personalization's model
+    validation, so the seed file carries only ``mcc``/``category`` and Mongo
+    assigns the key.  ``mcc`` is unique across all 5,952 rows, which is what
+    makes the upsert idempotent without one.
+
+    Guarded on its own emptiness rather than on ``stores``: the two are
+    independent, and the catalogue is what the app's category filter is built
+    from — an empty ``mcc_list`` means the UI offers no categories at all.
+    """
+    if db["mcc_list"].count_documents({}, limit=1) > 0:
+        return 0
+
+    for seed_dir in seed_candidate_dirs(data_dir):
+        path = seed_dir / "mcc_list.json"
+        if not path.exists():
+            continue
+        rows = json.loads(path.read_text(encoding="utf-8"))
+        inserted = 0
+        for row in rows:
+            result = db["mcc_list"].update_one(
+                {"mcc": row["mcc"]},
+                {"$setOnInsert": {"mcc": row["mcc"], "category": row["category"]}},
+                upsert=True,
+            )
+            if result.upserted_id is not None:
+                inserted += 1
+        logger.info("Auto-seeded %d MCC categor(ies) from %s", inserted, path)
+        return inserted
+
+    logger.warning(
+        "No mcc_list.json found in any of %s — the category filter will be empty",
+        ", ".join(str(d) for d in seed_candidate_dirs(data_dir)),
+    )
+    return 0
+
+
+def seed_mongo_if_empty(db: Any, data_dir: str | Path = "data") -> None:
+    """Seed stores, aliases and the MCC catalogue; always reconcile clubs.
+
+    Deals are deliberately never seeded — they are what the scrapers produce, so
+    shipping a snapshot of them would put stale benefits in front of users.
+
+    Cheap to call on every startup: each guard is a single indexed count that
+    returns immediately once the collection has anything in it.
     """
     seed_clubs(db, data_dir)
+    seed_mcc_list(db, data_dir)
 
     if db["stores"].count_documents({}, limit=1) > 0:
         return

@@ -7,6 +7,7 @@ import json
 from lessley_deals.persistence.seeding import (
     CLUBS,
     seed_candidate_dirs,
+    seed_mcc_list,
     seed_mongo_if_empty,
     upsert_seed_file,
 )
@@ -20,7 +21,10 @@ class _FakeCollection:
         return len(self.docs)
 
     def update_one(self, filter_, update, upsert=False):
-        doc_id = filter_["_id"]
+        # Keyed on whatever the caller filtered by: most collections upsert on
+        # `_id`, but `mcc_list` uses `mcc` because its `_id` has to stay an
+        # ObjectId that Mongo assigns.
+        ((_field, doc_id),) = filter_.items()
         existed = doc_id in self.docs
         if not existed and upsert:
             self.docs[doc_id] = dict(update["$setOnInsert"])
@@ -92,3 +96,61 @@ def test_data_dir_seed_subdir_is_preferred(tmp_path):
     candidates = seed_candidate_dirs(tmp_path)
 
     assert candidates[0] == tmp_path / "seed"
+
+
+def test_seeds_the_mcc_catalogue(tmp_path):
+    seed = tmp_path / "seed"
+    _write(seed, "mcc_list.json", [
+        {"mcc": "5411", "category": "GROCERIES"},
+        {"mcc": "5812", "category": "RESTAURANT"},
+    ])
+    db = _FakeDb()
+
+    inserted = seed_mcc_list(db, tmp_path)
+
+    assert inserted == 2
+    # Keyed on `mcc`, and `_id` is left for Mongo to assign — the Gateway's
+    # MccRepository and Personalization's MccCode both bind it to an ObjectId.
+    assert db["mcc_list"].docs["5411"] == {"mcc": "5411", "category": "GROCERIES"}
+    assert "_id" not in db["mcc_list"].docs["5411"]
+
+
+def test_mcc_catalogue_is_not_reseeded_when_present(tmp_path):
+    seed = tmp_path / "seed"
+    _write(seed, "mcc_list.json", [{"mcc": "5411", "category": "GROCERIES"}])
+    db = _FakeDb({"mcc_list": _FakeCollection({"9999": {"mcc": "9999", "category": "OTHER"}})})
+
+    assert seed_mcc_list(db, tmp_path) == 0
+    assert set(db["mcc_list"].docs) == {"9999"}
+
+
+def test_missing_mcc_file_is_not_fatal(tmp_path):
+    assert seed_mcc_list(_FakeDb(), tmp_path) == 0
+
+
+def test_boot_seeds_the_catalogue_but_never_deals(tmp_path):
+    """Deals come from the scrapers; seeding them would ship stale benefits."""
+    seed = tmp_path / "seed"
+    _write(seed, "stores.json", [{"id": "s1", "name": "Shop"}])
+    _write(seed, "store_aliases.json", [{"id": "a1", "store_id": "s1", "alias": "shp"}])
+    _write(seed, "mcc_list.json", [{"mcc": "5411", "category": "GROCERIES"}])
+    _write(seed, "deals.json", [{"id": "d1", "title": "should never be loaded"}])
+    db = _FakeDb()
+
+    seed_mongo_if_empty(db, tmp_path)
+
+    assert set(db["mcc_list"].docs) == {"5411"}
+    assert set(db["stores"].docs) == {"s1"}
+    assert db["deals"].docs == {}
+
+
+def test_mcc_is_seeded_even_when_stores_are_already_present(tmp_path):
+    """The two guards are independent — a store-populated DB can still be
+    missing the catalogue, which would leave the UI with no category filter."""
+    seed = tmp_path / "seed"
+    _write(seed, "mcc_list.json", [{"mcc": "5411", "category": "GROCERIES"}])
+    db = _FakeDb({"stores": _FakeCollection({"existing": {"_id": "existing"}})})
+
+    seed_mongo_if_empty(db, tmp_path)
+
+    assert set(db["mcc_list"].docs) == {"5411"}
