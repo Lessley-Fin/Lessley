@@ -54,7 +54,7 @@ export function NotificationDetail({ item }: NotificationDetailProps) {
   const { data: clubs = [] } = useClubs()
 
   return (
-    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+    <div className="mt-3 space-y-2 rounded-2xl bg-secondary p-3">
       {item.calcType === "missed-savings" && Array.isArray(parsed) ? (
         <>
           <p className={fintech.sectionEyebrow}>Missed savings analysis</p>

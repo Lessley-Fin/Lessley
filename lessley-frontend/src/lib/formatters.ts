@@ -45,3 +45,9 @@ export function formatRelativeTime(isoDate: string) {
 export function formatFitPercent(fitScore: number) {
   return `${Math.round(fitScore * 100)}%`
 }
+
+export function maskAccountNumber(value: string) {
+  const digits = value.replace(/\s+/g, "")
+  if (digits.length <= 8) return `•••• ${digits.slice(-4)}`
+  return `${digits.slice(0, 6)}...${digits.slice(-4)}`
+}

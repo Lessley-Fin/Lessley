@@ -14,6 +14,12 @@ import { AdminRoute } from "./AdminRoute"
 const LoginPage = lazy(() =>
   import("@/features/auth/LoginPage").then((m) => ({ default: m.LoginPage })),
 )
+const RegisterPage = lazy(() =>
+  import("@/features/auth/RegisterPage").then((m) => ({ default: m.RegisterPage })),
+)
+const ForgotPasswordPage = lazy(() =>
+  import("@/features/auth/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })),
+)
 const OptimizerPage = lazy(() =>
   import("@/features/optimizer/OptimizerPage").then((m) => ({
     default: m.OptimizerPage,
@@ -39,9 +45,9 @@ const RecommendationsPage = lazy(() =>
     default: m.RecommendationsPage,
   })),
 )
-const DealFinderPage = lazy(() =>
-  import("@/features/deal-finder/DealFinderPage").then((m) => ({
-    default: m.DealFinderPage,
+const HotDealsPage = lazy(() =>
+  import("@/features/hot-deals/HotDealsPage").then((m) => ({
+    default: m.HotDealsPage,
   })),
 )
 const AdminPage = lazy(() =>
@@ -71,6 +77,22 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<SuspenseFallback />}>
             <LoginPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.REGISTER,
+        element: (
+          <Suspense fallback={<SuspenseFallback />}>
+            <RegisterPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: ROUTES.FORGOT_PASSWORD,
+        element: (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ForgotPasswordPage />
           </Suspense>
         ),
       },
@@ -113,9 +135,13 @@ export const router = createBrowserRouter([
           },
           {
             path: "deal-finder",
+            element: <Navigate to={`${ROUTES.OPTIMIZER}?tab=deal-finder`} replace />,
+          },
+          {
+            path: "hot-deals",
             element: (
               <Suspense fallback={<SuspenseFallback />}>
-                <DealFinderPage />
+                <HotDealsPage />
               </Suspense>
             ),
           },

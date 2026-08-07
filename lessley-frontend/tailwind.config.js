@@ -5,17 +5,20 @@ export default {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['"Heebo"', 'system-ui', 'sans-serif'],
+  			sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
   		},
   		boxShadow: {
-  			fintech: '0 2px 8px hsl(250 95% 58% / 0.06), 0 12px 32px hsl(262 83% 58% / 0.08)',
-  			'fintech-lg': '0 8px 24px hsl(250 95% 58% / 0.12), 0 24px 48px hsl(262 83% 58% / 0.14)',
-  			'fintech-nav': '0 8px 32px hsl(262 83% 58% / 0.25)',
+  			fintech: '0 2px 8px hsl(182 38% 36% / 0.06), 0 12px 32px hsl(186 43% 32% / 0.08)',
+  			'fintech-lg': '0 8px 24px hsl(182 38% 36% / 0.12), 0 24px 48px hsl(186 43% 32% / 0.14)',
+  			'fintech-nav': '0 8px 32px hsl(186 43% 32% / 0.25)',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		spacing: {
+  			'13': '3.25rem'
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -45,9 +48,22 @@ export default {
   				foreground: 'hsl(var(--accent-foreground))'
   			},
   			destructive: 'hsl(var(--destructive))',
+  			success: {
+  				DEFAULT: 'hsl(var(--success))',
+  				foreground: 'hsl(var(--success-foreground))'
+  			},
+  			warning: {
+  				DEFAULT: 'hsl(var(--warning))',
+  				foreground: 'hsl(var(--warning-foreground))'
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
+  			navy: {
+  				DEFAULT: 'hsl(var(--navy))',
+  				foreground: 'hsl(var(--navy-foreground))',
+  				muted: 'hsl(var(--navy-muted))'
+  			},
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,43 +6,54 @@
 
 @layer base {
   :root {
-    --background: 228 60% 98%;
-    --foreground: 234 35% 14%;
+    --background: 203 34% 96%;
+    --foreground: 209 37% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 234 35% 14%;
+    --card-foreground: 209 37% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 234 35% 14%;
-    --primary: 250 95% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 228 45% 96%;
-    --secondary-foreground: 234 35% 14%;
-    --muted: 228 40% 94%;
-    --muted-foreground: 234 12% 46%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 228 35% 90%;
-    --input: 228 35% 90%;
-    --ring: 250 95% 58%;
+    --popover-foreground: 209 37% 15%;
+    --primary: 182 38% 36%;
+    --primary-foreground: 182 37% 98%;
+    --secondary: 195 33% 94%;
+    --secondary-foreground: 209 28% 20%;
+    --muted: 198 28% 94%;
+    --muted-foreground: 208 11% 46%;
+    --accent: 179 50% 88%;
+    --accent-foreground: 182 73% 18%;
+    --destructive: 355 68% 53%;
+    --destructive-foreground: 182 37% 98%;
+    --success: 153 50% 39%;
+    --success-foreground: 182 37% 98%;
+    --warning: 33 86% 61%;
+    --warning-foreground: 29 75% 15%;
+    --border: 201 21% 89%;
+    --input: 201 21% 89%;
+    --ring: 182 38% 36%;
     --radius: 1rem;
-    --chart-1: 250 95% 58%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 168 76% 42%;
-    --chart-4: 43 96% 56%;
-    --chart-5: 234 35% 14%;
-    --sidebar: 0 0% 100%;
-    --sidebar-foreground: 234 35% 14%;
-    --sidebar-primary: 250 95% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 45% 96%;
-    --sidebar-accent-foreground: 234 35% 14%;
-    --sidebar-border: 228 35% 90%;
-    --sidebar-ring: 250 95% 58%;
-    --brand-blue: 250 95% 58%;
-    --brand-purple: 262 83% 58%;
-    --brand-blue-soft: 228 80% 97%;
-    --brand-purple-soft: 262 60% 97%;
+    --chart-1: 182 38% 36%;
+    --chart-2: 180 40% 48%;
+    --chart-3: 176 38% 64%;
+    --chart-4: 205 31% 32%;
+    --chart-5: 33 86% 61%;
+    --sidebar: 203 54% 99%;
+    --sidebar-foreground: 209 37% 15%;
+    --sidebar-primary: 182 38% 36%;
+    --sidebar-primary-foreground: 182 37% 98%;
+    --sidebar-accent: 179 50% 88%;
+    --sidebar-accent-foreground: 182 73% 18%;
+    --sidebar-border: 201 21% 89%;
+    --sidebar-ring: 182 38% 36%;
+    --brand-teal: 182 38% 36%;
+    --brand-cyan: 186 43% 32%;
+    --brand-teal-soft: 195 33% 94%;
+    --brand-cyan-soft: 179 50% 94%;
+    --navy: 208 34% 17%;
+    --navy-foreground: 203 36% 96%;
+    --navy-muted: 203 13% 67%;
+    --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+    --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+    --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+    --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
   }
 
   * {
@@ -51,14 +62,14 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Heebo", system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
     margin: 0;
     min-height: 100svh;
-    background-color: hsl(228 60% 97%);
+    background-color: hsl(203 34% 97%);
     background-image:
-      radial-gradient(ellipse 90% 60% at 50% -15%, hsl(250 95% 58% / 0.14), transparent 55%),
-      radial-gradient(ellipse 70% 50% at 100% 10%, hsl(262 83% 58% / 0.1), transparent 50%),
-      radial-gradient(ellipse 50% 40% at 0% 80%, hsl(250 95% 58% / 0.06), transparent 45%);
+      radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.1), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 0% 80%, hsl(182 38% 36% / 0.06), transparent 45%);
     background-attachment: fixed;
   }
 }
@@ -100,7 +111,7 @@
   }
 
   .fintech-card {
-    @apply overflow-hidden rounded-3xl border border-white/90 bg-white shadow-[0_2px_8px_hsl(250_95%_58%_/0.06),0_12px_32px_hsl(262_83%_58%_/0.08)];
+    @apply overflow-hidden rounded-3xl border border-white/90 bg-white shadow-[0_2px_8px_hsl(182_38%_36%_/0.06),0_12px_32px_hsl(186_43%_32%_/0.08)];
   }
 
   .fintech-card-inset {
@@ -116,7 +127,7 @@
   }
 
   .fintech-metric-violet {
-    @apply border-violet-100/90 bg-gradient-to-br from-violet-50 to-purple-50/50;
+    @apply border-primary/15 bg-gradient-to-br from-primary/5 to-cyan-50/50;
   }
 
   .fintech-metric-amber {
@@ -156,7 +167,7 @@
   }
 
   .fintech-icon-wrap-violet {
-    @apply flex size-10 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600;
+    @apply flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary;
   }
 
   .fintech-icon-wrap-amber {
@@ -172,11 +183,11 @@
   }
 
   .fintech-list-row-accent {
-    @apply flex items-center gap-3 rounded-2xl border border-violet-100/80 bg-violet-50/50 px-3 py-3;
+    @apply flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-3;
   }
 
   .fintech-subheader {
-    @apply sticky top-0 z-10 flex items-center gap-3 border-b border-violet-100/60 bg-white/85 px-4 py-3 backdrop-blur-xl;
+    @apply sticky top-0 z-10 flex items-center gap-3 border-b border-primary/15 bg-white/85 px-4 py-3 backdrop-blur-xl;
   }
 
   .fintech-status-connected {
@@ -184,15 +195,15 @@
   }
 
   .fintech-input {
-    @apply min-h-12 rounded-2xl border border-slate-200/80 bg-white px-4 shadow-sm transition-shadow focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500/20;
+    @apply min-h-12 rounded-2xl border border-slate-200/80 bg-white px-4 shadow-sm transition-shadow focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/20;
   }
 
   .fintech-select {
-    @apply min-h-12 rounded-2xl border border-slate-200/80 bg-white px-4 shadow-sm focus:ring-2 focus:ring-blue-500/20;
+    @apply min-h-12 rounded-2xl border border-slate-200/80 bg-white px-4 shadow-sm focus:ring-2 focus:ring-primary/20;
   }
 
   .fintech-nav-bar {
-    @apply mx-3 mb-2 flex gap-1 rounded-[1.75rem] border border-slate-800/10 bg-slate-900 p-1.5 shadow-[0_8px_32px_hsl(262_83%_58%_/0.25)];
+    @apply mx-3 mb-2 flex gap-1 rounded-[1.75rem] border border-slate-800/10 bg-slate-900 p-1.5 shadow-[0_8px_32px_hsl(186_43%_32%_/0.25)];
   }
 
   .fintech-nav-pill {
@@ -200,7 +211,7 @@
   }
 
   .fintech-nav-pill-active {
-    @apply bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md;
+    @apply bg-gradient-to-r from-teal-600 to-cyan-700 text-white shadow-md;
   }
 
   .fintech-nav-pill-inactive {
@@ -208,18 +219,39 @@
   }
 
   .fintech-logo-mark {
-    @apply flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-sm font-semibold text-white shadow-[0_4px_12px_hsl(250_95%_58%_/0.4)];
+    @apply flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-cyan-700 text-sm font-semibold text-white shadow-[0_4px_12px_hsl(182_38%_36%_/0.4)];
   }
 
   .fintech-gradient-banner {
-    @apply bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-600 px-5 py-5 text-white;
+    @apply bg-gradient-to-r from-teal-600 to-cyan-700 px-5 py-5 text-white;
   }
 
   .fintech-rank-badge {
-    @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-medium text-violet-700;
+    @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary;
   }
 
   .fintech-fit-badge {
-    @apply shrink-0 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-700;
+    @apply shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary;
+  }
+
+  .surface-teal {
+    background-image: var(--gradient-teal);
+    color: hsl(var(--primary-foreground));
+  }
+
+  .surface-navy {
+    background-image: var(--gradient-navy);
+    color: hsl(var(--navy-foreground));
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

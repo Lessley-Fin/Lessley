@@ -1,11 +1,11 @@
-import { useState } from "react"
+import { forwardRef, useState } from "react"
 import { Eye, EyeOff, Lock } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 
 type PasswordInputProps = Omit<React.ComponentProps<typeof Input>, "type">
 
-export function PasswordInput(props: PasswordInputProps) {
+export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>((props, ref) => {
   const [visible, setVisible] = useState(false)
 
   return (
@@ -13,6 +13,7 @@ export function PasswordInput(props: PasswordInputProps) {
       <Lock className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
       <Input
         {...props}
+        ref={ref}
         type={visible ? "text" : "password"}
         className="fintech-input pl-11 pr-12"
       />
@@ -27,4 +28,5 @@ export function PasswordInput(props: PasswordInputProps) {
       </button>
     </div>
   )
-}
+})
+PasswordInput.displayName = "PasswordInput"

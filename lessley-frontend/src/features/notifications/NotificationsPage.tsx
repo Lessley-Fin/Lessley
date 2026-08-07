@@ -1,68 +1,40 @@
-import { useNavigate } from "react-router-dom"
 import { Bell } from "lucide-react"
 
-import { EmptyState } from "@/components/shared/EmptyState"
-import { LoadingCard } from "@/components/shared/LoadingCard"
-import { PageHeader } from "@/components/shared/PageHeader"
-import { fintech } from "@/lib/fintech-styles"
 import { NotificationRow } from "./components/NotificationRow"
-import { useNotificationsQuery, useMarkRead } from "./hooks"
+import { useMarkRead, useNotificationsQuery } from "./hooks"
 
 export function NotificationsPage() {
-  const navigate = useNavigate()
   const { data: notifications = [], isLoading } = useNotificationsQuery()
   const markRead = useMarkRead()
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
-  const handleRead = (id: string) => {
+  function handleRead(id: string) {
     markRead.mutate(id)
   }
 
-  const unread = notifications.filter((n) => !n.isRead)
-  const read = notifications.filter((n) => n.isRead)
-
   return (
-    <div className="flex min-h-full flex-col">
-      <PageHeader
-        title="Notifications"
-        subtitle={
-          isLoading
-            ? "Loading..."
-            : unread.length
-              ? `${unread.length} unread`
-              : "You're all caught up"
-        }
-        onBack={() => navigate(-1)}
-      />
-
-      <div className="flex-1 space-y-6 px-4 py-4">
-        {isLoading && notifications.length === 0 ? (
-          <LoadingCard message="Loading notifications..." />
-        ) : notifications.length === 0 ? (
-          <EmptyState icon={Bell} title="No notifications yet." />
-        ) : null}
-
-        {unread.length > 0 ? (
-          <section className="space-y-2">
-            <h3 className={fintech.sectionEyebrow}>Unread</h3>
-            <div className="space-y-2">
-              {unread.map((item) => (
-                <NotificationRow key={item.id} item={item} onRead={handleRead} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {read.length > 0 ? (
-          <section className="space-y-2">
-            <h3 className={fintech.sectionEyebrow}>Earlier</h3>
-            <div className="space-y-2">
-              {read.map((item) => (
-                <NotificationRow key={item.id} item={item} />
-              ))}
-            </div>
-          </section>
-        ) : null}
+    <div className="flex h-full flex-col gap-4">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+        <p className="text-sm text-muted-foreground">
+          {isLoading ? "Loading..." : unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up"}
+        </p>
       </div>
+
+      {!isLoading && notifications.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary">
+            <Bell className="size-7 text-muted-foreground" aria-hidden />
+          </div>
+          <p className="text-sm text-muted-foreground">No notifications yet.</p>
+        </div>
+      ) : (
+        <ul className="no-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
+          {notifications.map((item) => (
+            <NotificationRow key={item.id} item={item} onRead={handleRead} />
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

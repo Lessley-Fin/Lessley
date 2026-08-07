@@ -1,5 +1,4 @@
 import { Outlet } from "react-router-dom"
-import { Toaster } from "sonner"
 
 import { useSignalR } from "@/features/notifications/useSignalR"
 import { MainShell } from "@/features/shell/MainShell"
@@ -10,11 +9,8 @@ export function AppLayout() {
   useMyProfile()
 
   return (
-    <>
-      <MainShell>
-        <Outlet />
-      </MainShell>
-      <Toaster position="top-center" richColors expand visibleToasts={3} />
-    </>
+    <MainShell>
+      <Outlet />
+    </MainShell>
   )
 }
