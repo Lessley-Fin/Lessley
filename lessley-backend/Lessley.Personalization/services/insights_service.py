@@ -1,15 +1,32 @@
 import logging
+from datetime import datetime, timedelta
+from typing import Dict, List
+
+from functional import seq
+
 from services.transaction_stash_service import TransactionStashService
 from services.open_finance_service import OpenFinanceService
-from services.processing_core_service import ProcessingCoreService
 from services.publisher_service import PublisherService
 from services.user_repository import UserRepository
+from services.reference_data_repository import ReferenceDataRepository
+from services.mcc_service import MccService
 from config.constants import LIMITS
+from models.db.entities import Store
 from models.transaction import Transaction
-from routers.responses import TransactionInsightSchema
+from routers.responses import (
+    TransactionInsightSchema,
+    MissedStoreDiscountSchema,
+    MissedStoreSchema,
+)
 
 
 logger = logging.getLogger(__name__)
+
+# Sunday first, because that is how the week is displayed to the user.
+DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+# We never show a user more than this many alternative shops for a single club.
+MAX_ALTERNATIVE_STORES_PER_CLUB = 10
 
 
 def trim_categories_by_match_level(categories: list, matching_score) -> list:
@@ -34,19 +51,399 @@ def trim_categories_by_match_level(categories: list, matching_score) -> list:
 
 
 class InsightsService:
+    """
+    Works out what the user's spending actually says about them.
+
+    Every calculation below reads top-to-bottom like a sentence: start with the user's
+    purchases, narrow them down, put them into piles, add up the money, sort, and hand back
+    the answer. Nothing here touches the database — data arrives as arguments and reference
+    data is asked for from ReferenceDataRepository.
+    """
+
     def __init__(
         self,
         open_finance_service: OpenFinanceService,
         files_service: TransactionStashService,
-        processing_core_service: ProcessingCoreService,
         publisher_service: PublisherService,
         user_repository: UserRepository,
+        reference_data_repository: ReferenceDataRepository,
+        mcc_service: MccService,
     ):
         self.open_finance_service = open_finance_service
         self.files_service = files_service
-        self.processing_core_service = processing_core_service
         self.publisher_service = publisher_service
         self.user_repository = user_repository
+        self.reference_data_repository = reference_data_repository
+        self.mcc_service = mcc_service
+
+    # ── Reading a single purchase ─────────────────────────────────────────────
+    # Small helpers so the chains below can stay one idea per line.
+
+    @staticmethod
+    def _date_of(transaction: Transaction):
+        """When the purchase happened — whichever date the bank actually gave us."""
+        if not transaction.date:
+            return None
+        return transaction.date.transactionDate or transaction.date.bookingDate or transaction.date.valueDate
+
+    @staticmethod
+    def _amount_spent(transaction: Transaction) -> float:
+        """How much money left the account, as a positive number."""
+        amount = transaction.amount
+        if amount and amount.chargedAmount and amount.chargedAmount.amount is not None:
+            return abs(amount.chargedAmount.amount)
+        if amount and amount.originalAmount and amount.originalAmount.amount is not None:
+            return abs(amount.originalAmount.amount)
+        return 0.0
+
+    @staticmethod
+    def _amount_charged(transaction: Transaction) -> float:
+        """The billed figure exactly as the bank reported it — sign and all."""
+        amount = transaction.amount
+        if amount and amount.chargedAmount and amount.chargedAmount.amount is not None:
+            return amount.chargedAmount.amount
+        if amount and amount.originalAmount and amount.originalAmount.amount is not None:
+            return amount.originalAmount.amount
+        return 0.0
+
+    @staticmethod
+    def _amount_saved(transaction: Transaction) -> float:
+        """The gap between the sticker price and what was actually charged."""
+        amount = transaction.amount
+        charged = amount.chargedAmount.amount if amount and amount.chargedAmount else None
+        original = amount.originalAmount.amount if amount and amount.originalAmount else None
+        return abs((charged or 0.0) - (original or 0.0))
+
+    @staticmethod
+    def _category_of(transaction: Transaction) -> str:
+        """What kind of purchase this was ("GROCERIES"), or "N/A" if the bank did not say."""
+        if transaction.category and transaction.category.sub:
+            return transaction.category.sub
+        return "N/A"
+
+    @staticmethod
+    def _merchant_of(transaction: Transaction) -> str:
+        """Which shop this was, tidied up, or "N/A" if the bank did not say."""
+        name = transaction.merchantName
+        if name is not None and str(name).strip() != "":
+            return str(name).strip()
+        return "N/A"
+
+    @staticmethod
+    def _by_totals(row: dict) -> tuple:
+        """Ranking rule for category and account lines: most purchases wins, then most money."""
+        return (row["total_count"], row["total_amount"])
+
+    @staticmethod
+    def _by_transactions(row: dict) -> tuple:
+        """The same ranking rule for shop lines, which name their columns differently."""
+        return (row["transaction_count"], row["transaction_amount"])
+
+    # ── What does the user spend on? ──────────────────────────────────────────
+
+    def top_spending_categories(
+        self, transactions: list[Transaction], limit: int = LIMITS.TOP_CATEGORIES
+    ) -> list[dict]:
+        """The kinds of things the user spends the most on."""
+        if not transactions:
+            return []
+
+        return (
+            seq(transactions)                                  # every purchase the user made
+            .group_by(self._category_of)                       # one pile per kind of purchase
+            .select(self._summarise_category)                  # each pile becomes one summary line
+            .sorted(key=lambda row: row["category"])           # settle ties alphabetically
+            .sorted(key=self._by_totals, reverse=True)         # then put the biggest spend on top
+            .take(limit)                                       # keep only the leading few
+            .to_list()                                         # hand back a plain list
+        )
+
+    def _summarise_category(self, group: tuple) -> dict:
+        """Turn one pile of same-category purchases into a single summary line."""
+        category_name, purchases = group
+        return {
+            "category": category_name,
+            "total_count": len(purchases),
+            "total_amount": seq(purchases).sum(self._amount_spent),
+            "mcc_codes": (
+                seq(purchases)                                            # the purchases in this pile
+                .where(lambda purchase: purchase.categoryCode)            # those the bank gave a code for
+                # turn each numeric code into the category name it stands for
+                .select(lambda purchase: self.mcc_service.get_mcc_by_id(str(purchase.categoryCode)))
+                .where(lambda category: category != "N/A")                # drop codes we cannot name
+                .distinct()                                               # each code mentioned once
+                .sorted()                                                 # stable order for the client
+                .to_list()                                                # hand back a plain list
+            ),
+        }
+
+    # ── Which of the user's accounts is doing the spending? ───────────────────
+
+    def top_spending_accounts(self, transactions: list[Transaction], limit: int = LIMITS.TOP_ACCOUNTS) -> list[dict]:
+        """The user's own accounts, busiest first."""
+        if not transactions:
+            return []
+
+        return (
+            seq(transactions)                                     # every purchase the user made
+            .group_by(lambda purchase: purchase.accountId)        # one pile per account it came from
+            .select(self._summarise_account)                      # each pile becomes one summary line
+            .sorted(key=lambda row: row["accountId"] or "")       # settle ties by account id
+            .sorted(key=self._by_totals, reverse=True)            # then put the busiest account on top
+            .take(limit)                                          # keep only the leading few
+            .to_list()                                            # hand back a plain list
+        )
+
+    def _summarise_account(self, group: tuple) -> dict:
+        """Turn one pile of same-account purchases into a single summary line."""
+        account_id, purchases = group
+        return {
+            "accountId": account_id,
+            "accountNumber": purchases[0].accountNumber,
+            "total_count": len(purchases),
+            "total_amount": seq(purchases).sum(self._amount_spent),
+        }
+
+    # ── Which shops take the user's money? ────────────────────────────────────
+
+    def top_spending_stores(self, transactions: list[Transaction], limit: int = LIMITS.TOP_STORES) -> list[dict]:
+        """The shops the user spends the most at, each broken down by the account used."""
+        if not transactions:
+            return []
+
+        # First work out, for every shop-and-account pairing, how much went through it.
+        per_shop_and_account = (
+            seq(transactions)                                                 # every purchase the user made
+            .group_by(lambda purchase: (self._merchant_of(purchase),          # one pile per shop
+                                        purchase.accountNumber))              #   and account together
+            .select(self._summarise_shop_account_pair)                        # each pile becomes one line
+            .sorted(key=lambda row: (row["normalized_merchantName"],          # settle ties by shop name
+                                     row["accountNumber"] or ""))             #   then account number
+            .sorted(key=self._by_transactions, reverse=True)                  # then busiest pairing on top
+            .to_list()
+        )
+
+        # Then fold those lines together so each shop appears once, with its accounts nested inside.
+        return (
+            seq(per_shop_and_account)                                          # the shop-and-account lines
+            .group_by(lambda row: row["normalized_merchantName"])              # regroup them per shop
+            .select(self._summarise_shop)                                      # each shop becomes one entry
+            .sorted(key=self._by_transactions, reverse=True)                   # busiest shop on top
+            .take(limit)                                                       # keep only the leading few
+            .to_list()                                                         # hand back a plain list
+        )
+
+    def _summarise_shop_account_pair(self, group: tuple) -> dict:
+        """Turn one pile of same-shop, same-account purchases into a single line."""
+        (merchant_name, account_number), purchases = group
+        return {
+            "normalized_merchantName": merchant_name,
+            "accountNumber": account_number,
+            "transaction_count": len(purchases),
+            "transaction_amount": seq(purchases).sum(self._amount_spent),
+        }
+
+    def _summarise_shop(self, group: tuple) -> dict:
+        """Turn one shop's per-account lines into a single entry with the accounts nested inside."""
+        merchant_name, rows = group
+        return {
+            "normalized_merchantName": merchant_name,
+            "transaction_count": seq(rows).sum(lambda row: row["transaction_count"]),
+            "transaction_amount": seq(rows).sum(lambda row: row["transaction_amount"]),
+            "spend_by_account": (
+                seq(rows)                                                  # this shop's per-account lines
+                .select(lambda row: {                                      # renamed for the client
+                    "accountNumber": row["accountNumber"],
+                    "account_total_count": row["transaction_count"],
+                    "account_total_amount": row["transaction_amount"],
+                })
+                .sorted(key=lambda row: (row["account_total_count"],       # busiest account first
+                                         row["account_total_amount"]), reverse=True)
+                .to_list()
+            ),
+        }
+
+    # ── When does the user spend? ─────────────────────────────────────────────
+
+    def spending_by_day_of_week(self, transactions: list[Transaction]) -> list[dict]:
+        """How much the user spends on each day of the week, Sunday through Saturday."""
+        spent_on = (
+            seq(transactions)                                      # every purchase the user made
+            .where(lambda purchase: self._date_of(purchase))       # those we know the date of
+            .group_by(self._day_name_of)                           # one pile per weekday
+            .map(lambda group: (group[0],                          # weekday ->
+                                seq(group[1]).sum(self._amount_spent)))  # money spent that day
+            .to_dict()
+        )
+
+        # Always return all seven days, so a quiet Tuesday still shows up as zero.
+        return [{"day": day, "total_amount": spent_on.get(day, 0.0)} for day in DAY_NAMES]
+
+    def _day_name_of(self, transaction: Transaction) -> str:
+        """Which weekday this purchase landed on."""
+        return DAY_NAMES[(self._date_of(transaction).weekday() + 1) % 7]
+
+    def spending_difference_between_two_periods(self, transactions: list[Transaction], days: int) -> dict:
+        """Whether the user spent more or less than they did in the run-up to this period."""
+        cutoff = (datetime.utcnow() - timedelta(days=days)).date()
+        dated_purchases = seq(transactions).where(lambda purchase: self._date_of(purchase))
+
+        current_total = (
+            dated_purchases                                                    # every dated purchase
+            .where(lambda purchase: self._date_of(purchase) >= cutoff)         # the recent stretch
+            .sum(self._amount_spent)                                           # added up
+        )
+        previous_total = (
+            dated_purchases                                                    # every dated purchase
+            .where(lambda purchase: self._date_of(purchase) < cutoff)          # the stretch before that
+            .sum(self._amount_spent)                                           # added up
+        )
+
+        return {
+            "current_period_total": current_total,
+            "previous_period_total": previous_total,
+            "difference": current_total - previous_total,
+        }
+
+    # ── How much did the user save? ───────────────────────────────────────────
+
+    def spending_saved(self, transactions: list[Transaction]) -> float:
+        """Total money the user did not have to pay, thanks to discounts."""
+        return (
+            seq(transactions)          # every purchase the user made
+            .sum(self._amount_saved)   # add up what each one knocked off the price
+        )
+
+    def spending_saved_by_account(self, transactions: list[Transaction]) -> list[dict]:
+        """The same savings total, split by which account earned it."""
+        return (
+            seq(transactions)                                              # every purchase the user made
+            .where(lambda purchase: purchase.accountId)                    # those tied to a known account
+            .group_by(lambda purchase: purchase.accountId)                 # one pile per account
+            .select(self._summarise_account_savings)                       # each pile becomes one line
+            .sorted(key=lambda row: row["total_saved"], reverse=True)      # biggest saver on top
+            .to_list()                                                     # hand back a plain list
+        )
+
+    def _summarise_account_savings(self, group: tuple) -> dict:
+        """Turn one account's purchases into its savings total."""
+        account_id, purchases = group
+        return {
+            "accountId": account_id,
+            "accountNumber": purchases[0].accountNumber,
+            "total_saved": seq(purchases).sum(self._amount_saved),
+        }
+
+    # ── What could the user have saved elsewhere? ─────────────────────────────
+
+    def missed_savings(
+        self, transactions: list[Transaction], user_club_ids: List[str] | None = None
+    ) -> list[TransactionInsightSchema]:
+        """
+        For each purchase, the shops in the user's clubs that were running a deal on the
+        same kind of thing — the money that was on the table and left there.
+        """
+        if not transactions:
+            return []
+
+        insights = (
+            seq(transactions)                                                  # every purchase the user made
+            .where(lambda purchase: purchase.id and purchase.categoryCode)     # those we can actually analyse
+            .select(lambda purchase: self._missed_savings_for(purchase, user_club_ids))
+            .to_list()                                                         # hand back a plain list
+        )
+
+        logger.info(
+            "Missed savings analysis completed",
+            extra={
+                "reason": "Batch processing complete",
+                "extra_data": {
+                    "transaction_count": len(transactions),
+                    "processed_count": len(insights),
+                    "transactions_with_deals": seq(insights).count(lambda insight: insight.had_discount),
+                    "total_alternative_stores": seq(insights).sum(
+                        lambda insight: seq(insight.missed_store_discont).sum(lambda missed: missed.store_count)
+                    ),
+                    "insights_returned": len(insights),
+                },
+            },
+        )
+        return insights
+
+    def _missed_savings_for(
+        self, transaction: Transaction, user_club_ids: List[str] | None
+    ) -> TransactionInsightSchema:
+        """Work out what the user missed on this one purchase."""
+        category_name = self.mcc_service.get_mcc_by_id(transaction.categoryCode)
+        stores_by_club = self._alternative_stores_by_club(category_name, user_club_ids)
+
+        return TransactionInsightSchema(
+            transaction_id=transaction.id,
+            had_discount=len(stores_by_club) > 0,
+            missed_store_discont=self._describe_missed_stores(stores_by_club),
+            store_name=transaction.merchantName or "N/A",
+            mcc_code=category_name,
+            mcc_description=self._category_of(transaction),
+            amount=self._amount_charged(transaction),
+        )
+
+    def _alternative_stores_by_club(
+        self, category_name: str, user_club_ids: List[str] | None = None, exclude_store_id: str = None
+    ) -> Dict[str, List[Store]]:
+        """Shops selling the same kind of thing that are running a deal, gathered per club."""
+        if not category_name:
+            return {}
+
+        better_options = (
+            seq(self.reference_data_repository.stores_by_category(category_name))   # shops in this category
+            .where(lambda store: store.store_id != exclude_store_id)                # not the one just used
+            .where(lambda store: self.reference_data_repository.has_active_deal(store.store_id))  # running a deal
+            .to_list()
+        )
+        if not better_options:
+            return {}
+
+        # Only clubs the user actually belongs to, when we know which those are.
+        clubs = self.reference_data_repository.all_clubs()
+        if user_club_ids is not None:
+            member_of = set(user_club_ids)
+            clubs = {club_id: club for club_id, club in clubs.items() if club_id in member_of}
+
+        return (
+            seq(clubs.items())                                                     # each club to consider
+            .select(lambda entry: (entry[0], self._club_stores(entry[1], better_options)))
+            .where(lambda entry: entry[1])                                         # keep clubs that offer something
+            .to_dict()                                                             # club id -> its shops
+        )
+
+    @staticmethod
+    def _club_stores(club, better_options: List[Store]) -> List[Store]:
+        """Which of these shops belong to this club — capped, so we never flood the user."""
+        club_store_ids = set(club.stores or [])
+        return (
+            seq(better_options)                                            # the shops running deals
+            .where(lambda store: store.store_id in club_store_ids)         # those inside this club
+            .take(MAX_ALTERNATIVE_STORES_PER_CLUB)                         # at most ten per club
+            .to_list()
+        )
+
+    def _describe_missed_stores(self, stores_by_club: Dict[str, List[Store]]) -> List[MissedStoreDiscountSchema]:
+        """Turn the shops-per-club map into the shape the client expects."""
+        return (
+            seq(stores_by_club.items())                                             # each club and its shops
+            .where(lambda entry: self.reference_data_repository.get_club(entry[0]))  # skip clubs we cannot name
+            .select(lambda entry: MissedStoreDiscountSchema(
+                club_id=entry[0],
+                missed_store=[
+                    MissedStoreSchema(store_id=store.store_id, store_name=store.name) for store in entry[1]
+                ],
+                store_count=len(entry[1]),
+            ))
+            .to_list()
+        )
+
+    # ── Orchestration ─────────────────────────────────────────────────────────
+    # Fetch the user's transactions, run one of the calculations above, announce the result.
 
     async def _require_user(self, email: str):
         """
@@ -71,9 +468,21 @@ class InsightsService:
                     tags.append(code_str)
         return tags
 
+    async def _transactions_for(
+        self, user_id: str, time_filter: bool, days: int, use_mock: bool, sort: bool = False
+    ) -> list[Transaction]:
+        """Fetch the user's purchases — from the mock file when asked, otherwise from Open Finance."""
+        if use_mock:
+            return self.files_service.read_json("transactions_roee_all.json")
+
+        transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
+        if sort:
+            transactions = self.open_finance_service.sort_transactions(transactions)
+        return transactions
+
     async def calculate_user_categories_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[Transaction]:
+    ) -> list[dict]:
         """
         Calculates user categories from spending transactions, then publishes the derived
         tags to the Gateway via publisher_service so they are stored on the user profile
@@ -91,12 +500,8 @@ class InsightsService:
             # Task 1: stop early (HTTP 404) if the user is not registered in Lessley.
             user = await self._require_user(user_id)
 
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-
-            categories = self.processing_core_service.get_top_spending_categories(transactions)
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            categories = self.top_spending_categories(transactions)
 
             # Process 2: keep only the top (Len - X%) categories based on the user's match level.
             matching_score = user.get("MatchingScore") if user else None
@@ -127,7 +532,7 @@ class InsightsService:
 
     async def calculate_top_accounts_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[Transaction]:
+    ) -> list[dict]:
         """
         Calculates top accounts based on transactions.
         """
@@ -140,24 +545,8 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-
-            accounts = self.processing_core_service.get_top_spending_accounts(
-                transactions,
-                flat_columns=[
-                    "accountId",
-                    "accountNumber",
-                    "providerId",
-                    "type",
-                    "amount.chargedAmount.amount",
-                    "amount.originalAmount.amount",
-                ],
-                group_by_column="accountId",
-                ascending=False,
-            )
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            accounts = self.top_spending_accounts(transactions)
 
             logger.info(
                 "Top accounts calculated successfully",
@@ -177,7 +566,7 @@ class InsightsService:
 
     async def calculate_top_stores_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[Transaction]:
+    ) -> list[dict]:
         """
         Calculates top stores based on transactions.
         """
@@ -190,12 +579,8 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-
-            stores = self.processing_core_service.get_top_spending_stores(transactions)
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            stores = self.top_spending_stores(transactions)
 
             logger.info(
                 "Top stores calculated successfully",
@@ -228,12 +613,8 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-
-            spending_by_day = self.processing_core_service.get_spending_by_day_of_week(transactions)
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            spending_by_day = self.spending_by_day_of_week(transactions)
 
             logger.info(
                 "Spending by day of week calculated successfully",
@@ -267,16 +648,9 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(
-                    user_id, time_filter, days * 2
-                )
-
-            difference = self.processing_core_service.get_spending_difference_between_two_periods(
-                transactions, days
-            )
+            # One fetch covering both periods, then split by date on our side.
+            transactions = await self._transactions_for(user_id, time_filter, days * 2, use_mock)
+            difference = self.spending_difference_between_two_periods(transactions, days)
 
             logger.info(
                 "Spending difference between two periods calculated successfully",
@@ -306,16 +680,15 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-
-            total_saved = self.processing_core_service.get_spending_saved(transactions)
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            total_saved = self.spending_saved(transactions)
 
             logger.info(
                 "Spending saved calculated successfully",
-                extra={"reason": "Business logic complete", "extra_data": {"user_id": user_id, "total_saved": total_saved}},
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, "total_saved": total_saved},
+                },
             )
             return total_saved
         except Exception as e:
@@ -342,12 +715,8 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-
-            saved_by_account = self.processing_core_service.get_spending_saved_by_account(transactions)
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            saved_by_account = self.spending_saved_by_account(transactions)
 
             logger.info(
                 "Spending saved by account calculated successfully",
@@ -390,16 +759,10 @@ class InsightsService:
         )
 
         try:
-            if use_mock:
-                transactions = self.files_service.read_json("transactions_roee_all.json")
-            else:
-                transactions = await self.open_finance_service.get_user_transactions_async(user_id, time_filter, days)
-                transactions = self.open_finance_service.sort_transactions(transactions)
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock, sort=True)
 
             user_club_ids = await self.user_repository.get_user_clubs(user_id)
-            insights = await self.processing_core_service.calculate_missed_savings_async(
-                transactions, user_club_ids=user_club_ids
-            )
+            insights = self.missed_savings(transactions, user_club_ids=user_club_ids)
 
             if self.publisher_service:
                 serialized = [i.dict() if hasattr(i, "dict") else i for i in insights]
