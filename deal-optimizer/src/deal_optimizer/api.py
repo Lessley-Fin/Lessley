@@ -19,7 +19,7 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 from pymongo.errors import PyMongoError
 
-from .deals_source import get_database, load_store_deals, summarize_deals
+from .deals_source import get_database, load_store, load_store_deals, summarize_deals
 from .engine import UserContext, build_export_payload, optimize
 
 logger = logging.getLogger(__name__)
@@ -53,9 +53,23 @@ class OptimizeResponse(BaseModel):
     cart_total: float
     cart_quantity: int
     wallet_id: str | None = None
+    store: dict[str, Any] | None = None
     results: list[dict[str, Any]]
     deals: dict[str, dict[str, Any]]
     deals_considered: int
+
+
+def _store_for_display(store_id: str) -> dict[str, Any] | None:
+    """The store's name and imagery, or None if it can't be read.
+
+    Purely decorative, so a failure here must not cost the caller its prices —
+    the stack is already computed by the time this runs.
+    """
+    try:
+        return load_store(store_id)
+    except PyMongoError:
+        logger.warning("Could not read store %s for display", store_id, exc_info=True)
+        return None
 
 
 @app.get("/health")
@@ -125,6 +139,7 @@ def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
 
     return OptimizeResponse(
         **payload,
+        store=_store_for_display(request.store_id),
         deals=summarize_deals(deals),
         deals_considered=len(deals),
     )

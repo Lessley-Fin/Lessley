@@ -123,6 +123,28 @@ export interface ClubDto {
   name: string
 }
 
+/**
+ * What a deal is worth. The pipeline splits the raw discount logic by reward
+ * type, so at most one value field is set: `percentOff` is a ratio (0.3 = 30%
+ * off), `amountOff` is ILS taken off, `fixedPrice` is a price paid instead.
+ */
+export interface DealDiscount {
+  rewardType?: string | null
+  percentOff?: number | null
+  amountOff?: number | null
+  fixedPrice?: number | null
+  maxDiscountAmount?: number | null
+  conditionType?: string | null
+  minSpend?: number | null
+  minQuantity?: number | null
+}
+
+export interface DealLimits {
+  minimumPurchase?: number | null
+  maxUsesPerTransaction?: number | null
+  maxUsesPerMonth?: number | null
+}
+
 export interface DealDocument {
   dealId: string
   storeId: string
@@ -135,6 +157,12 @@ export interface DealDocument {
   url?: string
   redeemChannels: string[]
   couponCode?: string
+  dealType?: string | null
+  currency?: string | null
+  termsAndConditions?: string | null
+  discount?: DealDiscount | null
+  limits?: DealLimits | null
+  membershipRequired?: boolean | null
 }
 
 export interface StoreMetadata {
@@ -257,7 +285,30 @@ export interface OptimizerDealSummary {
   deal_type?: string | null
   source_id?: string | null
   club_id?: string | null
+  /** Where the benefit is claimed (benefit_url, falling back to the merchant site). */
   url?: string | null
+  /** The merchant's own site, when the deal also carries a claim link. */
+  store_url?: string | null
+  terms_and_conditions?: string | null
+  minimum_purchase?: number | null
+  max_uses_per_transaction?: number | null
+  max_uses_per_month?: number | null
+  max_discount_amount?: number | null
+  /** Tri-state on the wire: true / "yes" / null. */
+  membership_required?: boolean | string | null
+}
+
+/**
+ * The store a cart was priced at. Snake_case because the Gateway passes the
+ * optimizer's own payload through untouched. Deals carry no imagery of their
+ * own — the pipeline hangs scraped images off the store.
+ */
+export interface OptimizerStore {
+  store_id: string
+  name?: string | null
+  store_url?: string | null
+  image_urls: string[]
+  mcc_codes: string[]
 }
 
 export interface OptimizeResponse {
@@ -266,6 +317,7 @@ export interface OptimizeResponse {
   cart_total: number
   cart_quantity: number
   wallet_id: string | null
+  store?: OptimizerStore | null
   /** Ranked cheapest-first; `results[0]` is the winning stack. */
   results: OptimizerResult[]
   deals: Record<string, OptimizerDealSummary>

@@ -159,8 +159,8 @@ export function OptimizeTab() {
           </Notice>
         ) : data && winner ? (
           <>
-            <WinningStack result={winner} deals={data.deals} storeName={submitted.storeName} />
-            <RankedOptions results={runnersUp} deals={data.deals} />
+            <WinningStack result={winner} deals={data.deals} storeName={submitted.storeName} store={data.store} />
+            <RankedOptions results={runnersUp} deals={data.deals} store={data.store} />
             <p className="text-center text-xs text-muted-foreground">
               {t("optimizer.optimizeTab.rankedFrom", {
                 count: data.deals_considered,

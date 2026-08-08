@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+from pymongo.errors import PyMongoError
 
 from deal_optimizer import api
-from deal_optimizer.deals_source import _to_engine_dict, load_store_deals, summarize_deals
+from deal_optimizer.deals_source import _to_engine_dict, load_store, load_store_deals, summarize_deals
 
 from conftest import mk_deal
 
@@ -252,6 +253,100 @@ def test_summarize_deals_keys_on_deal_id():
         "source_id": "hot",
         "club_id": None,
         "url": "http://x",
+        "store_url": None,
+        "terms_and_conditions": None,
+        "minimum_purchase": None,
+        "max_uses_per_transaction": None,
+        "max_uses_per_month": None,
+        "max_discount_amount": None,
+        "membership_required": None,
     }
     assert summary["d2"]["title"] == "Second"
     assert summary["d2"]["url"] is None
+
+
+def test_summarize_deals_lifts_terms_out_of_nested_documents():
+    deal = {
+        "id": "d1",
+        "title": "Loadable card",
+        "url": "http://store",
+        "terms_and_conditions": "Up to 3,000 ILS per month.",
+        "discount_logic": {"reward": {"type": "percentage_off", "value": 0.3, "max_discount_amount": 300}},
+        "constraints": {
+            "limits": {"minimum_purchase": 100, "max_uses_per_transaction": 1, "max_uses_per_month": 2},
+            "eligibility": {"membership_required": True},
+        },
+    }
+
+    summary = summarize_deals([deal])["d1"]
+
+    assert summary["terms_and_conditions"] == "Up to 3,000 ILS per month."
+    assert summary["minimum_purchase"] == 100
+    assert summary["max_uses_per_transaction"] == 1
+    assert summary["max_uses_per_month"] == 2
+    assert summary["max_discount_amount"] == 300
+    assert summary["membership_required"] is True
+    # No benefit_url, so the claim link falls back to the merchant's own site,
+    # which store_url reports separately.
+    assert summary["url"] == "http://store"
+    assert summary["store_url"] == "http://store"
+
+
+def test_load_store_returns_display_fields(monkeypatch):
+    class _Stores:
+        def find_one(self, query):
+            assert query == {"$or": [{"_id": "store_1"}, {"id": "store_1"}]}
+            return {
+                "_id": "store_1",
+                "name": "KSP",
+                "metadata": {
+                    "store_url": "https://ksp.co.il",
+                    "image_urls": ["https://cdn/1.png"],
+                    "mcc_codes": ["ELECTRONICS"],
+                },
+            }
+
+    store = load_store("store_1", db={"stores": _Stores()})
+
+    assert store == {
+        "store_id": "store_1",
+        "name": "KSP",
+        "store_url": "https://ksp.co.il",
+        "image_urls": ["https://cdn/1.png"],
+        "mcc_codes": ["ELECTRONICS"],
+    }
+
+
+def test_load_store_returns_none_when_the_store_is_unknown():
+    class _Stores:
+        def find_one(self, query):
+            return None
+
+    assert load_store("nope", db={"stores": _Stores()}) is None
+
+
+def test_optimize_response_carries_the_store_for_display(client, stocked_store, monkeypatch):
+    monkeypatch.setattr(
+        api, "load_store", lambda store_id: {"store_id": store_id, "name": "KSP", "image_urls": ["u"]}
+    )
+
+    body = client.post(
+        "/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
+    ).json()
+
+    assert body["store"] == {"store_id": "store_1", "name": "KSP", "image_urls": ["u"]}
+
+
+def test_a_broken_store_lookup_does_not_cost_the_caller_its_prices(client, stocked_store, monkeypatch):
+    def _boom(store_id):
+        raise PyMongoError("down")
+
+    monkeypatch.setattr(api, "load_store", _boom)
+
+    response = client.post(
+        "/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["store"] is None
+    assert response.json()["results"]

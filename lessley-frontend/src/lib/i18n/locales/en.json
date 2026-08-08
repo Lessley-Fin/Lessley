@@ -358,8 +358,19 @@
     },
     "stackSteps": {
       "percentOff": "{{percent}} off",
-      "coversOfBill": "covers {{amount}} of the bill",
-      "atRate": "at {{rate}}"
+      "discountAppliesTo": "Discount applies to",
+      "youPayOnIt": "You pay on it",
+      "billLeftToPay": "Bill left to pay",
+      "atRate": "at {{rate}}",
+      "moreInfo": "Details",
+      "openDeal": "Open deal"
+    },
+    "dealInfo": {
+      "deal": "Deal",
+      "savedHere": "Saved at this step",
+      "openDeal": "Open this deal",
+      "visitStore": "Visit store",
+      "ariaLabel": "More information about this deal"
     }
   },
   "admin": {
@@ -446,6 +457,37 @@
       "hadDealsAt": "had deals at {{stores}}",
       "moreClubsWithDeals_one": "+{{count}} more club with deals",
       "moreClubsWithDeals_other": "+{{count}} more clubs with deals"
+    },
+    "discount": {
+      "percentOff": "{{percent}} off",
+      "amountOff": "{{amount}} off",
+      "fixedPrice": "Only {{amount}}",
+      "fromAmount": "From {{amount}}"
+    },
+    "dealTerms": {
+      "title": "Benefit terms",
+      "minimumPurchase": "Minimum purchase",
+      "maxDiscount": "Maximum discount",
+      "usesPerTransaction": "Uses per transaction",
+      "usesPerMonth": "Uses per month",
+      "membershipRequired": "Membership required",
+      "membershipRequiredValue": "Yes",
+      "redeemAt": "Redeem at",
+      "fineprintTitle": "Terms and conditions",
+      "channels": {
+        "website": "Online",
+        "physical_store": "In store",
+        "app": "App",
+        "phone": "Phone"
+      }
+    },
+    "dealTypes": {
+      "cashback": "Cashback",
+      "coupon": "Coupon",
+      "giftcard_discount": "Gift card",
+      "payment_discount": "Card discount",
+      "tender_tiered": "Tiered card",
+      "tender_flat": "Card benefit"
     }
   },
   "notifications": {

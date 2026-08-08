@@ -72,6 +72,56 @@ def _redeem_channels(constraints: Any) -> list[str]:
     return [name for name, available in channels.items() if available in _TRUTHY]
 
 
+def _discount_summary(discount_logic: Any) -> dict[str, Any]:
+    """``discount_logic`` -> the flat shape a client renders a discount from.
+
+    The raw sub-document nests the offer under ``reward`` and its trigger under
+    ``condition``, with the amount's *meaning* carried by ``reward.type``:
+    ``percentage_off`` is a ratio (0.3 = 30% off), ``fixed_discount_amount`` is
+    ILS taken off, and ``fixed_total_amount`` is a price you pay instead. A UI
+    badge needs to tell those apart, so they are split into named fields here
+    rather than left for every consumer to re-derive.
+    """
+    logic = discount_logic if isinstance(discount_logic, dict) else {}
+    reward = logic.get("reward") or {}
+    condition = logic.get("condition") or {}
+    reward_type = reward.get("type")
+    reward_value = reward.get("value")
+    condition_type = condition.get("type")
+    condition_value = condition.get("value")
+
+    return {
+        "reward_type": reward_type,
+        "percent_off": reward_value if reward_type == "percentage_off" else None,
+        "amount_off": reward_value if reward_type == "fixed_discount_amount" else None,
+        "fixed_price": reward_value if reward_type == "fixed_total_amount" else None,
+        "max_discount_amount": reward.get("max_discount_amount"),
+        "condition_type": condition_type,
+        "min_spend": condition_value if condition_type in ("min_spend", "exact_spend") else None,
+        "min_quantity": condition_value if condition_type == "min_quantity" else None,
+    }
+
+
+def _deal_limits(constraints: Any) -> dict[str, Any]:
+    """The caps a client shows as benefit terms, lifted out of ``constraints``."""
+    limits = (constraints or {}).get("limits") or {} if isinstance(constraints, dict) else {}
+    return {
+        "minimum_purchase": limits.get("minimum_purchase"),
+        "max_uses_per_transaction": limits.get("max_uses_per_transaction"),
+        "max_uses_per_month": limits.get("max_uses_per_month"),
+    }
+
+
+def _membership_required(constraints: Any) -> bool | None:
+    """Tri-state on the wire (True / "yes" / None) reduced to a bool or None."""
+    if not isinstance(constraints, dict):
+        return None
+    value = (constraints.get("eligibility") or {}).get("membership_required")
+    if value is None:
+        return None
+    return value is True or value == "yes"
+
+
 def deal_list_document(
     deal: dict[str, Any], club_by_source: dict[str, str] | None = None
 ) -> dict[str, Any] | None:
@@ -109,6 +159,16 @@ def deal_list_document(
         "url": deal.get("url"),
         "redeem_channels": _redeem_channels(deal.get("constraints")),
         "coupon_code": deal.get("coupon_code"),
+        # Display detail: what the deal is worth and on what terms. Kept here
+        # rather than left in `deals` so the Gateway can answer a deal search
+        # without a second collection — clients show the discount on the card
+        # and the terms in the detail view.
+        "deal_type": deal.get("deal_type"),
+        "currency": deal.get("currency"),
+        "terms_and_conditions": deal.get("terms_and_conditions"),
+        "discount": _discount_summary(deal.get("discount_logic")),
+        "limits": _deal_limits(deal.get("constraints")),
+        "membership_required": _membership_required(deal.get("constraints")),
     }
 
 

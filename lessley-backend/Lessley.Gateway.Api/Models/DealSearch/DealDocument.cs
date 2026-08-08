@@ -41,4 +41,69 @@ public class DealDocument
 
     [BsonElement("coupon_code")]
     public string? CouponCode { get; set; }
+
+    [BsonElement("deal_type")]
+    public string? DealType { get; set; }
+
+    [BsonElement("currency")]
+    public string? Currency { get; set; }
+
+    [BsonElement("terms_and_conditions")]
+    public string? TermsAndConditions { get; set; }
+
+    [BsonElement("discount")]
+    public DealDiscount? Discount { get; set; }
+
+    [BsonElement("limits")]
+    public DealLimits? Limits { get; set; }
+
+    [BsonElement("membership_required")]
+    public bool? MembershipRequired { get; set; }
+}
+
+/// <summary>
+/// What the deal is worth. The pipeline splits the raw <c>discount_logic</c> by
+/// reward type, so exactly one of the three value fields is set: a ratio off
+/// (<c>PercentOff</c> 0.3 = 30%), ILS off, or a price paid instead.
+/// </summary>
+[BsonIgnoreExtraElements]
+public class DealDiscount
+{
+    [BsonElement("reward_type")]
+    public string? RewardType { get; set; }
+
+    [BsonElement("percent_off")]
+    public double? PercentOff { get; set; }
+
+    [BsonElement("amount_off")]
+    public double? AmountOff { get; set; }
+
+    [BsonElement("fixed_price")]
+    public double? FixedPrice { get; set; }
+
+    [BsonElement("max_discount_amount")]
+    public double? MaxDiscountAmount { get; set; }
+
+    [BsonElement("condition_type")]
+    public string? ConditionType { get; set; }
+
+    [BsonElement("min_spend")]
+    public double? MinSpend { get; set; }
+
+    [BsonElement("min_quantity")]
+    public double? MinQuantity { get; set; }
+}
+
+/// <summary>Caps a client shows as benefit terms.</summary>
+[BsonIgnoreExtraElements]
+public class DealLimits
+{
+    [BsonElement("minimum_purchase")]
+    public double? MinimumPurchase { get; set; }
+
+    [BsonElement("max_uses_per_transaction")]
+    public int? MaxUsesPerTransaction { get; set; }
+
+    [BsonElement("max_uses_per_month")]
+    public int? MaxUsesPerMonth { get; set; }
 }

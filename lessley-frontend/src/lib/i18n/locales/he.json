@@ -363,8 +363,19 @@
     },
     "stackSteps": {
       "percentOff": "{{percent}} הנחה",
-      "coversOfBill": "מכסה {{amount}} מהחשבון",
-      "atRate": "בשיעור {{rate}}"
+      "discountAppliesTo": "ההנחה חלה על",
+      "youPayOnIt": "משלמים עליו",
+      "billLeftToPay": "נשאר לתשלום",
+      "atRate": "בשיעור {{rate}}",
+      "moreInfo": "פרטים",
+      "openDeal": "מעבר לדיל"
+    },
+    "dealInfo": {
+      "deal": "דיל",
+      "savedHere": "נחסך בשלב הזה",
+      "openDeal": "מעבר לדיל",
+      "visitStore": "מעבר לאתר החנות",
+      "ariaLabel": "מידע נוסף על הדיל"
     }
   },
   "admin": {
@@ -452,6 +463,37 @@
       "moreClubsWithDeals_one": "+ עוד מועדון אחד עם דילים",
       "moreClubsWithDeals_two": "+ עוד שני מועדונים עם דילים",
       "moreClubsWithDeals_other": "+ עוד {{count}} מועדונים עם דילים"
+    },
+    "discount": {
+      "percentOff": "{{percent}} הנחה",
+      "amountOff": "{{amount}} הנחה",
+      "fixedPrice": "רק {{amount}}",
+      "fromAmount": "מ-{{amount}}"
+    },
+    "dealTerms": {
+      "title": "תנאי ההטבה",
+      "minimumPurchase": "רכישת מינימום",
+      "maxDiscount": "הנחה מרבית",
+      "usesPerTransaction": "שימושים בעסקה",
+      "usesPerMonth": "שימושים בחודש",
+      "membershipRequired": "נדרשת חברות",
+      "membershipRequiredValue": "כן",
+      "redeemAt": "מימוש ב",
+      "fineprintTitle": "תנאים והגבלות",
+      "channels": {
+        "website": "אונליין",
+        "physical_store": "בחנות",
+        "app": "אפליקציה",
+        "phone": "טלפון"
+      }
+    },
+    "dealTypes": {
+      "cashback": "החזר כספי",
+      "coupon": "קופון",
+      "giftcard_discount": "כרטיס מתנה",
+      "payment_discount": "הנחה בכרטיס",
+      "tender_tiered": "כרטיס נטען מדורג",
+      "tender_flat": "הטבת כרטיס"
     }
   },
   "notifications": {

@@ -2,16 +2,17 @@ import { Trophy } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { formatAmount } from "@/lib/formatters"
-import type { OptimizerDealSummary, OptimizerResult } from "@/lib/types"
+import type { OptimizerDealSummary, OptimizerResult, OptimizerStore } from "@/lib/types"
 import { StackSteps } from "./StackSteps"
 
 interface WinningStackProps {
   result: OptimizerResult
   deals: Record<string, OptimizerDealSummary>
   storeName: string
+  store?: OptimizerStore | null
 }
 
-export function WinningStack({ result, deals, storeName }: WinningStackProps) {
+export function WinningStack({ result, deals, storeName, store }: WinningStackProps) {
   const { t } = useTranslation()
   const savedRate = result.starting_price > 0 ? result.total_savings / result.starting_price : 0
 
@@ -59,7 +60,7 @@ export function WinningStack({ result, deals, storeName }: WinningStackProps) {
             <span className="font-semibold">{formatAmount(result.starting_price)}</span>
           </div>
 
-          <StackSteps steps={result.per_step} deals={deals} />
+          <StackSteps steps={result.per_step} deals={deals} store={store} />
 
           <div className="mt-1 flex items-center justify-between rounded-2xl bg-secondary px-3 py-2 text-sm">
             <span className="font-semibold">{t("optimizer.winningStack.youPay")}</span>

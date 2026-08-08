@@ -112,6 +112,76 @@ def test_redeem_channels_default_to_empty_without_constraints():
     assert deal_list_document(_deal())["redeem_channels"] == []
 
 
+def test_percentage_discount_is_split_into_named_fields():
+    # reward.type is what gives the number its meaning, so the projection names
+    # it: a client rendering "30% off" must not mistake 0.3 for 0.3 shekels.
+    doc = deal_list_document(
+        _deal(
+            deal_type="giftcard_discount",
+            discount_logic={
+                "type": "percentage",
+                "condition": {"type": "min_spend", "value": 100},
+                "reward": {"type": "percentage_off", "value": 0.3, "max_discount_amount": 300},
+            },
+        )
+    )
+
+    assert doc["deal_type"] == "giftcard_discount"
+    assert doc["discount"] == {
+        "reward_type": "percentage_off",
+        "percent_off": 0.3,
+        "amount_off": None,
+        "fixed_price": None,
+        "max_discount_amount": 300,
+        "condition_type": "min_spend",
+        "min_spend": 100,
+        "min_quantity": None,
+    }
+
+
+def test_fixed_total_amount_is_a_price_not_a_discount():
+    doc = deal_list_document(
+        _deal(discount_logic={"reward": {"type": "fixed_total_amount", "value": 4.9}})
+    )
+
+    assert doc["discount"]["fixed_price"] == 4.9
+    assert doc["discount"]["percent_off"] is None
+    assert doc["discount"]["amount_off"] is None
+
+
+def test_terms_and_limits_travel_with_the_deal():
+    doc = deal_list_document(
+        _deal(
+            terms_and_conditions="Up to 3,000 ILS per month.",
+            currency="ILS",
+            constraints={
+                "limits": {"minimum_purchase": 50, "max_uses_per_transaction": 1, "max_uses_per_month": 2},
+                "eligibility": {"membership_required": "yes"},
+            },
+        )
+    )
+
+    assert doc["terms_and_conditions"] == "Up to 3,000 ILS per month."
+    assert doc["currency"] == "ILS"
+    assert doc["limits"] == {
+        "minimum_purchase": 50,
+        "max_uses_per_transaction": 1,
+        "max_uses_per_month": 2,
+    }
+    # "yes" and True mean the same thing upstream; the view emits one bool.
+    assert doc["membership_required"] is True
+
+
+def test_discount_and_limits_are_present_even_with_nothing_to_report():
+    # The Gateway binds these to non-nullable objects, so the keys have to exist
+    # on every row — an absent sub-document would leave the fields unbound.
+    doc = deal_list_document(_deal())
+
+    assert doc["discount"]["reward_type"] is None
+    assert doc["limits"]["minimum_purchase"] is None
+    assert doc["membership_required"] is None
+
+
 # --------------------------------------------------------------------------- #
 # store_list                                                                    #
 # --------------------------------------------------------------------------- #

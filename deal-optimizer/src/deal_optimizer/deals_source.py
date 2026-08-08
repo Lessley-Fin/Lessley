@@ -81,23 +81,69 @@ def load_store_deals(store_id: str, db: Database | None = None) -> list[dict[str
     return [_to_engine_dict(doc) for doc in cursor]
 
 
+def load_store(store_id: str, db: Database | None = None) -> dict[str, Any] | None:  # type: ignore[type-arg]
+    """Display fields for the store a cart is being priced at.
+
+    Deals carry no imagery of their own — the pipeline attaches every image it
+    scrapes alongside a deal to that deal's store, so this is where a client
+    gets a picture to show next to a result.
+    """
+    collection = (db if db is not None else get_database())["stores"]
+    # The business key is ``_id`` on pipeline-written rows and ``id`` on imported
+    # ones, the same split ``_to_engine_dict`` handles for deals.
+    doc = collection.find_one({"$or": [{"_id": store_id}, {"id": store_id}]})
+    if not doc:
+        return None
+
+    metadata = doc.get("metadata") or {}
+    return {
+        "store_id": store_id,
+        "name": doc.get("name"),
+        "store_url": metadata.get("store_url"),
+        "image_urls": list(metadata.get("image_urls") or []),
+        "mcc_codes": list(metadata.get("mcc_codes") or []),
+    }
+
+
+def _summarize_deal(deal: dict[str, Any]) -> dict[str, Any]:
+    """One deal reduced to what a client renders — identity, link and terms.
+
+    The terms fields are read out of the nested ``constraints``/``discount_logic``
+    sub-documents rather than shipped whole: a client showing "why this deal
+    applies and under what conditions" needs the handful of caps below, not the
+    engine's full rule input.
+    """
+    constraints = deal.get("constraints") or {}
+    limits = constraints.get("limits") or {}
+    eligibility = constraints.get("eligibility") or {}
+    reward = (deal.get("discount_logic") or {}).get("reward") or {}
+
+    return {
+        "deal_id": deal["id"],
+        "title": deal.get("title"),
+        "description": deal.get("deal_description"),
+        "deal_type": deal.get("deal_type"),
+        "source_id": deal.get("source_id"),
+        "club_id": deal.get("club_id"),
+        # Where the deal is claimed; ``url`` is the merchant's own site.
+        "url": deal.get("benefit_url") or deal.get("url"),
+        "store_url": deal.get("url"),
+        "terms_and_conditions": deal.get("terms_and_conditions"),
+        "minimum_purchase": limits.get("minimum_purchase"),
+        "max_uses_per_transaction": limits.get("max_uses_per_transaction"),
+        "max_uses_per_month": limits.get("max_uses_per_month"),
+        "max_discount_amount": reward.get("max_discount_amount"),
+        # True / "yes" / None — the same tri-state ``deal_eligibility`` reads.
+        "membership_required": eligibility.get("membership_required"),
+    }
+
+
 def summarize_deals(deals: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Map deal_id → the display fields a client needs to render a result path.
 
     ``build_export_payload`` deliberately reduces each path to bare ``deal_id``
     strings and expects the application to resolve them against its own deals
     database. This ships that lookup alongside the payload so a client can
-    render titles without a second round-trip per deal in the path.
+    render titles, links and benefit terms without a second round-trip per deal.
     """
-    return {
-        deal["id"]: {
-            "deal_id": deal["id"],
-            "title": deal.get("title"),
-            "description": deal.get("deal_description"),
-            "deal_type": deal.get("deal_type"),
-            "source_id": deal.get("source_id"),
-            "club_id": deal.get("club_id"),
-            "url": deal.get("benefit_url") or deal.get("url"),
-        }
-        for deal in deals
-    }
+    return {deal["id"]: _summarize_deal(deal) for deal in deals}

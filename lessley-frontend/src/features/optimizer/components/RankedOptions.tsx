@@ -4,16 +4,17 @@ import { useTranslation } from "react-i18next"
 
 import { formatAmount } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import type { OptimizerDealSummary, OptimizerResult } from "@/lib/types"
+import type { OptimizerDealSummary, OptimizerResult, OptimizerStore } from "@/lib/types"
 import { StackSteps } from "./StackSteps"
 
 interface RankedOptionsProps {
   results: OptimizerResult[]
   deals: Record<string, OptimizerDealSummary>
+  store?: OptimizerStore | null
 }
 
 /** The runner-up stacks — expand one to see the same step breakdown as the winner. */
-export function RankedOptions({ results, deals }: RankedOptionsProps) {
+export function RankedOptions({ results, deals, store }: RankedOptionsProps) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState<number | null>(null)
 
@@ -61,7 +62,7 @@ export function RankedOptions({ results, deals }: RankedOptionsProps) {
 
             {isOpen ? (
               <div className="border-t border-border px-3 py-3">
-                <StackSteps steps={result.per_step} deals={deals} />
+                <StackSteps steps={result.per_step} deals={deals} store={store} />
               </div>
             ) : null}
           </div>
