@@ -1,8 +1,7 @@
 import { ArrowRight, Landmark } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
-import { fintech } from "@/lib/fintech-styles"
 
 interface ConnectBankCardProps {
   onConnect: () => void
@@ -11,29 +10,22 @@ interface ConnectBankCardProps {
 }
 
 export function ConnectBankCard({ onConnect, isPending, error }: ConnectBankCardProps) {
+  const { t } = useTranslation()
   return (
-    <Card className="fintech-card overflow-hidden border-0">
-      <div className={fintech.gradientBanner}>
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-white/20">
-          <Landmark className="size-5" />
-        </div>
-        <CardTitle className="mt-4 text-lg font-semibold text-white">Connect your bank</CardTitle>
-        <p className="mt-2 text-sm leading-relaxed text-blue-100">
-          Link Open Banking to sync transactions and unlock personalized insights.
-        </p>
+    <div className="surface-navy space-y-4 rounded-3xl p-6 shadow-[var(--shadow-card)]">
+      <div className="flex size-10 items-center justify-center rounded-2xl bg-card/15">
+        <Landmark className="size-5" aria-hidden />
       </div>
-      <CardContent className="space-y-3 px-5 pb-5 pt-4">
-        {error ? (
-          <p className="text-xs text-amber-700">Unable to start bank connection. Please try again.</p>
-        ) : null}
-        <Button className="min-h-12 w-full gap-2" onClick={onConnect} disabled={isPending}>
-          Connect Open Banking
-          <ArrowRight className="size-4" />
-        </Button>
-        <p className="text-center text-[11px] text-slate-400">
-          Regulated Open Banking · Read-only access · You stay in control
-        </p>
-      </CardContent>
-    </Card>
+      <div>
+        <p className="text-lg font-bold">{t("insights.connectBank.title")}</p>
+        <p className="mt-1 text-sm text-navy-muted">{t("insights.connectBank.subtitle")}</p>
+      </div>
+      {error ? <p className="text-xs text-warning">{t("insights.connectBank.error")}</p> : null}
+      <Button variant="hero" size="xl" onClick={onConnect} disabled={isPending}>
+        {t("insights.connectBank.cta")}
+        <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />
+      </Button>
+      <p className="text-center text-[11px] text-navy-muted">{t("insights.connectBank.footer")}</p>
+    </div>
   )
 }

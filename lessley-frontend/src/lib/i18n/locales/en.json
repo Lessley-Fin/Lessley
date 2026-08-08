@@ -1,0 +1,557 @@
+{
+  "common": {
+    "appName": "Lessley",
+    "tagline": "Financial autopilot",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "delete": "Delete",
+    "remove": "Remove",
+    "add": "Add",
+    "search": "Search",
+    "seeAll": "See all",
+    "viewAll": "View all",
+    "done": "Done",
+    "yes": "Yes",
+    "no": "No",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "nav": {
+    "insights": "Insights",
+    "hot": "Hot",
+    "optimizer": "Optimizer",
+    "recommend": "Recommend",
+    "notifications": "Notifications",
+    "profileAndSettings": "Profile and settings"
+  },
+  "auth": {
+    "login": {
+      "welcomeBack": "Welcome back",
+      "tagline": "Financial autopilot for every purchase",
+      "username": "Username",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "signingIn": "Signing in...",
+      "signIn": "Sign in",
+      "createAccount": "Create account",
+      "signInFailed": "Sign-in failed. Please try again."
+    },
+    "forgotPassword": {
+      "backToSignIn": "Back to sign in",
+      "resetPassword": "Reset password",
+      "subtitleSendCode": "We'll email you a verification code.",
+      "subtitleEnterCode": "Enter the 6-digit code sent to your email.",
+      "subtitleChoosePassword": "Choose a new password.",
+      "enterCodeSentTo": "Enter the {{length}}-digit code sent to {{email}}.",
+      "yourEmail": "your email",
+      "email": "Email",
+      "sendCode": "Send code",
+      "verificationCode": "Verification code",
+      "verify": "Verify",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password",
+      "passwordsMismatch": "Passwords don't match.",
+      "savePassword": "Save password",
+      "passwordUpdated": "Password updated"
+    },
+    "register": {
+      "back": "Back",
+      "stepAccount": "Account",
+      "stepClubs": "Clubs",
+      "stepBanking": "Banking",
+      "registrationFailed": "Registration failed. Please try again.",
+      "account": {
+        "title": "Create account",
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "verifyPassword": "Verify password",
+        "alreadyHaveAccount": "Already have an account?",
+        "signIn": "Sign in"
+      },
+      "clubs": {
+        "title": "Which clubs do you own? 🎟️",
+        "subtitle": "Optional — pick what you already have and we'll start matching deals right away.",
+        "selected": "Selected",
+        "creatingAccount": "Creating account..."
+      },
+      "banking": {
+        "title": "Connect open banking to unlock the real savings",
+        "subtitle": "Lessley reads your past transactions — read-only — to see where you actually shop.",
+        "valueProp1": "Find the clubs and cards that fit your real spending",
+        "valueProp2": "Catch savings you missed on purchases you already made",
+        "valueProp3": "Stack coupons with card perks automatically",
+        "connecting": "Connecting...",
+        "connectMyBank": "Connect my bank",
+        "skipForNow": "Skip for now",
+        "skipNotice": "You can skip this — but insights and recommendations stay limited until a bank or card is connected. You can connect later from Settings.",
+        "dataUsageNotice": "Your data is used for internal processing in an anonymous way — powering insights, ads and marketing. It is never leaked or sold to any third party."
+      }
+    },
+    "shell": {
+      "tagline": "Personal finance, optimized for you",
+      "bankGradeSecurity": "Bank-grade security",
+      "encryptionNotice": "Your credentials are encrypted in transit. We never store your banking passwords."
+    }
+  },
+  "matchLevels": {
+    "Low": "Broad (top 75%)",
+    "Medium": "Medium (top 50%)",
+    "High": "Strict (top 25%)"
+  },
+  "timeRanges": {
+    "7": "7 days",
+    "30": "30 days",
+    "90": "90 days",
+    "365": "1 year"
+  },
+  "categories": {
+    "ALCOHOL_&_TOBACCO": "Alcohol & tobacco",
+    "BARS": "Bars",
+    "BEAUTY": "Beauty",
+    "BOOKS_&_GAMES": "Books & games",
+    "BUSINESS_EXPENSES": "Business expenses",
+    "CAPITAL_MARKET": "Capital market",
+    "CAR_&_FUEL": "Car & fuel",
+    "CHARITY": "Charity",
+    "CLOTHES_&_ACCESSORIES": "Clothes & accessories",
+    "COFFEE_&_SNACKS": "Coffee & snacks",
+    "COMMUNICATIONS": "Communications",
+    "CULTURE_&_EVENTS": "Culture & events",
+    "EDUCATION": "Education",
+    "ELECTRONICS": "Electronics",
+    "FEES": "Fees",
+    "FINANCE_OTHER": "Finance other",
+    "FLIGHTS": "Flights",
+    "FOOD_&_DRINKS_OTHER": "Food & drinks other",
+    "FURNITURE_&_INTERIOR": "Furniture & interior",
+    "GARDEN": "Garden",
+    "GIFTS": "Gifts",
+    "GROCERIES": "Groceries",
+    "HEALTHCARE": "Healthcare",
+    "HEALTH_&_BEAUTY_OTHER": "Health & beauty other",
+    "HOBBIES": "Hobbies",
+    "HOBBY_&_SPORTS_EQUIPMENT": "Hobby & sports equipment",
+    "HOME": "Home",
+    "HOME_IMPROVEMENTS_OTHER": "Home improvements other",
+    "HOUSEHOLD_&_SERVICES_-_OTHER": "Household & services other",
+    "INSURANCE_&_FEES": "Insurance & fees",
+    "KIDS": "Kids",
+    "LEISURE_OTHER": "Leisure other",
+    "LOANS": "Loans",
+    "OTHER": "Other",
+    "PETS": "Pets",
+    "PHARMACY": "Pharmacy",
+    "PUBLIC_TRANSPORT": "Public transport",
+    "RENOVATION_&_REPAIRS": "Renovation & repairs",
+    "RESTAURANT": "Restaurant",
+    "SAVINGS": "Savings",
+    "SERVICES": "Services",
+    "SHOPPING_OTHER": "Shopping other",
+    "SPORTS_&_FITNESS": "Sports & fitness",
+    "TRANSPORT_OTHER": "Transport other",
+    "UTILITIES": "Utilities",
+    "VACATION": "Vacation"
+  },
+  "insights": {
+    "page": {
+      "title": "Your money, decoded",
+      "loadingInsights": "Loading insights...",
+      "linkedAccounts": "{{count}} linked accounts",
+      "deepDiveTitle": "Deep dive",
+      "deepDiveSubtitle": "Swipe through the details for the {{period}}."
+    },
+    "period": {
+      "lastYear": "last year",
+      "lastDays": "last {{count}} days"
+    },
+    "carousel": {
+      "overview": "Overview",
+      "categories": "Categories",
+      "topStores": "Top stores",
+      "transactions": "Transactions",
+      "accounts": "Accounts"
+    },
+    "accountsSlide": {
+      "title": "Spending by accounts",
+      "subtitle": "Open Banking connected",
+      "empty": "No linked accounts with activity yet."
+    },
+    "connectBank": {
+      "title": "Connect your bank",
+      "subtitle": "Link Open Banking to sync transactions and unlock personalized insights.",
+      "error": "Unable to start bank connection. Please try again.",
+      "cta": "Connect Open Banking",
+      "footer": "Regulated Open Banking · Read-only access · You stay in control"
+    },
+    "connectionCheck": "Verifying bank connection...",
+    "savingsHero": {
+      "label": "Saved with Lessley",
+      "club": "club",
+      "clubs": "clubs"
+    },
+    "spendingOverviewSlide": {
+      "title": "Spending overview",
+      "subtitle": "This period vs previous",
+      "empty": "Not enough history yet to compare periods.",
+      "thisPeriod": "This period",
+      "current": "Current",
+      "previous": "Previous",
+      "currentDays": "Last {{count}} days",
+      "previousDays": "{{count}} days before that",
+      "currentYear": "Last year",
+      "previousYear": "The year before that"
+    },
+    "statsGrid": {
+      "transactions": "Transactions",
+      "totalAmount": "Total amount",
+      "allLinkedCards": "All linked cards"
+    },
+    "topCategorySlide": {
+      "title": "Top category",
+      "subtitle": "Where the money goes",
+      "empty": "No category data yet for this period."
+    },
+    "topStoresSlide": {
+      "title": "Top stores",
+      "subtitle": "Scroll for the full ten",
+      "empty": "No store patterns yet for this period."
+    },
+    "recentTransactionsSlide": {
+      "title": "Recent transactions",
+      "subtitle": "Last movements",
+      "empty": "No transactions found for this period.",
+      "transaction": "Transaction"
+    },
+    "common": {
+      "transactionsCount": "{{count}} transactions"
+    }
+  },
+  "recommendations": {
+    "page": {
+      "title": "Recommendations",
+      "subtitle": "Club fit calculated from your last 90 days",
+      "notConnectedTitle": "Connect to get recommendations",
+      "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
+      "tabTopMatches": "Top matches",
+      "tabMissedSavings": "Missed savings"
+    },
+    "missedSavingsSlide": {
+      "title": "Missed savings",
+      "subtitle": "Purchases that had a better home",
+      "recalculateAria": "Recalculate missed savings",
+      "empty": "No missed savings found yet. Once your spending is analyzed, we'll show you where you could have saved.",
+      "storesCount": "{{count}} stores"
+    },
+    "topClubMatchesSlide": {
+      "title": "Top club matches",
+      "subtitle": "Ranked by store overlap with your spend",
+      "recalculateAria": "Recalculate matches",
+      "empty": "We need more transaction history to analyze club fit. Try recalculating or connect more accounts.",
+      "storesMatch": "{{hit}}/{{total}} stores match"
+    }
+  },
+  "dealFinder": {
+    "hotDeals": {
+      "title": "Featured deals",
+      "subtitle": "Real deals across your loyalty clubs, refreshed regularly",
+      "loading": "Loading deals…",
+      "loadFailed": "Failed to load deals.",
+      "empty": "No featured deals right now — check back soon."
+    },
+    "tab": {
+      "storePlaceholder": "Store (optional)",
+      "dealPlaceholder": "Find a deal (optional)",
+      "categoriesLabel": "Categories",
+      "filterCategoriesPlaceholder": "Filter {{count}} categories",
+      "searchDeals": "Search deals",
+      "promptSearch": "Use the filters above to search deals across your loyalty clubs.",
+      "searching": "Searching deals…",
+      "noMatches": "No deals match those filters yet 🔍",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "card": {
+      "collapseDeal": "Collapse deal",
+      "expandDeal": "Expand deal",
+      "getDeal": "Get Deal",
+      "copy": "Copy",
+      "visitStore": "Visit store",
+      "scraped": "Scraped: {{date}}",
+      "resolved": "Resolved: {{date}}",
+      "deal": "Deal"
+    },
+    "detailDialog": {
+      "scraped": "Scraped {{date}}",
+      "copyCouponAria": "Copy coupon code",
+      "getThisDeal": "Get this deal",
+      "visitStore": "Visit store",
+      "deal": "Deal"
+    }
+  },
+  "optimizer": {
+    "page": {
+      "tabOptimize": "Optimize",
+      "tabDealFinder": "Deal Finder",
+      "priceOptimizerTitle": "Price optimizer",
+      "dealFinderTitle": "Deal finder",
+      "priceOptimizerSubtitle": "AI-powered deal discovery ✨",
+      "dealFinderSubtitle": "Search live deals across your loyalty clubs"
+    },
+    "optimizeTab": {
+      "searchWholeMarket": "Search the whole market",
+      "storeNamePlaceholder": "Store name",
+      "pricingAgainst": "Pricing against {{store}}",
+      "changeStore": "change",
+      "noStoreMatches": "No stores matched “{{query}}”.",
+      "totalPricePlaceholder": "Total price ₪",
+      "itemsLabel": "Items",
+      "findBestPrices": "Find best prices",
+      "optimizing": "Stacking deals…",
+      "requiredNotice": "Pick a store and enter a cart total.",
+      "prompt": "Pick a store and enter your cart total — we'll find the cheapest legal combination of deals you can stack.",
+      "optimizeFailed": "Failed to optimize this cart.",
+      "noDealsAtStore": "We have no deals on file for {{store}} yet.",
+      "noStackApplies_one": "The single deal at {{store}} doesn't apply to this cart.",
+      "noStackApplies_other": "None of the {{count}} deals at {{store}} apply to this cart.",
+      "rankedFrom_one": "Ranked from 1 deal at {{store}}",
+      "rankedFrom_other": "Ranked from {{count}} deals at {{store}}"
+    },
+    "engineInfoDialog": {
+      "ariaLabel": "How the engine works",
+      "title": "What you'll get",
+      "subtitle": "How the engine works",
+      "highlight1Title": "Stacked savings",
+      "highlight1Desc": "Combine a store coupon with the right card benefit in one step.",
+      "highlight2Title": "Exact product match",
+      "highlight2Desc": "We price the item you actually want, not a lookalike.",
+      "highlight3Title": "Ephemeral coupons",
+      "highlight3Desc": "Scraped from retailers and forums minutes after they appear."
+    },
+    "winningStack": {
+      "title": "Best stack",
+      "subtitle_one": "{{store}} · 1 deal applied",
+      "subtitle_other": "{{store}} · {{count}} deals applied",
+      "cartTotal": "Cart total",
+      "youPay": "You pay",
+      "saved": "Saved ({{percent}}%)",
+      "howItStacks": "How it stacks"
+    },
+    "rankedOptions": {
+      "title": "Other options",
+      "subtitle_one": "1 more ranked combination",
+      "subtitle_other": "{{count}} more ranked combinations",
+      "saves_one": "saves {{amount}} · 1 deal",
+      "saves_other": "saves {{amount}} · {{count}} deals"
+    },
+    "stackSteps": {
+      "percentOff": "{{percent}} off",
+      "coversOfBill": "covers {{amount}} of the bill",
+      "atRate": "at {{rate}}"
+    }
+  },
+  "admin": {
+    "page": {
+      "title": "Admin console",
+      "subtitle": "Swipe between admin actions",
+      "tabRole": "Role",
+      "tabTags": "Tags",
+      "tabNotifyUser": "Notify user",
+      "tabBroadcast": "Broadcast"
+    },
+    "common": {
+      "userEmail": "User email",
+      "message": "Message",
+      "messagePlaceholder": "Notification message...",
+      "dealId": "Deal ID",
+      "optional": "optional",
+      "dealIdPlaceholder": "deal-abc-123"
+    },
+    "changeRole": {
+      "heading": "Change user role",
+      "role": "Role",
+      "failed": "Failed to change role.",
+      "success": "Role updated",
+      "updating": "Updating...",
+      "updateRole": "Update role"
+    },
+    "notifyGroup": {
+      "heading": "Broadcast notification to group",
+      "groupCategory": "Group category",
+      "loadCategoriesFailed": "Failed to load categories.",
+      "loading": "Loading...",
+      "selectCategory": "Select a category",
+      "failed": "Failed to broadcast notification.",
+      "success": "Notification broadcast",
+      "broadcasting": "Broadcasting...",
+      "broadcastToGroup": "Broadcast to group"
+    },
+    "notifyUser": {
+      "heading": "Send notification to user",
+      "recipientEmail": "Recipient email",
+      "failed": "Failed to send notification.",
+      "success": "Notification sent",
+      "sending": "Sending...",
+      "sendNotification": "Send notification"
+    },
+    "tagChipInput": {
+      "placeholder": "Add a tag and press Enter"
+    },
+    "updateTags": {
+      "heading": "Assign user tags",
+      "tags": "Tags",
+      "tagsPlaceholder": "e.g. high-spender",
+      "failed": "Failed to update tags.",
+      "success": "Tags updated",
+      "saving": "Saving...",
+      "saveTags": "Save tags"
+    }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "genericMessage": "An unexpected error occurred. Please try again.",
+    "featureMessage": "An unexpected error occurred.",
+    "featureSectionMessage": "The {{featureName}} section encountered an error.",
+    "tryAgain": "Try again"
+  },
+  "shared": {
+    "matchingClubs": {
+      "noneCompact": "No club matches found.",
+      "noneFull": "We need more transaction history to analyze club fit.",
+      "storesMatch": "{{hit}}/{{total}} stores match",
+      "fit": "{{percent}} fit"
+    },
+    "missedSavings": {
+      "noneCompact": "No missed savings found in this analysis.",
+      "noneFull": "No missed savings data yet. Once your spending is analyzed, we'll show you where you could have saved.",
+      "unknownStore": "Unknown",
+      "spentAt": "{{amount}} at {{store}}",
+      "spentAtFull": "You spent {{amount}} at {{store}}",
+      "savingsAvailableIn": "Savings available in {{category}}",
+      "savingsAvailableInFull": "Savings were available in",
+      "thisCategory": "this category",
+      "hadDeals": "had deals",
+      "hadDealsAt": "had deals at {{stores}}",
+      "moreClubsWithDeals_one": "+{{count}} more club with deals",
+      "moreClubsWithDeals_other": "+{{count}} more clubs with deals"
+    }
+  },
+  "notifications": {
+    "page": {
+      "title": "Notifications",
+      "loading": "Loading...",
+      "unreadCount": "{{count}} unread",
+      "allCaughtUp": "You're all caught up",
+      "empty": "No notifications yet."
+    },
+    "badge": {
+      "Analysis": "Analysis",
+      "Clubs": "Clubs",
+      "Deal": "Deal",
+      "System": "System"
+    },
+    "title": {
+      "dealMatch": "New deal match",
+      "clubMatch": "New club match",
+      "analysisReady": "Analysis ready",
+      "systemUpdate": "System update"
+    },
+    "detail": {
+      "missedSavingsAnalysis": "Missed savings analysis",
+      "clubRecommendations": "Club recommendations",
+      "deal": "Deal",
+      "categories": "Categories",
+      "noAdditionalDetails": "No additional details."
+    },
+    "toast": {
+      "newNotification": "New notification",
+      "dismiss": "Dismiss",
+      "group": "Group",
+      "direct": "Direct",
+      "justNow": "Just now",
+      "deal": "Deal"
+    }
+  },
+  "settings": {
+    "page": {
+      "title": "Settings",
+      "loading": "Loading your settings...",
+      "loadError": "Failed to load your profile. Please try again."
+    },
+    "menu": {
+      "profileTitle": "View your profile",
+      "profileDesc": "Username and email",
+      "preferencesTitle": "Preferences",
+      "preferencesDesc": "Clubs, match level and muted noise",
+      "bankingTitle": "Open banking",
+      "bankingDesc": "Connected cards",
+      "languageTitle": "Language",
+      "logoutTitle": "Log out",
+      "logoutDesc": "End this session",
+      "adminConsoleTitle": "Admin console",
+      "adminConsoleDesc": "Roles, tags and notifications"
+    },
+    "banking": {
+      "title": "Connect more cards for sharper insights",
+      "subtitle": "Each linked card widens the picture of your spending, so club matches and missed-savings alerts get more accurate.",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "connectError": "Unable to start bank connection. Please try again.",
+      "connecting": "Connecting...",
+      "connectAnotherCard": "Connect another card",
+      "connectACard": "Connect a card",
+      "readOnlyNotice": "Read-only access, revocable anytime."
+    },
+    "logout": {
+      "signedInAs": "Signed in as {{username}}",
+      "notice": "Signing out keeps your data safe on this device — your clubs, preferences and connected cards stay exactly as they are.",
+      "signOut": "Sign out"
+    },
+    "preferences": {
+      "loyaltyClubs": "Loyalty clubs",
+      "matchLevel": "Match level",
+      "mutedCategories": "Muted categories",
+      "noTagsYet": "No tags yet — connect your bank to see available tags.",
+      "saveFailed": "Failed to save settings.",
+      "saved": "Settings saved",
+      "saving": "Saving...",
+      "saveSettings": "Save settings"
+    },
+    "profile": {
+      "account": "Account",
+      "username": "Username",
+      "email": "Email",
+      "role": "Role",
+      "defaultRole": "User"
+    },
+    "language": {
+      "title": "Change language"
+    }
+  },
+  "menu": {
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "openMenuWithUnread": "Open menu, {{count}} unread notifications",
+    "navigationMenu": "Navigation menu",
+    "mainMenu": "Main menu",
+    "securedAccount": "Secured account",
+    "guest": "Guest",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "admin": "Admin",
+    "signOut": "Sign out"
+  }
+}

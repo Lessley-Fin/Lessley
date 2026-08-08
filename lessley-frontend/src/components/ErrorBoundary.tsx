@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import i18n from "@/lib/i18n/config"
 
 interface Props {
   children: ReactNode
@@ -60,14 +61,14 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <div>
               <p className="font-semibold text-slate-800">
-                Something went wrong
+                {i18n.t("errorBoundary.title")}
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                An unexpected error occurred. Please try again.
+                {i18n.t("errorBoundary.genericMessage")}
               </p>
             </div>
             <Button onClick={this.handleReset} className="min-h-10">
-              Try again
+              {i18n.t("errorBoundary.tryAgain")}
             </Button>
           </CardContent>
         </Card>

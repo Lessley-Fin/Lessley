@@ -1,8 +1,9 @@
 import { Lightbulb, Store, TrendingDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-import { CLUBS } from "@/lib/constants"
 import { fintech } from "@/lib/fintech-styles"
 import { formatAmount } from "@/lib/formatters"
+import type { ClubDto } from "@/lib/types"
 
 export interface MissedSavingsEntry {
   transaction_id?: string
@@ -17,23 +18,23 @@ export interface MissedSavingsEntry {
 
 interface MissedSavingsListProps {
   items: MissedSavingsEntry[]
+  clubs?: ClubDto[]
   compact?: boolean
   limit?: number
 }
 
-function resolveClubName(clubId: string): string {
-  return CLUBS.find((c) => c.id === clubId)?.name ?? clubId
+function resolveClubName(clubs: ClubDto[], clubId: string): string {
+  return clubs.find((c) => c.id === clubId)?.name ?? clubId
 }
 
-export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedSavingsListProps) {
+export function MissedSavingsList({ items, clubs = [], compact = false, limit = 5 }: MissedSavingsListProps) {
+  const { t } = useTranslation()
   const relevant = items.filter((i) => (i.missed_store_discont?.length ?? 0) > 0).slice(0, limit)
 
   if (relevant.length === 0) {
     return (
       <p className={compact ? "text-xs text-slate-500" : "fintech-card-inset text-sm text-slate-600"}>
-        {compact
-          ? "No missed savings found in this analysis."
-          : "No missed savings data yet. Once your spending is analyzed, we'll show you where you could have saved."}
+        {compact ? t("shared.missedSavings.noneCompact") : t("shared.missedSavings.noneFull")}
       </p>
     )
   }
@@ -43,7 +44,7 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
       <div className="space-y-2">
         {relevant.map((item, idx) => {
           const topDiscount = item.missed_store_discont?.[0]
-          const clubName = topDiscount?.club_id ? resolveClubName(topDiscount.club_id) : null
+          const clubName = topDiscount?.club_id ? resolveClubName(clubs, topDiscount.club_id) : null
           const altStores = topDiscount?.missed_store?.slice(0, 3).map((s) => s.store_name).join(", ")
 
           return (
@@ -51,21 +52,26 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
               <div className="flex items-center gap-2">
                 <Store className="size-3.5 shrink-0 text-blue-500" />
                 <p className="text-xs font-medium text-slate-700">
-                  {formatAmount(item.amount)} at {item.store_name ?? "Unknown"}
+                  {t("shared.missedSavings.spentAt", {
+                    amount: formatAmount(item.amount),
+                    store: item.store_name ?? t("shared.missedSavings.unknownStore"),
+                  })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingDown className="size-3.5 shrink-0 text-red-400" />
                 <p className="text-xs text-slate-500">
-                  Savings available in {item.mcc_description ?? "this category"}
+                  {t("shared.missedSavings.savingsAvailableIn", {
+                    category: item.mcc_description ?? t("shared.missedSavings.thisCategory"),
+                  })}
                 </p>
               </div>
               {clubName ? (
                 <div className="flex items-center gap-2">
                   <Lightbulb className="size-3.5 shrink-0 text-emerald-500" />
                   <p className="text-xs text-slate-500">
-                    <span className="font-medium text-slate-600">{clubName}</span> had deals
-                    {altStores ? ` at ${altStores}` : ""}
+                    <span className="font-medium text-slate-600">{clubName}</span>{" "}
+                    {altStores ? t("shared.missedSavings.hadDealsAt", { stores: altStores }) : t("shared.missedSavings.hadDeals")}
                   </p>
                 </div>
               ) : null}
@@ -80,7 +86,7 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
     <>
       {relevant.map((item, idx) => {
         const topDiscount = item.missed_store_discont?.[0]
-        const clubName = topDiscount?.club_id ? resolveClubName(topDiscount.club_id) : null
+        const clubName = topDiscount?.club_id ? resolveClubName(clubs, topDiscount.club_id) : null
         const altStoreNames = topDiscount?.missed_store?.slice(0, 3).map((s) => s.store_name).join(", ")
         const extraClubs = (item.missed_store_discont?.length ?? 0) - 1
 
@@ -94,7 +100,10 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
                 <Store className="size-3.5" />
               </div>
               <p className="text-sm font-medium text-slate-800">
-                You spent {formatAmount(item.amount)} at {item.store_name ?? "Unknown"}
+                {t("shared.missedSavings.spentAtFull", {
+                  amount: formatAmount(item.amount),
+                  store: item.store_name ?? t("shared.missedSavings.unknownStore"),
+                })}
               </p>
             </div>
 
@@ -103,8 +112,8 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
                 <TrendingDown className="size-3.5" />
               </div>
               <p className="text-sm text-slate-600">
-                Savings were available in{" "}
-                <span className="font-medium text-slate-700">{item.mcc_description ?? "this category"}</span>
+                {t("shared.missedSavings.savingsAvailableInFull")}{" "}
+                <span className="font-medium text-slate-700">{item.mcc_description ?? t("shared.missedSavings.thisCategory")}</span>
               </p>
             </div>
 
@@ -114,11 +123,12 @@ export function MissedSavingsList({ items, compact = false, limit = 5 }: MissedS
               </div>
               <div className="min-w-0 text-sm text-slate-600">
                 <p>
-                  <span className="font-medium text-slate-700">{clubName}</span> had deals at {altStoreNames}
+                  <span className="font-medium text-slate-700">{clubName}</span>{" "}
+                  {t("shared.missedSavings.hadDealsAt", { stores: altStoreNames })}
                 </p>
                 {extraClubs > 0 ? (
                   <p className={`${fintech.sectionEyebrow} mt-0.5`}>
-                    +{extraClubs} more club{extraClubs !== 1 ? "s" : ""} with deals
+                    {t("shared.missedSavings.moreClubsWithDeals", { count: extraClubs })}
                   </p>
                 ) : null}
               </div>

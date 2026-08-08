@@ -21,7 +21,6 @@ from routers import open_finance_controller
 from routers import mcc_controller
 from routers import insights_controller
 from routers import recommendation_controller
-from routers import club_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 from middleware.edge_auth_middleware import EdgeAuthMiddleware, dev_bypass_active
@@ -100,11 +99,13 @@ async def _handle_gateway_command(routing_key: str, data: dict) -> None:
     club_id = data.get("ClubId") or data.get("clubId") or data.get("club_id")
 
     if routing_key == "Gateway.calculate_missed_savings":
+        time_filter = data.get("TimeFilter", True)
+        days = data.get("Days") or 7
         service = DIContainer.get_insights_service()
         await service.calculate_missed_savings_async(
             user_id,
-            time_filter=True,
-            days=90,
+            time_filter=time_filter,
+            days=days,
             use_mock=False,
         )
     elif routing_key == "Gateway.calculate_matching_clubs":
@@ -176,7 +177,7 @@ async def lifespan(app: FastAPI):
     # Startup: Connect to MongoDB and load static data
     await init_db()
     await DIContainer.get_mcc_service().initialize()
-    await DIContainer.get_recommendation_core_service().initialize()
+    await DIContainer.get_reference_data_repository().load_async()
 
     publisher_service = DIContainer.get_publisher_service()
     await publisher_service.initialize()
@@ -368,4 +369,3 @@ app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
 app.include_router(recommendation_controller.router)
-app.include_router(club_controller.router)

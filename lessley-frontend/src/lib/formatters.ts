@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n/config"
+
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "ILS",
@@ -27,16 +29,17 @@ export function formatRelativeTime(isoDate: string) {
     const diffMs = now.getTime() - date.getTime()
     const diffMin = Math.floor(diffMs / 60_000)
 
-    if (diffMin < 1) return "Just now"
-    if (diffMin < 60) return `${diffMin}m ago`
+    if (diffMin < 1) return i18n.t("common.justNow")
+    if (diffMin < 60) return i18n.t("common.minutesAgo", { count: diffMin })
 
     const diffHours = Math.floor(diffMin / 60)
-    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffHours < 24) return i18n.t("common.hoursAgo", { count: diffHours })
 
     const diffDays = Math.floor(diffHours / 24)
-    if (diffDays < 7) return `${diffDays}d ago`
+    if (diffDays < 7) return i18n.t("common.daysAgo", { count: diffDays })
 
-    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" })
+    const locale = i18n.language === "he" ? "he-IL" : "en-GB"
+    return date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "2-digit" })
   } catch {
     return isoDate
   }
@@ -44,4 +47,10 @@ export function formatRelativeTime(isoDate: string) {
 
 export function formatFitPercent(fitScore: number) {
   return `${Math.round(fitScore * 100)}%`
+}
+
+export function maskAccountNumber(value: string) {
+  const digits = value.replace(/\s+/g, "")
+  if (digits.length <= 8) return `•••• ${digits.slice(-4)}`
+  return `${digits.slice(0, 6)}...${digits.slice(-4)}`
 }

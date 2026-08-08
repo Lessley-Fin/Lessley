@@ -22,17 +22,6 @@ class BasicResponse(BaseModel, Generic[T]):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
-class MccCountSchema(BaseModel):
-    mcc: str
-    store_count: int
-
-
-class ClubMccDistributionResponseSchema(BaseModel):
-    club_id: str
-    club_name: str
-    categories: list[MccCountSchema]
-
-
 class ClubRecommendationSchema(BaseModel):
     """Schema for a single club recommendation based on spending analysis."""
 

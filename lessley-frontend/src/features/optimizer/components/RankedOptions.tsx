@@ -1,10 +1,8 @@
 import { useState } from "react"
-import { ChevronDown, Layers } from "lucide-react"
+import { ChevronDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-import { CardHeaderWithIcon } from "@/components/shared/CardHeaderWithIcon"
-import { Card, CardContent } from "@/components/ui/card"
 import { formatAmount } from "@/lib/formatters"
-import { fintech } from "@/lib/fintech-styles"
 import { cn } from "@/lib/utils"
 import type { OptimizerDealSummary, OptimizerResult } from "@/lib/types"
 import { StackSteps } from "./StackSteps"
@@ -16,55 +14,59 @@ interface RankedOptionsProps {
 
 /** The runner-up stacks — expand one to see the same step breakdown as the winner. */
 export function RankedOptions({ results, deals }: RankedOptionsProps) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState<number | null>(null)
 
   if (results.length === 0) return null
 
   return (
-    <Card className="fintech-card border-0">
-      <CardHeaderWithIcon
-        icon={Layers}
-        iconColor="violet"
-        title="Other options"
-        subtitle={`${results.length} more ranked combination${results.length !== 1 ? "s" : ""}`}
-      />
-      <CardContent className="space-y-2 px-5 pb-5 pt-2">
-        {results.map((result) => {
-          const isOpen = expanded === result.rank
+    <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          {t("optimizer.rankedOptions.title")}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {t("optimizer.rankedOptions.subtitle", { count: results.length })}
+        </p>
+      </div>
 
-          return (
-            <div key={result.rank} className="rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setExpanded(isOpen ? null : result.rank)}
-                aria-expanded={isOpen}
-                className="flex w-full items-center gap-3 px-3 py-3 text-left"
-              >
-                <span className={fintech.rankBadge}>#{result.rank}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-slate-800">
-                    {formatAmount(result.final_price)}
-                  </span>
-                  <span className="block text-xs text-slate-500">
-                    saves {formatAmount(result.total_savings)} · {result.per_step.length} deal
-                    {result.per_step.length !== 1 ? "s" : ""}
-                  </span>
+      {results.map((result) => {
+        const isOpen = expanded === result.rank
+
+        return (
+          <div key={result.rank} className="rounded-2xl border border-border">
+            <button
+              type="button"
+              onClick={() => setExpanded(isOpen ? null : result.rank)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center gap-3 px-3 py-3 text-start"
+            >
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold">
+                {result.rank}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{formatAmount(result.final_price)}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {t("optimizer.rankedOptions.saves", {
+                    amount: formatAmount(result.total_savings),
+                    count: result.per_step.length,
+                  })}
                 </span>
-                <ChevronDown
-                  className={cn("size-4 shrink-0 text-slate-400 transition-transform", isOpen && "rotate-180")}
-                  aria-hidden
-                />
-              </button>
+              </span>
+              <ChevronDown
+                className={cn("size-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")}
+                aria-hidden
+              />
+            </button>
 
-              {isOpen ? (
-                <div className="border-t border-slate-100 px-3 py-3">
-                  <StackSteps steps={result.per_step} deals={deals} />
-                </div>
-              ) : null}
-            </div>
-          )
-        })}
-      </CardContent>
-    </Card>
+            {isOpen ? (
+              <div className="border-t border-border px-3 py-3">
+                <StackSteps steps={result.per_step} deals={deals} />
+              </div>
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
   )
 }

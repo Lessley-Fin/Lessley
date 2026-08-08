@@ -22,10 +22,10 @@ public class PersonalizationService : IPersonalizationService
         _logger = logger;
     }
 
-    public async Task TriggerCalculateMissedSavingsAsync(string userId, CancellationToken ct = default)
+    public async Task TriggerCalculateMissedSavingsAsync(string userId, bool timeFilter = true, int days = 7, CancellationToken ct = default)
     {
         _logger.LogInformation("Publishing CalculateMissedSavingsCommand for {UserId}", userId);
-        await _bus.Publish(new CalculateMissedSavingsCommand(userId), ct);
+        await _bus.Publish(new CalculateMissedSavingsCommand(userId, timeFilter, days), ct);
     }
 
     public async Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default)

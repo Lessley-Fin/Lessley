@@ -1,68 +1,57 @@
-import { useState } from "react"
-import { PackageSearch, Sparkles } from "lucide-react"
+import { useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
-import { EmptyState } from "@/components/shared/EmptyState"
-import { ErrorAlert } from "@/components/shared/ErrorAlert"
-import { LoadingCard } from "@/components/shared/LoadingCard"
-import { fintech } from "@/lib/fintech-styles"
-import { OptimizerForm, type OptimizerFormValues } from "./components/OptimizerForm"
-import { RankedOptions } from "./components/RankedOptions"
-import { WinningStack } from "./components/WinningStack"
-import { useOptimizeCart } from "./hooks"
-import type { OptimizeParams } from "./api"
+import { cn } from "@/lib/utils"
+import { DealFinderTab } from "./components/DealFinderTab"
+import { EngineInfoDialog } from "./components/EngineInfoDialog"
+import { OptimizeTab } from "./components/OptimizeTab"
+
+type Tab = "optimize" | "deal-finder"
 
 export function OptimizerPage() {
-  const [submitted, setSubmitted] = useState<{ params: OptimizeParams; storeName: string } | null>(null)
+  const { t } = useTranslation()
+  const TABS: { id: Tab; label: string }[] = [
+    { id: "optimize", label: t("optimizer.page.tabOptimize") },
+    { id: "deal-finder", label: t("optimizer.page.tabDealFinder") },
+  ]
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab: Tab = searchParams.get("tab") === "deal-finder" ? "deal-finder" : "optimize"
 
-  const { data, isLoading, error } = useOptimizeCart(submitted?.params ?? null)
-
-  function handleSubmit(values: OptimizerFormValues) {
-    setSubmitted({
-      params: {
-        storeId: values.store.storeId,
-        cartTotal: values.cartTotal,
-        cartQuantity: values.cartQuantity,
-      },
-      storeName: values.store.name,
-    })
+  function setTab(next: Tab) {
+    setSearchParams({ tab: next })
   }
 
-  const [winner, ...runnersUp] = data?.results ?? []
-
   return (
-    <section className={fintech.page}>
-      <OptimizerForm onSubmit={handleSubmit} isOptimizing={isLoading} />
-
-      {!submitted ? (
-        <EmptyState
-          icon={Sparkles}
-          title="Price a cart"
-          description="Pick a store and enter your cart total — we'll find the cheapest legal combination of deals you can stack."
-        />
-      ) : isLoading ? (
-        <LoadingCard message="Stacking deals…" />
-      ) : error ? (
-        <ErrorAlert message={error instanceof Error ? error.message : "Failed to optimize this cart."} />
-      ) : data && !winner ? (
-        <EmptyState
-          icon={PackageSearch}
-          title="No stack found"
-          description={
-            data.deals_considered === 0
-              ? `We have no deals on file for ${submitted.storeName} yet.`
-              : `None of the ${data.deals_considered} deals at ${submitted.storeName} apply to this cart.`
-          }
-        />
-      ) : data && winner ? (
-        <>
-          <WinningStack result={winner} deals={data.deals} storeName={submitted.storeName} />
-          <RankedOptions results={runnersUp} deals={data.deals} />
-          <p className="text-center text-xs text-slate-400">
-            Ranked from {data.deals_considered} deal{data.deals_considered !== 1 ? "s" : ""} at{" "}
-            {submitted.storeName}
+    <div className="space-y-4 pb-2">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {tab === "optimize" ? t("optimizer.page.priceOptimizerTitle") : t("optimizer.page.dealFinderTitle")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {tab === "optimize" ? t("optimizer.page.priceOptimizerSubtitle") : t("optimizer.page.dealFinderSubtitle")}
           </p>
-        </>
-      ) : null}
-    </section>
+        </div>
+        <EngineInfoDialog />
+      </div>
+
+      <div className="flex gap-1 rounded-full border border-border bg-card p-1">
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            className={cn(
+              "flex-1 rounded-full py-2 text-sm font-semibold transition-colors",
+              tab === id ? "surface-teal shadow-[var(--shadow-card)]" : "text-muted-foreground"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "optimize" ? <OptimizeTab /> : <DealFinderTab />}
+    </div>
   )
 }

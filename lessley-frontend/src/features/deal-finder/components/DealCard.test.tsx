@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
-import type { DealSearchResultItem } from "@/lib/types"
+import type { ClubDto, DealSearchResultItem } from "@/lib/types"
 import { DealCard } from "./DealCard"
+
+const mockClubs: ClubDto[] = [{ id: "club_hot", name: "HOT Israel" }]
 
 const baseItem: DealSearchResultItem = {
   deal: {
@@ -28,24 +30,24 @@ const baseItem: DealSearchResultItem = {
 
 describe("DealCard", () => {
   it("renders store name and deal title", () => {
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     expect(screen.getByText("Test Store")).toBeInTheDocument()
     expect(screen.getByText("20% off everything")).toBeInTheDocument()
   })
 
   it("shows club name for known club id", () => {
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     expect(screen.getByText("HOT Israel")).toBeInTheDocument()
   })
 
   it("falls back to raw club id for unknown clubs", () => {
     const item = { ...baseItem, deal: { ...baseItem.deal, clubId: "club_unknown" } }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     expect(screen.getByText("club_unknown")).toBeInTheDocument()
   })
 
   it("is collapsed by default — description not visible", () => {
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     expect(
       screen.queryByText("Get 20% off on all items this weekend"),
     ).not.toBeInTheDocument()
@@ -53,14 +55,14 @@ describe("DealCard", () => {
 
   it("expands on click revealing description", async () => {
     const user = userEvent.setup()
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     expect(screen.getByText("Get 20% off on all items this weekend")).toBeInTheDocument()
   })
 
   it("shows store URL link when expanded", async () => {
     const user = userEvent.setup()
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     expect(screen.getByRole("link", { name: /visit store/i })).toHaveAttribute(
       "href",
@@ -70,7 +72,7 @@ describe("DealCard", () => {
 
   it("collapses again on second click", async () => {
     const user = userEvent.setup()
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     await user.click(screen.getByRole("button", { name: /collapse deal/i }))
     expect(
@@ -87,7 +89,7 @@ describe("DealCard", () => {
         metadata: { ...baseItem.store.metadata, storeUrl: undefined },
       },
     }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     expect(screen.queryByRole("link", { name: /visit store/i })).not.toBeInTheDocument()
   })
@@ -98,7 +100,7 @@ describe("DealCard", () => {
       ...baseItem,
       deal: { ...baseItem.deal, description: undefined },
     }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     expect(
       screen.queryByText("Get 20% off on all items this weekend"),
@@ -110,14 +112,14 @@ describe("DealCard", () => {
       ...baseItem,
       deal: { ...baseItem.deal, benefitUrl: "https://deal.example.com/buy/123" },
     }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     const link = screen.getByRole("link", { name: /get deal/i })
     expect(link).toHaveAttribute("href", "https://deal.example.com/buy/123")
     expect(link).toHaveAttribute("target", "_blank")
   })
 
   it("does not show Get Deal link when benefitUrl is absent", () => {
-    render(<DealCard item={baseItem} />)
+    render(<DealCard item={baseItem} clubs={mockClubs} />)
     expect(screen.queryByRole("link", { name: /get deal/i })).not.toBeInTheDocument()
   })
 
@@ -127,7 +129,7 @@ describe("DealCard", () => {
       ...baseItem,
       deal: { ...baseItem.deal, benefitUrl: "https://deal.example.com/buy/123" },
     }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     const links = screen.getAllByRole("link", { name: /get deal/i })
     expect(links.length).toBeGreaterThanOrEqual(1)
@@ -139,7 +141,7 @@ describe("DealCard", () => {
       ...baseItem,
       deal: { ...baseItem.deal, redeemChannels: ["online", "physical_store"] },
     }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     expect(screen.getByText("online")).toBeInTheDocument()
     expect(screen.getByText("physical store")).toBeInTheDocument()
   })
@@ -150,7 +152,7 @@ describe("DealCard", () => {
       ...baseItem,
       deal: { ...baseItem.deal, couponCode: "SAVE20" },
     }
-    render(<DealCard item={item} />)
+    render(<DealCard item={item} clubs={mockClubs} />)
     await user.click(screen.getByRole("button", { name: /expand deal/i }))
     expect(screen.getByText("SAVE20")).toBeInTheDocument()
   })

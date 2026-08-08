@@ -1,8 +1,7 @@
 import { Trophy } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { formatAmount } from "@/lib/formatters"
-import { fintech } from "@/lib/fintech-styles"
 import type { OptimizerDealSummary, OptimizerResult } from "@/lib/types"
 import { StackSteps } from "./StackSteps"
 
@@ -13,47 +12,50 @@ interface WinningStackProps {
 }
 
 export function WinningStack({ result, deals, storeName }: WinningStackProps) {
+  const { t } = useTranslation()
   const savedRate = result.starting_price > 0 ? result.total_savings / result.starting_price : 0
 
   return (
-    <Card className="fintech-card overflow-hidden border-0">
-      <div className="border-b border-slate-100/80 bg-gradient-to-r from-emerald-50 to-blue-50 px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className={fintech.iconWrapEmerald}>
-            <Trophy className="size-4" />
-          </div>
-          <div>
-            <p className={fintech.sectionTitle}>Best stack</p>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {storeName} · {result.per_step.length} deal{result.per_step.length !== 1 ? "s" : ""} applied
-            </p>
-          </div>
+    <div className="overflow-hidden rounded-3xl bg-card shadow-[var(--shadow-card)]">
+      <div className="surface-teal flex items-center gap-3 p-5">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card/25">
+          <Trophy className="size-4" aria-hidden />
+        </div>
+        <div>
+          <p className="text-sm font-bold">{t("optimizer.winningStack.title")}</p>
+          <p className="text-xs opacity-80">
+            {t("optimizer.winningStack.subtitle", { count: result.per_step.length, store: storeName })}
+          </p>
         </div>
       </div>
 
-      <CardContent className="space-y-4 px-5 pb-5 pt-4">
-        <div className="grid grid-cols-3 gap-2">
-          <div className={fintech.metric}>
-            <p className={fintech.metricValue}>{formatAmount(result.starting_price)}</p>
-            <p className={fintech.metricLabel}>Cart total</p>
-          </div>
-          <div className={fintech.metricEmerald}>
-            <p className={fintech.metricValue}>{formatAmount(result.final_price)}</p>
-            <p className={fintech.metricLabel}>You pay</p>
-          </div>
-          <div className={fintech.metricViolet}>
-            <p className={fintech.metricValue}>{formatAmount(result.total_savings)}</p>
-            <p className={fintech.metricLabel}>Saved ({Math.round(savedRate * 100)}%)</p>
-          </div>
+      <div className="space-y-4 p-5">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <Metric label={t("optimizer.winningStack.cartTotal")} value={formatAmount(result.starting_price)} />
+          <Metric label={t("optimizer.winningStack.youPay")} value={formatAmount(result.final_price)} accent />
+          <Metric
+            label={t("optimizer.winningStack.saved", { percent: Math.round(savedRate * 100) })}
+            value={formatAmount(result.total_savings)}
+            accent
+          />
         </div>
 
         <div>
-          <p className={fintech.sectionEyebrow}>How it stacks</p>
-          <div className="mt-2">
-            <StackSteps steps={result.per_step} deals={deals} />
-          </div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t("optimizer.winningStack.howItStacks")}
+          </p>
+          <StackSteps steps={result.per_step} deals={deals} />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+  )
+}
+
+function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="rounded-2xl bg-secondary p-3">
+      <p className={accent ? "text-base font-bold text-primary" : "text-base font-bold"}>{value}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{label}</p>
+    </div>
   )
 }

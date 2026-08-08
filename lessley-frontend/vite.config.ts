@@ -42,9 +42,10 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Personalization-owned prefixes FIRST — Vite matches by prefix in declaration
         // order, so a general '/api' entry above these would swallow them.
+        // Keep this list identical to the `@personalization` matcher in lessley-cd/Caddyfile.
+        // (/api/v1/clubs is NOT here: clubs are served by the Gateway's ClubController.)
         '/api/v1/insights': personalizationProxy,
         '/api/v1/open-finance': personalizationProxy,
-        '/api/v1/clubs': personalizationProxy,
         '/api': {
           target: gatewayTarget,
           changeOrigin: true,

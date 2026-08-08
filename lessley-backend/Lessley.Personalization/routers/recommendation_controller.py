@@ -3,14 +3,14 @@ import time
 from fastapi import APIRouter, Request
 from services.di_container import DIContainer
 from .responses import BasicResponse, ClubRecommendationResponseSchema, PaginatedResponse
-from .schemas import RecommendationByCategoryRequestSchema
+from .schemas import RecommendationByCategoryRequestSchema, MissedSavingsRequestSchema
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 logger = logging.getLogger(__name__)
 
 
 @router.post("/missed-savings")
-async def calculate_missed_savings(request: Request, req: RecommendationByCategoryRequestSchema):
+async def calculate_missed_savings(request: Request, req: MissedSavingsRequestSchema):
     """
     Triggers async missed-savings analysis for the user.
     Result is published back to Gateway via RabbitMQ and stored in the notifications DB.
@@ -21,14 +21,20 @@ async def calculate_missed_savings(request: Request, req: RecommendationByCatego
         f"API request: {request.method} {request.url}",
         extra={
             "reason": "Request received",
-            "extra_data": {"email": req.email, "method": request.method, "endpoint": request.url.path},
+            "extra_data": {
+                "email": req.email,
+                "time_filter": req.time_filter,
+                "days": req.days,
+                "method": request.method,
+                "endpoint": request.url.path,
+            },
         },
     )
 
     try:
         service = DIContainer.get_insights_service()
         missed_savings = await service.calculate_missed_savings_async(
-            req.email, time_filter=True, days=90, use_mock=False
+            req.email, time_filter=req.time_filter, days=req.days, use_mock=False
         )
 
         response_time_ms = (time.time() - start_time) * 1000

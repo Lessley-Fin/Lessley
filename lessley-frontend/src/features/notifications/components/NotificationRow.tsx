@@ -1,16 +1,12 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { formatRelativeTime } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
+import { notificationBadge, notificationHasDetail, notificationTitleKey } from "../helpers"
 import type { NotificationDto } from "../notificationTypes"
 import { NotificationDetail } from "./NotificationDetail"
-
-function typeAccent(type: string) {
-  return type === "group"
-    ? "border-violet-200/80 bg-violet-50 text-violet-800"
-    : "border-sky-200/80 bg-sky-50 text-sky-800"
-}
 
 interface NotificationRowProps {
   item: NotificationDto
@@ -18,67 +14,37 @@ interface NotificationRowProps {
 }
 
 export function NotificationRow({ item, onRead }: NotificationRowProps) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
+  const hasDetail = notificationHasDetail(item)
 
-  const handleClick = () => {
-    if (!item.isRead && onRead) {
-      onRead(item.id)
-    }
-    setExpanded((prev) => !prev)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault()
-      handleClick()
-    }
+  function handleClick() {
+    if (!item.isRead && onRead) onRead(item.id)
+    if (hasDetail) setExpanded((prev) => !prev)
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
+    <li
       className={cn(
-        "fintech-card cursor-pointer rounded-2xl p-4 transition-shadow active:scale-[0.99]",
-        item.isRead
-          ? "border-slate-200/60"
-          : "border-violet-200/80 bg-violet-50/50 ring-1 ring-violet-100",
+        "rounded-3xl bg-card p-4 shadow-[var(--shadow-card)]",
+        !item.isRead && "ring-2 ring-primary/40",
       )}
     >
-      <div className="flex items-start gap-3">
-        {!item.isRead ? (
-          <span className="mt-2 size-2 shrink-0 rounded-full bg-violet-500" aria-hidden />
-        ) : (
-          <span className="mt-2 size-2 shrink-0" aria-hidden />
-        )}
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                typeAccent(item.type)
-              )}
-            >
-              {item.type === "group" ? "Group" : item.type === "calc" ? "Analysis" : "Direct"}
-            </span>
-            <span className="text-xs text-slate-400 tabular-nums">{formatRelativeTime(item.sentAt)}</span>
-          </div>
-          <p className={cn("text-sm leading-relaxed", item.isRead ? "text-slate-600" : "font-medium text-slate-800")}>
-            {item.message}
-          </p>
-
-          {expanded ? <NotificationDetail item={item} /> : null}
+      <button type="button" onClick={handleClick} className="w-full text-start">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-secondary-foreground">
+            {t(`notifications.badge.${notificationBadge(item)}`)}
+          </span>
+          {!item.isRead ? <span className="size-2 rounded-full bg-primary" aria-hidden /> : null}
+          <span className="ms-auto text-xs text-muted-foreground">{formatRelativeTime(item.sentAt)}</span>
+          {hasDetail ? (
+            <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} aria-hidden />
+          ) : null}
         </div>
-
-        <ChevronDown
-          className={cn(
-            "mt-1.5 size-4 shrink-0 text-slate-400 transition-transform duration-200",
-            expanded && "rotate-180",
-          )}
-        />
-      </div>
-    </div>
+        <p className="mt-2 text-[15px] font-semibold">{t(`notifications.title.${notificationTitleKey(item)}`)}</p>
+        <p className="text-sm text-muted-foreground">{item.message}</p>
+      </button>
+      {expanded && hasDetail ? <NotificationDetail item={item} /> : null}
+    </li>
   )
 }

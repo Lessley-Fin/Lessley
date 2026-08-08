@@ -5,6 +5,12 @@ export interface PaginatedApiResponse<T> {
   timestamp?: string
 }
 
+export interface BasicApiResponse<T> {
+  status: string
+  data: T
+  timestamp?: string
+}
+
 export interface PersonalizationTransaction {
   id?: string
   userId?: string
@@ -112,6 +118,11 @@ export interface MccCategoryDto {
   category: string
 }
 
+export interface ClubDto {
+  id: string
+  name: string
+}
+
 export interface DealDocument {
   dealId: string
   storeId: string
@@ -148,6 +159,27 @@ export interface PagedDealSearchResult {
   total: number
   page: number
   pageSize: number
+}
+
+export interface SpendingByDayInsight {
+  day: string
+  total_amount: number
+}
+
+export interface SpendingPeriodComparison {
+  current_period_total: number
+  previous_period_total: number
+  difference: number
+}
+
+export interface SpendingSavedInsight {
+  total_saved: number
+}
+
+export interface SpendingSavedByAccountInsight {
+  accountId: string
+  accountNumber?: string
+  total_saved: number
 }
 
 export interface TopStoreInsight {

@@ -5,6 +5,10 @@ import {
   checkHasConnection,
   fetchCategoryInsights,
   fetchRecommendations,
+  fetchSpendingByDayInsights,
+  fetchSpendingPeriodComparison,
+  fetchSpendingSaved,
+  fetchSpendingSavedByAccount,
   fetchTopAccountInsights,
   fetchTopStoreInsights,
   fetchTransactions,
@@ -49,6 +53,38 @@ export function useTopStores(days: number, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.insights.topStores(days),
     queryFn: () => fetchTopStoreInsights(days),
+    enabled,
+  })
+}
+
+export function useSpendingByDay(days: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.insights.spendingByDay(days),
+    queryFn: () => fetchSpendingByDayInsights(days),
+    enabled,
+  })
+}
+
+export function useSpendingPeriodComparison(days: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.insights.spendingPeriodComparison(days),
+    queryFn: () => fetchSpendingPeriodComparison(days),
+    enabled,
+  })
+}
+
+export function useSpendingSaved(days: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.insights.spendingSaved(days),
+    queryFn: () => fetchSpendingSaved(days),
+    enabled,
+  })
+}
+
+export function useSpendingSavedByAccount(days: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.insights.spendingSavedByAccount(days),
+    queryFn: () => fetchSpendingSavedByAccount(days),
     enabled,
   })
 }

@@ -81,6 +81,7 @@ builder.Services.AddSingleton<IMongoClient>(_ =>
 builder.Services.AddScoped<IDealFinderRepository, DealFinderRepository>();
 builder.Services.AddScoped<IDealFinderService, DealFinderService>();
 builder.Services.AddScoped<IMccRepository, MccRepository>();
+builder.Services.AddScoped<IClubRepository, ClubRepository>();
 
 // ── Framework ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllers()
