@@ -30,7 +30,6 @@ export function OptimizeTab() {
   const [storeText, setStoreText] = useState("")
   const [selectedStore, setSelectedStore] = useState<StoreDocument | null>(null)
   const [cartTotal, setCartTotal] = useState("")
-  const [cartQuantity, setCartQuantity] = useState("1")
   const [submitted, setSubmitted] = useState<{ params: OptimizeParams; storeName: string } | null>(null)
 
   // Searching while a store is picked would re-open the suggestion list under the user.
@@ -38,9 +37,7 @@ export function OptimizeTab() {
   const { data, isLoading, error } = useOptimizeCart(submitted?.params ?? null)
 
   const total = Number(cartTotal)
-  const quantity = Number(cartQuantity)
-  const canSubmit =
-    selectedStore !== null && Number.isFinite(total) && total > 0 && Number.isFinite(quantity) && quantity >= 1
+  const canSubmit = selectedStore !== null && Number.isFinite(total) && total > 0
 
   function handleSelectStore(store: StoreDocument) {
     setSelectedStore(store)
@@ -51,7 +48,9 @@ export function OptimizeTab() {
     event.preventDefault()
     if (!canSubmit || !selectedStore) return
     setSubmitted({
-      params: { storeId: selectedStore.storeId, cartTotal: total, cartQuantity: quantity },
+      // The engine still requires a quantity; the cart total is what actually
+      // drives the stack, so we always price a single-line cart.
+      params: { storeId: selectedStore.storeId, cartTotal: total, cartQuantity: 1 },
       storeName: selectedStore.name,
     })
   }
@@ -120,29 +119,16 @@ export function OptimizeTab() {
           </p>
         ) : null}
 
-        <div className="grid grid-cols-[2fr_1fr] gap-3">
-          <Input
-            type="number"
-            inputMode="decimal"
-            min="0.01"
-            step="0.01"
-            value={cartTotal}
-            onChange={(e) => setCartTotal(e.target.value)}
-            placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
-            className="h-12 rounded-2xl bg-secondary"
-          />
-          <Input
-            type="number"
-            inputMode="numeric"
-            min="1"
-            step="1"
-            value={cartQuantity}
-            onChange={(e) => setCartQuantity(e.target.value)}
-            aria-label={t("optimizer.optimizeTab.itemsLabel")}
-            placeholder={t("optimizer.optimizeTab.itemsLabel")}
-            className="h-12 rounded-2xl bg-secondary"
-          />
-        </div>
+        <Input
+          type="number"
+          inputMode="decimal"
+          min="0.01"
+          step="0.01"
+          value={cartTotal}
+          onChange={(e) => setCartTotal(e.target.value)}
+          placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
+          className="h-12 rounded-2xl bg-secondary"
+        />
 
         <Button type="submit" variant="hero" size="xl" disabled={!canSubmit || isLoading}>
           {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}

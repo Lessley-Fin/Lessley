@@ -30,32 +30,43 @@ export function WinningStack({ result, deals, storeName }: WinningStackProps) {
       </div>
 
       <div className="space-y-4 p-5">
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <Metric label={t("optimizer.winningStack.cartTotal")} value={formatAmount(result.starting_price)} />
-          <Metric label={t("optimizer.winningStack.youPay")} value={formatAmount(result.final_price)} accent />
-          <Metric
-            label={t("optimizer.winningStack.saved", { percent: Math.round(savedRate * 100) })}
-            value={formatAmount(result.total_savings)}
-            accent
-          />
+        {/* The number the whole page exists to produce, with the saving it represents. */}
+        <div className="text-center">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t("optimizer.winningStack.youPay")}
+          </p>
+          <p className="mt-1 text-4xl font-bold text-primary">{formatAmount(result.final_price)}</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm">
+            <span className="text-muted-foreground line-through">{formatAmount(result.starting_price)}</span>
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+              {t("optimizer.winningStack.savePill", {
+                amount: formatAmount(result.total_savings),
+                percent: Math.round(savedRate * 100),
+              })}
+            </span>
+          </div>
         </div>
 
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             {t("optimizer.winningStack.howItStacks")}
           </p>
+
+          {/* Anchor the chain at both ends so the steps read as a path from
+              cart total down to the final price. */}
+          <div className="mb-1 flex items-center justify-between rounded-2xl border border-dashed border-border px-3 py-2 text-sm">
+            <span className="text-muted-foreground">{t("optimizer.winningStack.cartTotal")}</span>
+            <span className="font-semibold">{formatAmount(result.starting_price)}</span>
+          </div>
+
           <StackSteps steps={result.per_step} deals={deals} />
+
+          <div className="mt-1 flex items-center justify-between rounded-2xl bg-secondary px-3 py-2 text-sm">
+            <span className="font-semibold">{t("optimizer.winningStack.youPay")}</span>
+            <span className="text-base font-bold text-primary">{formatAmount(result.final_price)}</span>
+          </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="rounded-2xl bg-secondary p-3">
-      <p className={accent ? "text-base font-bold text-primary" : "text-base font-bold"}>{value}</p>
-      <p className="mt-0.5 text-[11px] text-muted-foreground">{label}</p>
     </div>
   )
 }

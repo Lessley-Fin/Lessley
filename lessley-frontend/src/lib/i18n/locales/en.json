@@ -318,7 +318,6 @@
       "changeStore": "change",
       "noStoreMatches": "No stores matched “{{query}}”.",
       "totalPricePlaceholder": "Total price ₪",
-      "itemsLabel": "Items",
       "findBestPrices": "Find best prices",
       "optimizing": "Stacking deals…",
       "requiredNotice": "Pick a store and enter a cart total.",
@@ -347,7 +346,7 @@
       "subtitle_other": "{{store}} · {{count}} deals applied",
       "cartTotal": "Cart total",
       "youPay": "You pay",
-      "saved": "Saved ({{percent}}%)",
+      "savePill": "Save {{amount}} ({{percent}}%)",
       "howItStacks": "How it stacks"
     },
     "rankedOptions": {

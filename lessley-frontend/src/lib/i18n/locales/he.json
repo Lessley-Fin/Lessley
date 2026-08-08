@@ -318,7 +318,6 @@
       "changeStore": "שינוי",
       "noStoreMatches": "לא נמצאו חנויות שתואמות ל־„{{query}}”.",
       "totalPricePlaceholder": "מחיר כולל ₪",
-      "itemsLabel": "פריטים",
       "findBestPrices": "מציאת המחירים הטובים ביותר",
       "optimizing": "משלבים דילים…",
       "requiredNotice": "יש לבחור חנות ולהזין סכום עגלה.",
@@ -350,7 +349,7 @@
       "subtitle_other": "{{store}} · {{count}} דילים הופעלו",
       "cartTotal": "סכום העגלה",
       "youPay": "אתם משלמים",
-      "saved": "נחסך ({{percent}}%)",
+      "savePill": "חיסכון {{amount}} ({{percent}}%)",
       "howItStacks": "איך זה מצטבר"
     },
     "rankedOptions": {
