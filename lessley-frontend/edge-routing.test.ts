@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 import { describe, expect, it } from "vitest"
 
@@ -12,11 +13,15 @@ import { describe, expect, it } from "vitest"
  * This actually happened: clubs moved from Personalization to the Gateway's ClubController,
  * the Caddyfile was updated and vite.config.ts was not, so `/api/v1/clubs` kept being sent
  * to Personalization — which has no such route — and the client got a 404 in dev only.
+ *
+ * Lives at the repo root rather than under src/ because it reads files with node:fs. Files in
+ * src/ are compiled by tsconfig.app.json, which has no node types (that would break
+ * `npm run build`); this one is covered by tsconfig.node.json alongside vite.config.ts.
  */
 
-const ROOT = path.resolve(__dirname, "../..")
-const CADDYFILE = path.resolve(ROOT, "../lessley-cd/Caddyfile")
-const VITE_CONFIG = path.resolve(ROOT, "vite.config.ts")
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const CADDYFILE = path.resolve(HERE, "../lessley-cd/Caddyfile")
+const VITE_CONFIG = path.resolve(HERE, "vite.config.ts")
 
 function personalizationPrefixesInCaddyfile(): string[] {
   const caddyfile = readFileSync(CADDYFILE, "utf8")
@@ -26,13 +31,15 @@ function personalizationPrefixesInCaddyfile(): string[] {
   return matcher![1]
     .trim()
     .split(/\s+/)
-    .map((prefix) => prefix.replace(/\/\*$/, ""))
+    .map((prefix: string) => prefix.replace(/\/\*$/, ""))
     .sort()
 }
 
 function personalizationPrefixesInViteConfig(): string[] {
   const config = readFileSync(VITE_CONFIG, "utf8")
-  return [...config.matchAll(/'([^']+)':\s*personalizationProxy/g)].map((m) => m[1]).sort()
+  return [...config.matchAll(/'([^']+)':\s*personalizationProxy/g)]
+    .map((match: RegExpMatchArray) => match[1])
+    .sort()
 }
 
 describe("dev proxy mirrors the production edge", () => {
