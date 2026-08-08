@@ -3,6 +3,7 @@ import { AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import i18n from "@/lib/i18n/config"
 
 interface Props {
   children: ReactNode
@@ -43,15 +44,15 @@ export class FeatureErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="size-7" />
           </div>
           <div>
-            <p className="font-semibold text-slate-800">Something went wrong</p>
+            <p className="font-semibold text-slate-800">{i18n.t("errorBoundary.title")}</p>
             <p className="mt-1 text-sm text-slate-500">
               {this.props.featureName
-                ? `The ${this.props.featureName} section encountered an error.`
-                : "An unexpected error occurred."}
+                ? i18n.t("errorBoundary.featureSectionMessage", { featureName: this.props.featureName })
+                : i18n.t("errorBoundary.featureMessage")}
             </p>
           </div>
           <Button onClick={this.handleReset} className="min-h-10">
-            Try again
+            {i18n.t("errorBoundary.tryAgain")}
           </Button>
         </CardContent>
       </Card>

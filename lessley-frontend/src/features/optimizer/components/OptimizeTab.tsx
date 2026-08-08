@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Sparkles } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,8 +12,6 @@ const EXAMPLE = {
   listed: 899,
   coupon: 72,
   cashback: 35.96,
-  couponLabel: "Club coupon (Behatsdaa)",
-  cashbackLabel: "Card cashback (Mastercard)",
 }
 
 interface OptimizeResult {
@@ -24,6 +23,7 @@ interface OptimizeResult {
 // labeled illustrative demo: it applies fixed 8%/4% example rates to whatever the user enters,
 // the same ratios the example card itself uses (72/899 ≈ 8%, 35.96/899 = 4%).
 export function OptimizeTab() {
+  const { t } = useTranslation()
   const [store, setStore] = useState("")
   const [total, setTotal] = useState("")
   const [result, setResult] = useState<OptimizeResult | null>(null)
@@ -37,19 +37,19 @@ export function OptimizeTab() {
 
   function handleSubmit() {
     setResult({ store: store.trim(), listed: Number(total) })
-    toast.success("Best stacked price found 🎉")
+    toast.success(t("optimizer.optimizeTab.toastSuccess"))
   }
 
   return (
     <>
       <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          Search the whole market
+          {t("optimizer.optimizeTab.searchWholeMarket")}
         </p>
         <Input
           value={store}
           onChange={(e) => setStore(e.target.value)}
-          placeholder="Store name"
+          placeholder={t("optimizer.optimizeTab.storeNamePlaceholder")}
           autoComplete="off"
           className="h-12 rounded-2xl bg-secondary"
         />
@@ -59,32 +59,34 @@ export function OptimizeTab() {
           min="0"
           value={total}
           onChange={(e) => setTotal(e.target.value)}
-          placeholder="Total price ₪"
+          placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
           className="h-12 rounded-2xl bg-secondary"
         />
         <Button type="button" variant="hero" size="xl" disabled={!canSubmit} onClick={handleSubmit}>
           <Sparkles />
-          Find best prices
+          {t("optimizer.optimizeTab.findBestPrices")}
         </Button>
-        {!canSubmit ? <p className="text-center text-xs text-muted-foreground">Store and total are required.</p> : null}
+        {!canSubmit ? (
+          <p className="text-center text-xs text-muted-foreground">{t("optimizer.optimizeTab.requiredNotice")}</p>
+        ) : null}
       </div>
 
       <div className="rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
         <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          {result ? "Result" : "Example result"}
+          {result ? t("optimizer.optimizeTab.result") : t("optimizer.optimizeTab.exampleResult")}
         </p>
         <div className="rounded-2xl border border-dashed border-border p-4">
           <p className="mb-3 font-semibold">{result?.store ?? EXAMPLE.store}</p>
-          <ResultRow label="Listed price" value={formatAmount(listed)} />
-          <ResultRow label={EXAMPLE.couponLabel} value={`−${formatAmount(coupon)}`} accent />
-          <ResultRow label={EXAMPLE.cashbackLabel} value={`−${formatAmount(cashback)}`} accent />
+          <ResultRow label={t("optimizer.optimizeTab.listedPrice")} value={formatAmount(listed)} />
+          <ResultRow label={t("optimizer.optimizeTab.couponLabel")} value={`−${formatAmount(coupon)}`} accent />
+          <ResultRow label={t("optimizer.optimizeTab.cashbackLabel")} value={`−${formatAmount(cashback)}`} accent />
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-            <span className="font-semibold">Your price</span>
+            <span className="font-semibold">{t("optimizer.optimizeTab.yourPrice")}</span>
             <span className="text-xl font-bold text-primary">{formatAmount(finalPrice)}</span>
           </div>
         </div>
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
-          Illustrative estimate — not a live market quote.
+          {t("optimizer.optimizeTab.illustrativeNotice")}
         </p>
       </div>
     </>

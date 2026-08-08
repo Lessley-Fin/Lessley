@@ -1,10 +1,12 @@
 import { Landmark } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { useHasConnection } from "@/features/insights/hooks"
 import { useInitOpenFinance } from "@/features/user/hooks"
 
 export function BankingView() {
+  const { t } = useTranslation()
   const { data: isConnected } = useHasConnection()
   const initOpenFinance = useInitOpenFinance()
 
@@ -19,21 +21,22 @@ export function BankingView() {
   return (
     <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
       <Landmark className="size-6 text-primary" aria-hidden />
-      <p className="font-bold">Connect more cards for sharper insights</p>
-      <p className="text-sm text-muted-foreground">
-        Each linked card widens the picture of your spending, so club matches and missed-savings alerts get more
-        accurate.
-      </p>
+      <p className="font-bold">{t("settings.banking.title")}</p>
+      <p className="text-sm text-muted-foreground">{t("settings.banking.subtitle")}</p>
       <span className="inline-flex w-fit items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-        {isConnected ? "Connected" : "Not connected"}
+        {isConnected ? t("settings.banking.connected") : t("settings.banking.notConnected")}
       </span>
       {initOpenFinance.error ? (
-        <p className="text-xs text-destructive">Unable to start bank connection. Please try again.</p>
+        <p className="text-xs text-destructive">{t("settings.banking.connectError")}</p>
       ) : null}
       <Button type="button" variant="hero" size="xl" onClick={handleConnect} disabled={initOpenFinance.isPending}>
-        {initOpenFinance.isPending ? "Connecting..." : isConnected ? "Connect another card" : "Connect a card"}
+        {initOpenFinance.isPending
+          ? t("settings.banking.connecting")
+          : isConnected
+            ? t("settings.banking.connectAnotherCard")
+            : t("settings.banking.connectACard")}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">Read-only access, revocable anytime.</p>
+      <p className="text-center text-xs text-muted-foreground">{t("settings.banking.readOnlyNotice")}</p>
     </div>
   )
 }

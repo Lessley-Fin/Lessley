@@ -27,7 +27,7 @@ export function MenuNavItem({ label, icon: Icon, active, badge, showUnreadDot, o
       role="menuitem"
       onClick={onClick}
       className={cn(
-        "relative flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-left text-[15px] font-medium transition-colors",
+        "relative flex w-full shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-start text-[15px] font-medium transition-colors",
         active
           ? "bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md"
           : "text-slate-700 hover:bg-violet-50 active:bg-violet-100/80"
@@ -40,7 +40,7 @@ export function MenuNavItem({ label, icon: Icon, active, badge, showUnreadDot, o
         )}
       >
         <Icon className="size-[18px] stroke-[2]" aria-hidden />
-        {showUnreadDot ? <UnreadDot className="-right-0.5 -top-0.5" /> : null}
+        {showUnreadDot ? <UnreadDot className="-end-0.5 -top-0.5" /> : null}
       </span>
       <span className="flex-1">{label}</span>
       {badge && badge > 0 ? (

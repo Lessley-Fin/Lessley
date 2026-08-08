@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 import { fintech } from "@/lib/fintech-styles"
 import { formatFitPercent } from "@/lib/formatters"
 import { ListRow } from "./ListRow"
@@ -17,12 +19,13 @@ interface MatchingClubsListProps {
 }
 
 export function MatchingClubsList({ clubs, compact = false, limit = 3 }: MatchingClubsListProps) {
+  const { t } = useTranslation()
   const top = clubs.slice(0, limit)
 
   if (top.length === 0) {
     return (
       <p className={compact ? "text-xs text-slate-500" : "fintech-card-inset text-sm text-slate-600"}>
-        {compact ? "No club matches found." : "We need more transaction history to analyze club fit."}
+        {compact ? t("shared.matchingClubs.noneCompact") : t("shared.matchingClubs.noneFull")}
       </p>
     )
   }
@@ -40,7 +43,7 @@ export function MatchingClubsList({ clubs, compact = false, limit = 3 }: Matchin
                 {idx + 1}. {club.club_name ?? club.club_id}
               </p>
               <p className="text-[10px] text-slate-400">
-                {club.hit_count}/{club.total_stores} stores match
+                {t("shared.matchingClubs.storesMatch", { hit: club.hit_count, total: club.total_stores })}
               </p>
             </div>
             {typeof club.fit_score === "number" ? (
@@ -61,8 +64,10 @@ export function MatchingClubsList({ clubs, compact = false, limit = 3 }: Matchin
               {index + 1}. {club.club_name ?? club.club_id}
             </p>
             <p className="text-xs text-slate-500">
-              {typeof club.fit_score === "number" ? `${formatFitPercent(club.fit_score)} fit · ` : ""}
-              {club.hit_count}/{club.total_stores} stores match
+              {typeof club.fit_score === "number"
+                ? `${t("shared.matchingClubs.fit", { percent: formatFitPercent(club.fit_score) })} · `
+                : ""}
+              {t("shared.matchingClubs.storesMatch", { hit: club.hit_count, total: club.total_stores })}
             </p>
           </div>
           {typeof club.fit_score === "number" ? (

@@ -1,5 +1,6 @@
 import { LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/features/auth/store"
@@ -10,6 +11,7 @@ interface LogoutViewProps {
 }
 
 export function LogoutView({ username }: LogoutViewProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -19,14 +21,11 @@ export function LogoutView({ username }: LogoutViewProps) {
 
   return (
     <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
-      <p className="font-bold">Signed in as {username}</p>
-      <p className="text-sm text-muted-foreground">
-        Signing out keeps your data safe on this device — your clubs, preferences and connected cards stay exactly
-        as they are.
-      </p>
+      <p className="font-bold">{t("settings.logout.signedInAs", { username })}</p>
+      <p className="text-sm text-muted-foreground">{t("settings.logout.notice")}</p>
       <Button type="button" variant="navy" size="xl" onClick={handleLogout}>
         <LogOut className="size-4" aria-hidden />
-        Sign out
+        {t("settings.logout.signOut")}
       </Button>
     </div>
   )

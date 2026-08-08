@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 import { TIME_RANGE_OPTIONS } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
@@ -7,6 +9,7 @@ interface AnalysisPeriodCardProps {
 }
 
 export function AnalysisPeriodCard({ value, onChange }: AnalysisPeriodCardProps) {
+  const { t } = useTranslation()
   return (
     <div className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-full border border-border bg-card p-1 text-sm">
       {TIME_RANGE_OPTIONS.map((opt) => (
@@ -19,7 +22,7 @@ export function AnalysisPeriodCard({ value, onChange }: AnalysisPeriodCardProps)
             value === opt.days ? "surface-navy shadow-[var(--shadow-card)]" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {opt.label}
+          {t(`timeRanges.${opt.days}`)}
         </button>
       ))}
     </div>

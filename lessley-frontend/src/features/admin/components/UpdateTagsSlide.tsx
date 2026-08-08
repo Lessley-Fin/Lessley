@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { FormEvent } from "react"
 import { Tag } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,7 @@ import { useUpdateUserTags } from "../hooks"
 import { TagChipInput } from "./TagChipInput"
 
 export function UpdateTagsSlide() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState("")
   const [tags, setTags] = useState<string[]>([])
   const mutation = useUpdateUserTags()
@@ -28,10 +30,10 @@ export function UpdateTagsSlide() {
         <span className="flex size-9 items-center justify-center rounded-full bg-secondary">
           <Tag className="size-4 text-primary" aria-hidden />
         </span>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Assign user tags</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("admin.updateTags.heading")}</p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="admin-tags-email">User email</Label>
+        <Label htmlFor="admin-tags-email">{t("admin.common.userEmail")}</Label>
         <Input
           id="admin-tags-email"
           type="email"
@@ -43,17 +45,17 @@ export function UpdateTagsSlide() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label>Tags</Label>
-        <TagChipInput value={tags} onChange={setTags} placeholder="e.g. high-spender" />
+        <Label>{t("admin.updateTags.tags")}</Label>
+        <TagChipInput value={tags} onChange={setTags} placeholder={t("admin.updateTags.tagsPlaceholder")} />
       </div>
       <ErrorAlert
         message={
-          mutation.error instanceof Error ? mutation.error.message : mutation.error ? "Failed to update tags." : null
+          mutation.error instanceof Error ? mutation.error.message : mutation.error ? t("admin.updateTags.failed") : null
         }
       />
-      {mutation.isSuccess ? <p className="text-xs text-success">Tags updated</p> : null}
+      {mutation.isSuccess ? <p className="text-xs text-success">{t("admin.updateTags.success")}</p> : null}
       <Button type="submit" variant="hero" size="xl" disabled={mutation.isPending || !email.trim()}>
-        {mutation.isPending ? "Saving..." : "Save tags"}
+        {mutation.isPending ? t("admin.updateTags.saving") : t("admin.updateTags.saveTags")}
       </Button>
     </form>
   )

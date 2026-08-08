@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Check, Search } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { DealDetailDialog } from "@/components/shared/DealDetailDialog"
 import { DealResultCard } from "@/components/shared/DealResultCard"
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils"
 const PAGE_SIZE = 10
 
 export function DealFinderTab() {
+  const { t } = useTranslation()
   const [storeText, setStoreText] = useState("")
   const [dealText, setDealText] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
@@ -52,24 +54,24 @@ export function DealFinderTab() {
         <Input
           value={storeText}
           onChange={(e) => setStoreText(e.target.value)}
-          placeholder="Store (optional)"
+          placeholder={t("dealFinder.tab.storePlaceholder")}
           className="h-12 rounded-2xl bg-secondary"
         />
         <Input
           value={dealText}
           onChange={(e) => setDealText(e.target.value)}
-          placeholder="Find a deal (optional)"
+          placeholder={t("dealFinder.tab.dealPlaceholder")}
           className="h-12 rounded-2xl bg-secondary"
         />
         <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Categories</p>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("dealFinder.tab.categoriesLabel")}</p>
           <Input
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            placeholder={`Filter ${mccCategories.length} categories`}
+            placeholder={t("dealFinder.tab.filterCategoriesPlaceholder", { count: mccCategories.length })}
             className="h-11 rounded-2xl bg-secondary"
           />
-          <div className="no-scrollbar mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto pr-1">
+          <div className="no-scrollbar mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto pe-1">
             {filteredCategoryChips.map((mc) => {
               const isSelected = selectedCategories.includes(mc.category)
               return (
@@ -82,8 +84,8 @@ export function DealFinderTab() {
                     isSelected ? "border-primary bg-accent text-accent-foreground" : "border-border bg-card text-muted-foreground"
                   )}
                 >
-                  {isSelected ? <Check className="mr-1 inline size-3" aria-hidden /> : null}
-                  {formatCategoryLabel(mc.category)}
+                  {isSelected ? <Check className="me-1 inline size-3" aria-hidden /> : null}
+                  {t(`categories.${mc.category}`, { defaultValue: formatCategoryLabel(mc.category) })}
                 </button>
               )
             })}
@@ -91,26 +93,26 @@ export function DealFinderTab() {
         </div>
         <Button type="button" variant="hero" size="xl" onClick={handleSearch}>
           <Search />
-          Search deals
+          {t("dealFinder.tab.searchDeals")}
         </Button>
       </div>
 
       <div className="space-y-3">
         {!enabled ? (
           <p className="rounded-3xl bg-card p-6 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
-            Use the filters above to search deals across your loyalty clubs.
+            {t("dealFinder.tab.promptSearch")}
           </p>
         ) : isLoading ? (
           <p className="rounded-3xl bg-card p-6 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
-            Searching deals…
+            {t("dealFinder.tab.searching")}
           </p>
         ) : error ? (
           <p className="rounded-3xl bg-card p-6 text-center text-sm text-destructive shadow-[var(--shadow-card)]">
-            {error instanceof Error ? error.message : "Failed to load deals."}
+            {error instanceof Error ? error.message : t("dealFinder.hotDeals.loadFailed")}
           </p>
         ) : data && data.items.length === 0 ? (
           <p className="rounded-3xl bg-card p-6 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
-            No deals match those filters yet 🔍
+            {t("dealFinder.tab.noMatches")}
           </p>
         ) : (
           data?.items.map((item) => <DealResultCard key={item.deal.dealId} item={item} clubs={clubs} onOpen={setOpenItem} />)
@@ -126,10 +128,10 @@ export function DealFinderTab() {
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              Previous
+              {t("dealFinder.tab.previous")}
             </Button>
             <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
+              {t("dealFinder.tab.pageOf", { page, total: totalPages })}
             </span>
             <Button
               type="button"
@@ -139,7 +141,7 @@ export function DealFinderTab() {
               disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
-              Next
+              {t("dealFinder.tab.next")}
             </Button>
           </div>
         ) : null}

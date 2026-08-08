@@ -1,4 +1,5 @@
 import { RefreshCw, Sparkles } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { emojiForClub } from "@/lib/constants"
@@ -12,6 +13,7 @@ interface TopClubMatchesSlideProps {
 }
 
 export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClubMatchesSlideProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex h-[420px] flex-col gap-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="flex items-start gap-3">
@@ -19,14 +21,14 @@ export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClub
           <Sparkles className="size-4 text-accent-foreground" aria-hidden />
         </span>
         <div className="flex-1">
-          <p className="font-bold">Top club matches</p>
-          <p className="text-xs text-muted-foreground">Ranked by store overlap with your spend</p>
+          <p className="font-bold">{t("recommendations.topClubMatchesSlide.title")}</p>
+          <p className="text-xs text-muted-foreground">{t("recommendations.topClubMatchesSlide.subtitle")}</p>
         </div>
         <Button
           type="button"
           variant="pill"
           size="icon"
-          aria-label="Recalculate matches"
+          aria-label={t("recommendations.topClubMatchesSlide.recalculateAria")}
           onClick={onRecalculate}
           disabled={isPending}
         >
@@ -34,11 +36,9 @@ export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClub
         </Button>
       </div>
       {clubs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          We need more transaction history to analyze club fit. Try recalculating or connect more accounts.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("recommendations.topClubMatchesSlide.empty")}</p>
       ) : (
-        <ul className="no-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <ul className="no-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pe-1">
           {clubs.map((club, i) => (
             <li key={club.club_id} className="rounded-2xl bg-secondary p-3">
               <div className="flex items-center gap-3">
@@ -50,7 +50,10 @@ export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClub
                     {emojiForClub(club.club_name)} {club.club_name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {club.hit_count}/{club.total_stores} stores match
+                    {t("recommendations.topClubMatchesSlide.storesMatch", {
+                      hit: club.hit_count,
+                      total: club.total_stores,
+                    })}
                   </p>
                 </div>
                 <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">

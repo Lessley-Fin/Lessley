@@ -9,16 +9,16 @@ export function notificationBadge(item: NotificationDto): "Analysis" | "Clubs" |
   return "System"
 }
 
-export function notificationTitle(item: NotificationDto): string {
+export function notificationTitleKey(item: NotificationDto): "dealMatch" | "clubMatch" | "analysisReady" | "systemUpdate" {
   switch (notificationBadge(item)) {
     case "Deal":
-      return "New deal match"
+      return "dealMatch"
     case "Clubs":
-      return "New club match"
+      return "clubMatch"
     case "Analysis":
-      return "Analysis ready"
+      return "analysisReady"
     default:
-      return "System update"
+      return "systemUpdate"
   }
 }
 

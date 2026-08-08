@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 import type { MeResponse } from "@/features/user/api"
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -14,12 +16,13 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ profile }: ProfileViewProps) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Account</p>
-      <Row label="Username" value={profile.userName} />
-      <Row label="Email" value={profile.email} />
-      <Row label="Role" value={profile.roles.join(", ") || "User"} />
+      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("settings.profile.account")}</p>
+      <Row label={t("settings.profile.username")} value={profile.userName} />
+      <Row label={t("settings.profile.email")} value={profile.email} />
+      <Row label={t("settings.profile.role")} value={profile.roles.join(", ") || t("settings.profile.defaultRole")} />
     </div>
   )
 }

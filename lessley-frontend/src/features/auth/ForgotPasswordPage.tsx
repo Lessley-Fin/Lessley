@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ArrowLeft, Loader2, MailCheck, ShieldCheck } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,16 +12,16 @@ import { passwordSchema } from "./schemas"
 
 const CODE_LENGTH = 6
 
-const SUBTITLES = [
-  "We'll email you a verification code.",
-  "Enter the 6-digit code sent to your email.",
-  "Choose a new password.",
-]
-
 // No backend endpoint exists for password reset yet (no email-sending infrastructure in the
 // Gateway), so this whole flow is a client-only stub: it walks the same 3 steps a real flow
 // would, but never calls the network or changes any real password.
 export function ForgotPasswordPage() {
+  const { t } = useTranslation()
+  const SUBTITLES = [
+    t("auth.forgotPassword.subtitleSendCode"),
+    t("auth.forgotPassword.subtitleEnterCode"),
+    t("auth.forgotPassword.subtitleChoosePassword"),
+  ]
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [isWorking, setIsWorking] = useState(false)
@@ -47,7 +48,7 @@ export function ForgotPasswordPage() {
     setIsWorking(true)
     await new Promise((resolve) => setTimeout(resolve, 500))
     setIsWorking(false)
-    toast.success("Password updated")
+    toast.success(t("auth.forgotPassword.passwordUpdated"))
     navigate(ROUTES.LOGIN)
   }
 
@@ -57,19 +58,24 @@ export function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen flex-col px-6 py-8">
       <Link to={ROUTES.LOGIN} className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        <ArrowLeft className="size-4" aria-hidden /> Back to sign in
+        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> {t("auth.forgotPassword.backToSignIn")}
       </Link>
       <div className="mx-auto w-full max-w-sm">
-        <h1 className="text-2xl font-bold tracking-tight">Reset password</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("auth.forgotPassword.resetPassword")}</h1>
         <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          {step === 1 ? `Enter the ${CODE_LENGTH}-digit code sent to ${email || "your email"}.` : SUBTITLES[step]}
+          {step === 1
+            ? t("auth.forgotPassword.enterCodeSentTo", {
+                length: CODE_LENGTH,
+                email: email || t("auth.forgotPassword.yourEmail"),
+              })
+            : SUBTITLES[step]}
         </p>
 
         <div className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
           {step === 0 ? (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.forgotPassword.email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -82,7 +88,7 @@ export function ForgotPasswordPage() {
               </div>
               <Button type="button" variant="hero" size="xl" disabled={!email || isWorking} onClick={handleSendCode}>
                 {isWorking ? <Loader2 className="size-4 animate-spin" /> : <MailCheck />}
-                Send code
+                {t("auth.forgotPassword.sendCode")}
               </Button>
             </>
           ) : null}
@@ -90,7 +96,7 @@ export function ForgotPasswordPage() {
           {step === 1 ? (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="code">Verification code</Label>
+                <Label htmlFor="code">{t("auth.forgotPassword.verificationCode")}</Label>
                 <Input
                   id="code"
                   inputMode="numeric"
@@ -109,7 +115,7 @@ export function ForgotPasswordPage() {
                 onClick={handleVerifyCode}
               >
                 {isWorking ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck />}
-                Verify
+                {t("auth.forgotPassword.verify")}
               </Button>
             </>
           ) : null}
@@ -117,7 +123,7 @@ export function ForgotPasswordPage() {
           {step === 2 ? (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="pw">New password</Label>
+                <Label htmlFor="pw">{t("auth.forgotPassword.newPassword")}</Label>
                 <Input
                   id="pw"
                   type="password"
@@ -128,7 +134,7 @@ export function ForgotPasswordPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pw2">Confirm new password</Label>
+                <Label htmlFor="pw2">{t("auth.forgotPassword.confirmNewPassword")}</Label>
                 <Input
                   id="pw2"
                   type="password"
@@ -139,7 +145,7 @@ export function ForgotPasswordPage() {
                 />
               </div>
               {passwordsMismatch ? (
-                <p className="text-xs font-medium text-destructive">Passwords don't match.</p>
+                <p className="text-xs font-medium text-destructive">{t("auth.forgotPassword.passwordsMismatch")}</p>
               ) : null}
               <Button
                 type="button"
@@ -149,7 +155,7 @@ export function ForgotPasswordPage() {
                 onClick={handleSavePassword}
               >
                 {isWorking ? <Loader2 className="size-4 animate-spin" /> : null}
-                Save password
+                {t("auth.forgotPassword.savePassword")}
               </Button>
             </>
           ) : null}

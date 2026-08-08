@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { CarouselDots } from "@/components/shared/CarouselDots"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
@@ -25,13 +26,20 @@ import {
   useTransactions,
 } from "./hooks"
 
-const CAROUSEL_LABELS = ["Overview", "Categories", "Top stores", "Transactions", "Accounts"]
-
-function periodLabelFor(days: number) {
-  return days === 365 ? "last year" : `last ${days} days`
-}
-
 export function InsightsRecommendationsPage() {
+  const { t } = useTranslation()
+  const CAROUSEL_LABELS = [
+    t("insights.carousel.overview"),
+    t("insights.carousel.categories"),
+    t("insights.carousel.topStores"),
+    t("insights.carousel.transactions"),
+    t("insights.carousel.accounts"),
+  ]
+
+  function periodLabelFor(days: number) {
+    return days === 365 ? t("insights.period.lastYear") : t("insights.period.lastDays", { count: days })
+  }
+
   const [timeRangeDays, setTimeRangeDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
   const [deepDiveDays, setDeepDiveDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
   const [carouselApi, setCarouselApi] = useState<CarouselApi>()
@@ -93,16 +101,17 @@ export function InsightsRecommendationsPage() {
   return (
     <div className="space-y-6 pb-2">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Your money, decoded</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("insights.page.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          {periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1)} · {linkedAccounts.length} linked accounts
+          {periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1)} ·{" "}
+          {t("insights.page.linkedAccounts", { count: linkedAccounts.length })}
         </p>
       </div>
 
       <AnalysisPeriodCard value={timeRangeDays} onChange={setTimeRangeDays} />
 
       {txLoading ? (
-        <p className="text-sm text-muted-foreground">Loading insights...</p>
+        <p className="text-sm text-muted-foreground">{t("insights.page.loadingInsights")}</p>
       ) : insightsError ? (
         <p className="text-sm text-destructive">{insightsError}</p>
       ) : (
@@ -118,16 +127,16 @@ export function InsightsRecommendationsPage() {
 
       <div className="space-y-3 border-t border-border/70 pt-5">
         <div>
-          <h2 className="text-lg font-bold tracking-tight">Deep dive</h2>
+          <h2 className="text-lg font-bold tracking-tight">{t("insights.page.deepDiveTitle")}</h2>
           <p className="text-sm text-muted-foreground">
-            Swipe through the details for the {deepDivePeriodLabel}.
+            {t("insights.page.deepDiveSubtitle", { period: deepDivePeriodLabel })}
           </p>
         </div>
 
         <AnalysisPeriodCard value={deepDiveDays} onChange={setDeepDiveDays} />
 
         {deepDiveLoading ? (
-          <p className="text-sm text-muted-foreground">Loading insights...</p>
+          <p className="text-sm text-muted-foreground">{t("insights.page.loadingInsights")}</p>
         ) : deepDiveErrorMessage ? (
           <p className="text-sm text-destructive">{deepDiveErrorMessage}</p>
         ) : (

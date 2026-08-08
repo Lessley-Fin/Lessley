@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { KeyboardEvent } from "react"
 import { X } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Input } from "@/components/ui/input"
 
@@ -10,7 +11,8 @@ interface TagChipInputProps {
   placeholder?: string
 }
 
-export function TagChipInput({ value, onChange, placeholder = "Add a tag and press Enter" }: TagChipInputProps) {
+export function TagChipInput({ value, onChange, placeholder }: TagChipInputProps) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState("")
 
   function commitDraft() {
@@ -52,7 +54,7 @@ export function TagChipInput({ value, onChange, placeholder = "Add a tag and pre
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={commitDraft}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("admin.tagChipInput.placeholder")}
         className="h-12 rounded-2xl"
       />
     </div>

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 import { CarouselSlideCard } from "@/components/shared/CarouselSlideCard"
 import { INSIGHTS_DEFAULTS, emojiForStore } from "@/lib/constants"
 import { formatAmount } from "@/lib/formatters"
@@ -9,19 +11,20 @@ interface TopStoresSlideProps {
 }
 
 export function TopStoresSlide({ stores }: TopStoresSlideProps) {
+  const { t } = useTranslation()
   const topStores = stores.slice(0, INSIGHTS_DEFAULTS.CAROUSEL_LIST_LIMIT)
 
   if (topStores.length === 0) {
     return (
-      <CarouselSlideCard title="Top stores" subtitle="Scroll for the full ten">
-        <p className="text-sm text-muted-foreground">No store patterns yet for this period.</p>
+      <CarouselSlideCard title={t("insights.topStoresSlide.title")} subtitle={t("insights.topStoresSlide.subtitle")}>
+        <p className="text-sm text-muted-foreground">{t("insights.topStoresSlide.empty")}</p>
       </CarouselSlideCard>
     )
   }
 
   return (
-    <CarouselSlideCard title="Top stores" subtitle="Scroll for the full ten">
-      <ul className="no-scrollbar max-h-52 space-y-2 overflow-y-auto pr-1">
+    <CarouselSlideCard title={t("insights.topStoresSlide.title")} subtitle={t("insights.topStoresSlide.subtitle")}>
+      <ul className="no-scrollbar max-h-52 space-y-2 overflow-y-auto pe-1">
         {topStores.map((store, i) => {
           const label = getStoreLabel(store)
           return (
@@ -33,7 +36,9 @@ export function TopStoresSlide({ stores }: TopStoresSlideProps) {
                 <p className="truncate text-sm font-semibold">
                   {i + 1}. {label}
                 </p>
-                <p className="text-xs text-muted-foreground">{getStoreTransactionCount(store)} transactions</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("insights.common.transactionsCount", { count: getStoreTransactionCount(store) })}
+                </p>
               </div>
               <span className="text-sm font-bold">{formatAmount(getStoreTotalAmount(store))}</span>
             </li>

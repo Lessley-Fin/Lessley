@@ -1,17 +1,16 @@
 import { ChevronRight, Globe, Landmark, LogOut, Shield, SlidersHorizontal, User } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 import type { MeResponse } from "@/features/user/api"
 import { ROUTES } from "@/lib/routes"
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/lib/i18n/config"
 import type { SettingsView } from "../types"
 
-const MENU_ITEMS = [
-  { id: "profile", icon: User, title: "View your profile", desc: "Username and email" },
-  { id: "preferences", icon: SlidersHorizontal, title: "Preferences", desc: "Clubs, match level and muted noise" },
-  { id: "banking", icon: Landmark, title: "Open banking", desc: "Connected cards" },
-  { id: "language", icon: Globe, title: "Language", desc: "English" },
-  { id: "logout", icon: LogOut, title: "Log out", desc: "End this session" },
-] as const satisfies readonly { id: Exclude<SettingsView, "menu">; icon: typeof User; title: string; desc: string }[]
+const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
+  en: "English",
+  he: "עברית",
+}
 
 interface SettingsMenuProps {
   profile: MeResponse
@@ -19,7 +18,17 @@ interface SettingsMenuProps {
 }
 
 export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
+  const { t, i18n } = useTranslation()
   const isAdmin = profile.roles.includes("Admin")
+  const currentLanguageName = LANGUAGE_NAMES[i18n.language as SupportedLanguage] ?? LANGUAGE_NAMES[SUPPORTED_LANGUAGES[0]]
+
+  const MENU_ITEMS = [
+    { id: "profile", icon: User, title: t("settings.menu.profileTitle"), desc: t("settings.menu.profileDesc") },
+    { id: "preferences", icon: SlidersHorizontal, title: t("settings.menu.preferencesTitle"), desc: t("settings.menu.preferencesDesc") },
+    { id: "banking", icon: Landmark, title: t("settings.menu.bankingTitle"), desc: t("settings.menu.bankingDesc") },
+    { id: "language", icon: Globe, title: t("settings.menu.languageTitle"), desc: currentLanguageName },
+    { id: "logout", icon: LogOut, title: t("settings.menu.logoutTitle"), desc: t("settings.menu.logoutDesc") },
+  ] as const satisfies readonly { id: Exclude<SettingsView, "menu">; icon: typeof User; title: string; desc: string }[]
 
   return (
     <>
@@ -39,7 +48,7 @@ export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
             <button
               type="button"
               onClick={() => onNavigate(item.id)}
-              className="flex w-full items-center gap-3 border-b border-border p-4 text-left last:border-0 hover:bg-secondary"
+              className="flex w-full items-center gap-3 border-b border-border p-4 text-start last:border-0 hover:bg-secondary"
             >
               <span className="flex size-9 items-center justify-center rounded-full bg-secondary">
                 <item.icon className="size-4 text-primary" aria-hidden />
@@ -48,7 +57,7 @@ export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
                 <p className="text-sm font-semibold">{item.title}</p>
                 <p className="text-xs text-muted-foreground">{item.desc}</p>
               </div>
-              <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+              <ChevronRight className="size-4 text-muted-foreground rtl:rotate-180" aria-hidden />
             </button>
           </li>
         ))}
@@ -63,10 +72,10 @@ export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
             <Shield className="size-4 text-primary" aria-hidden />
           </span>
           <div className="flex-1">
-            <p className="text-sm font-semibold">Admin console</p>
-            <p className="text-xs text-muted-foreground">Roles, tags and notifications</p>
+            <p className="text-sm font-semibold">{t("settings.menu.adminConsoleTitle")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.menu.adminConsoleDesc")}</p>
           </div>
-          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+          <ChevronRight className="size-4 text-muted-foreground rtl:rotate-180" aria-hidden />
         </Link>
       ) : null}
     </>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Lightbulb } from "lucide-react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { useClubs } from "@/features/clubs/hooks"
@@ -17,9 +18,9 @@ import { cn } from "@/lib/utils"
 import { MissedSavingsSlide } from "./components/MissedSavingsSlide"
 import { TopClubMatchesSlide } from "./components/TopClubMatchesSlide"
 
-const TABS = ["Top matches", "Missed savings"]
-
 export function RecommendationsPage() {
+  const { t } = useTranslation()
+  const TABS = [t("recommendations.page.tabTopMatches"), t("recommendations.page.tabMissedSavings")]
   const queryClient = useQueryClient()
   const [api, setApi] = useState<CarouselApi>()
   const [selected, setSelected] = useState(0)
@@ -75,10 +76,8 @@ export function RecommendationsPage() {
         <div className="flex size-12 items-center justify-center rounded-2xl bg-accent">
           <Lightbulb className="size-6 text-accent-foreground" aria-hidden />
         </div>
-        <p className="font-bold">Connect to get recommendations</p>
-        <p className="text-sm text-muted-foreground">
-          Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.
-        </p>
+        <p className="font-bold">{t("recommendations.page.notConnectedTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("recommendations.page.notConnectedSubtitle")}</p>
       </div>
     )
   }
@@ -86,8 +85,8 @@ export function RecommendationsPage() {
   return (
     <div className="space-y-4 pb-2">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Recommendations</h1>
-        <p className="text-sm text-muted-foreground">Club fit calculated from your last 90 days</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("recommendations.page.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("recommendations.page.subtitle")}</p>
       </div>
 
       <div className="flex gap-1 rounded-full border border-border bg-card p-1">

@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { formatRelativeTime } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { notificationBadge, notificationHasDetail, notificationTitle } from "../helpers"
+import { notificationBadge, notificationHasDetail, notificationTitleKey } from "../helpers"
 import type { NotificationDto } from "../notificationTypes"
 import { NotificationDetail } from "./NotificationDetail"
 
@@ -13,6 +14,7 @@ interface NotificationRowProps {
 }
 
 export function NotificationRow({ item, onRead }: NotificationRowProps) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const hasDetail = notificationHasDetail(item)
 
@@ -28,18 +30,18 @@ export function NotificationRow({ item, onRead }: NotificationRowProps) {
         !item.isRead && "ring-2 ring-primary/40",
       )}
     >
-      <button type="button" onClick={handleClick} className="w-full text-left">
+      <button type="button" onClick={handleClick} className="w-full text-start">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-secondary-foreground">
-            {notificationBadge(item)}
+            {t(`notifications.badge.${notificationBadge(item)}`)}
           </span>
           {!item.isRead ? <span className="size-2 rounded-full bg-primary" aria-hidden /> : null}
-          <span className="ml-auto text-xs text-muted-foreground">{formatRelativeTime(item.sentAt)}</span>
+          <span className="ms-auto text-xs text-muted-foreground">{formatRelativeTime(item.sentAt)}</span>
           {hasDetail ? (
             <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} aria-hidden />
           ) : null}
         </div>
-        <p className="mt-2 text-[15px] font-semibold">{notificationTitle(item)}</p>
+        <p className="mt-2 text-[15px] font-semibold">{t(`notifications.title.${notificationTitleKey(item)}`)}</p>
         <p className="text-sm text-muted-foreground">{item.message}</p>
       </button>
       {expanded && hasDetail ? <NotificationDetail item={item} /> : null}

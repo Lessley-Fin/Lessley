@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom"
 import { createPortal } from "react-dom"
+import { useTranslation } from "react-i18next"
 import { Bell, LogOut, Menu, Settings, Shield, ShieldCheck, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -37,9 +38,10 @@ export function AppMenu({
   onOpenAdmin,
   onLogout,
 }: AppMenuProps) {
+  const { t } = useTranslation()
   const location = useLocation()
   const hasUnread = unreadCount > 0
-  const displayName = username.trim() || "Guest"
+  const displayName = username.trim() || t("menu.guest")
 
   const isNotificationsActive = location.pathname === ROUTES.NOTIFICATIONS
   const isSettingsActive = location.pathname === ROUTES.SETTINGS
@@ -60,7 +62,7 @@ export function AppMenu({
               <button
                 type="button"
                 className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
-                aria-label="Close menu"
+                aria-label={t("menu.closeMenu")}
                 tabIndex={open ? 0 : -1}
                 onClick={() => onOpenChange(false)}
               />
@@ -68,8 +70,8 @@ export function AppMenu({
               <aside
                 role="dialog"
                 aria-modal="true"
-                aria-label="Navigation menu"
-                className="absolute bottom-0 left-0 top-0 flex w-[min(85%,20rem)] flex-col overflow-hidden rounded-r-3xl border-r border-slate-200/60 bg-white shadow-[8px_0_40px_hsl(222_47%_11%_/0.12)]"
+                aria-label={t("menu.navigationMenu")}
+                className="absolute bottom-0 start-0 top-0 flex w-[min(85%,20rem)] flex-col overflow-hidden rounded-e-3xl border-e border-slate-200/60 bg-white shadow-[8px_0_40px_hsl(222_47%_11%_/0.12)]"
               >
                 <div className="shrink-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 px-5 pb-6 pt-[max(2rem,env(safe-area-inset-top))] text-white">
                   <div className="flex items-start justify-between">
@@ -84,7 +86,7 @@ export function AppMenu({
                         <p className="truncate text-lg font-bold leading-tight">{displayName}</p>
                         <p className="mt-0.5 flex items-center gap-1 text-xs text-blue-100">
                           <Shield className="size-3" aria-hidden />
-                          Secured account
+                          {t("menu.securedAccount")}
                         </p>
                       </div>
                     </div>
@@ -93,7 +95,7 @@ export function AppMenu({
                       variant="ghost"
                       className="min-h-9 min-w-9 shrink-0 rounded-xl bg-white/10 px-0 text-white hover:bg-white/20 hover:text-white"
                       onClick={() => onOpenChange(false)}
-                      aria-label="Close menu"
+                      aria-label={t("menu.closeMenu")}
                       tabIndex={open ? 0 : -1}
                     >
                       <X className="size-5" />
@@ -101,9 +103,9 @@ export function AppMenu({
                   </div>
                 </div>
 
-                <nav className="flex shrink-0 flex-col gap-1 px-3 py-4" role="menu" aria-label="Main menu">
+                <nav className="flex shrink-0 flex-col gap-1 px-3 py-4" role="menu" aria-label={t("menu.mainMenu")}>
                   <MenuNavItem
-                    label="Notifications"
+                    label={t("menu.notifications")}
                     icon={Bell}
                     active={isNotificationsActive}
                     badge={hasUnread ? unreadCount : undefined}
@@ -111,14 +113,14 @@ export function AppMenu({
                     onClick={() => closeAnd(onOpenNotifications)}
                   />
                   <MenuNavItem
-                    label="Settings"
+                    label={t("menu.settings")}
                     icon={Settings}
                     active={isSettingsActive}
                     onClick={() => closeAnd(onOpenSettings)}
                   />
                   {isAdmin ? (
                     <MenuNavItem
-                      label="Admin"
+                      label={t("menu.admin")}
                       icon={ShieldCheck}
                       active={isAdminActive}
                       onClick={() => closeAnd(onOpenAdmin)}
@@ -127,7 +129,7 @@ export function AppMenu({
                 </nav>
 
                 <div className="mt-auto shrink-0 border-t border-slate-100 px-3 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-                  <MenuNavItem label="Sign out" icon={LogOut} onClick={() => closeAnd(onLogout)} />
+                  <MenuNavItem label={t("menu.signOut")} icon={LogOut} onClick={() => closeAnd(onLogout)} />
                 </div>
               </aside>
             </div>
@@ -143,11 +145,11 @@ export function AppMenu({
         variant="ghost"
         className="relative min-h-11 min-w-11 rounded-xl border border-slate-200/80 bg-white px-0 text-slate-700 shadow-sm hover:bg-slate-50"
         onClick={() => onOpenChange(true)}
-        aria-label={hasUnread ? `Open menu, ${unreadCount} unread notifications` : "Open menu"}
+        aria-label={hasUnread ? t("menu.openMenuWithUnread", { count: unreadCount }) : t("menu.openMenu")}
         aria-expanded={open}
       >
         <Menu className="size-5" />
-        {hasUnread ? <UnreadDot className="-right-0.5 -top-0.5" /> : null}
+        {hasUnread ? <UnreadDot className="-end-0.5 -top-0.5" /> : null}
       </Button>
       {menuPortal}
     </>

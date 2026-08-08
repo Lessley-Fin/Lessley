@@ -1,4 +1,5 @@
 import { Calendar } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { emojiForCategory, formatCategoryLabel } from "@/lib/constants"
 import { formatDate } from "@/lib/formatters"
@@ -13,6 +14,7 @@ interface DealResultCardProps {
 }
 
 export function DealResultCard({ item, clubs, rank, onOpen }: DealResultCardProps) {
+  const { t } = useTranslation()
   const { deal, store } = item
   const category = store.metadata.mccCodes[0]
 
@@ -20,20 +22,22 @@ export function DealResultCard({ item, clubs, rank, onOpen }: DealResultCardProp
     <button
       type="button"
       onClick={() => onOpen(item)}
-      className="w-full overflow-hidden rounded-3xl bg-card text-left shadow-[var(--shadow-card)] transition-transform active:scale-[0.99]"
+      className="w-full overflow-hidden rounded-3xl bg-card text-start shadow-[var(--shadow-card)] transition-transform active:scale-[0.99]"
     >
       <div className="surface-navy relative flex h-28 items-end p-4">
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-5xl opacity-40">
           {emojiForCategory(category)}
         </span>
         {rank !== undefined ? (
-          <span className="absolute left-3 top-3 flex size-8 items-center justify-center rounded-full bg-card text-sm font-bold text-foreground">
+          <span className="absolute start-3 top-3 flex size-8 items-center justify-center rounded-full bg-card text-sm font-bold text-foreground">
             {rank}
           </span>
         ) : null}
         <div className="relative">
           <p className="text-sm font-bold">{store.name}</p>
-          <p className="text-xs text-navy-muted">{category ? formatCategoryLabel(category) : "Deal"}</p>
+          <p className="text-xs text-navy-muted">
+            {category ? t(`categories.${category}`, { defaultValue: formatCategoryLabel(category) }) : t("dealFinder.card.deal")}
+          </p>
         </div>
       </div>
       <div className="space-y-2 p-4">

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { ChevronDown, RefreshCw, TrendingDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { formatAmount } from "@/lib/formatters"
@@ -14,6 +15,7 @@ interface MissedSavingsSlideProps {
 }
 
 export function MissedSavingsSlide({ insights, clubs, onRecalculate, isPending }: MissedSavingsSlideProps) {
+  const { t } = useTranslation()
   const [openId, setOpenId] = useState<string | null>(null)
   const items = insights.filter((i) => (i.missed_store_discont?.length ?? 0) > 0).slice(0, 10)
 
@@ -24,14 +26,14 @@ export function MissedSavingsSlide({ insights, clubs, onRecalculate, isPending }
           <TrendingDown className="size-4 text-accent-foreground" aria-hidden />
         </span>
         <div className="flex-1">
-          <p className="font-bold">Missed savings</p>
-          <p className="text-xs text-muted-foreground">Purchases that had a better home</p>
+          <p className="font-bold">{t("recommendations.missedSavingsSlide.title")}</p>
+          <p className="text-xs text-muted-foreground">{t("recommendations.missedSavingsSlide.subtitle")}</p>
         </div>
         <Button
           type="button"
           variant="pill"
           size="icon"
-          aria-label="Recalculate missed savings"
+          aria-label={t("recommendations.missedSavingsSlide.recalculateAria")}
           onClick={onRecalculate}
           disabled={isPending}
         >
@@ -39,12 +41,9 @@ export function MissedSavingsSlide({ insights, clubs, onRecalculate, isPending }
         </Button>
       </div>
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No missed savings found yet. Once your spending is analyzed, we&apos;ll show you where you could have
-          saved.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("recommendations.missedSavingsSlide.empty")}</p>
       ) : (
-        <ul className="no-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <ul className="no-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pe-1">
           {items.map((item) => {
             const isOpen = openId === item.transaction_id
             return (
@@ -52,7 +51,7 @@ export function MissedSavingsSlide({ insights, clubs, onRecalculate, isPending }
                 <button
                   type="button"
                   onClick={() => setOpenId(isOpen ? null : item.transaction_id)}
-                  className="flex w-full items-center gap-3 text-left"
+                  className="flex w-full items-center gap-3 text-start"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{item.store_name}</p>
@@ -69,7 +68,7 @@ export function MissedSavingsSlide({ insights, clubs, onRecalculate, isPending }
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold">{getClubName(clubs, discount.club_id)}</p>
                           <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground">
-                            {discount.store_count} stores
+                            {t("recommendations.missedSavingsSlide.storesCount", { count: discount.store_count })}
                           </span>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">

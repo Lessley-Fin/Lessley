@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Check, Copy, ExternalLink } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -15,6 +16,7 @@ interface DealDetailDialogProps {
 }
 
 export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialogProps) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   function handleCopyCode(code: string) {
@@ -37,7 +39,9 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
                 </span>
                 {item.store.name}
               </DialogTitle>
-              <DialogDescription>{category ? formatCategoryLabel(category) : "Deal"}</DialogDescription>
+              <DialogDescription>
+                {category ? t(`categories.${category}`, { defaultValue: formatCategoryLabel(category) }) : t("dealFinder.detailDialog.deal")}
+              </DialogDescription>
             </DialogHeader>
 
             <p className="text-[15px] font-semibold">{item.deal.title}</p>
@@ -50,7 +54,7 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
                 {getClubName(clubs, item.deal.clubId)}
               </span>
               <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                Scraped {formatDate(item.deal.scrapedAt)}
+                {t("dealFinder.detailDialog.scraped", { date: formatDate(item.deal.scrapedAt) })}
               </span>
             </div>
 
@@ -61,7 +65,7 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
                   type="button"
                   onClick={() => handleCopyCode(item.deal.couponCode!)}
                   className="shrink-0 text-xs font-medium text-primary"
-                  aria-label="Copy coupon code"
+                  aria-label={t("dealFinder.detailDialog.copyCouponAria")}
                 >
                   {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                 </button>
@@ -87,7 +91,7 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
             {item.deal.benefitUrl ? (
               <Button asChild variant="hero" size="xl">
                 <a href={item.deal.benefitUrl} target="_blank" rel="noopener noreferrer">
-                  Get this deal
+                  {t("dealFinder.detailDialog.getThisDeal")}
                 </a>
               </Button>
             ) : null}
@@ -100,7 +104,7 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
                 className="flex items-center justify-center gap-1 text-xs font-medium text-primary"
               >
                 <ExternalLink className="size-3" aria-hidden />
-                Visit store
+                {t("dealFinder.detailDialog.visitStore")}
               </a>
             ) : null}
           </>

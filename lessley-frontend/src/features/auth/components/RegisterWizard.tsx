@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowLeft } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 import { StepIndicator } from "@/components/shared/StepIndicator"
 import { Form } from "@/components/ui/form"
@@ -14,9 +15,9 @@ import { AccountStep } from "./register-steps/AccountStep"
 import { BankingStep } from "./register-steps/BankingStep"
 import { ClubsStep } from "./register-steps/ClubsStep"
 
-const STEPS = ["Account", "Clubs", "Banking"]
-
 export function RegisterWizard() {
+  const { t } = useTranslation()
+  const STEPS = [t("auth.register.stepAccount"), t("auth.register.stepClubs"), t("auth.register.stepBanking")]
   const [step, setStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
@@ -51,7 +52,7 @@ export function RegisterWizard() {
       setStep(2)
     } catch (error) {
       form.setError("root", {
-        message: error instanceof Error ? error.message : "Registration failed. Please try again.",
+        message: error instanceof Error ? error.message : t("auth.register.registrationFailed"),
       })
     } finally {
       setIsSubmitting(false)
@@ -74,7 +75,7 @@ export function RegisterWizard() {
         onClick={handleBack}
         className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground"
       >
-        <ArrowLeft className="size-4" aria-hidden /> Back
+        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> {t("auth.register.back")}
       </button>
       <div className="mx-auto w-full max-w-sm">
         <StepIndicator steps={STEPS} currentIndex={step} />

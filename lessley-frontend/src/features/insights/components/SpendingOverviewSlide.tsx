@@ -1,4 +1,5 @@
 import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
+import { useTranslation } from "react-i18next"
 
 import { CarouselSlideCard } from "@/components/shared/CarouselSlideCard"
 import type { SpendingPeriodComparison } from "@/lib/types"
@@ -17,20 +18,25 @@ function LegendDot({ color, text }: { color: string; text: string }) {
 }
 
 export function SpendingOverviewSlide({ comparison }: SpendingOverviewSlideProps) {
+  const { t } = useTranslation()
   if (!comparison) {
     return (
-      <CarouselSlideCard title="Spending overview" subtitle="This period vs previous">
-        <p className="text-sm text-muted-foreground">Not enough history yet to compare periods.</p>
+      <CarouselSlideCard title={t("insights.spendingOverviewSlide.title")} subtitle={t("insights.spendingOverviewSlide.subtitle")}>
+        <p className="text-sm text-muted-foreground">{t("insights.spendingOverviewSlide.empty")}</p>
       </CarouselSlideCard>
     )
   }
 
   const data = [
-    { label: "This period", current: comparison.current_period_total, previous: comparison.previous_period_total },
+    {
+      label: t("insights.spendingOverviewSlide.thisPeriod"),
+      current: comparison.current_period_total,
+      previous: comparison.previous_period_total,
+    },
   ]
 
   return (
-    <CarouselSlideCard title="Spending overview" subtitle="This period vs previous">
+    <CarouselSlideCard title={t("insights.spendingOverviewSlide.title")} subtitle={t("insights.spendingOverviewSlide.subtitle")}>
       <ResponsiveContainer width="100%" height={170}>
         <BarChart data={data} barGap={4}>
           <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} />
@@ -39,8 +45,8 @@ export function SpendingOverviewSlide({ comparison }: SpendingOverviewSlideProps
         </BarChart>
       </ResponsiveContainer>
       <div className="flex gap-4 text-xs text-muted-foreground">
-        <LegendDot color="hsl(var(--chart-1))" text="Current" />
-        <LegendDot color="hsl(var(--chart-3))" text="Previous" />
+        <LegendDot color="hsl(var(--chart-1))" text={t("insights.spendingOverviewSlide.current")} />
+        <LegendDot color="hsl(var(--chart-3))" text={t("insights.spendingOverviewSlide.previous")} />
       </div>
     </CarouselSlideCard>
   )

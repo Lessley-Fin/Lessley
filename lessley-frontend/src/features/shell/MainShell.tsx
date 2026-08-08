@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { Bell } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 import { useAuthStore } from "@/features/auth/store"
 import { useUnreadCount } from "@/features/notifications/hooks"
@@ -9,6 +10,7 @@ import { ROUTES } from "@/lib/routes"
 import { cn } from "@/lib/utils"
 
 export function MainShell({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
   const username = useAuthStore((s) => s.username)
   const unreadCount = useUnreadCount()
   const location = useLocation()
@@ -25,22 +27,22 @@ export function MainShell({ children }: { children: ReactNode }) {
             L
           </div>
           <div className="flex-1">
-            <p className="text-[15px] font-bold leading-tight">Lessley</p>
-            <p className="text-xs text-muted-foreground">Financial autopilot</p>
+            <p className="text-[15px] font-bold leading-tight">{t("common.appName")}</p>
+            <p className="text-xs text-muted-foreground">{t("common.tagline")}</p>
           </div>
           <Link
             to={ROUTES.NOTIFICATIONS}
-            aria-label="Notifications"
+            aria-label={t("nav.notifications")}
             className="relative flex size-10 items-center justify-center rounded-full border border-border bg-card shadow-[var(--shadow-card)]"
           >
             <Bell className="size-[18px]" aria-hidden />
             {unreadCount > 0 ? (
-              <span className="absolute right-1.5 top-1.5 size-2.5 rounded-full bg-warning ring-2 ring-card" />
+              <span className="absolute end-1.5 top-1.5 size-2.5 rounded-full bg-warning ring-2 ring-card" />
             ) : null}
           </Link>
           <Link
             to={ROUTES.SETTINGS}
-            aria-label="Profile and settings"
+            aria-label={t("nav.profileAndSettings")}
             className="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-bold uppercase text-accent-foreground"
           >
             {avatarInitial}
@@ -68,7 +70,7 @@ export function MainShell({ children }: { children: ReactNode }) {
                       )}
                     >
                       <tab.icon className="size-[18px]" aria-hidden />
-                      {tab.label}
+                      {t(tab.labelKey)}
                     </Link>
                   )
                 })}

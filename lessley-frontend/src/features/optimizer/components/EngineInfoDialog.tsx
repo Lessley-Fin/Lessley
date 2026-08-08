@@ -1,4 +1,5 @@
 import { Box, CircleQuestionMark, Globe, Sparkles, Zap } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -10,29 +11,30 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-const HIGHLIGHTS = [
-  {
-    icon: Sparkles,
-    title: "Stacked savings",
-    description: "Combine a store coupon with the right card benefit in one step.",
-  },
-  {
-    icon: Box,
-    title: "Exact product match",
-    description: "We price the item you actually want, not a lookalike.",
-  },
-  {
-    icon: Globe,
-    title: "Ephemeral coupons",
-    description: "Scraped from retailers and forums minutes after they appear.",
-  },
-]
-
 export function EngineInfoDialog() {
+  const { t } = useTranslation()
+  const HIGHLIGHTS = [
+    {
+      icon: Sparkles,
+      title: t("optimizer.engineInfoDialog.highlight1Title"),
+      description: t("optimizer.engineInfoDialog.highlight1Desc"),
+    },
+    {
+      icon: Box,
+      title: t("optimizer.engineInfoDialog.highlight2Title"),
+      description: t("optimizer.engineInfoDialog.highlight2Desc"),
+    },
+    {
+      icon: Globe,
+      title: t("optimizer.engineInfoDialog.highlight3Title"),
+      description: t("optimizer.engineInfoDialog.highlight3Desc"),
+    },
+  ]
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="pill" size="icon" aria-label="How the engine works">
+        <Button variant="pill" size="icon" aria-label={t("optimizer.engineInfoDialog.ariaLabel")}>
           <CircleQuestionMark />
         </Button>
       </DialogTrigger>
@@ -40,9 +42,9 @@ export function EngineInfoDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="size-4 text-primary" aria-hidden />
-            What you'll get
+            {t("optimizer.engineInfoDialog.title")}
           </DialogTitle>
-          <DialogDescription>How the engine works</DialogDescription>
+          <DialogDescription>{t("optimizer.engineInfoDialog.subtitle")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           {HIGHLIGHTS.map(({ icon: Icon, title, description }) => (

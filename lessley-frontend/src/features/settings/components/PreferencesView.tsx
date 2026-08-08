@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { useClubs } from "@/features/clubs/hooks"
@@ -28,6 +29,7 @@ interface PreferencesViewProps {
 }
 
 export function PreferencesView({ profile }: PreferencesViewProps) {
+  const { t } = useTranslation()
   const { data: clubs = [] } = useClubs()
   const updateProfile = useUpdateMyProfile()
 
@@ -42,7 +44,7 @@ export function PreferencesView({ profile }: PreferencesViewProps) {
   return (
     <div className="space-y-4 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
       <div>
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Loyalty clubs</p>
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("settings.preferences.loyaltyClubs")}</p>
         <div className="flex flex-wrap gap-2">
           {clubs.map((club) => (
             <Chip
@@ -57,31 +59,29 @@ export function PreferencesView({ profile }: PreferencesViewProps) {
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Match level</p>
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("settings.preferences.matchLevel")}</p>
         <div className="flex flex-wrap gap-2">
           {MATCH_LEVEL_OPTIONS.map((opt) => (
             <Chip key={opt.value} active={matchLevel === opt.value} onClick={() => setMatchLevel(opt.value)}>
-              {opt.label}
+              {t(`matchLevels.${opt.value}`)}
             </Chip>
           ))}
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Muted categories</p>
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("settings.preferences.mutedCategories")}</p>
         {profile.tags.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No tags yet — connect your bank to see available tags.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("settings.preferences.noTagsYet")}</p>
         ) : (
-          <div className="no-scrollbar flex max-h-44 flex-wrap gap-2 overflow-y-auto pr-1">
+          <div className="no-scrollbar flex max-h-44 flex-wrap gap-2 overflow-y-auto pe-1">
             {profile.tags.map((tag) => (
               <Chip
                 key={tag}
                 active={mutedTags.includes(tag)}
                 onClick={() => setMutedTags((prev) => toggleArrayValue(prev, tag))}
               >
-                {formatCategoryLabel(tag)}
+                {t(`categories.${tag}`, { defaultValue: formatCategoryLabel(tag) })}
               </Chip>
             ))}
           </div>
@@ -90,13 +90,13 @@ export function PreferencesView({ profile }: PreferencesViewProps) {
 
       {updateProfile.error ? (
         <p className="text-xs text-destructive">
-          {updateProfile.error instanceof Error ? updateProfile.error.message : "Failed to save settings."}
+          {updateProfile.error instanceof Error ? updateProfile.error.message : t("settings.preferences.saveFailed")}
         </p>
       ) : null}
-      {updateProfile.isSuccess ? <p className="text-xs text-success">Settings saved</p> : null}
+      {updateProfile.isSuccess ? <p className="text-xs text-success">{t("settings.preferences.saved")}</p> : null}
 
       <Button type="button" variant="hero" size="xl" onClick={handleSave} disabled={updateProfile.isPending}>
-        {updateProfile.isPending ? "Saving..." : "Save settings"}
+        {updateProfile.isPending ? t("settings.preferences.saving") : t("settings.preferences.saveSettings")}
       </Button>
     </div>
   )

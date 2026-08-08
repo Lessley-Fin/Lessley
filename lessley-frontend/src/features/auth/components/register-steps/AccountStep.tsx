@@ -1,5 +1,6 @@
 import type { UseFormReturn } from "react-hook-form"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +20,7 @@ interface AccountStepProps {
 }
 
 export function AccountStep({ form, onContinue }: AccountStepProps) {
+  const { t } = useTranslation()
   return (
     <form
       className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
@@ -27,13 +29,13 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
         onContinue()
       }}
     >
-      <h1 className="text-xl font-bold">Create account</h1>
+      <h1 className="text-xl font-bold">{t("auth.register.account.title")}</h1>
       <FormField
         control={form.control}
         name="userName"
         render={({ field }) => (
           <FormItem className="space-y-1.5">
-            <FormLabel>Username</FormLabel>
+            <FormLabel>{t("auth.register.account.username")}</FormLabel>
             <FormControl>
               <Input {...field} autoComplete="username" className="h-12 rounded-2xl" />
             </FormControl>
@@ -46,7 +48,7 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
         name="email"
         render={({ field }) => (
           <FormItem className="space-y-1.5">
-            <FormLabel>Email</FormLabel>
+            <FormLabel>{t("auth.register.account.email")}</FormLabel>
             <FormControl>
               <Input {...field} type="email" autoComplete="email" className="h-12 rounded-2xl" />
             </FormControl>
@@ -59,7 +61,7 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
         name="password"
         render={({ field }) => (
           <FormItem className="space-y-1.5">
-            <FormLabel>Password</FormLabel>
+            <FormLabel>{t("auth.register.account.password")}</FormLabel>
             <FormControl>
               <Input {...field} type="password" autoComplete="new-password" className="h-12 rounded-2xl" />
             </FormControl>
@@ -72,7 +74,7 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
         name="verifyPassword"
         render={({ field }) => (
           <FormItem className="space-y-1.5">
-            <FormLabel>Verify password</FormLabel>
+            <FormLabel>{t("auth.register.account.verifyPassword")}</FormLabel>
             <FormControl>
               <Input {...field} type="password" autoComplete="new-password" className="h-12 rounded-2xl" />
             </FormControl>
@@ -81,12 +83,12 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
         )}
       />
       <Button type="submit" variant="hero" size="xl">
-        Continue
+        {t("common.continue")}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        Already have an account?{" "}
+        {t("auth.register.account.alreadyHaveAccount")}{" "}
         <Link to={ROUTES.LOGIN} className="font-medium text-primary">
-          Sign in
+          {t("auth.register.account.signIn")}
         </Link>
       </p>
     </form>

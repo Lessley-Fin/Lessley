@@ -1,5 +1,6 @@
 import type { UseFormReturn } from "react-hook-form"
 import { Check, Loader2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
@@ -16,16 +17,15 @@ interface ClubsStepProps {
 }
 
 export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsStepProps) {
+  const { t } = useTranslation()
   const { data: clubs = [] } = useClubs()
   const selected = form.watch("clubs") ?? []
 
   return (
     <div className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
       <div>
-        <h1 className="text-xl font-bold">Which clubs do you own? 🎟️</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Optional — pick what you already have and we'll start matching deals right away.
-        </p>
+        <h1 className="text-xl font-bold">{t("auth.register.clubs.title")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("auth.register.clubs.subtitle")}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {clubs.map((club) => {
@@ -37,7 +37,7 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
               disabled={isLoading}
               onClick={() => form.setValue("clubs", toggleArrayValue(selected, club.id))}
               className={cn(
-                "flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all",
+                "flex flex-col items-start gap-2 rounded-2xl border p-4 text-start transition-all",
                 isSelected ? "border-primary bg-accent" : "border-border bg-secondary hover:border-primary/40"
               )}
             >
@@ -45,7 +45,7 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
               <span className="text-sm font-semibold leading-tight">{club.name}</span>
               {isSelected ? (
                 <span className="flex items-center gap-1 text-[11px] font-medium text-primary">
-                  <Check className="size-3" aria-hidden /> Selected
+                  <Check className="size-3" aria-hidden /> {t("auth.register.clubs.selected")}
                 </span>
               ) : null}
             </button>
@@ -55,7 +55,7 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
       <ErrorAlert message={serverError} />
       <Button type="button" variant="hero" size="xl" disabled={isLoading} onClick={onContinue}>
         {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
-        {isLoading ? "Creating account..." : "Continue"}
+        {isLoading ? t("auth.register.clubs.creatingAccount") : t("common.continue")}
       </Button>
     </div>
   )

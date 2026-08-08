@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2, Sparkles } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ import { loginSchema, type LoginValues } from "../schemas"
 import { usePostAuth } from "../usePostAuth"
 
 export function LoginForm() {
+  const { t } = useTranslation()
   const postAuth = usePostAuth()
 
   const form = useForm<LoginValues>({
@@ -36,7 +38,7 @@ export function LoginForm() {
       await postAuth({ userName: data.userName ?? values.userName, email: data.email })
     } catch (error) {
       form.setError("root", {
-        message: error instanceof Error ? error.message : "Sign-in failed. Please try again.",
+        message: error instanceof Error ? error.message : t("auth.login.signInFailed"),
       })
     }
   })
@@ -49,7 +51,7 @@ export function LoginForm() {
           name="userName"
           render={({ field }) => (
             <FormItem className="space-y-1.5">
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t("auth.login.username")}</FormLabel>
               <FormControl>
                 <Input {...field} autoComplete="username" className="h-12 rounded-2xl" disabled={isLoading} />
               </FormControl>
@@ -62,7 +64,7 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem className="space-y-1.5">
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t("auth.login.password")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -78,16 +80,16 @@ export function LoginForm() {
         />
         <div className="flex justify-end">
           <Link to={ROUTES.FORGOT_PASSWORD} className="text-xs font-medium text-primary hover:underline">
-            Forgot password?
+            {t("auth.login.forgotPassword")}
           </Link>
         </div>
         <ErrorAlert message={serverError} />
         <Button type="submit" variant="hero" size="xl" disabled={isLoading}>
           {isLoading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles />}
-          {isLoading ? "Signing in..." : "Sign in"}
+          {isLoading ? t("auth.login.signingIn") : t("auth.login.signIn")}
         </Button>
         <Button asChild variant="pill" size="xl">
-          <Link to={ROUTES.REGISTER}>Create account</Link>
+          <Link to={ROUTES.REGISTER}>{t("auth.login.createAccount")}</Link>
         </Button>
       </form>
     </Form>
