@@ -12,6 +12,7 @@ import {
   useTriggerMatchingClubs,
   useTriggerMissedSavings,
 } from "@/features/insights/hooks"
+import { getDirection } from "@/lib/i18n/config"
 import { queryKeys } from "@/lib/query-keys"
 import type { ClubRecommendation, ClubRecommendationResponse, TransactionInsight } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -19,7 +20,8 @@ import { MissedSavingsSlide } from "./components/MissedSavingsSlide"
 import { TopClubMatchesSlide } from "./components/TopClubMatchesSlide"
 
 export function RecommendationsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const direction = getDirection(i18n.language)
   const TABS = [t("recommendations.page.tabTopMatches"), t("recommendations.page.tabMissedSavings")]
   const queryClient = useQueryClient()
   const [api, setApi] = useState<CarouselApi>()
@@ -105,7 +107,7 @@ export function RecommendationsPage() {
         ))}
       </div>
 
-      <Carousel setApi={setApi} opts={{ align: "start" }}>
+      <Carousel setApi={setApi} opts={{ align: "start", direction }}>
         <CarouselContent>
           <CarouselItem>
             <TopClubMatchesSlide

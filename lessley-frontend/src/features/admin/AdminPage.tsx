@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import { getDirection } from "@/lib/i18n/config"
 import { cn } from "@/lib/utils"
 import { ChangeRoleSlide } from "./components/ChangeRoleSlide"
 import { NotifyGroupSlide } from "./components/NotifyGroupSlide"
@@ -9,7 +10,8 @@ import { NotifyUserSlide } from "./components/NotifyUserSlide"
 import { UpdateTagsSlide } from "./components/UpdateTagsSlide"
 
 export function AdminPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const direction = getDirection(i18n.language)
   const TABS = [
     t("admin.page.tabRole"),
     t("admin.page.tabTags"),
@@ -52,7 +54,7 @@ export function AdminPage() {
         ))}
       </div>
 
-      <Carousel setApi={setApi} opts={{ align: "start" }}>
+      <Carousel setApi={setApi} opts={{ align: "start", direction }}>
         <CarouselContent>
           <CarouselItem>
             <ChangeRoleSlide />
