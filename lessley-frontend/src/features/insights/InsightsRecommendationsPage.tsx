@@ -1,51 +1,84 @@
 import { useState } from "react"
-import { CheckCircle2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
+import { CarouselDots } from "@/components/shared/CarouselDots"
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import { useMyProfile } from "@/features/user/hooks"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
-import { fintech } from "@/lib/fintech-styles"
-import { ActiveAccountsCard } from "./components/ActiveAccountsCard"
+import { getDirection } from "@/lib/i18n/config"
+import { AccountsSlide } from "./components/AccountsSlide"
 import { AnalysisPeriodCard } from "./components/AnalysisPeriodCard"
 import { ConnectBankCard } from "./components/ConnectBankCard"
 import { ConnectionCheck } from "./components/ConnectionCheck"
-import { RecentTransactionsCard } from "./components/RecentTransactionsCard"
-import { SpendingByDayCard } from "./components/SpendingByDayCard"
-import { SpendingComparisonCard } from "./components/SpendingComparisonCard"
-import { SpendingOverviewCard } from "./components/SpendingOverviewCard"
-import { SpendingSavedCard } from "./components/SpendingSavedCard"
-import { TopStoresCard } from "./components/TopStoresCard"
+import { RecentTransactionsSlide } from "./components/RecentTransactionsSlide"
+import { SavingsHeroCard } from "./components/SavingsHeroCard"
+import { SpendingOverviewSlide } from "./components/SpendingOverviewSlide"
+import { StatsGridCard } from "./components/StatsGridCard"
+import { TopCategorySlide } from "./components/TopCategorySlide"
+import { TopStoresSlide } from "./components/TopStoresSlide"
 import {
   useCategoryInsights,
   useHasConnection,
   useInitOpenFinance,
-  useSpendingByDay,
   useSpendingPeriodComparison,
   useSpendingSaved,
-  useSpendingSavedByAccount,
   useTopAccounts,
   useTopStores,
   useTransactions,
 } from "./hooks"
 
 export function InsightsRecommendationsPage() {
+  const { t, i18n } = useTranslation()
+  const direction = getDirection(i18n.language)
+  const CAROUSEL_LABELS = [
+    t("insights.carousel.overview"),
+    t("insights.carousel.categories"),
+    t("insights.carousel.topStores"),
+    t("insights.carousel.transactions"),
+    t("insights.carousel.accounts"),
+  ]
+
+  function periodLabelFor(days: number) {
+    return days === 365 ? t("insights.period.lastYear") : t("insights.period.lastDays", { count: days })
+  }
+
   const [timeRangeDays, setTimeRangeDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
+  const [deepDiveDays, setDeepDiveDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>()
 
   const { data: isConnected, isLoading: checkingConnection } = useHasConnection()
   const connected = isConnected === true
 
+  const { data: profile } = useMyProfile()
+
   const { data: transactions = [], isLoading: txLoading, error: txError } = useTransactions(timeRangeDays, connected)
-  const { data: categoryInsights = [] } = useCategoryInsights(timeRangeDays, connected)
-  const { data: topAccounts = [] } = useTopAccounts(timeRangeDays, connected)
-  const { data: topStoresRaw = [] } = useTopStores(timeRangeDays, connected)
-  const { data: spendingByDay = [] } = useSpendingByDay(timeRangeDays, connected)
-  const { data: spendingComparison = null } = useSpendingPeriodComparison(timeRangeDays, connected)
   const { data: spendingSaved = null } = useSpendingSaved(timeRangeDays, connected)
-  const { data: spendingSavedByAccount = [] } = useSpendingSavedByAccount(timeRangeDays, connected)
+  const { data: linkedAccounts = [] } = useTopAccounts(timeRangeDays, connected)
+
+  const {
+    data: deepDiveTransactions = [],
+    isLoading: deepDiveLoading,
+    error: deepDiveError,
+  } = useTransactions(deepDiveDays, connected)
+  const { data: categoryInsights = [] } = useCategoryInsights(deepDiveDays, connected)
+  const { data: deepDiveAccounts = [] } = useTopAccounts(deepDiveDays, connected)
+  const { data: topStoresRaw = [] } = useTopStores(deepDiveDays, connected)
+  const { data: spendingComparison = null } = useSpendingPeriodComparison(deepDiveDays, connected)
+
   const initOpenFinance = useInitOpenFinance()
 
-  const accountHighlights = topAccounts.slice(0, INSIGHTS_DEFAULTS.ACCOUNT_HIGHLIGHTS_LIMIT)
   const insightsError = txError instanceof Error ? txError.message : ""
+  const deepDiveErrorMessage = deepDiveError instanceof Error ? deepDiveError.message : ""
 
-  const handleConnectOpenBanking = () => {
+  const totalSpend = transactions.reduce((sum, tx) => {
+    const amount = tx.amount?.chargedAmount?.amount ?? tx.amount?.originalAmount?.amount
+    return sum + (typeof amount === "number" ? amount : 0)
+  }, 0)
+
+  const periodLabel = periodLabelFor(timeRangeDays)
+  const deepDivePeriodLabel = periodLabelFor(deepDiveDays)
+
+  function handleConnectOpenBanking() {
     initOpenFinance.mutate(undefined, {
       onSuccess: (data) => {
         window.location.assign(data.connectUrl)
@@ -54,56 +87,85 @@ export function InsightsRecommendationsPage() {
   }
 
   if (checkingConnection) {
-    return (
-      <section className={fintech.page}>
-        <ConnectionCheck />
-      </section>
-    )
+    return <ConnectionCheck />
   }
 
   if (!connected) {
     return (
-      <section className={fintech.page}>
-        <ConnectBankCard
-          onConnect={handleConnectOpenBanking}
-          isPending={initOpenFinance.isPending}
-          error={initOpenFinance.error}
-        />
-      </section>
+      <ConnectBankCard
+        onConnect={handleConnectOpenBanking}
+        isPending={initOpenFinance.isPending}
+        error={initOpenFinance.error}
+      />
     )
   }
 
   return (
-    <section className={fintech.page}>
-      <div className="flex justify-center">
-        <span className={fintech.statusConnected}>
-          <CheckCircle2 className="size-3.5" />
-          Open Banking connected
-        </span>
+    <div className="space-y-6 pb-2">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{t("insights.page.title")}</h1>
+        <p className="text-sm text-muted-foreground">
+          {periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1)} ·{" "}
+          {t("insights.page.linkedAccounts", { count: linkedAccounts.length })}
+        </p>
       </div>
 
       <AnalysisPeriodCard value={timeRangeDays} onChange={setTimeRangeDays} />
-      <SpendingOverviewCard
-        transactions={transactions}
-        categories={categoryInsights}
-        isLoading={txLoading}
-        error={insightsError}
-      />
 
-      {!txLoading && !insightsError ? (
-        <TopStoresCard stores={topStoresRaw} />
-      ) : null}
-
-      {!txLoading && !insightsError ? (
+      {txLoading ? (
+        <p className="text-sm text-muted-foreground">{t("insights.page.loadingInsights")}</p>
+      ) : insightsError ? (
+        <p className="text-sm text-destructive">{insightsError}</p>
+      ) : (
         <>
-          <SpendingByDayCard spendingByDay={spendingByDay} />
-          <SpendingComparisonCard comparison={spendingComparison} />
-          <SpendingSavedCard totalSaved={spendingSaved} savedByAccount={spendingSavedByAccount} />
+          <SavingsHeroCard
+            totalSaved={spendingSaved?.total_saved ?? 0}
+            periodLabel={periodLabel}
+            clubsCount={profile?.clubs?.length ?? 0}
+          />
+          <StatsGridCard transactionCount={transactions.length} totalAmount={totalSpend} periodLabel={periodLabel} />
         </>
-      ) : null}
+      )}
 
-      <RecentTransactionsCard transactions={transactions} isLoading={txLoading} />
-      <ActiveAccountsCard accounts={accountHighlights} />
-    </section>
+      <div className="space-y-3 border-t border-border/70 pt-5">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight">{t("insights.page.deepDiveTitle")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("insights.page.deepDiveSubtitle", { period: deepDivePeriodLabel })}
+          </p>
+        </div>
+
+        <AnalysisPeriodCard value={deepDiveDays} onChange={setDeepDiveDays} />
+
+        {deepDiveLoading ? (
+          <p className="text-sm text-muted-foreground">{t("insights.page.loadingInsights")}</p>
+        ) : deepDiveErrorMessage ? (
+          <p className="text-sm text-destructive">{deepDiveErrorMessage}</p>
+        ) : (
+          <>
+            <Carousel setApi={setCarouselApi} opts={{ align: "start", direction }}>
+              <CarouselContent>
+                <CarouselItem>
+                  <SpendingOverviewSlide comparison={spendingComparison} days={deepDiveDays} />
+                </CarouselItem>
+                <CarouselItem>
+                  <TopCategorySlide categories={categoryInsights} />
+                </CarouselItem>
+                <CarouselItem>
+                  <TopStoresSlide stores={topStoresRaw} />
+                </CarouselItem>
+                <CarouselItem>
+                  <RecentTransactionsSlide transactions={deepDiveTransactions} />
+                </CarouselItem>
+                <CarouselItem>
+                  <AccountsSlide accounts={deepDiveAccounts} />
+                </CarouselItem>
+              </CarouselContent>
+            </Carousel>
+            <CarouselDots api={carouselApi} labels={CAROUSEL_LABELS} />
+          </>
+        )}
+      </div>
+    </div>
   )
 }

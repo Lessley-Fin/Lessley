@@ -4,8 +4,9 @@ import { useAuthStore } from "@/features/auth/store"
 import { fetchMyProfile } from "@/features/user/api"
 import { ROUTES } from "@/lib/routes"
 
-export function usePostAuth() {
-  const navigate = useNavigate()
+// Split from usePostAuth so RegisterWizard can apply the session immediately
+// after register+login but defer navigation until the Banking step finishes.
+export function useApplyAuthProfile() {
   const login = useAuthStore((s) => s.login)
 
   return async (profile: { userName: string; email: string }) => {
@@ -23,7 +24,15 @@ export function usePostAuth() {
         email: resolvedEmail,
       })
     }
+  }
+}
 
+export function usePostAuth() {
+  const navigate = useNavigate()
+  const applyAuthProfile = useApplyAuthProfile()
+
+  return async (profile: { userName: string; email: string }) => {
+    await applyAuthProfile(profile)
     navigate(ROUTES.OPTIMIZER, { replace: true })
   }
 }

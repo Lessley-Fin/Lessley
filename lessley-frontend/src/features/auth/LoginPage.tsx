@@ -1,45 +1,21 @@
-import { useState } from "react"
-import { ShieldCheck } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AuthModeSwitcher } from "./components/AuthModeSwitcher"
 import { LoginForm } from "./components/LoginForm"
-import { RegisterForm } from "./components/RegisterForm"
 
 export function LoginPage() {
-  const [mode, setMode] = useState<"login" | "register">("login")
-
+  const { t } = useTranslation()
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center px-5 py-12">
-      <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <span className="fintech-logo-mark size-12 text-lg" aria-hidden>
-          L
-        </span>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Lessley</h1>
-          <p className="mt-1 text-sm text-slate-500">Personal finance, optimized for you</p>
+    <div className="flex min-h-full flex-col justify-center px-6 py-10">
+      <div className="mx-auto w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="surface-teal mb-4 flex size-16 items-center justify-center rounded-3xl text-2xl font-bold shadow-[var(--shadow-card)]">
+            L
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">{t("auth.login.welcomeBack")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("auth.login.tagline")}</p>
         </div>
-        <p className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
-          <ShieldCheck className="size-3.5" aria-hidden />
-          Bank-grade security
-        </p>
+        <LoginForm />
       </div>
-
-      <Card className="fintech-card w-full max-w-sm border-0 shadow-fintech-lg">
-        <CardHeader className="px-6 pb-2 pt-6">
-          <CardTitle className="text-center text-lg font-semibold text-slate-900">
-            {mode === "login" ? "Sign in to your account" : "Create your account"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 pb-7">
-          <AuthModeSwitcher mode={mode} disabled={false} onModeChange={setMode} />
-          {mode === "login" ? <LoginForm /> : <RegisterForm />}
-        </CardContent>
-      </Card>
-
-      <p className="mt-8 max-w-xs text-center text-xs leading-relaxed text-slate-400">
-        Your credentials are encrypted in transit. We never store your banking passwords.
-      </p>
-    </main>
+    </div>
   )
 }

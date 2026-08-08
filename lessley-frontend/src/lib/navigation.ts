@@ -1,20 +1,16 @@
-import { BarChart3, Lightbulb, ScanSearch, Tag } from "lucide-react"
+import { ChartColumn, Flame, Lightbulb, Sparkles } from "lucide-react"
 import { ROUTES } from "./routes"
 
 export const MAIN_TABS = [
-  { id: "optimizer", label: "Optimizer", icon: ScanSearch, path: ROUTES.OPTIMIZER },
-  {
-    id: "insights",
-    label: "Insights",
-    subtitle: "& clubs",
-    icon: BarChart3,
-    path: ROUTES.INSIGHTS,
-  },
-  { id: "recommendations", label: "Recomendation", icon: Lightbulb, path: ROUTES.RECOMMENDATIONS },
-  { id: "deal-finder", label: "Deal", subtitle: "Finder", icon: Tag, path: ROUTES.DEAL_FINDER },
+  { id: "insights", labelKey: "nav.insights", icon: ChartColumn, path: ROUTES.INSIGHTS },
+  { id: "hot-deals", labelKey: "nav.hot", icon: Flame, path: ROUTES.HOT_DEALS },
+  { id: "optimizer", labelKey: "nav.optimizer", icon: Sparkles, path: ROUTES.OPTIMIZER },
+  { id: "recommendations", labelKey: "nav.recommend", icon: Lightbulb, path: ROUTES.RECOMMENDATIONS },
 ] as const
 
-export const OVERLAY_ROUTES = [ROUTES.NOTIFICATIONS, ROUTES.SETTINGS, ROUTES.ADMIN] as const
+// The bottom nav stays visible on every authenticated route, including Notifications,
+// Settings and Admin — verified against the prototype's own markup for each of those pages.
+export const OVERLAY_ROUTES = [] as const
 
 export type MainTab = (typeof MAIN_TABS)[number]["id"]
 
