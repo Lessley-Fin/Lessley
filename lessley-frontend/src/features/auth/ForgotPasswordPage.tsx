@@ -56,7 +56,7 @@ export function ForgotPasswordPage() {
   const canSavePassword = passwordSchema.safeParse(password).success && password === confirmPassword
 
   return (
-    <div className="flex min-h-screen flex-col px-6 py-8">
+    <div className="flex min-h-full flex-col px-6 py-8">
       <Link to={ROUTES.LOGIN} className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> {t("auth.forgotPassword.backToSignIn")}
       </Link>

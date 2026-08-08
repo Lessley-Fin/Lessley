@@ -6,6 +6,7 @@ import {
 
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { AppLayout } from "@/layouts/AppLayout"
+import { AuthLayout } from "@/layouts/AuthLayout"
 import { ROUTES } from "@/lib/routes"
 import { ProtectedRoute } from "./ProtectedRoute"
 import { GuestRoute } from "./GuestRoute"
@@ -73,28 +74,33 @@ export const router = createBrowserRouter([
     element: <GuestRoute />,
     children: [
       {
-        path: ROUTES.LOGIN,
-        element: (
-          <Suspense fallback={<SuspenseFallback />}>
-            <LoginPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: ROUTES.REGISTER,
-        element: (
-          <Suspense fallback={<SuspenseFallback />}>
-            <RegisterPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: ROUTES.FORGOT_PASSWORD,
-        element: (
-          <Suspense fallback={<SuspenseFallback />}>
-            <ForgotPasswordPage />
-          </Suspense>
-        ),
+        element: <AuthLayout />,
+        children: [
+          {
+            path: ROUTES.LOGIN,
+            element: (
+              <Suspense fallback={<SuspenseFallback />}>
+                <LoginPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: ROUTES.REGISTER,
+            element: (
+              <Suspense fallback={<SuspenseFallback />}>
+                <RegisterPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: ROUTES.FORGOT_PASSWORD,
+            element: (
+              <Suspense fallback={<SuspenseFallback />}>
+                <ForgotPasswordPage />
+              </Suspense>
+            ),
+          },
+        ],
       },
     ],
   },

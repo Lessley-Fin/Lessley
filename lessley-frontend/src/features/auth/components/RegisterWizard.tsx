@@ -69,7 +69,7 @@ export function RegisterWizard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col px-6 py-8">
+    <div className="flex min-h-full flex-col px-6 py-8">
       <button
         type="button"
         onClick={handleBack}
