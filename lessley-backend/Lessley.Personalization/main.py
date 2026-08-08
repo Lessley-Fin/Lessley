@@ -177,7 +177,7 @@ async def lifespan(app: FastAPI):
     # Startup: Connect to MongoDB and load static data
     await init_db()
     await DIContainer.get_mcc_service().initialize()
-    await DIContainer.get_recommendation_core_service().initialize()
+    await DIContainer.get_reference_data_repository().load_async()
 
     publisher_service = DIContainer.get_publisher_service()
     await publisher_service.initialize()

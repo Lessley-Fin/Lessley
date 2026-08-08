@@ -12,19 +12,22 @@ from services.insights_service import InsightsService
 
 
 def _service(user_repo, publisher, categories):
-    processing = MagicMock()
-    processing.get_top_spending_categories = MagicMock(return_value=categories)
     files = MagicMock()
     files.read_json = MagicMock(return_value=[{"fake": "tx"}])
     open_finance = MagicMock()
     open_finance.get_user_transactions_async = AsyncMock(return_value=[{"fake": "tx"}])
-    return InsightsService(
+    service = InsightsService(
         open_finance_service=open_finance,
         files_service=files,
-        processing_core_service=processing,
         publisher_service=publisher,
         user_repository=user_repo,
+        reference_data_repository=MagicMock(),
+        mcc_service=MagicMock(),
     )
+    # These tests cover orchestration (stop on unknown user, trim, publish), not the
+    # category calculation itself — that has its own tests and its own golden-output check.
+    service.top_spending_categories = MagicMock(return_value=categories)
+    return service
 
 
 # ── unknown user → stop ───────────────────────────────────────────────────────
@@ -43,7 +46,7 @@ async def test_calc_categories_unknown_user_raises_and_stops():
 
     assert exc.value.status_code == 404
     publisher.publish_user_tag_assigned.assert_not_awaited()
-    service.processing_core_service.get_top_spending_categories.assert_not_called()
+    service.top_spending_categories.assert_not_called()
 
 
 # ── publish category name tags to the Gateway ─────────────────────────────────

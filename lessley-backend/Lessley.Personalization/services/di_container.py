@@ -3,10 +3,9 @@ from .clients.open_finance_client import OpenFinanceClient
 from .open_finance_service import OpenFinanceService
 from .insights_service import InsightsService
 from .transaction_stash_service import TransactionStashService
-from .processing_core_service import ProcessingCoreService
 from .mcc_service import MccService
 from .recommendation_service import RecommendationService
-from .recommendation_core_service import RecommendationCoreService
+from .reference_data_repository import ReferenceDataRepository
 from .user_repository import UserRepository
 from .publisher_service import PublisherService
 
@@ -30,13 +29,11 @@ class DIContainer:
             return DIContainer._instances["transaction_stash_service"]
 
     @staticmethod
-    def get_processing_service() -> ProcessingCoreService:
+    def get_reference_data_repository() -> ReferenceDataRepository:
         with DIContainer._lock:
-            if "processing_service" not in DIContainer._instances:
-                DIContainer._instances["processing_service"] = ProcessingCoreService(
-                    mcc_service=DIContainer.get_mcc_service()
-                )
-            return DIContainer._instances["processing_service"]
+            if "reference_data_repository" not in DIContainer._instances:
+                DIContainer._instances["reference_data_repository"] = ReferenceDataRepository()
+            return DIContainer._instances["reference_data_repository"]
 
     @staticmethod
     def get_mcc_service() -> MccService:
@@ -52,9 +49,10 @@ class DIContainer:
                 DIContainer._instances["insights_service"] = InsightsService(
                     open_finance_service=DIContainer.get_open_finance_service(),
                     files_service=DIContainer.get_transaction_stash_service(),
-                    processing_core_service=DIContainer.get_processing_service(),
                     publisher_service=DIContainer.get_publisher_service(),
                     user_repository=DIContainer.get_user_repository(),
+                    reference_data_repository=DIContainer.get_reference_data_repository(),
+                    mcc_service=DIContainer.get_mcc_service(),
                 )
             return DIContainer._instances["insights_service"]
 
@@ -86,16 +84,9 @@ class DIContainer:
         with DIContainer._lock:
             if "recommendation_service" not in DIContainer._instances:
                 DIContainer._instances["recommendation_service"] = RecommendationService(
-                    recommendation_core_service=DIContainer.get_recommendation_core_service(),
+                    reference_data_repository=DIContainer.get_reference_data_repository(),
                     user_repository=DIContainer.get_user_repository(),
                     publisher_service=DIContainer.get_publisher_service(),
                     mcc_service=DIContainer.get_mcc_service(),
                 )
             return DIContainer._instances["recommendation_service"]
-
-    @staticmethod
-    def get_recommendation_core_service() -> RecommendationCoreService:
-        with DIContainer._lock:
-            if "recommendation_core_service" not in DIContainer._instances:
-                DIContainer._instances["recommendation_core_service"] = RecommendationCoreService()
-            return DIContainer._instances["recommendation_core_service"]
