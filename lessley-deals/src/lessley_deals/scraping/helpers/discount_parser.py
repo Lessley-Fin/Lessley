@@ -53,6 +53,15 @@ _COUPON_RE = re.compile(r"קוד קופון[א-ת\s]*:?\s*([a-zA-Z0-9]{4,})")
 # ₪ amount in title (for benefit_type 1300)
 _TITLE_SHEKEL_RE = re.compile(r"(\d[,0-9]*)\s*₪")
 
+# Per-liter/kWh fuel discount stated in agorot, no "%" sign — benefit_type
+# "100" only: "עד 25 אגורות הנחה", "30 אג הנחה" (100 אגורות = 1 ₪).
+_AGOROT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*אג(?:ורה|ורות)?")
+
+# Bare discount number with neither "%" nor "אג..." — benefit_type "100"
+# only: "3.5 הנחה".  HOT drops the "%" sign in these listings; the number
+# itself is still the percentage.
+_BARE_DISCOUNT_NUMBER_RE = re.compile(r"(\d+(?:\.\d+)?)\s*הנחה")
+
 
 # ---------------------------------------------------------------------------
 # HOT-specific discount deduction
@@ -64,7 +73,9 @@ def deduce_hot_discount_mechanics(
 ) -> dict[str, Any]:
     """Deduce discount condition / reward / constraints from a HOT benefit record.
 
-    Implements the 6-level priority cascade from legacy ``hot_extract_format.py``:
+    Implements the 6-level priority cascade from legacy ``hot_extract_format.py``,
+    plus a benefit_type-"100"-only tail for listings that drop punctuation HOT
+    itself would normally include:
 
     1. benefit_type 1300 + before/after prices  → exact_spend + fixed_total_amount
     2. benefit_type 1300 + title ₪ + percentage  → exact_spend + fixed_total_amount
@@ -72,6 +83,12 @@ def deduce_hot_discount_mechanics(
     4. Percentage in text                        → percentage_off
     5. Spend & Save                              → min_spend + fixed_discount_amount
     6. Price-based fallback                      → exact_spend / percentage_off / unknown
+    7. benefit_type "100" only, no price data:
+       7a. Agorot amount ("עד 25 אגורות הנחה")   → fixed_discount_amount (raw agorot,
+           see ``reward["unit"]``) — a per-liter/kWh fuel rate, not a total-purchase
+           deduction; the caller must multiply by quantity itself.
+       7b. Bare number + "הנחה", no "%"/"אג..."   → percentage_off (HOT dropped the
+           "%" sign in the listing; the number is still a percentage)
 
     Parameters
     ----------
@@ -79,15 +96,19 @@ def deduce_hot_discount_mechanics(
         The ``data.main`` dict from a HOT detail response, or the benefit
         list record (both share the same field names).
     combined_text:
-        Pre-joined text from all relevant fields (title + description +
-        free_text + terms + value).  If empty, the function builds it
-        from *main*.
+        Extra text to search on top of *main* — typically the T&C / offer
+        details, which only exist on the detail response.  If empty, the
+        function builds it from *main*.  Either way the percentage branches
+        also search ``value`` / ``valueNum`` / ``title`` directly, so passing
+        a narrow *combined_text* can never hide the headline discount.
 
     Returns
     -------
     dict with keys ``condition``, ``reward`` (a capped Spend & Save match
     puts ``max_discount_amount`` on ``reward`` — see deal-optimizer's
-    ``transform.py::apply_deal``, which reads the cap from there).
+    ``transform.py::apply_deal``, which reads the cap from there; an agorot
+    fuel rate similarly puts ``unit: "agorot_per_liter"`` on ``reward`` so it
+    isn't mistaken for a flat ILS amount).
     """
     title = str(main.get("title", "") or "")
     desc = str(main.get("description", "") or "")
@@ -106,6 +127,15 @@ def deduce_hot_discount_mechanics(
     price_after = _to_float(main.get("price_after_discount")) or 0.0
     benefit_type = str(main.get("benefit_type") or main.get("type") or "")
 
+    # The headline percentage lives in `value` / `valueNum` ("2%", "2% הנחה"),
+    # never in the T&C prose — so callers that pass an explicit *combined_text*
+    # (hot.py's _merge_detail passes only details + terms) must not narrow the
+    # window the percentage is looked for in.  Both the priority-2 and
+    # priority-4 branches search this one string, and priority 4 *gates* on the
+    # same search: testing for a bare "%" instead would let HOT's literal
+    # "undefined%" in cashback_description open the branch on garbage.
+    pct_text = f"{value_field} {value_num_field} {title} {combined_text}"
+
     # Defaults
     condition: dict[str, Any] = {"type": "min_quantity", "value": 1}
     reward: dict[str, Any] = {"type": "percentage_off", "value": 0.0}
@@ -119,7 +149,7 @@ def deduce_hot_discount_mechanics(
     elif (
         benefit_type == "1300"
         and (title_amount := _TITLE_SHEKEL_RE.search(title))
-        and (pct := _PERCENT_RE.search(f"{value_field} {value_num_field} {combined_text}"))
+        and (pct := _PERCENT_RE.search(pct_text))
     ):
         total_val = int(title_amount.group(1).replace(",", ""))
         discount_pct = float(pct.group(1)) / 100.0
@@ -137,16 +167,11 @@ def deduce_hot_discount_mechanics(
         reward = {"type": "fixed_total_amount", "value": val2}
 
     # --- Priority 4: Percentage ---
-    elif "%" in combined_text:
-        search_order = f"{value_field} {value_num_field} {title} {combined_text}"
-        pct = _PERCENT_RE.search(search_order)
-        if pct:
-            reward = {"type": "percentage_off", "value": float(pct.group(1)) / 100.0}
-        elif price_before > 0:
-            reward = {
-                "type": "percentage_off",
-                "value": round(1 - (price_after / price_before), 2),
-            }
+    # No price-ratio fallback here: a record with before/after prices but no
+    # stated percentage is described exactly by priority 6 (exact_spend /
+    # fixed_total_amount), which beats rounding it to a lossy percentage.
+    elif (pct := _PERCENT_RE.search(pct_text)):
+        reward = {"type": "percentage_off", "value": float(pct.group(1)) / 100.0}
 
     # --- Priority 5: Spend & Save ---
     elif (ss := _SPEND_SAVE_RE.search(combined_text)):
@@ -168,6 +193,22 @@ def deduce_hot_discount_mechanics(
             reward = {"type": "fixed_total_amount", "value": price_after}
         elif price_before > 0 and price_after == 0:
             reward = {"type": "percentage_off", "value": 1.0}
+
+        # --- Priority 7: benefit_type "100" listings with no "%" sign ---
+        # Only reached when nothing above matched and there's no price to
+        # fall back on — narrow on purpose, scoped to fuel-station /
+        # small-merchant listings that other benefit types don't share.
+        elif benefit_type == "100" and (agorot := _AGOROT_RE.search(f"{value_field} {value_num_field}")):
+            # A per-liter/kWh rate, not a total-purchase deduction — the raw
+            # agorot number is kept as-is (100 אגורות = 1 ₪) rather than
+            # converted, since the caller decides how to apply it per unit.
+            reward = {
+                "type": "fixed_discount_amount",
+                "value": float(agorot.group(1)),
+                "unit": "agorot_per_liter",
+            }
+        elif benefit_type == "100" and (bare := _BARE_DISCOUNT_NUMBER_RE.search(value_field)):
+            reward = {"type": "percentage_off", "value": float(bare.group(1)) / 100.0}
 
     return {
         "condition": condition,

@@ -138,6 +138,101 @@ class TestTierDiscountDerivation:
         assert "coupon_code" not in deal.raw_payload
 
 
+class TestBracketLadder:
+    """``reward.tiers`` — the structured ladder the optimizer routes money through.
+
+    Before this existed the brackets were collapsed to the entry rate with no
+    ceiling at all, so a 10,000 ILS cart claimed the headline percentage of the
+    whole cart from a card that tops out at 2,200.
+    """
+
+    def _reward(self, cls, chit, tier: str) -> dict[str, Any]:
+        adapter = _make_adapter(cls)
+        pairs = adapter._to_raw_records(chit, [], datetime.now(timezone.utc))
+        deal = next(d for _s, d in pairs if d.raw_payload["member_tier"] == tier)
+        return deal.raw_payload["discount_logic"]["reward"]
+
+    def test_regular_tier_emits_both_rungs_in_order(self) -> None:
+        reward = self._reward(PaisPlusFoodChainsAdapter, _food_chit(), "regular")
+        assert reward["tiers"] == [
+            {"from_amount": 0, "to_amount": 400, "percentage_off": 0.075},
+            {"from_amount": 400, "to_amount": 2200, "percentage_off": 0.05},
+        ]
+
+    def test_vip_tier_emits_its_own_rungs(self) -> None:
+        reward = self._reward(PaisPlusFoodChainsAdapter, _food_chit(), "vip")
+        assert reward["tiers"] == [
+            {"from_amount": 0, "to_amount": 600, "percentage_off": 0.10},
+            {"from_amount": 600, "to_amount": 3000, "percentage_off": 0.05},
+        ]
+
+    def test_max_discount_amount_is_the_fully_loaded_card(self) -> None:
+        # regular: 400 * 7.5% + 1800 * 5% = 30 + 90
+        assert self._reward(PaisPlusFoodChainsAdapter, _food_chit(), "regular")[
+            "max_discount_amount"
+        ] == 120.0
+        # vip: 600 * 10% + 2400 * 5% = 60 + 120
+        assert self._reward(PaisPlusFoodChainsAdapter, _food_chit(), "vip")["max_discount_amount"] == 180.0
+
+    def test_headline_value_and_price_text_are_unchanged(self) -> None:
+        # The flat fields stay put so ladder-unaware consumers still degrade to
+        # a bounded (if pessimistic) number rather than the old runaway.
+        reward = self._reward(PaisPlusFoodChainsAdapter, _food_chit(), "regular")
+        assert reward["type"] == "percentage_off"
+        assert reward["value"] == 0.075
+
+    def test_ladder_is_dropped_whole_when_a_bracket_is_malformed(self) -> None:
+        chit = _food_chit(
+            topup_rules=[
+                {
+                    "rule_member": "regular",
+                    "topup_rule_discounts": [
+                        {"from_amount": 0, "to_amount": 400, "w_eligibility_discount_percent": 7.5},
+                        {"from_amount": 400, "w_eligibility_discount_percent": 5},  # no to_amount
+                    ],
+                }
+            ]
+        )
+        reward = self._reward(PaisPlusFoodChainsAdapter, chit, "regular")
+
+        # Rung 2 can't be priced, and rung 1 alone would understate the card —
+        # so neither the ladder nor a bogus cap is emitted.
+        assert "tiers" not in reward
+        assert "max_discount_amount" not in reward
+        assert reward["value"] == 0.075
+
+
+class TestExclusiveGroup:
+    def test_both_tier_deals_of_one_chit_share_a_group(self) -> None:
+        adapter = _make_adapter(PaisPlusFoodChainsAdapter)
+        pairs = adapter._to_raw_records(_food_chit(), [], datetime.now(timezone.utc))
+
+        groups = {d.raw_payload["discount_logic"]["exclusive_group"] for _s, d in pairs}
+        assert groups == {"paisplus_food_chains:chit-1020"}
+
+    def test_every_store_under_one_chit_shares_the_group(self) -> None:
+        # The networks chit fans out to many merchants; they're separate stores,
+        # and the optimizer only ever loads one store's deals, so a chit-scoped
+        # key is enough to keep regular and vip apart.
+        adapter = _make_adapter(PaisPlusNetworksAdapter)
+        pairs = adapter._to_raw_records(
+            _networks_chit(), [_merchant(1, "מקדונלד'ס"), _merchant(2, "American Eagle")], datetime.now(timezone.utc)
+        )
+
+        groups = {d.raw_payload["discount_logic"]["exclusive_group"] for _s, d in pairs}
+        assert groups == {"paisplus_networks:chit-5001"}
+
+    def test_different_chits_get_different_groups(self) -> None:
+        adapter = _make_adapter(PaisPlusFoodChainsAdapter)
+        now = datetime.now(timezone.utc)
+        a = adapter._to_raw_records(_food_chit(chit_id=1020), [], now)
+        b = adapter._to_raw_records(_food_chit(chit_id=1021), [], now)
+
+        group_a = a[0][1].raw_payload["discount_logic"]["exclusive_group"]
+        group_b = b[0][1].raw_payload["discount_logic"]["exclusive_group"]
+        assert group_a != group_b
+
+
 class TestMerchantFanOut:
     def test_three_merchants_share_chit_tiers_yields_six_deals(self) -> None:
         adapter = _make_adapter(PaisPlusNetworksAdapter)

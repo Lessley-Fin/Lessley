@@ -37,8 +37,20 @@ def apply_deal(price_in: float, quantity: int, deal: DealNode) -> float | None:
     elif rt == "fixed_total_amount":
         savings = (cval - rval) if cond_type in _VOUCHER_CONDS else 0
     elif rt == "percentage_off":
-        base = cval if cond_type in _VOUCHER_CONDS else price_in
-        savings = base * rval  # BUG 1 fix: rval is already a ratio
+        tiers = rew.get("tiers")
+        if tiers:
+            # A tiered loadable card: the rate steps down as the load grows, so
+            # savings accrue rung by rung against the cumulative thresholds
+            # (25% on the first 600, then 15% up to 1500). Walking the ladder
+            # bounds savings on its own — a bill past the top rung simply stops
+            # accruing — which is why an uncapped flat rate overstated it.
+            savings = sum(
+                max(0.0, min(price_in, t["to_amount"]) - t["from_amount"]) * t["percentage_off"]
+                for t in tiers
+            )
+        else:
+            base = cval if cond_type in _VOUCHER_CONDS else price_in
+            savings = base * rval  # BUG 1 fix: rval is already a ratio
     else:
         savings = 0
 

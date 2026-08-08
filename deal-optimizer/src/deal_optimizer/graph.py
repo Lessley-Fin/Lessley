@@ -51,6 +51,9 @@ class DealNode:
     constraints: dict[str, Any]  # the full lean DealConstraints dict
     raw: dict[str, Any]  # the original deal dict (for output)
     ils_covered: float | None = None  # tender deals only: how much of the bill this deal paid for
+    # Tiered tender deals only: the per-rung split of ``ils_covered``, as plain
+    # dicts (tier_index/rate/ils_covered/savings). None for flat deals.
+    tender_segments: list[dict[str, Any]] | None = None
 
 
 def build_vertices(deals: list[dict[str, Any]]) -> list[DealNode]:
@@ -90,12 +93,28 @@ def accepts(deal: DealNode, other_type: str, unknown_as_yes: bool) -> bool:
     return unknown_as_yes
 
 
+def exclusive_group(deal: DealNode) -> str | None:
+    """The mutual-exclusion key two deals must not share, if any.
+
+    Some sources emit several deals describing the *same* physical instrument —
+    a PaisPlus cash card publishes one deal per membership tier (regular / vip),
+    but a cardholder has exactly one tier. They aren't alternatives the graph can
+    stack; they're alternatives it must choose between. Combinability can't say
+    this: it is keyed on ``deal_type``, and both sides are ``giftcard_discount``.
+    """
+    group = deal.discount_logic.get("exclusive_group")
+    return group if isinstance(group, str) and group else None
+
+
 def mutually_compatible(a: DealNode, b: DealNode, unknown_as_yes: bool) -> bool:
     """Both sides must accept the other's category (bidirectional rule)."""
     # Duplicate instances of the same deal are self-stackable by user grant
     # (max_uses_per_transaction >= 2). Combinability with itself is implicit.
     if a.deal_id == b.deal_id:
         return True
+    group = exclusive_group(a)
+    if group is not None and group == exclusive_group(b):
+        return False
     return accepts(a, b.category, unknown_as_yes) and accepts(b, a.category, unknown_as_yes)
 
 
@@ -103,6 +122,9 @@ def refusal_reasons(a: DealNode, b: DealNode, unknown_as_yes: bool) -> list[str]
     """Human-readable reasons ``a`` and ``b`` are NOT mutually compatible (empty if they are)."""
     if a.deal_id == b.deal_id:
         return []
+    group = exclusive_group(a)
+    if group is not None and group == exclusive_group(b):
+        return [f"{a.deal_id} and {b.deal_id} are mutually exclusive (exclusive_group={group!r})"]
     reasons = []
     if not accepts(a, b.category, unknown_as_yes):
         val = (a.constraints.get("combinability", {}) or {}).get(ACCEPTS_KEY[b.category], "unknown")

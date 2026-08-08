@@ -21,6 +21,8 @@ def mk_deal(
     reward_type: str = "percentage_off",
     reward_value: float = 0.0,
     max_discount_amount: float | None = None,
+    tiers: list[dict[str, Any]] | None = None,
+    exclusive_group: str | None = None,
     cond_type: str = "min_spend",
     cond_value: float = 0,
     accepts_all: bool = False,
@@ -42,6 +44,15 @@ def mk_deal(
     reward: dict[str, Any] = {"type": reward_type, "value": reward_value}
     if max_discount_amount is not None:
         reward["max_discount_amount"] = max_discount_amount
+    if tiers is not None:
+        reward["tiers"] = tiers
+
+    discount_logic: dict[str, Any] = {
+        "condition": {"type": cond_type, "value": cond_value},
+        "reward": reward,
+    }
+    if exclusive_group is not None:
+        discount_logic["exclusive_group"] = exclusive_group
 
     coverage = {
         "is_include_outlets_stores": "unknown",
@@ -56,10 +67,7 @@ def mk_deal(
         "store_id": store_id,
         "title": title or deal_id,
         "deal_type": deal_type,
-        "discount_logic": {
-            "condition": {"type": cond_type, "value": cond_value},
-            "reward": reward,
-        },
+        "discount_logic": discount_logic,
         "constraints": {
             "combinability": comb,
             "limits": {

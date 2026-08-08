@@ -57,6 +57,23 @@ export function StackSteps({ steps, deals }: StackStepsProps) {
                 <span>covers {formatAmount(step.ils_covered)} of the bill</span>
               ) : null}
             </div>
+
+            {/* A tiered loadable card discounts at a rate that steps down as the
+                load grows, so the rate above is a blend. Break it out per rung,
+                otherwise "21.7% off" matches none of the card's actual rates. */}
+            {step.segments ? (
+              <ul className="mt-2 space-y-1 border-l-2 border-slate-200 pl-3 text-xs text-slate-500">
+                {step.segments.map((segment) => (
+                  <li key={segment.tier_index} className="flex items-baseline gap-1.5">
+                    <span className="font-medium text-slate-700">
+                      {formatAmount(segment.ils_covered)}
+                    </span>
+                    <span>at {formatPercent(segment.rate)}</span>
+                    <span className="text-emerald-600">−{formatAmount(segment.savings)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </li>
         )
       })}

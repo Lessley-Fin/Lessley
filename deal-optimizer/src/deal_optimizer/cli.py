@@ -135,6 +135,11 @@ def main() -> None:
                     f"     covers {step['ils_covered']:.2f} ILS of the bill at {step['discount_rate']:.0%} off "
                     f"-> pay {step['amount_paid_on_covered']:.2f} on it (saved {step['savings']:.2f})"
                 )
+                for segment in step["segments"] or []:
+                    print(
+                        f"       tier {segment['tier_index'] + 1}: {segment['ils_covered']:.2f} ILS "
+                        f"at {segment['rate']:.0%} (saved {segment['savings']:.2f})"
+                    )
                 if step["remaining_to_allocate"]:
                     print(f"     {step['remaining_to_allocate']:.2f} ILS still unallocated after this step")
             else:

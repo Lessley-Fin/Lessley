@@ -27,12 +27,17 @@ silver/gold, ``"vip"`` for gold+/platinum), each with its own amount-bracket
 discounts. Confirmed live: every store within a chit_group shares identical
 bracket numbers -- it's one program-wide bonus per group, same spirit as
 hever's own loading bonus, just split by membership tier. Each store
-therefore yields **two deals**, one per tier, each using hever's flat
-``discount_logic`` shape (single headline percentage = that tier's
-entry-bracket rate; the full bracket breakdown goes into
-``terms_and_conditions`` as descriptive text, same "own text first, then
-the fixed bonus sentence" convention as
-:func:`lessley_deals.scraping.sources.hever.HeverGiftCardAdapter._loading_bonus_sentence`).
+therefore yields **two deals**, one per tier.
+
+Unlike hever's single flat rate, each tier's amount brackets are a real
+two-stage ladder with a hard ceiling (networks/regular: 25% on the first
+600 ILS, then 15% up to 1500). They're emitted structurally as
+``discount_logic.reward.tiers`` so the optimizer can route part of a bill
+through each rung, alongside a ``max_discount_amount`` that keeps
+ladder-unaware consumers from applying the headline rate to an unbounded
+cart. The human-readable breakdown still goes into ``terms_and_conditions``,
+same "own text first, then the fixed bonus sentence" convention as
+:func:`lessley_deals.scraping.sources.hever.HeverGiftCardAdapter._loading_bonus_sentence`.
 """
 
 from __future__ import annotations
@@ -65,6 +70,32 @@ _USER_AGENT = (
 _MAX_CONCURRENT_MERCHANT_FETCHES = 5
 
 _TIER_LABELS = {"regular": "רגיל", "vip": "VIP"}
+
+
+def _build_tiers(brackets: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The amount-bracket ladder as structured ``reward.tiers`` entries.
+
+    ``brackets`` arrives sorted by ``from_amount``. The rungs are contiguous
+    (bracket N starts where N-1 ends), so a bracket missing any of its three
+    numbers can't be dropped in isolation without silently misstating the
+    ones after it -- the whole ladder is discarded instead, leaving the
+    caller with the flat headline rate.
+    """
+    tiers: list[dict[str, Any]] = []
+    for bracket in brackets:
+        from_amount = bracket.get("from_amount")
+        to_amount = bracket.get("to_amount")
+        percent = bracket.get("w_eligibility_discount_percent")
+        if from_amount is None or to_amount is None or percent is None or to_amount <= from_amount:
+            return []
+        tiers.append(
+            {
+                "from_amount": from_amount,
+                "to_amount": to_amount,
+                "percentage_off": percent / 100.0,
+            }
+        )
+    return tiers
 
 
 class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
@@ -196,6 +227,11 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
     # ------------------------------------------------------------------
 
     def _tier_bonus_sentence(self, brackets: list[dict[str, Any]], store_name: str) -> str:
+        """The ladder as a Hebrew sentence, appended to the store's own terms.
+
+        Only called for a ladder that :func:`_build_tiers` already validated,
+        so every bracket is known to carry all three numbers.
+        """
         parts = []
         for i, bracket in enumerate(brackets):
             amount = bracket["to_amount"] - bracket["from_amount"]
@@ -268,14 +304,43 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
                     continue
                 max_amount = brackets[-1].get("to_amount")
 
+                tiers = _build_tiers(brackets)
+                reward: dict[str, Any] = {
+                    "type": "percentage_off",
+                    "value": headline_pct / 100.0,
+                }
+                if tiers:
+                    # Savings if the card is loaded all the way to its ceiling.
+                    # Emitted alongside ``tiers`` on purpose: consumers that
+                    # don't walk the ladder still clamp here instead of applying
+                    # the headline rate to an unbounded cart, and for a
+                    # well-formed ladder the two agree at the ceiling.
+                    reward["max_discount_amount"] = round(
+                        sum((t["to_amount"] - t["from_amount"]) * t["percentage_off"] for t in tiers),
+                        2,
+                    )
+                    reward["tiers"] = tiers
+
                 discount_logic = {
                     "type": "percentage",
                     "condition": {"type": "min_quantity", "value": 1},
-                    "reward": {"type": "percentage_off", "value": headline_pct / 100.0},
+                    "reward": reward,
+                    # "regular" and "vip" are the same physical card -- a holder
+                    # has one tier, never both. Without this the optimizer would
+                    # happily allocate both tiers' ladders to one cart and claim
+                    # savings the card can't pay out.
+                    "exclusive_group": f"{self.source_id}:chit-{chit_id}",
                 }
                 tier_label = _TIER_LABELS[tier]
-                price_text = f"{headline_pct}% הנחה בטעינה (עד {max_amount} ₪) - {tier_label}"
-                bonus_sentence = self._tier_bonus_sentence(brackets, store_name)
+                price_text = (
+                    f"{headline_pct}% הנחה בטעינה (עד {max_amount} ₪) - {tier_label}"
+                    if max_amount is not None
+                    else f"{headline_pct}% הנחה בטעינה - {tier_label}"
+                )
+                # A ladder that didn't validate can't be described accurately
+                # either, so the sentence is skipped rather than half-rendered;
+                # the store's own terms still go through untouched.
+                bonus_sentence = self._tier_bonus_sentence(brackets, store_name) if tiers else ""
                 # Store's own constraints first, then the fixed bonus
                 # sentence -- same order as hever._to_raw_deal's terms.
                 terms = f"{own_constraints} {bonus_sentence}".strip() if own_constraints else bonus_sentence

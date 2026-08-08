@@ -107,12 +107,38 @@ itself covered (`ils_covered: 1000` says that).
 | `amount_paid_on_covered` | this step | What you pay, after this step's discount, for the ILS it covered |
 | `remaining_to_allocate` | whole cart | Bill ILS not yet routed to any payment instrument — `None` until the first tender step, then counts down to 0 |
 | `cumulative_savings` / `cumulative_discount_rate` | whole cart | Running total ILS saved / fraction of the original cart price saved so far, through this step |
+| `segments` | this step | For a tiered card (`reward.tiers`): how `ils_covered` split across its rungs, each `{tier_index, rate, ils_covered, savings}`. `None` for flat deals |
 
 E.g. a 1200 ILS cart split Hever (30% off, up to 1000) then Behatsdaa (30% off,
 remaining 200): step 1 has `bill_before: 1200`, covers 1000 of it at 30% (pay
 700 on it, 200 left to allocate, 25% cumulative discount), `bill_after: 900`;
 step 2 has `bill_before: 900`, covers the remaining 200 at 30% (pay 140,
 nothing left, 30% cumulative discount), `bill_after: 840`.
+
+### Tiered loadable cards
+
+Some cards discount at a rate that steps down as you load more — PaisPlus
+networks gives 25% on the first 600 ILS, then 15% up to a 1500 ILS ceiling.
+These carry a `reward.tiers` ladder:
+
+```json
+"reward": {"type": "percentage_off", "value": 0.25, "max_discount_amount": 285,
+           "tiers": [{"from_amount": 0,   "to_amount": 600,  "percentage_off": 0.25},
+                     {"from_amount": 600, "to_amount": 1500, "percentage_off": 0.15}]}
+```
+
+Each rung is allocated separately, so a 10,000 ILS cart routes 1500 through the
+card (600 at 25% + 900 at 15% = 285 saved) rather than claiming 25% of the
+whole cart. The step reports the split in `segments`, and `discount_rate` is
+the blended 19% across the ILS actually covered. `value` and
+`max_discount_amount` stay populated as a bounded fallback for consumers that
+don't walk the ladder.
+
+Deals may also declare `discount_logic.exclusive_group`; two deals sharing that
+string are never combined. It exists for sources that publish one deal per
+membership tier of the *same* physical card (PaisPlus emits a regular and a vip
+variant) — combinability can't express this, since it is keyed on `deal_type`
+and both sides are `giftcard_discount`.
 
 `unknown_as_yes=True` (default, optimistic) treats combinability `"unknown"` as
 `"yes"`; `--strict` / `unknown_as_yes=False` treats it as `"no"`.
@@ -139,7 +165,8 @@ payload = build_export_payload(results, store_id=store_id, cart_total=cart_total
      "per_step": [{"deal_id": "LC04_hever_giftcard_1000", "bill_before": 2000, "bill_after": 1700.0,
                    "ils_covered": 1000.0, "discount_rate": 0.3, "savings": 300.0,
                    "amount_paid_on_covered": 700.0, "remaining_to_allocate": 0.0,
-                   "cumulative_savings": 300.0, "cumulative_discount_rate": 0.15}, "..."]}
+                   "cumulative_savings": 300.0, "cumulative_discount_rate": 0.15,
+                   "segments": null}, "..."]}
   ]
 }
 ```

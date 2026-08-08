@@ -134,6 +134,7 @@ def _synthetic_tender_node(deal: dict[str, Any], usage: TenderUsage) -> DealNode
     allocation — ``discount_logic`` is overridden to a flat deduction so
     ``apply_deal`` reproduces the allocator's result during price-trace
     reconstruction; ``ils_covered`` records how much of the bill it paid for;
+    ``tender_segments`` breaks that down per rung for a tiered card;
     ``raw`` keeps the original deal for display/reporting."""
     return DealNode(
         vertex_id=f"{deal['id']}#tender",
@@ -147,6 +148,18 @@ def _synthetic_tender_node(deal: dict[str, Any], usage: TenderUsage) -> DealNode
         constraints=deal.get("constraints", {}) or {},
         raw=deal,
         ils_covered=usage.ils_covered,
+        tender_segments=(
+            [
+                {
+                    "tier_index": s.tier_index,
+                    "rate": s.rate,
+                    "ils_covered": s.ils_covered,
+                    "savings": s.savings,
+                }
+                for s in usage.segments
+            ]
+            or None
+        ),
     )
 
 
@@ -427,6 +440,23 @@ def _build_result(cart_total: float, cart_quantity: int, path: list[DealNode], r
         cumulative_savings = cart_total - price_out
         cumulative_discount_rate = (cumulative_savings / cart_total) if cart_total else 0.0
 
+        # Tiered loadable cards split their ils_covered across rungs at
+        # different rates; report that split so a 285 ILS saving reads as
+        # "600 at 25% + 900 at 15%" rather than an unexplained 19% blend.
+        segments = (
+            [
+                {
+                    "tier_index": s["tier_index"],
+                    "rate": round(s["rate"], 6),
+                    "ils_covered": round(s["ils_covered"], 6),
+                    "savings": round(s["savings"], 6),
+                }
+                for s in node.tender_segments
+            ]
+            if node.tender_segments
+            else None
+        )
+
         per_step.append(
             {
                 "deal_id": node.deal_id,
@@ -439,6 +469,7 @@ def _build_result(cart_total: float, cart_quantity: int, path: list[DealNode], r
                 "remaining_to_allocate": None if remaining_to_allocate is None else round(remaining_to_allocate, 6),
                 "cumulative_savings": round(cumulative_savings, 6),
                 "cumulative_discount_rate": round(cumulative_discount_rate, 6),
+                "segments": segments,
             }
         )
         price = price_out
@@ -493,6 +524,10 @@ def optimize(
       - ``cumulative_savings``/``cumulative_discount_rate`` — running total ILS
         saved / fraction of the original cart price saved so far, through
         this step (inclusive).
+      - ``segments`` — for a tiered loadable card (``reward.tiers``), how
+        ``ils_covered`` split across the card's rungs, each entry
+        ``{tier_index, rate, ils_covered, savings}``. ``None`` for flat deals.
+        The entries sum to this step's ``ils_covered``/``savings``.
     """
     paths = find_top_paths(cart_total, cart_quantity, deal_dicts, user_context, unknown_as_yes, top_n=top_n, verbose=verbose)
 
@@ -504,7 +539,12 @@ def optimize(
             print(f"\n  --- #{r['rank']}  final price {r['final_price']:.4f}  (saved {r['total_savings']:.4f}) ---")
             for step in r["per_step"]:
                 covered = f"  [covers {step['ils_covered']:.2f} ILS of the bill]" if step["ils_covered"] is not None else ""
-                print(f"    {step['deal_id']:<28} {step['price_in']:>10.4f} -> {step['price_out']:<10.4f}{covered}")
+                print(f"    {step['deal_id']:<28} {step['bill_before']:>10.4f} -> {step['bill_after']:<10.4f}{covered}")
+                for segment in step["segments"] or []:
+                    print(
+                        f"        tier {segment['tier_index']}: {segment['ils_covered']:.2f} ILS "
+                        f"at {segment['rate']:.0%} (saved {segment['savings']:.2f})"
+                    )
 
     return results
 
