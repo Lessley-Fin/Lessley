@@ -5,6 +5,7 @@ import { CarouselDots } from "@/components/shared/CarouselDots"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { useMyProfile } from "@/features/user/hooks"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
+import { getDirection } from "@/lib/i18n/config"
 import { AccountsSlide } from "./components/AccountsSlide"
 import { AnalysisPeriodCard } from "./components/AnalysisPeriodCard"
 import { ConnectBankCard } from "./components/ConnectBankCard"
@@ -27,7 +28,8 @@ import {
 } from "./hooks"
 
 export function InsightsRecommendationsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const direction = getDirection(i18n.language)
   const CAROUSEL_LABELS = [
     t("insights.carousel.overview"),
     t("insights.carousel.categories"),
@@ -141,7 +143,7 @@ export function InsightsRecommendationsPage() {
           <p className="text-sm text-destructive">{deepDiveErrorMessage}</p>
         ) : (
           <>
-            <Carousel setApi={setCarouselApi} opts={{ align: "start" }}>
+            <Carousel setApi={setCarouselApi} opts={{ align: "start", direction }}>
               <CarouselContent>
                 <CarouselItem>
                   <SpendingOverviewSlide comparison={spendingComparison} />
