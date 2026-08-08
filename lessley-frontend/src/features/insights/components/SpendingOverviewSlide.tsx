@@ -6,6 +6,7 @@ import type { SpendingPeriodComparison } from "@/lib/types"
 
 interface SpendingOverviewSlideProps {
   comparison: SpendingPeriodComparison | null
+  days: number
 }
 
 function LegendDot({ color, text }: { color: string; text: string }) {
@@ -17,7 +18,7 @@ function LegendDot({ color, text }: { color: string; text: string }) {
   )
 }
 
-export function SpendingOverviewSlide({ comparison }: SpendingOverviewSlideProps) {
+export function SpendingOverviewSlide({ comparison, days }: SpendingOverviewSlideProps) {
   const { t } = useTranslation()
   if (!comparison) {
     return (
@@ -26,6 +27,14 @@ export function SpendingOverviewSlide({ comparison }: SpendingOverviewSlideProps
       </CarouselSlideCard>
     )
   }
+
+  const isYear = days === 365
+  const currentPeriodLabel = isYear
+    ? t("insights.spendingOverviewSlide.currentYear")
+    : t("insights.spendingOverviewSlide.currentDays", { count: days })
+  const previousPeriodLabel = isYear
+    ? t("insights.spendingOverviewSlide.previousYear")
+    : t("insights.spendingOverviewSlide.previousDays", { count: days })
 
   const data = [
     {
@@ -45,8 +54,8 @@ export function SpendingOverviewSlide({ comparison }: SpendingOverviewSlideProps
         </BarChart>
       </ResponsiveContainer>
       <div className="flex gap-4 text-xs text-muted-foreground">
-        <LegendDot color="hsl(var(--chart-1))" text={t("insights.spendingOverviewSlide.current")} />
-        <LegendDot color="hsl(var(--chart-3))" text={t("insights.spendingOverviewSlide.previous")} />
+        <LegendDot color="hsl(var(--chart-1))" text={currentPeriodLabel} />
+        <LegendDot color="hsl(var(--chart-3))" text={previousPeriodLabel} />
       </div>
     </CarouselSlideCard>
   )

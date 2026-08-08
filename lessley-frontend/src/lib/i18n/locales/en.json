@@ -208,7 +208,11 @@
       "empty": "Not enough history yet to compare periods.",
       "thisPeriod": "This period",
       "current": "Current",
-      "previous": "Previous"
+      "previous": "Previous",
+      "currentDays": "Last {{count}} days",
+      "previousDays": "{{count}} days before that",
+      "currentYear": "Last year",
+      "previousYear": "The year before that"
     },
     "statsGrid": {
       "transactions": "Transactions",

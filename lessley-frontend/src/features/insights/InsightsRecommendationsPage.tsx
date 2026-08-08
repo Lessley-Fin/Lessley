@@ -146,7 +146,7 @@ export function InsightsRecommendationsPage() {
             <Carousel setApi={setCarouselApi} opts={{ align: "start", direction }}>
               <CarouselContent>
                 <CarouselItem>
-                  <SpendingOverviewSlide comparison={spendingComparison} />
+                  <SpendingOverviewSlide comparison={spendingComparison} days={deepDiveDays} />
                 </CarouselItem>
                 <CarouselItem>
                   <TopCategorySlide categories={categoryInsights} />
