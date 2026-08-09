@@ -1590,6 +1590,108 @@ def enrich_constraints_cmd(
     )
 
 
+@app.command(name="enrich-raw-constraints")
+def enrich_raw_constraints_cmd(
+    source: str = typer.Option(
+        "", "--source", "-s", help="Only enrich this source_id (default: every source)"
+    ),
+    limit: int = typer.Option(0, "--limit", "-n", help="Enrich at most N records (0 = all)"),
+    force: bool = typer.Option(
+        False, "--force", help="Re-parse records that already have constraints"
+    ),
+    concurrency: int = typer.Option(
+        16, "--concurrency", "-c", help="Concurrent LLM calls (default 16)"
+    ),
+    chunk_size: int = typer.Option(
+        200, "--chunk-size", help="Distinct terms texts parsed between checkpoints (default 200)"
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Call the LLM but do not write back"),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Backfill `constraints` onto already-scraped raw deals — no re-scraping.
+
+    Parses each raw deal's `terms_and_conditions` with the configured LLM and
+    writes the result onto `raw_payload.constraints`, which is where the persist
+    stage picks it up. Run `deals process` afterwards to carry the constraints
+    onto the built deals.
+
+    Checkpoints every --chunk-size records and skips anything already enriched,
+    so it is safe to interrupt and re-run: it resumes where it stopped.
+    """
+    _setup_logging(log_level)
+
+    from lessley_deals.enrichment.enrich_raw_constraints import enrich_raw_constraints
+
+    raw_deal_repo = _make_repos(data_dir).raw_deal_repo
+
+    console.print(
+        f"Enriching raw deals from [bold]{source or 'all sources'}[/bold] "
+        f"(concurrency={concurrency}, checkpoint every {chunk_size})…"
+    )
+    stats = asyncio.run(
+        enrich_raw_constraints(
+            raw_deal_repo,
+            source=source,
+            limit=limit,
+            force=force,
+            concurrency=concurrency,
+            chunk_size=chunk_size,
+            dry_run=dry_run,
+        )
+    )
+    console.print(
+        f"[green]Done.[/green] total={stats['total']} pending={stats['pending']} "
+        f"processed={stats['processed']} skipped={stats['skipped']} failed={stats['failed']} "
+        f"llm_calls={stats['llm_calls']}"
+        + (" [yellow](dry-run)[/yellow]" if dry_run else "")
+    )
+    if not dry_run and stats["processed"]:
+        console.print("Next: [bold]python -m deals process[/bold] to build deals with them.")
+
+
+@app.command(name="propagate-constraints")
+def propagate_constraints_cmd(
+    source: str = typer.Option(
+        "", "--source", "-s", help="Only touch deals from this source_id (default: all)"
+    ),
+    file: Optional[str] = typer.Option(
+        None, "--file", help="Deals JSON file to update instead of <data-dir>/deals.json"
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite deals that already carry constraints"
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Report changes without writing"),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Copy constraints from enriched raw records onto already-built deals.
+
+    Zero LLM calls: deals built before `enrich-raw-constraints` ran carry no
+    constraints even though the answer is already stored on their raw record.
+    This matches them by raw_id and copies the block across in seconds.
+    """
+    _setup_logging(log_level)
+
+    from lessley_deals.enrichment.propagate_constraints import propagate_constraints
+
+    raw_deal_repo = _make_repos(data_dir).raw_deal_repo
+
+    stats = propagate_constraints(
+        raw_deal_repo,
+        data_dir=data_dir,
+        file=file,
+        source=source,
+        force=force,
+        dry_run=dry_run,
+    )
+    console.print(
+        f"[green]Done.[/green] total={stats['total']} updated={stats['updated']} "
+        f"skipped={stats['skipped']} no_raw_match={stats['no_raw_match']}"
+        + (" [yellow](dry-run)[/yellow]" if dry_run else "")
+    )
+
+
 # ---------------------------------------------------------------------------
 # Orchestration: worker process, schedule inspection, deal history
 # ---------------------------------------------------------------------------

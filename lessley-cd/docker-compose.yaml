@@ -266,11 +266,23 @@ services:
       - DEALS_REVIEW_THRESHOLD=${DEALS_REVIEW_THRESHOLD:-0.50}
       # Parse each deal's terms into a structured `constraints` block — this is
       # what gives deal-optimizer real combinability instead of "unknown".
-      # Costs one LLM call per deal that has terms, and needs
-      # COLLEGE_API_BASE/COLLEGE_MODEL_* or OPENAI_API_KEY; without those every
-      # parse is logged and skipped (never fatal), so this stays a no-op until
-      # credentials are added to .env.
+      # Costs one LLM call per deal that has terms.
       - DEALS_ENRICH_CONSTRAINTS=1
+      # Which LLM answers those calls. `college` is the default and points at
+      # the faculty's self-hosted gpt-oss-120b; `azure` falls back to
+      # OPENAI_API_KEY. env_file does NOT reach the app for these — the client
+      # reads os.environ directly, so they must be listed here.
+      #
+      # COLLEGE_API_BASE is an internal IP: the host running this stack has to
+      # be on the college network. Without reachable credentials every parse is
+      # logged and skipped (never fatal), so a misconfigured deployment scrapes
+      # fine and just leaves constraints empty.
+      - LLM_PROVIDER=${LLM_PROVIDER:-college}
+      - COLLEGE_API_BASE=${COLLEGE_API_BASE:-}
+      - COLLEGE_MODEL_HOST=${COLLEGE_MODEL_HOST:-}
+      - COLLEGE_MODEL_NAME=${COLLEGE_MODEL_NAME:-}
+      - COLLEGE_API_KEY=${COLLEGE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       # Fetch each HOT benefit's detail page. All 7 benefit types are scraped
       # either way (the adapter's own default) — details are what carry
       # terms_and_conditions, which the constraints stage above needs.

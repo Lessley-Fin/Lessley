@@ -197,6 +197,109 @@ def test_behatsdaa_is_a_supported_source() -> None:
 
 
 # --------------------------------------------------------------------------- #
+# Per-source blocks — each pins the mapping that source gets wrong by default  #
+# --------------------------------------------------------------------------- #
+
+_BLOCKED_SOURCES = (
+    "behatsdaa",
+    "hot",
+    "hever_gift_card_company",
+    "hever_teamim_card_store",
+    "paisplus",
+    "paisplus_networks",
+    "paisplus_food_chains",
+    "mastercard",
+    "topcash",
+)
+
+
+def test_every_scraped_source_has_its_own_terminology_block() -> None:
+    assert set(supported_source_prompts()) == set(_BLOCKED_SOURCES)
+
+
+def test_every_block_keeps_the_schema_and_output_discipline_intact() -> None:
+    for source in _BLOCKED_SOURCES:
+        prompt = build_system_prompt(source)
+        assert "SOURCE-SPECIFIC RULES" in prompt, source
+        assert "is_include_outlets_stores" in prompt, source
+        # Output discipline must stay the last thing the model reads.
+        assert prompt.index("SOURCE-SPECIFIC RULES") < prompt.index(
+            "Return ONLY the JSON object"
+        ), source
+
+
+def test_hot_block_pins_per_member_caps_apart_from_per_transaction() -> None:
+    prompt = build_system_prompt("hot")
+    # HOT's signature number caps vouchers per PERSON, which has no field. The
+    # likely failure is it landing in max_uses_per_transaction.
+    assert "מוגבל לתו 1 לעמית מועדון (ת.ז.)" in prompt
+    assert "per person" in prompt
+    # The statement-credit boilerplate prohibits nothing — it must stay unknown.
+    assert "It prohibits NOTHING" in prompt
+    # Buying the voucher on the club site is not the merchant's web shop.
+    assert "where the voucher is BOUGHT" in prompt
+
+
+def test_hever_blocks_pin_the_tiered_load_sentence_as_economics() -> None:
+    for source in ("hever_gift_card_company", "hever_teamim_card_store"):
+        prompt = build_system_prompt(source)
+        assert "ECONOMICS, not a restriction" in prompt, source
+        # The load tiers must not become minimum_purchase.
+        assert "never produces minimum_purchase" in prompt, source
+        # A shekel spend ceiling is not a limit.
+        assert "עד 1,000 ש\"ח לעסקה" in prompt, source
+    # Only the restaurant card claims physical stores from a dine-in phrase.
+    assert "ישיבה במסעדה" in build_system_prompt("hever_teamim_card_store")
+
+
+def test_paisplus_block_separates_voucher_counts_from_shekel_ceilings() -> None:
+    prompt = build_system_prompt("paisplus")
+    # A genuine count DOES map here — unlike the loadable sources.
+    assert "ניתן לממש עד 2 תווי קנייה בעסקה אחת" in prompt
+    assert "max_uses_per_transaction: 2" in prompt
+    # ...but a shekel ceiling still does not.
+    assert "ניתן לממש את תווי הקנייה בסכום של עד 2000 ₪ לעסקה" in prompt
+    # The source ships this typo; the model must read it as normal stacking.
+    assert "כולל כפלמבצעים" in prompt
+
+
+def test_paisplus_networks_block_inverts_the_default_store_coverage() -> None:
+    prompt = build_system_prompt("paisplus_networks")
+    # This source excludes branches — the opposite of the branch-based sources.
+    assert "ניתן למימוש באתר בלבד" in prompt
+    assert "is_include_physical_stores: no" in prompt
+    # The balance-vs-basket instruction is not a spend floor.
+    assert "NOT minimum_purchase" in prompt
+
+
+def test_paisplus_food_block_keeps_self_checkout_out_of_store_coverage() -> None:
+    prompt = build_system_prompt("paisplus_food_chains")
+    assert "לא ניתן לשלם בקופות עצמיות" in prompt
+    assert "self-checkout is a register type" in prompt
+    assert "Do NOT set is_include_physical_stores to \"no\" for it" in prompt
+
+
+def test_mastercard_block_pins_day_of_month_apart_from_monthly_limit() -> None:
+    prompt = build_system_prompt("mastercard")
+    # "ב-10 בחודש" is a date, and the obvious failure is max_uses_per_month: 10.
+    assert "תקף ב-10 וב-11 בחודש בלבד" in prompt
+    assert "max_uses_per_month stays **null**" in prompt
+    # A payment network is not a club — membership must not be inferred.
+    assert "not a members' club" in prompt
+
+
+def test_topcash_block_claims_online_and_maps_cashback_blockers() -> None:
+    prompt = build_system_prompt("topcash")
+    # Every TopCash merchant is a web shop, and an account is always required.
+    assert "is_include_online_stores: **yes**" in prompt
+    assert "membership_required: **yes**" in prompt
+    # Payout waiting periods must not become numbers.
+    assert "These are days, not limits" in prompt
+    # Exclusions that DO line up with a field.
+    assert "stackable_with_giftcards: no" in prompt
+
+
+# --------------------------------------------------------------------------- #
 # End-to-end (LLM mocked)                                                     #
 # --------------------------------------------------------------------------- #
 

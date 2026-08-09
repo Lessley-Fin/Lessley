@@ -28,6 +28,8 @@ python -m deals process                              # Normalize + match raw dat
 python -m deals review                               # Interactive TUI for uncertain matches
 python -m deals review --pending                     # Show review queue summary
 python -m deals discover-stores                      # Analyze raw data for new stores
+python -m deals enrich-raw-constraints               # Backfill `constraints` onto already-scraped raw deals
+python -m deals propagate-constraints                # Copy raw constraints onto already-built deals (no LLM)
 python -m deals optimize <store_id> <cart_total>      # Cheapest legal deal stack (needs `pip install -e ../deal-optimizer`)
 ```
 
@@ -84,7 +86,15 @@ Thresholds from `MatchConfig`: auto-accept ≥ 0.90, send to review ≥ 0.50, di
 
 **MCC categories** — a store's `metadata.mcc_codes` is a ranked list of **category names** (`GROCERIES`, `RESTAURANT`, `CLOTHES_&_ACCESSORIES`, …), never the 4-digit numbers. The closed set of 46 names and the numeric-MCC → category mapping live in `enrichment/mcc_catalog.py`; run everything that writes the field through `normalize_mcc_codes()` so legacy numeric rows and loose spellings resolve to the canonical name. `deals enrich-stores` classifies missing ones via the LLM and converts already-numeric ones without spending a call.
 
-**Deal constraints** — `ConstraintsStage` turns each deal's `terms_and_conditions` into the structured `constraints` block via a local LLM (`enrichment/constaints_parser.py`). The system prompt is **assembled per source**: a shared base (schema + rules + generic Hebrew vocabulary) plus an optional `_SOURCE_PROMPTS[source_id]` terminology block, with the output-discipline reminder kept last. Every site words the same restriction differently and leans on a different instrument (voucher / loadable card / club card), so a source with a block gets its own mappings; one without falls back to the generic prompt unchanged. `behatsdaa` has a block — write new ones alongside it and add tests asserting the mappings that source gets wrong by default.
+**Deal constraints** — `ConstraintsStage` turns each deal's `terms_and_conditions` into the structured `constraints` block via a local LLM (`enrichment/constaints_parser.py`). The system prompt is **assembled per source**: a shared base (schema + rules + generic Hebrew vocabulary) plus an optional `_SOURCE_PROMPTS[source_id]` terminology block, with the output-discipline reminder kept last. Every site words the same restriction differently and leans on a different instrument (voucher / loadable card / club card), so a source with a block gets its own mappings; one without falls back to the generic prompt unchanged. **Every scraped source has a block** (`behatsdaa`, `hot`, both `hever_*`, all three `paisplus_*`, `mastercard`, `topcash`) — a source added later falls back to the generic prompt until one is written for it. Each block is grounded in that source's real terms text and pins the mapping it gets wrong by default; `tests/unit/enrichment/test_deal_constraints.py` asserts those specific rules survive edits. The recurring trap across sources is a **number that looks like a limit but is not**: a shekel spend ceiling (`עד 1,000 ₪ לעסקה`), a wallet load tier (`30% על טעינת 1,000 ₪ ראשונים`), a per-*member* voucher cap (`מוגבל לתו 1 לעמית מועדון (ת.ז.)`), a day of the month (`תקף ב-10 בחודש`), or a cashback waiting period (`כ-130 ימים`). None of these has a field; all three numeric limits stay null. Only a count scoped to one purchase (`עד 2 תווי קנייה בעסקה`) fills `max_uses_per_transaction`.
+
+  **Which LLM answers these calls** is `LLM_PROVIDER` (`enrichment/llm_client.py`), defaulting to `college` — the faculty's self-hosted `gpt-oss-120b` at `COLLEGE_API_BASE`. The `openai` package is only the client library; nothing reaches OpenAI unless `LLM_PROVIDER=azure`. `COLLEGE_API_BASE` is an internal IP with a self-signed cert, so the caller must be on the college network. A parse that cannot reach a model is logged and skipped, never fatal — which is why a misconfigured deployment scrapes fine and silently leaves `constraints` empty.
+
+  **Identical terms cost one call.** Sources reuse boilerplate heavily — one HOT text covers 6.3k deals, and across all sources 11.4k deals reduce to ~4.3k distinct `(source_id, terms)` pairs. `ConstraintsStage` groups by that exact pair and parses each once. The parser is deterministic (`temperature=0`, `seed=42`) and its prompt depends on nothing else, so the fan-out is byte-identical to parsing each deal separately — it is a 2.6x saving with no accuracy cost. `enrich-raw-constraints` groups the whole backlog *before* chunking, so a boilerplate group is never split across checkpoints and re-billed.
+
+  **Backfilling deals scraped before this stage existed** (or while it was misconfigured): `deals enrich-raw-constraints` parses each stored raw deal's terms and writes the block onto `raw_payload["constraints"]` — exactly where `PersistStage` reads it — so a following `deals process` carries it onto the built deals with no further LLM calls. It checkpoints every `--chunk-size` *distinct texts* and skips anything already enriched, so an interrupted run resumes instead of paying twice.
+
+  **Deals already built** (a `process` run that predates the enrichment) keep `constraints: null` even once the raw records are enriched. `deals propagate-constraints` matches them by `raw_id` and copies the block across — zero LLM calls, seconds to run. Reach for it instead of re-parsing; the answer is already on disk.
 
 **`src/lessley_deals/pipeline/`** — `PipelineOrchestrator` wires `scrape_stage.py`, `normalize_stage.py`, `match_stage.py`, `persist_stage.py`, `ingest_stage.py` via a shared `context.py`. Each stage is independently testable. `factory.py` is the **composition root** — the single place that decides JSON vs MongoDB, which sources are registered, and whether versioning is on. Both the CLI and the worker build from it.
 
@@ -173,6 +183,10 @@ in messy freeform text; skip it when they're already named JSON/HTML fields.
 | `DEALS_LOG_LEVEL` | `INFO` | Log verbosity |
 | `LLM_SCRAPER_REMOTE_URL` | — | Optional remote Selenium/CDP endpoint (e.g. Bright Data scraping browser) for the AI scraper engine; local Chrome if unset |
 | `LLM_SCRAPER_VERBOSE` | — | When set (any value), the AI scraper logs the cleaned DOM preview and each extracted deal at INFO. The engine also logs a WARNING when a page looks blocked (captcha/empty/anti-bot markers) |
+| `LLM_PROVIDER` | `college` | `college` (self-hosted gpt-oss-120b) or `azure` (OpenAI-compatible, `OPENAI_API_KEY`) |
+| `COLLEGE_API_BASE` / `COLLEGE_MODEL_HOST` / `COLLEGE_MODEL_NAME` | — | Required by `LLM_PROVIDER=college`. Internal IP + Run:AI Host header + model id |
+| `COLLEGE_API_KEY` | `not-needed` | Optional — the college endpoint does not check it |
+| `DEALS_ENRICH_CONSTRAINTS` | — | Worker only: `1` runs the constraints stage on every scrape |
 | `MONGO_URI` | — | MongoDB connection string |
 | `MONGO_DB_NAME` | — | MongoDB database name |
 | `DEALS_VERSIONING` | `1` | SCD Type 2 deal history (see `docs/orchestration.md`) |

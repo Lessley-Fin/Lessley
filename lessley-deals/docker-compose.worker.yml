@@ -36,6 +36,17 @@ services:
       # --- misc ----------------------------------------------------------
       DEALS_LOG_LEVEL: INFO
       DEALS_ENRICH_CONSTRAINTS: "0"       # "1" costs an LLM call per new deal
+
+      # --- LLM (constraints enrichment) ----------------------------------
+      # `college` (default) targets the faculty's self-hosted gpt-oss-120b over
+      # an internal IP — the host must be on the college network. `azure` falls
+      # back to OPENAI_API_KEY. Unset/unreachable → every parse is logged and
+      # skipped, never fatal.
+      LLM_PROVIDER: ${LLM_PROVIDER:-college}
+      COLLEGE_API_BASE: ${COLLEGE_API_BASE:-}
+      COLLEGE_MODEL_HOST: ${COLLEGE_MODEL_HOST:-}
+      COLLEGE_MODEL_NAME: ${COLLEGE_MODEL_NAME:-}
+      COLLEGE_API_KEY: ${COLLEGE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
       # Raw payloads and the review queue stay on disk for replay/auditing.

@@ -483,9 +483,503 @@ excluded product categories produce no numbers at all.
 """
 
 
+_HOT_PROMPT = """\
+# SOURCE-SPECIFIC RULES — HOT / מועדון הוט (credit-card club)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+מועדון הוט is a credit-card club. Membership is expressed through a
+club-linked credit card (``כרטיס אשראי המשויך למועדון הוט`` — issued as
+``ישראכרט הוט`` or ``אמריקן אקספרס הוט``), so nearly every deal implies both
+``membership_required: yes`` and a ``payment_method_required``. Three different
+instruments appear, and they need different readings:
+
+### 1. Statement-credit discount (by far the most common)
+
+    ההנחה בחיוב תינתן אוטומטית למשלמים בכרטיס אשראי המשויך למועדון הוט,
+    במעמד חיוב החשבון. הנחה זו ניתנת על הסכום המשולם בפועל בכרטיס האשראי.
+    את ההנחה ניתן יהיה לראות בפרטי חיוב כרטיס האשראי (סטייטמנט) ...
+
+This text describes HOW the discount is applied — as a credit on the card
+statement rather than at the register. It prohibits NOTHING. Resolve it as:
+
+- membership_required: yes
+- payment_method_required: "HOT club-linked credit card"
+- every combinability field: "unknown" (silence, not prohibition)
+- every store_coverage field: "unknown" — the statement credit follows the
+  card, not a store type. ``במעמד חיוב החשבון`` and ``בקופה`` describe when the
+  discount lands; neither says branches are in or out.
+- all three numeric limits: null
+
+``יש לשלם באמצעות כרטיס האשראי של מועדון הוט: ישראכרט הוט ו/או אמריקן אקספרס
+הוט`` → payment_method_required: "HOT club credit card (Isracard HOT or
+American Express HOT)", membership_required: yes.
+
+### 2. Swish digital voucher (``תו דיגיטלי``)
+
+Opens with ``רכישת תו דיגיטלי בהנחה של X% באתר מועדון הוט``. The member buys a
+discounted voucher on the club's website and redeems it at the merchant.
+
+- ``באתר מועדון הוט`` is where the voucher is BOUGHT. It says nothing about the
+  merchant's own web shop — leave is_include_online_stores "unknown".
+- ``התו תקף בישיבה בלבד`` → is_include_physical_stores: yes
+- ``לא תקף ב-TA ומשלוחים`` → NO field. Take-away and delivery are not "online
+  stores"; do not touch is_include_online_stores for them.
+- ``ההטבה אינה תקפה למבצעים`` → stackable_with_store_sale: no
+- membership_required: yes; payment_method_required: "HOT club-linked credit
+  card" (``יש לשלם בכרטיס אשראי המשויך למועדון הוט``).
+
+### 3. HOTsave cashback (``הוטsave``)
+
+An affiliate cashback service reached through a portal
+(``בכל רכישה עוברים דרך הוטsave``). Registration is required
+(``השירות מותנה בהרשמה מראש``) → membership_required: yes. The rest is
+operational mechanics with no field — record nothing for it.
+
+## Limits — per-member voucher caps are NOT per-transaction (read this twice)
+
+HOT's most common numeric phrase caps how many vouchers a MEMBER may buy,
+identified by ID number. The schema has no per-member field. Every one of these
+leaves ALL THREE numeric fields null:
+
+- ``מוגבל לתו 1 לעמית מועדון (ת.ז.)`` · ``מוגבל ל-5 תווים לעמית מועדון (ת.ז.)``
+- ``מוגבל ל-2 תווים לחבר מועדון``
+
+``לעמית מועדון`` / ``לחבר מועדון`` / ``(ת.ז.)`` means *per person*, not per
+transaction and not per month. max_uses_per_transaction requires the text to
+scope the count to one purchase (``בעסקה``, ``בקנייה``, ``לשולחן``);
+max_uses_per_month requires an explicit calendar month (``בחודש קלנדרי``).
+
+A percentage in the opening line (``בהנחה של 15%``) is the deal's discount
+rate, never minimum_purchase.
+
+## Has no field — do NOT force these anywhere
+
+- Meal/timing: ``לא כולל ארוחות עסקיות`` · ``ארוחות בראש השנה האזרחית`` ·
+  ``אינו תקף בחגים וחול המועד`` · ``ללא happy hours`` · ``ארוחת בוקר ... בהתאם
+  לשעות בהן מוגשת``
+- Audience: ``ההטבה אינה מיועדת לקבוצות ואירועים``
+- Kashrut: ``כשרות על פי הצהרת בית העסק``
+- Payment detail: ``לא ניתן לשלם את הטיפ (תשר) באמצעות קוד ההטבה``
+- Boilerplate: ``מימוש ההטבה בכפוף לתנאים והגבלות באתר בית העסק`` ·
+  ``בכפוף לתנאי התקנון`` · ``מומלץ ליצור קשר עם בית העסק טרם ההגעה``
+- Delivery mechanics: ``יתקבל מסרון עם קוד למימוש``
+
+## Worked example
+
+Terms::
+
+    ההנחה בחיוב תינתן אוטומטית למשלמים בכרטיס אשראי המשויך למועדון הוט, במעמד
+    חיוב החשבון. הנחה זו ניתנת על הסכום המשולם בפועל בכרטיס האשראי.
+
+Correct output::
+
+    {"combinability": {"stackable_with_store_sale": "unknown",
+                       "stackable_with_member_discounts": "unknown",
+                       "stackable_with_coupons": "unknown",
+                       "stackable_with_payment_discounts": "unknown",
+                       "stackable_with_giftcards": "unknown",
+                       "stackable_with_cashback": "unknown"},
+     "limits": {"max_uses_per_transaction": null,
+                "max_uses_per_month": null,
+                "minimum_purchase": null},
+     "store_coverage": {"is_include_outlets_stores": "unknown",
+                        "is_include_online_stores": "unknown",
+                        "is_include_physical_stores": "unknown"},
+     "eligibility": {"membership_required": "yes",
+                     "payment_method_required": "HOT club-linked credit card"}}
+"""
+
+
+_HEVER_SHARED = """\
+## What this source is
+
+``חבר`` is a closed members' organisation. The benefit is a **loadable prepaid
+card** (``כרטיס "חבר" הנטען``): the member loads money and receives a tiered
+percentage off the load, then spends the balance at the accepting chain. The
+card and the payment method are the same object.
+
+Always true for this source:
+- membership_required: yes — only a חבר member can load the card.
+- stackable_with_payment_discounts: "unknown" unless the text says otherwise.
+
+## The tiered-load sentence is ECONOMICS, not a restriction
+
+Nearly every deal ends with some version of::
+
+    ניתן לטעון כרטיס "חבר" הנטען ולקבל 30% הנחה על טעינת 1,000 ₪ ראשונים,
+    25% הנחה על 1,000 ₪ הבאים ו-20% הנחה על 1,000 ₪ נוספים (עד 3,000 ₪ בסה"כ),
+    לשימוש ברשת <chain>.
+
+Every number in it is a load tier or a load ceiling. Read it ONLY for the chain
+name. It never produces minimum_purchase, never max_uses_per_month, never
+max_uses_per_transaction.
+
+## Shekel ceilings are NOT limits
+
+- ``עד 1,000 ש"ח לעסקה`` · ``ניתן לשלם עד 1000 ₪ לעסקה`` ·
+  ``רכישה בכרטיס הנטען עד 1,000 ₪``
+
+A shekel amount caps how much may be SPENT. minimum_purchase is a floor the
+customer must reach — the opposite. max_uses_* count cards or vouchers, not
+shekels. All of these → all three numeric fields null.
+
+## Stacking
+
+- ``לא כולל כפל הנחות מועדון הרשת`` / ``לא כולל כפל הנחות מועדון`` →
+  stackable_with_member_discounts: no
+- ``כולל כפל מבצעים`` → stackable_with_store_sale: yes
+- Silence on a kind of stacking → "unknown" (stored as stackable).
+"""
+
+
+_HEVER_GIFT_CARD_PROMPT = (
+    """\
+# SOURCE-SPECIFIC RULES — חבר / Hever gift card (loadable card)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+"""
+    + _HEVER_SHARED
+    + """
+payment_method_required: "Hever loadable club card".
+
+Store coverage is usually unstated on this source — leave all three
+"unknown" unless the text names branches, an outlet, or a web shop.
+
+## Worked example
+
+Terms::
+
+    לא כולל כפל הנחות מועדון הרשת, רכישה בכרטיס הנטען עד 1,000 ₪
+    ניתן לטעון כרטיס "חבר" הנטען ולקבל 30% הנחה על טעינת 1,000 ₪ ראשונים,
+    25% הנחה על 1,000 ₪ הבאים ו-20% הנחה על 1,000 ₪ נוספים (עד 3,000 ₪ בסה"כ),
+    לשימוש ברשת 4chef.
+
+Correct output — note that NO number survives::
+
+    {"combinability": {"stackable_with_store_sale": "unknown",
+                       "stackable_with_member_discounts": "no",
+                       "stackable_with_coupons": "unknown",
+                       "stackable_with_payment_discounts": "unknown",
+                       "stackable_with_giftcards": "unknown",
+                       "stackable_with_cashback": "unknown"},
+     "limits": {"max_uses_per_transaction": null,
+                "max_uses_per_month": null,
+                "minimum_purchase": null},
+     "store_coverage": {"is_include_outlets_stores": "unknown",
+                        "is_include_online_stores": "unknown",
+                        "is_include_physical_stores": "unknown"},
+     "eligibility": {"membership_required": "yes",
+                     "payment_method_required": "Hever loadable club card"}}
+"""
+)
+
+
+_HEVER_TEAMIM_PROMPT = (
+    """\
+# SOURCE-SPECIFIC RULES — חבר טעמים / Hever Teamim (loadable restaurant card)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+"""
+    + _HEVER_SHARED
+    + """
+payment_method_required: "Hever Teamim loadable card".
+
+## Dining terms (this source is restaurants)
+
+- ``ישיבה במסעדה`` / ``תקף בישיבה בלבד`` → is_include_physical_stores: yes.
+  Leave is_include_online_stores and is_include_outlets_stores "unknown" — a
+  restaurant deal that is silent about a web shop has not excluded one.
+- ``לא תקף במשלוחים`` · ``TAKE AWAY`` · ``לא כולל עסקיות`` ·
+  ``לא תקף בשעות happy hour`` → NO field. Delivery and take-away are service
+  channels, not online stores.
+- ``מינימום הזמנה הוא לזוג`` → a party-size floor, not money → minimum_purchase
+  stays null.
+"""
+)
+
+
+_PAISPLUS_PROMPT = """\
+# SOURCE-SPECIFIC RULES — פיס פלוס / Pais Plus (gift voucher)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+Pais Plus sells a **gift voucher** (``תו קנייה``), delivered as a digital code
+and spent at the chain. Unlike a loadable wallet, the voucher is a countable
+object — so genuine per-transaction counts DO appear here and must be captured.
+
+## Stacking
+
+- ``כולל כפל מבצעים והנחות`` → stackable_with_store_sale: yes. The source often
+  ships this with a missing space (``כולל כפלמבצעים והנחות``) — read it the same
+  way. A carve-out such as ``פרט למבצע 1+1 חינם`` does not change it: still
+  "yes", and the 1+1 exclusion has no field.
+- ``לא ניתן למימוש במקביל להטבות ו/או מבצעי מועדון`` /
+  ``לא כולל מבצעי מועדון`` → stackable_with_member_discounts: no
+- ``לא ניתן לרכוש כרטיס מתנה/גיפט קארד באמצעות התו`` →
+  stackable_with_giftcards: no
+
+## Store coverage
+
+- ``ניתן למימוש בסניפים`` / ``ניתן למימוש לישיבה בסניפים או לאיסוף עצמי`` /
+  ``בקופות הסניפים`` → is_include_physical_stores: yes
+- ``לא ניתן למימוש באתרי הסחר`` / ``לא ניתן למימוש באתר הסחר`` /
+  ``לא ניתן למימוש באתר`` / ``לא כולל אתר סחר`` (incl. named sites such as
+  ``לרבות טרמינל X``) → is_include_online_stores: no
+- ``לא ניתן למימוש בחנויות עודפים ו/או ברכישת פרטי עודפים`` →
+  is_include_outlets_stores: no
+- ``לא ניתן למימוש בסניפי נתב"ג`` → a NAMED branch exclusion. No field — it
+  does not make physical stores excluded.
+
+## Limits — count vouchers, not shekels
+
+Genuine counts DO map here:
+- ``ניתן לממש עד 2 תווי קנייה בעסקה אחת`` → max_uses_per_transaction: 2
+- ``ניתן לממש תו אחד בלבד בעסקה`` → max_uses_per_transaction: 1
+
+Shekel ceilings do NOT:
+- ``ניתן לממש את תווי הקנייה בסכום של עד 2000 ₪ לעסקה`` → all numeric null.
+  This caps the amount spent, not the number of vouchers.
+
+``ניתן לפצל את התו למספר רכישות`` (the voucher may be spent across several
+purchases) is a convenience, not a limit → no field.
+
+## Has no field
+
+``לא תקף במשלוחים`` · ``לא ניתן לשלם בקופות עצמיות`` ·
+``לא כולל אלכוהול וסיגריות`` · ``לא כולל שטיחים / מוצרי LIMITED / אלקטרוניקה``
+· ``יש לרכוש תו ייעודי לסניף הרלוונטי`` · ``הסניפים המכבדים את ההטבה: ...`` ·
+``התו לא ניתן להמרה למזומן`` · ``בכפוף למלאי`` · ``גניבה/אובדן/השחתה`` ·
+``האחריות על טיב המוצרים`` · issuer names (``מנפיק התו: ...``) ·
+allergen notices.
+"""
+
+
+_PAISPLUS_NETWORKS_PROMPT = """\
+# SOURCE-SPECIFIC RULES — פיס פלוס רשתות אונליין (loadable, online-first)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+A **loadable** Pais Plus voucher for chains whose redemption is primarily
+online. The closing sentence — ``ניתן לטעון ולקבל 25% הנחה על טעינת 600 ₪
+ראשונים ו-15% הנחה על טעינת 900 ₪ הנוספים (עד 1500 ₪ בסה"כ), לשימוש ברשת
+<chain>`` — is the deal's economics. Read it only for the chain name; every
+number in it is a load tier or load ceiling → all three numeric fields null.
+
+## Store coverage — this source usually EXCLUDES branches (note the direction)
+
+- ``ניתן למימוש באתר ובאפליקציה`` → is_include_online_stores: yes
+- ``ניתן למימוש באתר בלבד`` → is_include_online_stores: yes AND
+  is_include_physical_stores: no
+- ``לא ניתן למימוש בסניפים`` → is_include_physical_stores: no
+
+Do not carry over the assumption from branch-based sources that a voucher
+implies physical stores. Here the default instrument is the web shop.
+
+- ``ובהזמנות טלפוניות`` excluded → no field (phone orders are not a store type).
+
+## Stacking
+
+``כולל כפל מבצעים והנחות`` → stackable_with_store_sale: yes.
+
+## Has no field
+
+``לא ניתן להמרה למזומן`` · ``לא ניתן לשלם את עלות המשלוח באמצעות התו`` ·
+``לא ניתן לפצל תשלום / לשלם באמצעי תשלום נוסף`` ·
+``יש לוודא שהתו טעון בסכום גבוה יותר משווי העסקה``.
+
+That last one is a usage instruction, NOT minimum_purchase — it compares the
+voucher balance to the basket, and imposes no spend floor on the customer.
+"""
+
+
+_PAISPLUS_FOOD_PROMPT = """\
+# SOURCE-SPECIFIC RULES — פיס פלוס רשתות מזון (loadable supermarket card)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+A **loadable** Pais Plus voucher for supermarket chains, spent at the register.
+The closing ``ניתן לטעון ולקבל 7.5% הנחה על טעינת 400 ₪ ראשונים ו-5% הנחה על
+טעינת 1800 ₪ הנוספים (עד 2200 ₪ בסה"כ), לשימוש ברשת <chain>`` is economics —
+read it only for the chain name, and produce no numbers from it.
+
+## Store coverage
+
+- ``לא כולל אתר סחר`` / ``לא כולל אתר הסחר האלקטרוני`` →
+  is_include_online_stores: no
+- The deal is redeemed at the register, so ``ניתן לשלם בקופה`` /
+  ``בקופות הסניפים`` → is_include_physical_stores: yes. Absent any such phrase,
+  leave it "unknown".
+
+## Has no field — the recurring supermarket exclusions
+
+- ``לא ניתן לשלם בקופות עצמיות`` — self-checkout is a register type, not a
+  store type. Do NOT set is_include_physical_stores to "no" for it.
+- ``לא כולל אלכוהול וסיגריות`` · ``לא כולל סיגריות ומוצרי טבק`` — product
+  categories.
+- ``לא ניתן לשלם בקופה בסכום העולה על הסכום הטעון בתו`` — you cannot spend more
+  than the card holds. Not a limit, not a minimum. All numeric fields null.
+- ``או להעביר סכומי טעינה מרשת לרשת`` — balances are not transferable between
+  chains.
+"""
+
+
+_MASTERCARD_PROMPT = """\
+# SOURCE-SPECIFIC RULES — Mastercard (card-issuer promotion)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+A promotion tied to paying with a Mastercard credit card. **Mastercard is a
+payment network, not a members' club** — so a requirement to pay with the card
+sets payment_method_required WITHOUT implying club membership.
+
+- ``תקף למשלמים בכרטיס אשראי מאסטרקארד`` /
+  ``בלעדי למשלמים בכרטיס אשראי מאסטרקארד`` →
+  payment_method_required: "Mastercard credit card",
+  membership_required: "unknown" (NOT "yes" — no club is named).
+- Only set membership_required: yes if the text names a customers' club the
+  shopper must belong to.
+
+## Calendar dates are NOT monthly usage limits (read this twice)
+
+This source's signature phrase is a day-of-month window:
+
+- ``המבצע תקף באתר ב-10 בחודש בלבד`` · ``תקף ב-10 וב-11 בחודש בלבד`` ·
+  ``ההטבה תקפה ב-10 וב-11 בחודש``
+
+``ב-10 בחודש`` is the 10th DAY of the month — a date on which the offer runs,
+not a count of permitted uses. max_uses_per_month stays **null**. The schema
+models no validity window; record nothing for it.
+
+Percentages (``25% הנחה``, ``18% הנחה``) are the discount rate, never
+minimum_purchase.
+
+## Stacking
+
+- ``כולל כפל מבצעים`` → stackable_with_store_sale: yes
+- ``לא כולל כפל הנחות ומבצעים למועדוני לקוחות`` /
+  ``לא כולל כפל מבצעים והנחות למועדוני לקוחות`` →
+  stackable_with_member_discounts: no
+- ``לא כולל כפל מבצעים`` (no qualifier about clubs) →
+  stackable_with_store_sale: no
+
+## Store coverage
+
+- ``בתוקף על כל הפריטים באתר ובחנויות`` / ``תקף באתר ובחנויות`` →
+  is_include_online_stores: yes AND is_include_physical_stores: yes
+- ``תקף באתר בלבד`` → online yes, physical no
+
+## Has no field
+
+``קוד קופון: MASTERCARDAY`` (a coupon code is not a constraint) ·
+``התמונה להמחשה בלבד`` · ``בכפוף לתקנון המלא`` · ``לתקנון`` ·
+``מתן ההטבה וטיב המוצרים באחריות בית העסק בלבד`` · product carve-outs such as
+``לא כולל חבילת Cruise``.
+"""
+
+
+_TOPCASH_PROMPT = """\
+# SOURCE-SPECIFIC RULES — TopCash / טופקאש (online cashback affiliate)
+
+These rules OVERRIDE the generic guidance above wherever the two disagree.
+
+## What this source is
+
+TopCash is a cashback affiliate: the shopper registers, reaches an online store
+through TopCash (a browser extension or a click-through), buys there, and gets
+cashback credited later. The "deal" is the cashback rate at that store.
+
+Known facts for this source — apply them unless the text contradicts:
+- membership_required: **yes** — cashback requires a TopCash account and going
+  through TopCash (``יש להתחיל את תהליך הקנייה דרך TopCash`` /
+  ``בצעו מעבר לחנות דרך TopCash``).
+- is_include_online_stores: **yes** — every TopCash merchant is a web shop.
+- is_include_physical_stores / is_include_outlets_stores: "unknown" unless the
+  text actually names branches.
+- payment_method_required: null — TopCash requires no particular instrument.
+
+## What DOES map (things that block the cashback)
+
+The terms are a list of what forfeits the cashback. Where such an exclusion
+lines up with a schema field, use it:
+
+- ``אין קאשבק על תשלום באמצעות Credit / נקודות מועדון`` →
+  stackable_with_payment_discounts: no
+- ``רכישות שנעשו באמצעות גיפטקארד`` / ``רכישות של ובאמצעות כרטיסי מתנה``
+  excluded → stackable_with_giftcards: no
+- ``שימוש בקופונים חיצוניים שלא סופקו על ידי TopCash עלול למנוע קבלת קאשבק`` /
+  ``שימוש בקודים וקופונים חיצוניים ... עלול למנוע`` → stackable_with_coupons: no
+- ``מוצרים מקטגוריית "Daily Deals" שנרכשו כחלק מעסקת קידום מכירות`` excluded →
+  stackable_with_store_sale: no
+
+## Has no field — the cashback plumbing
+
+This source is dense with tracking mechanics. Record nothing for them, and in
+particular never turn a waiting period or a percentage into a number:
+
+- Timing of payout: ``הקאשבק הופך לזמין כ-90 ימים לאחר מימוש ההזמנה`` ·
+  ``ימי ההמתנה לאישור הקאשבק, כ-130 ימים``. These are days, not limits →
+  max_uses_per_month stays null.
+- Tracking mechanics: ``הפעילו קאשבק בתוסף`` · ``התוסף לא עובד בחנות זו`` ·
+  ``יש לבצע הזמנה במסגרת הפעלה אחת (ביקור רציף באתר ללא שיטוט בדפי אינטרנט
+  חיצוניים)`` · ``מומלץ לבצע מעבר במצב מחובר``
+- Rate uncertainty: ``מספקים אחוז משתנה של קאשבק ... ולכן לא ניתן לדעת במדויק
+  את גובה הקאשבק``
+- Support policy: ``לא ניתן לשלוח לבדיקה הזמנות עם קאשבק חסר`` ·
+  ``כל שינוי בהזמנה קיימת עלול למנוע אישור הקאשבק``
+- Channel/scope detail: ``קניות שנעשות דרך האפליקציה`` ·
+  ``אין קאשבק עבור הזמנות דרך סוכן או צד שלישי`` ·
+  ``קאשבק ינתן על הזמנת מקומות אירוח בלבד`` ·
+  ``קאשבק מחושב מעלות המגורים בלבד ללא מסים, דמי שירות, מע"מ``
+
+## Worked example
+
+Terms::
+
+    תנאים לקבלת הקאשבק • אין קאשבק על תשלום באמצעות Credit / נקודות מועדון.
+
+Correct output::
+
+    {"combinability": {"stackable_with_store_sale": "unknown",
+                       "stackable_with_member_discounts": "unknown",
+                       "stackable_with_coupons": "unknown",
+                       "stackable_with_payment_discounts": "no",
+                       "stackable_with_giftcards": "unknown",
+                       "stackable_with_cashback": "unknown"},
+     "limits": {"max_uses_per_transaction": null,
+                "max_uses_per_month": null,
+                "minimum_purchase": null},
+     "store_coverage": {"is_include_outlets_stores": "unknown",
+                        "is_include_online_stores": "yes",
+                        "is_include_physical_stores": "unknown"},
+     "eligibility": {"membership_required": "yes",
+                     "payment_method_required": null}}
+"""
+
+
 # Keyed by ``source_id`` as registered in ``scraping/registry.py``.
 _SOURCE_PROMPTS: dict[str, str] = {
     "behatsdaa": _BEHATSDAA_PROMPT,
+    "hot": _HOT_PROMPT,
+    "hever_gift_card_company": _HEVER_GIFT_CARD_PROMPT,
+    "hever_teamim_card_store": _HEVER_TEAMIM_PROMPT,
+    "paisplus": _PAISPLUS_PROMPT,
+    "paisplus_networks": _PAISPLUS_NETWORKS_PROMPT,
+    "paisplus_food_chains": _PAISPLUS_FOOD_PROMPT,
+    "mastercard": _MASTERCARD_PROMPT,
+    "topcash": _TOPCASH_PROMPT,
 }
 
 

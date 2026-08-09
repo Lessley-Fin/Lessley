@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Sequence
+from concurrent.futures import Executor
 from typing import Any, Protocol
 
 from lessley_deals.domain.models import RawScrapedRecord
@@ -42,9 +43,15 @@ class ConstraintsStage:
         parser: ConstraintsParser = parse_deal_constraints,
         *,
         max_concurrency: int = 5,
+        executor: Executor | None = None,
     ) -> None:
         self._parser = parser
         self._max_concurrency = max(1, max_concurrency)
+        # Each parse is a blocking HTTP call offloaded to a thread. The default
+        # executor is sized off the CPU count, so a caller asking for more
+        # concurrency than that (a bulk backfill) must supply its own pool or
+        # the semaphore is throttled by threads it never sees.
+        self._executor = executor
 
     async def run(self, deals: Sequence[RawScrapedRecord]) -> dict[str, dict[str, Any]]:
         """Return ``{raw_id: constraints_dict}`` for every deal we could parse."""
@@ -58,27 +65,51 @@ class ConstraintsStage:
             )
             return {}
 
+        # Sources reuse boilerplate heavily — one HOT terms text covers 6k+ deals.
+        # The parser is deterministic (temperature 0, fixed seed) and the prompt
+        # depends on nothing but these two values, so identical (source, terms)
+        # must yield identical constraints. Parse each distinct pair once and fan
+        # the answer out: fewer calls, byte-identical results.
+        groups: dict[tuple[str | None, str], list[str]] = {}
+        for raw_id, terms, source_id in parseable:
+            groups.setdefault((source_id, terms), []).append(raw_id)
+
         semaphore = asyncio.Semaphore(self._max_concurrency)
         loop = asyncio.get_event_loop()
 
         async def _one(
-            raw_id: str, terms: str, source_id: str | None
-        ) -> tuple[str, dict[str, Any] | None]:
+            key: tuple[str | None, str], raw_ids: list[str]
+        ) -> tuple[list[str], dict[str, Any] | None]:
+            source_id, terms = key
             async with semaphore:
                 try:
-                    result = await loop.run_in_executor(None, self._parser, terms, source_id)
+                    result = await loop.run_in_executor(
+                        self._executor, self._parser, terms, source_id
+                    )
                 except Exception as exc:  # noqa: BLE001 — never let one deal kill the run
-                    logger.warning("Constraints parse failed for %s: %s", raw_id, exc)
-                    return raw_id, None
-                return raw_id, result.model_dump()
+                    logger.warning(
+                        "Constraints parse failed for %d deal(s) starting %s: %s",
+                        len(raw_ids),
+                        raw_ids[0],
+                        exc,
+                    )
+                    return raw_ids, None
+                return raw_ids, result.model_dump()
 
-        pairs = await asyncio.gather(*(_one(rid, terms, src) for rid, terms, src in parseable))
-        constraints_map = {rid: c for rid, c in pairs if c is not None}
+        results = await asyncio.gather(*(_one(k, ids) for k, ids in groups.items()))
+        constraints_map = {
+            raw_id: constraints
+            for raw_ids, constraints in results
+            if constraints is not None
+            for raw_id in raw_ids
+        }
 
         logger.info(
-            "Constraints stage: parsed %d/%d deals (%d without terms, %d failed)",
+            "Constraints stage: parsed %d/%d deals via %d LLM call(s) "
+            "(%d without terms, %d failed)",
             len(constraints_map),
             len(targets),
+            len(groups),
             skipped_no_terms,
             len(parseable) - len(constraints_map),
         )

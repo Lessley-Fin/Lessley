@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from pymongo import UpdateOne
 from pymongo.collection import Collection
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
@@ -33,6 +34,21 @@ class RawDealMongoRepository:
     def save_many(self, records: Sequence[RawScrapedRecord]) -> None:
         for record in records:
             self.save(record)
+
+    def update_many(self, records: Sequence[RawScrapedRecord]) -> int:
+        """Overwrite existing records in place, matched by ``_id``.
+
+        One round trip for the whole batch. Unmatched ids are ignored (no
+        upsert), mirroring the JSON repository.
+        """
+        if not records:
+            return 0
+        operations = [
+            UpdateOne({"_id": doc["_id"]}, {"$set": doc})
+            for doc in (self._to_doc(r) for r in records)
+        ]
+        result = self._col.bulk_write(operations, ordered=False)
+        return int(result.modified_count)
 
     def exists_by_fingerprint(self, fingerprint: str) -> bool:
         return self._col.count_documents({"fingerprint": fingerprint}, limit=1) > 0

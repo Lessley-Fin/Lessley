@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from lessley_deals.domain.models import Deal
 from lessley_deals.persistence.json_store import JsonStore
@@ -21,6 +21,28 @@ class DealJsonRepository:
         Returns True if a deal with that id existed and was replaced.
         """
         return self._store.update_by_id(deal.id, self._to_clean_dict(deal))
+
+    def update_many(self, deals: Sequence[Deal]) -> int:
+        """Overwrite existing deals in place, matched by ``id``.
+
+        One read and one write for the whole batch — ``update()`` rewrites the
+        entire file per deal, which is unusable across thousands of them.
+        Deals whose id is not on file are ignored (never appended).
+        """
+        if not deals:
+            return 0
+        data = self._store.read()
+        positions = {d["id"]: i for i, d in enumerate(data)}
+        updated = 0
+        for deal in deals:
+            index = positions.get(deal.id)
+            if index is None:
+                continue
+            data[index] = self._to_clean_dict(deal)
+            updated += 1
+        if updated:
+            self._store.write(data)
+        return updated
 
     @staticmethod
     def _to_clean_dict(deal: Deal) -> dict[str, Any]:
