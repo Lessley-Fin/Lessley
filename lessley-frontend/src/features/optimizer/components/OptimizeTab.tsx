@@ -155,10 +155,7 @@ export function OptimizeTab() {
                 <SelectValue />
               </span>
             </SelectTrigger>
-            {/* item-aligned, not the popper default: the shared SelectContent
-                pins a popper viewport to the trigger's height, which would show
-                one of these five rows at a time. */}
-            <SelectContent position="item-aligned" className="rounded-2xl">
+            <SelectContent className="rounded-2xl">
               {MAX_DEALS_OPTIONS.map((count) => (
                 <SelectItem key={count} value={String(count)} className="rounded-xl">
                   {t("optimizer.optimizeTab.maxDeals.option", { count })}

@@ -87,8 +87,10 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.Viewport
         className={cn(
           "p-1",
-          position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+          // No fixed height here: pinning the viewport to the trigger's height
+          // (shadcn's default) would show one row at a time and scroll the
+          // rest. The list is bounded by the content's max-height instead.
+          position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]"
         )}
       >
         {children}
