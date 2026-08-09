@@ -44,6 +44,14 @@ cards at once.
 runner-up combinations too (e.g. "use only Hever" vs. "split Hever + Behatsdaa
 + Mastercard").
 
+`max_deals` (default 3, `None` = no cap) is how long a combination the engine
+searches for — the most deals any one returned option may stack, counting the
+chain and tender phases together. Left unbounded the engine will happily stack
+seven coupons for another few shekels, which nobody executes at a checkout. The
+cap is enforced *during* the search, not by filtering results afterwards, so a
+cap of 2 returns the best possible pair rather than a truncated 5-deal stack —
+and it prunes the state space, so a lower cap is also a cheaper search.
+
 `deal_eligibility` (used internally by `find_top_paths` before any DP runs, and
 publicly by `wallet.py`) prunes deals a given `UserContext` doesn't qualify
 for: membership (`eligibility.membership_required` vs. `ctx.member_source_ids`),
@@ -81,10 +89,11 @@ pip install -e ".[dev]"
 python -m deal_optimizer.cli data/deals.json <store_id> 500 --quantity 1
 python -m deal_optimizer.cli data/deals.json <store_id> 500 --strict     # unknown→no
 python -m deal_optimizer.cli data/deals.json <store_id> 500 --top-n 3    # show fewer/more ranked options (default 5)
+python -m deal_optimizer.cli data/deals.json <store_id> 500 --max-deals 2  # at most 2 deals per option (default 3; 0 = no limit)
 
 # Library
 from deal_optimizer import optimize, UserContext
-results = optimize(deals, cart_total=500, cart_quantity=1, top_n=5)
+results = optimize(deals, cart_total=500, cart_quantity=1, top_n=5, max_deals=3)
 # → list of up to top_n dicts, cheapest first:
 #   {"rank", "path": [...], "starting_price", "final_price", "total_savings", "per_step": [...]}
 ```
@@ -228,6 +237,7 @@ uvicorn deal_optimizer.api:app --host 0.0.0.0 --port 8003
   "cart_total": 500,
   "cart_quantity": 1,
   "top_n": 5,
+  "max_deals": 3,             // most deals one option may stack (1..10)
   "strict": false,            // combinability "unknown" → "no"
   "member_source_ids": ["hot", "mastercard"],
   "preferred_store_types": ["online"],

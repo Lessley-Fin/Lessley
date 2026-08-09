@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from pymongo.errors import PyMongoError
 
 from .deals_source import get_database, load_store, load_store_deals, summarize_deals
-from .engine import UserContext, build_export_payload, optimize
+from .engine import DEFAULT_MAX_DEALS, UserContext, build_export_payload, optimize
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,12 @@ class OptimizeRequest(BaseModel):
     cart_total: float = Field(..., gt=0, description="Total cart value in ILS")
     cart_quantity: int = Field(1, ge=1, description="Number of items in the cart")
     top_n: int = Field(5, ge=1, le=20, description="How many ranked options to return")
+    max_deals: int = Field(
+        DEFAULT_MAX_DEALS,
+        ge=1,
+        le=10,
+        description="Longest combination to search for — the most deals one ranked option may stack",
+    )
     strict: bool = Field(False, description="Treat combinability 'unknown' as 'no' instead of 'yes'")
     member_source_ids: list[str] = Field(
         default_factory=list,
@@ -113,6 +119,7 @@ def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
         user_context,
         unknown_as_yes=not request.strict,
         top_n=request.top_n,
+        max_deals=request.max_deals,
     )
 
     # The DP always includes the trivial START → END path — "apply nothing, pay
@@ -130,9 +137,10 @@ def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
     )
 
     logger.info(
-        "Optimized store=%s cart=%.2f — %d deal(s) considered, %d ranked option(s)",
+        "Optimized store=%s cart=%.2f max_deals=%d — %d deal(s) considered, %d ranked option(s)",
         request.store_id,
         request.cart_total,
+        request.max_deals,
         len(deals),
         len(results),
     )

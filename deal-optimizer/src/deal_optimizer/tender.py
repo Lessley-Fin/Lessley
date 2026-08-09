@@ -256,6 +256,7 @@ def _enumerate_allocations(
     quantity: int,
     deals: list[dict[str, Any]],
     conflicts: Callable[[str, str], bool],
+    max_deals: int | None = None,
 ) -> list[TenderAllocation]:
     """Every distinct feasible way to split ``price`` across ``deals``, ranked
     best-savings-first (always includes the "use nothing" option).
@@ -267,6 +268,13 @@ def _enumerate_allocations(
     subsets collapse to the same actual outcome (an "eligible but never
     filled" rate option doesn't change what was used), so results are
     deduplicated by the actual (deal_id, ils_covered) combination reached.
+
+    ``max_deals`` caps how many *distinct deals* one allocation may use (None
+    = no cap). It bounds the enumeration rather than filtering afterwards:
+    an over-budget subset is skipped outright. Nothing reachable is lost —
+    a rate option the greedy never fills contributes nothing, so the same
+    outcome is also produced by the smaller subset without it. ``max_deals=0``
+    leaves exactly the "use nothing" option, so the result is never empty.
     """
     candidates = [d for d in deals if _condition_met(d, price, quantity)]
     vouchers: list[_Voucher] = []
@@ -282,7 +290,8 @@ def _enumerate_allocations(
 
     # Every subset of rate options (small N in practice) — needed because two
     # rate deals might conflict with each other even though each is fine alone.
-    for r in range(len(rate_options) + 1):
+    max_rate_options = len(rate_options) if max_deals is None else min(len(rate_options), max_deals)
+    for r in range(max_rate_options + 1):
         for rate_subset in combinations(rate_options, r):
             if _has_conflict([o.deal_id for o in rate_subset], conflicts):
                 continue
@@ -292,6 +301,10 @@ def _enumerate_allocations(
             ]
             for counts in _voucher_unit_counts(usable_vouchers):
                 chosen_vouchers = [(v, n) for v, n in zip(usable_vouchers, counts) if n > 0]
+                # Repeat units of one voucher are still one deal to redeem, so
+                # the budget counts distinct vouchers, not units.
+                if max_deals is not None and r + len(chosen_vouchers) > max_deals:
+                    continue
                 if _has_conflict([v.deal_id for v, _ in chosen_vouchers], conflicts):
                     continue
                 total_voucher_size = sum(v.size * n for v, n in chosen_vouchers)
@@ -317,9 +330,11 @@ def allocate_tender(
     quantity: int,
     deals: list[dict[str, Any]],
     conflicts: Callable[[str, str], bool],
+    max_deals: int | None = None,
 ) -> TenderAllocation:
-    """The single savings-maximizing way to split ``price`` across ``deals``."""
-    return _enumerate_allocations(price, quantity, deals, conflicts)[0]
+    """The single savings-maximizing way to split ``price`` across ``deals``,
+    using at most ``max_deals`` distinct deals (None = no cap)."""
+    return _enumerate_allocations(price, quantity, deals, conflicts, max_deals)[0]
 
 
 def allocate_tender_top_k(
@@ -328,10 +343,12 @@ def allocate_tender_top_k(
     deals: list[dict[str, Any]],
     conflicts: Callable[[str, str], bool],
     k: int = 5,
+    max_deals: int | None = None,
 ) -> list[TenderAllocation]:
     """Up to ``k`` distinct ways to split ``price`` across ``deals``, ranked
-    best-savings-first — for presenting ranked alternatives, not just the winner."""
-    return _enumerate_allocations(price, quantity, deals, conflicts)[:k]
+    best-savings-first — for presenting ranked alternatives, not just the winner.
+    ``max_deals`` caps how many distinct deals any one allocation may use."""
+    return _enumerate_allocations(price, quantity, deals, conflicts, max_deals)[:k]
 
 
 def _has_conflict(ids: list[str], conflicts: Callable[[str, str], bool]) -> bool:

@@ -5,6 +5,7 @@ a directed acyclic flow graph: START → deals → END.
 """
 
 from .engine import (
+    DEFAULT_MAX_DEALS,
     UserContext,
     build_export_payload,
     deal_eligibility,
@@ -34,6 +35,7 @@ from .wallet import (
 )
 
 __all__ = [
+    "DEFAULT_MAX_DEALS",
     "UserContext",
     "build_export_payload",
     "deal_eligibility",

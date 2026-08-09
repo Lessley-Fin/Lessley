@@ -42,6 +42,12 @@ from .transform import apply_deal
 _CHAIN_CATEGORIES = ("store_sale", "member_discount", "coupon")
 _TENDER_CATEGORIES = ("giftcard_discount", "payment_discount", "cashback")
 
+# How many deals one returned combination may use, across both phases. The
+# engine will happily stack seven coupons for another few shekels, but nobody
+# juggles seven coupons at a checkout — an option is only worth showing if
+# it's realistically executable. Pass ``max_deals=None`` for no cap.
+DEFAULT_MAX_DEALS = 3
+
 
 @dataclass
 class UserContext:
@@ -169,16 +175,33 @@ def _run_chain_dp(
     by_id: dict[str, DealNode],
     cart_quantity: int,
     unknown_as_yes: bool,
+    max_deals: int | None,
     verbose: bool,
 ) -> dict[tuple[str, frozenset[str]], tuple[float, tuple | None]]:
-    """The state-DP sweep (Part 3e/3f/3g) over the price-level chain vertices."""
+    """The state-DP sweep (Part 3e/3f/3g) over the price-level chain vertices.
+
+    ``max_deals`` bounds the whole combination, tender phase included, so a
+    chain state that has already spent the budget is simply never extended —
+    shorter states stay in ``dp`` and remain available to phase 2.
+    """
     dp = dict(seed)
     for v in vertices:
         new_dp: dict[tuple[str, frozenset[str]], tuple[float, tuple | None]] = {}
-        stats = {"already_applied": 0, "edge_blocked": 0, "path_conflict": 0, "condition_failed": 0, "accepted": 0}
+        stats = {
+            "already_applied": 0,
+            "budget_reached": 0,
+            "edge_blocked": 0,
+            "path_conflict": 0,
+            "condition_failed": 0,
+            "accepted": 0,
+        }
         for (cur_id, applied), (price, _prev) in dp.items():
             if v.vertex_id in applied:
                 stats["already_applied"] += 1
+                continue
+
+            if max_deals is not None and len(applied) >= max_deals:
+                stats["budget_reached"] += 1
                 continue
 
             if cur_id != START_ID:
@@ -205,7 +228,8 @@ def _run_chain_dp(
         if verbose:
             print(
                 f"  {v.vertex_id:<28} states_before={len(dp):<5} accepted={stats['accepted']:<4} "
-                f"already_applied={stats['already_applied']:<4} edge_blocked={stats['edge_blocked']:<4} "
+                f"already_applied={stats['already_applied']:<4} budget_reached={stats['budget_reached']:<4} "
+                f"edge_blocked={stats['edge_blocked']:<4} "
                 f"path_conflict={stats['path_conflict']:<4} condition_failed={stats['condition_failed']:<4}"
             )
 
@@ -242,6 +266,7 @@ def find_top_paths(
     user_context: UserContext | None = None,
     unknown_as_yes: bool = True,
     top_n: int = 5,
+    max_deals: int | None = DEFAULT_MAX_DEALS,
     verbose: bool = False,
 ) -> list[list[DealNode]]:
     """Find up to ``top_n`` distinct legal combinations of deals, cheapest
@@ -258,6 +283,13 @@ def find_top_paths(
     are pooled, deduplicated by their actual set of deals used (many
     candidates collapse to the same real-world outcome), and the cheapest
     ``top_n`` are returned.
+
+    ``max_deals`` (default ``DEFAULT_MAX_DEALS``, ``None`` = no cap) is the
+    longest combination to search for, counting both phases together: a
+    3-coupon chain leaves room for only one payment-instrument deal at a
+    cap of 4. It is enforced *during* the search, not by filtering results
+    afterwards, so a lower cap yields the best combination that actually
+    fits the budget — plus a cheaper search, since it prunes the state space.
 
     ``verbose=True`` prints the eligibility prune, the phase-1 DP sweep, and
     the tender allocations chosen from every phase-1 state.
@@ -291,10 +323,15 @@ def find_top_paths(
     by_id.update(tender_nodes_by_id)
 
     if verbose:
-        print(f"\n=== PHASE 1 — PRICE-LEVEL CHAIN ({len(vertices)} vertices: store_sale/member_discount/coupon) ===")
+        print(
+            f"\n=== PHASE 1 — PRICE-LEVEL CHAIN ({len(vertices)} vertices: store_sale/member_discount/coupon"
+            f", max_deals={max_deals}) ==="
+        )
 
     INIT = (START_ID, frozenset())
-    dp = _run_chain_dp(vertices, {INIT: (cart_total, None)}, by_id, cart_quantity, unknown_as_yes, verbose)
+    dp = _run_chain_dp(
+        vertices, {INIT: (cart_total, None)}, by_id, cart_quantity, unknown_as_yes, max_deals, verbose
+    )
 
     # The same combo of chain deals (`applied`) can be reached via different
     # `cur_id` (last-added vertex) and therefore appear as separate dp keys —
@@ -323,7 +360,11 @@ def find_top_paths(
             for d in tender_deals
             if all(mutually_compatible(by_id[u_id], tender_nodes_by_id[d["id"]], unknown_as_yes) for u_id in applied)
         ]
-        allocations = allocate_tender_top_k(price_in, cart_quantity, eligible, _conflicts, k=top_n)
+        # Whatever the chain didn't spend is what the tender phase may use.
+        tender_budget = None if max_deals is None else max(0, max_deals - len(applied))
+        allocations = allocate_tender_top_k(
+            price_in, cart_quantity, eligible, _conflicts, k=top_n, max_deals=tender_budget
+        )
         for allocation in allocations:
             candidates.append((allocation.price_after, chain_state, allocation))
 
@@ -377,10 +418,21 @@ def find_best_path(
     deal_dicts: list[dict[str, Any]],
     user_context: UserContext | None = None,
     unknown_as_yes: bool = True,
+    max_deals: int | None = DEFAULT_MAX_DEALS,
     verbose: bool = False,
 ) -> list[DealNode]:
-    """The single cheapest combination — a convenience wrapper over ``find_top_paths(top_n=1)``."""
-    return find_top_paths(cart_total, cart_quantity, deal_dicts, user_context, unknown_as_yes, top_n=1, verbose=verbose)[0]
+    """The single cheapest combination of at most ``max_deals`` deals — a
+    convenience wrapper over ``find_top_paths(top_n=1)``."""
+    return find_top_paths(
+        cart_total,
+        cart_quantity,
+        deal_dicts,
+        user_context,
+        unknown_as_yes,
+        top_n=1,
+        max_deals=max_deals,
+        verbose=verbose,
+    )[0]
 
 
 def get_optimal_deal_path(
@@ -391,6 +443,7 @@ def get_optimal_deal_path(
     user_context: UserContext | None = None,
     unknown_as_yes: bool = True,
     top_n: int = 5,
+    max_deals: int | None = DEFAULT_MAX_DEALS,
     verbose: bool = False,
 ) -> list[dict[str, Any]]:
     """Public entry point. Reads deals from ``file_path``, filters by store, optimizes."""
@@ -400,7 +453,16 @@ def get_optimal_deal_path(
     store_deals = [d for d in all_deals if _deal_matches_store(d, target_store_id)]
     if verbose:
         print(f"Store {target_store_id!r}: {len(store_deals)}/{len(all_deals)} deals in file match")
-    return optimize(store_deals, cart_total, cart_quantity, user_context, unknown_as_yes, top_n=top_n, verbose=verbose)
+    return optimize(
+        store_deals,
+        cart_total,
+        cart_quantity,
+        user_context,
+        unknown_as_yes,
+        top_n=top_n,
+        max_deals=max_deals,
+        verbose=verbose,
+    )
 
 
 def _deal_matches_store(deal: dict[str, Any], target_store_id: str) -> bool:
@@ -491,12 +553,16 @@ def optimize(
     user_context: UserContext | None = None,
     unknown_as_yes: bool = True,
     top_n: int = 5,
+    max_deals: int | None = DEFAULT_MAX_DEALS,
     verbose: bool = False,
 ) -> list[dict[str, Any]]:
     """Optimize an in-memory list of deals; returns up to ``top_n`` ranked
     results (cheapest first — ``results[0]`` is the single best), each shaped
     like ``{"rank", "path", "starting_price", "final_price", "total_savings",
     "per_step"}``.
+
+    ``max_deals`` caps how many deals any one result may combine (``None`` =
+    no cap) — see ``find_top_paths``.
 
     Each ``per_step`` entry has two kinds of fields — whole-cart running state,
     and this-step-only state — deliberately named apart so they can't be
@@ -529,7 +595,16 @@ def optimize(
         ``{tier_index, rate, ils_covered, savings}``. ``None`` for flat deals.
         The entries sum to this step's ``ils_covered``/``savings``.
     """
-    paths = find_top_paths(cart_total, cart_quantity, deal_dicts, user_context, unknown_as_yes, top_n=top_n, verbose=verbose)
+    paths = find_top_paths(
+        cart_total,
+        cart_quantity,
+        deal_dicts,
+        user_context,
+        unknown_as_yes,
+        top_n=top_n,
+        max_deals=max_deals,
+        verbose=verbose,
+    )
 
     results = [_build_result(cart_total, cart_quantity, path, rank) for rank, path in enumerate(paths, 1)]
 

@@ -1,13 +1,14 @@
 import { useState } from "react"
-import { Check, Loader2, Search, Sparkles, Store } from "lucide-react"
+import { Check, Layers, Loader2, Search, Sparkles, Store } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import type { StoreDocument } from "@/lib/types"
 import { useOptimizeCart, useStoreSearch } from "../hooks"
-import type { OptimizeParams } from "../api"
+import { DEFAULT_MAX_DEALS, MAX_DEALS_OPTIONS, type OptimizeParams } from "../api"
 import { RankedOptions } from "./RankedOptions"
 import { WinningStack } from "./WinningStack"
 
@@ -30,6 +31,7 @@ export function OptimizeTab() {
   const [storeText, setStoreText] = useState("")
   const [selectedStore, setSelectedStore] = useState<StoreDocument | null>(null)
   const [cartTotal, setCartTotal] = useState("")
+  const [maxDeals, setMaxDeals] = useState<number>(DEFAULT_MAX_DEALS)
   const [submitted, setSubmitted] = useState<{ params: OptimizeParams; storeName: string } | null>(null)
 
   // Searching while a store is picked would re-open the suggestion list under the user.
@@ -44,13 +46,22 @@ export function OptimizeTab() {
     setStoreText(store.name)
   }
 
+  function handleMaxDealsChange(value: string) {
+    const next = Number(value)
+    setMaxDeals(next)
+    // With results already on screen the cap reads as a refinement of that
+    // answer, not a new query to compose — so re-price immediately instead of
+    // waiting for another submit (store and total are unchanged either way).
+    setSubmitted((prev) => (prev ? { ...prev, params: { ...prev.params, maxDeals: next } } : prev))
+  }
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!canSubmit || !selectedStore) return
     setSubmitted({
       // The engine still requires a quantity; the cart total is what actually
       // drives the stack, so we always price a single-line cart.
-      params: { storeId: selectedStore.storeId, cartTotal: total, cartQuantity: 1 },
+      params: { storeId: selectedStore.storeId, cartTotal: total, cartQuantity: 1, maxDeals },
       storeName: selectedStore.name,
     })
   }
@@ -119,16 +130,43 @@ export function OptimizeTab() {
           </p>
         ) : null}
 
-        <Input
-          type="number"
-          inputMode="decimal"
-          min="0.01"
-          step="0.01"
-          value={cartTotal}
-          onChange={(e) => setCartTotal(e.target.value)}
-          placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
-          className="h-12 rounded-2xl bg-secondary"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="0.01"
+            value={cartTotal}
+            onChange={(e) => setCartTotal(e.target.value)}
+            placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
+            className="h-12 flex-1 rounded-2xl bg-secondary"
+          />
+
+          {/* How many deals a single option may stack. Sits alongside the price
+              because both are "what am I pricing", not a result-list setting. */}
+          <Select value={String(maxDeals)} onValueChange={handleMaxDealsChange}>
+            <SelectTrigger
+              aria-label={t("optimizer.optimizeTab.maxDeals.label")}
+              title={t("optimizer.optimizeTab.maxDeals.hint")}
+              className="h-12 w-[7.5rem] shrink-0 rounded-2xl bg-secondary px-3.5"
+            >
+              <span className="flex items-center gap-2 truncate">
+                <Layers className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <SelectValue />
+              </span>
+            </SelectTrigger>
+            {/* item-aligned, not the popper default: the shared SelectContent
+                pins a popper viewport to the trigger's height, which would show
+                one of these five rows at a time. */}
+            <SelectContent position="item-aligned" className="rounded-2xl">
+              {MAX_DEALS_OPTIONS.map((count) => (
+                <SelectItem key={count} value={String(count)} className="rounded-xl">
+                  {t("optimizer.optimizeTab.maxDeals.option", { count })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <Button type="submit" variant="hero" size="xl" disabled={!canSubmit || isLoading}>
           {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}

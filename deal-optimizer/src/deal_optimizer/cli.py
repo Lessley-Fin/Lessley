@@ -1,7 +1,7 @@
 """CLI entry point: find the optimal deal stack for a store + cart.
 
     python -m deal_optimizer.cli <deals.json> <store_id> <cart_total> [--quantity N] [--strict]
-        [--verbose] [--top-n N] [--wallet-id user_x --wallet-file mock_wallets.json]
+        [--verbose] [--top-n N] [--max-deals N] [--wallet-id user_x --wallet-file mock_wallets.json]
         [--sources hot,mastercard] [--store-types online,physical]
         [--monthly-uses deal_id:2,other_deal:1] [--output result.json]
 
@@ -20,7 +20,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .engine import UserContext, build_export_payload, get_optimal_deal_path
+from .engine import DEFAULT_MAX_DEALS, UserContext, build_export_payload, get_optimal_deal_path
 from .wallet import load_wallets, wallet_to_user_context
 
 
@@ -86,6 +86,15 @@ def main() -> None:
     )
     p.add_argument("--top-n", type=int, default=5, help="Number of ranked options to show (default 5)")
     p.add_argument(
+        "--max-deals",
+        type=int,
+        default=DEFAULT_MAX_DEALS,
+        help=(
+            f"Longest combination to search for — the most deals one option may stack "
+            f"(default {DEFAULT_MAX_DEALS}; 0 = no limit)"
+        ),
+    )
+    p.add_argument(
         "--output", "-o", help="Write the ranked results to this JSON file, for an application to load and display"
     )
     args = p.parse_args()
@@ -98,6 +107,8 @@ def main() -> None:
         user_context=_build_user_context(args),
         unknown_as_yes=not args.strict,
         top_n=args.top_n,
+        # 0 is the CLI's way of spelling "no limit" (argparse has no natural None).
+        max_deals=args.max_deals or None,
         verbose=args.verbose,
     )
 
@@ -115,7 +126,10 @@ def main() -> None:
             json.dump(payload, f, indent=2, ensure_ascii=False)
         print(f"Wrote {len(results)} ranked result(s) to {out_path}")
 
-    print(f"\nStore: {args.store_id}  |  Cart: {args.cart_total:.2f} ILS  |  Items: {args.quantity}")
+    print(
+        f"\nStore: {args.store_id}  |  Cart: {args.cart_total:.2f} ILS  |  Items: {args.quantity}"
+        f"  |  Max deals per option: {args.max_deals or 'unlimited'}"
+    )
     print(f"Starting price: {args.cart_total:.2f}")
     if not results or not results[0]["per_step"]:
         print("No applicable deals found.")

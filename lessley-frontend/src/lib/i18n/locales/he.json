@@ -318,6 +318,13 @@
       "changeStore": "שינוי",
       "noStoreMatches": "לא נמצאו חנויות שתואמות ל־„{{query}}”.",
       "totalPricePlaceholder": "מחיר כולל ₪",
+      "maxDeals": {
+        "label": "מקסימום דילים בשילוב",
+        "hint": "מספר הדילים המרבי שאפשר לשלב בהצעה אחת.",
+        "option_one": "דיל אחד",
+        "option_two": "2 דילים",
+        "option_other": "{{count}} דילים"
+      },
       "findBestPrices": "מציאת המחירים הטובים ביותר",
       "optimizing": "משלבים דילים…",
       "requiredNotice": "יש לבחור חנות ולהזין סכום עגלה.",

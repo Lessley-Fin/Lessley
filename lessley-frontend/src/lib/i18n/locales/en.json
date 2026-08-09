@@ -318,6 +318,12 @@
       "changeStore": "change",
       "noStoreMatches": "No stores matched “{{query}}”.",
       "totalPricePlaceholder": "Total price ₪",
+      "maxDeals": {
+        "label": "Max deals per option",
+        "hint": "The most deals a single option may stack.",
+        "option_one": "1 deal",
+        "option_other": "{{count}} deals"
+      },
       "findBestPrices": "Find best prices",
       "optimizing": "Stacking deals…",
       "requiredNotice": "Pick a store and enter a cart total.",

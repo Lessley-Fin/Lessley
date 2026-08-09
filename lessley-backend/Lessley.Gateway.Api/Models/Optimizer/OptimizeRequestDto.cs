@@ -25,6 +25,14 @@ public record OptimizeRequestDto
     [Range(1, 20)]
     public int TopN { get; init; } = 5;
 
+    /// <summary>
+    /// Longest combination to search for — the most deals one ranked option may
+    /// stack. Keeps results realistically executable at a checkout instead of
+    /// chasing the last shekel across seven coupons.
+    /// </summary>
+    [Range(1, 10)]
+    public int MaxDeals { get; init; } = 3;
+
     /// <summary>Treat combinability "unknown" as "no" instead of the optimistic "yes".</summary>
     public bool Strict { get; init; }
 

@@ -2,11 +2,20 @@ import { apiFetch, jsonBody } from "@/lib/api-client"
 import type { OptimizeResponse, StoreDocument } from "@/lib/types"
 import { searchDeals } from "@/features/deal-finder/api"
 
+/** Deals one stack may combine. The engine will chain seven coupons for another
+ *  few shekels; nobody juggles seven coupons at a checkout. Mirrors the
+ *  optimizer's own default so the two can't drift apart silently. */
+export const DEFAULT_MAX_DEALS = 3
+/** What the picker offers — one deal (no stacking) up to five. */
+export const MAX_DEALS_OPTIONS = [1, 2, 3, 4, 5] as const
+
 export interface OptimizeParams {
   storeId: string
   cartTotal: number
   cartQuantity: number
   topN?: number
+  /** Longest combination to search for — the most deals one option may stack. */
+  maxDeals?: number
   strict?: boolean
   memberSourceIds?: string[]
 }
@@ -20,6 +29,7 @@ export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> 
         cartTotal: params.cartTotal,
         cartQuantity: params.cartQuantity,
         topN: params.topN ?? 5,
+        maxDeals: params.maxDeals ?? DEFAULT_MAX_DEALS,
         strict: params.strict ?? false,
         memberSourceIds: params.memberSourceIds ?? [],
       }),
