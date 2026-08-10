@@ -4,6 +4,9 @@ from typing import Dict, List
 from functional import seq
 
 from models.db.entities import Club, Deal, Store
+from services.utils.place_vocabulary import PlaceVocabulary
+from services.utils.store_index import StoreIndex
+from services.utils.store_name_matcher import NO_MATCH, StoreMatch, match_store
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +26,8 @@ class ReferenceDataRepository:
         self._deals_by_id: Dict[str, Deal] = {}  # deal id            -> the deal
         self._deals_by_store: Dict[str, List[Deal]] = {}  # store id  -> that store's deals
         self._stores_by_category: Dict[str, List[Store]] = {}  # "GROCERIES" -> stores selling it
+        self._store_index: StoreIndex | None = None  # shop names, arranged for lookup by name
+        self._place_words = PlaceVocabulary()  # mall/street words, learned from merchant names
         self._loaded = False
 
     # ── Loading ───────────────────────────────────────────────────────────────
@@ -53,6 +58,8 @@ class ReferenceDataRepository:
                 .map(lambda group: (group[0], [store for _, store in group[1]]))
                 .to_dict()                                                   # "GROCERIES" -> [store, store, ...]
             )
+
+            self._store_index = StoreIndex(stores)
 
             logger.info(
                 "Stores loaded and indexed",
@@ -175,3 +182,33 @@ class ReferenceDataRepository:
     def has_active_deal(self, store_id: str) -> bool:
         """True when this store is currently running at least one deal."""
         return len(self._deals_by_store.get(store_id, [])) > 0
+
+    def find_store_by_merchant_name(self, merchant_name: str | None, town_name: str | None = None) -> Store | None:
+        """
+        The shop a card-feed merchant name refers to, or nothing when we cannot tell.
+
+        Feed names are messy — branch numbers, mall names, company suffixes, truncation —
+        so this is a real match rather than a lookup. `town_name` comes from the
+        transaction's own `merchantAddress` and is what lets us tell a branch's town apart
+        from the shop's actual name.
+        """
+        return self.match_merchant_name(merchant_name, town_name).store
+
+    def match_merchant_name(self, merchant_name: str | None, town_name: str | None = None) -> StoreMatch:
+        """As `find_store_by_merchant_name`, but keeps the reasoning — used by the debug view."""
+        if self._store_index is None:
+            return StoreMatch(status=NO_MATCH, rejected_by="NOT_LOADED")
+        return match_store(merchant_name, town_name, self._store_index, self._place_words)
+
+    def teach_place_words(self, merchant_names: List[str]) -> None:
+        """
+        Let the matcher learn which words name a *place* rather than a shop, from the
+        merchant names we have actually seen.
+
+        Worth calling with as many distinct merchant names as are on hand: 'קניון' and
+        'רננים' only reveal themselves as places by turning up against many unrelated
+        shops, so the vocabulary is only as good as the variety it has been shown.
+        """
+        if self._store_index is None:
+            return
+        self._place_words = PlaceVocabulary.learn_from_merchant_names(merchant_names, self._store_index)
