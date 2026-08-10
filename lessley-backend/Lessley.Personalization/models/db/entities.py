@@ -98,6 +98,9 @@ class StoreMetadata(BaseModel):
     image_urls: List[str] = Field(default_factory=list)
     mcc_codes: List[str] = Field(default_factory=list)
     store_url: str | None = None
+    # The shop's English name where the display name is Hebrew ('עיל"מ' / 'Herbology').
+    # Matched against as an alternative spelling, so a feed reporting either one lands.
+    official_name: str | None = None
 
     @field_validator("mcc_codes", mode="before")
     @classmethod
