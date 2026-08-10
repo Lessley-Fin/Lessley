@@ -233,7 +233,10 @@ def test_hot_block_pins_per_member_caps_apart_from_per_transaction() -> None:
     # HOT's signature number caps vouchers per PERSON, which has no field. The
     # likely failure is it landing in max_uses_per_transaction.
     assert "מוגבל לתו 1 לעמית מועדון (ת.ז.)" in prompt
-    assert "per person" in prompt
+    # ...but the same cap WITH a monthly window is a real max_uses_per_month.
+    assert "מוגבל ל-2 קופונים לעמית בחודש" in prompt
+    assert "max_uses_per_month: 2" in prompt
+    assert "Decide by the TIME WINDOW" in prompt
     # The statement-credit boilerplate prohibits nothing — it must stay unknown.
     assert "It prohibits NOTHING" in prompt
     # Buying the voucher on the club site is not the merchant's web shop.

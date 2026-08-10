@@ -538,19 +538,28 @@ An affiliate cashback service reached through a portal
 (``השירות מותנה בהרשמה מראש``) → membership_required: yes. The rest is
 operational mechanics with no field — record nothing for it.
 
-## Limits — per-member voucher caps are NOT per-transaction (read this twice)
+## Limits — a per-member cap is never per-TRANSACTION (read this twice)
 
 HOT's most common numeric phrase caps how many vouchers a MEMBER may buy,
-identified by ID number. The schema has no per-member field. Every one of these
-leaves ALL THREE numeric fields null:
+identified by ID number. Decide by the TIME WINDOW attached to it:
+
+**No time window → all three numeric fields null.** The schema has no
+"per member, ever" field, and this is NOT a per-transaction count:
 
 - ``מוגבל לתו 1 לעמית מועדון (ת.ז.)`` · ``מוגבל ל-5 תווים לעמית מועדון (ת.ז.)``
 - ``מוגבל ל-2 תווים לחבר מועדון``
 
-``לעמית מועדון`` / ``לחבר מועדון`` / ``(ת.ז.)`` means *per person*, not per
-transaction and not per month. max_uses_per_transaction requires the text to
-scope the count to one purchase (``בעסקה``, ``בקנייה``, ``לשולחן``);
-max_uses_per_month requires an explicit calendar month (``בחודש קלנדרי``).
+**A monthly window → max_uses_per_month.** ``לעמית``/``לחבר מועדון`` says who
+the quota belongs to; ``בחודש`` says how often it refills, and that IS the
+field:
+
+- ``מוגבל ל-2 קופונים לעמית בחודש`` → max_uses_per_month: 2
+- ``ניתן לממש עד 12 תווים לחבר מועדון בחודש קלנדרי`` → max_uses_per_month: 12
+- ``תקף לקופון 1 לעמית (ת.ז.) בחודש`` → max_uses_per_month: 1
+
+max_uses_per_transaction still requires the count to be scoped to a single
+purchase (``בעסקה``, ``בקנייה``, ``לשולחן``) — a per-member quota never fills
+it, with or without a month.
 
 A percentage in the opening line (``בהנחה של 15%``) is the deal's discount
 rate, never minimum_purchase.
