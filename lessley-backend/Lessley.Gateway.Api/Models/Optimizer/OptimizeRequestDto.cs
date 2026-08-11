@@ -36,7 +36,12 @@ public record OptimizeRequestDto
     /// <summary>Treat combinability "unknown" as "no" instead of the optimistic "yes".</summary>
     public bool Strict { get; init; }
 
-    /// <summary>source_ids the user has access to — loyalty programs joined and cards held.</summary>
+    /// <summary>
+    /// source_ids the user has access to — loyalty programs joined and cards held.
+    /// Server-populated from the caller's saved clubs; anything a client sends here
+    /// is discarded. Always serialized (empty list included, never null) so the
+    /// optimizer prunes on it rather than treating the caller as an unknown user.
+    /// </summary>
     public List<string> MemberSourceIds { get; init; } = [];
 
     /// <summary>Preferred store types: outlets | online | physical.</summary>

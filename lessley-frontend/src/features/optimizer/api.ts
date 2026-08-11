@@ -17,9 +17,14 @@ export interface OptimizeParams {
   /** Longest combination to search for — the most deals one option may stack. */
   maxDeals?: number
   strict?: boolean
-  memberSourceIds?: string[]
 }
 
+/**
+ * Which loyalty clubs the user belongs to is deliberately *not* sent: the Gateway
+ * fills it from the caller's saved clubs and discards anything we put here, so a
+ * client can't claim a membership it doesn't have. Deals the user isn't eligible
+ * for are already pruned by the time the response comes back.
+ */
 export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> {
   return apiFetch<OptimizeResponse>(
     "/api/v1/optimizer/optimize",
@@ -31,7 +36,6 @@ export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> 
         topN: params.topN ?? 5,
         maxDeals: params.maxDeals ?? DEFAULT_MAX_DEALS,
         strict: params.strict ?? false,
-        memberSourceIds: params.memberSourceIds ?? [],
       }),
       errorMessage: "Could not optimize this cart.",
     },

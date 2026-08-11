@@ -150,6 +150,18 @@ def test_no_wallet_in_the_request_is_optimistic(client, membership_gated):
     assert any("gated" in r["path"] for r in body["results"])
 
 
+def test_empty_member_source_ids_prunes_rather_than_being_optimistic(client, membership_gated):
+    # The distinction the null default exists for: `[]` is a caller stating the
+    # user has joined nothing, which must prune. Reading it as "unknown user"
+    # would offer every members-only deal to exactly the users entitled to none.
+    body = client.post(
+        "/optimize", json={"store_id": "store_1", "cart_total": 100, "member_source_ids": []}
+    ).json()
+
+    assert body["results"]
+    assert all("gated" not in r["path"] for r in body["results"])
+
+
 def test_current_deal_head_maps_onto_the_engine_dict():
     # A deals_current head: bookkeeping at the top level, the serialized Deal
     # under `snapshot` — that snapshot is what the engine reads.

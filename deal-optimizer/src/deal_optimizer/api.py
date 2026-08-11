@@ -43,9 +43,13 @@ class OptimizeRequest(BaseModel):
         description="Longest combination to search for — the most deals one ranked option may stack",
     )
     strict: bool = Field(False, description="Treat combinability 'unknown' as 'no' instead of 'yes'")
-    member_source_ids: list[str] = Field(
-        default_factory=list,
-        description="source_ids the user has access to — loyalty programs joined and cards held",
+    member_source_ids: list[str] | None = Field(
+        None,
+        description=(
+            "source_ids the user has access to — loyalty programs joined and cards held. "
+            "Omit (null) for an unknown user; an empty list means a known user who has "
+            "joined nothing, which does prune members-only deals"
+        ),
     )
     preferred_store_types: list[str] = Field(default_factory=list)
     uses_this_month: dict[str, int] = Field(
@@ -104,10 +108,19 @@ def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
     # No wallet data in the request means "unknown user", which the engine treats
     # optimistically (no eligibility pruning) — same convention as the CLI, where
     # a UserContext is only built once there's something to put in it.
+    #
+    # ``member_source_ids`` distinguishes absent from empty on purpose: null is the
+    # unknown user, while ``[]`` is a known user who has joined no clubs — and that
+    # one *must* build a context, or the caller who tells us the truth about a
+    # member-less user gets every members-only deal offered back.
     user_context = None
-    if request.member_source_ids or request.preferred_store_types or request.uses_this_month:
+    if (
+        request.member_source_ids is not None
+        or request.preferred_store_types
+        or request.uses_this_month
+    ):
         user_context = UserContext(
-            member_source_ids=request.member_source_ids,
+            member_source_ids=request.member_source_ids or [],
             preferred_store_types=request.preferred_store_types,
             uses_this_month=request.uses_this_month,
         )

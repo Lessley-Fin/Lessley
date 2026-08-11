@@ -82,6 +82,12 @@ public class UserService : IUserService
         return user?.Tags;
     }
 
+    public async Task<List<string>?> GetUserClubsAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        return user is null ? null : user.Clubs ?? new List<string>();
+    }
+
     public async Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default)
     {
         var user = await _userManager.FindByEmailAsync(email);
