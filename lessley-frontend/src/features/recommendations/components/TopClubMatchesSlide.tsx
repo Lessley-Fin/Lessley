@@ -1,6 +1,7 @@
-import { RefreshCw, Sparkles } from "lucide-react"
+import { Percent, RefreshCw, Sparkles, Store } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { InfoDialog } from "@/components/shared/InfoDialog"
 import { Button } from "@/components/ui/button"
 import { emojiForClub } from "@/lib/constants"
 import { formatFitPercent } from "@/lib/formatters"
@@ -14,6 +15,18 @@ interface TopClubMatchesSlideProps {
 
 export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClubMatchesSlideProps) {
   const { t } = useTranslation()
+  const INFO_HIGHLIGHTS = [
+    {
+      icon: Percent,
+      title: t("recommendations.topClubMatchesSlide.infoDialog.highlight1Title"),
+      description: t("recommendations.topClubMatchesSlide.infoDialog.highlight1Desc"),
+    },
+    {
+      icon: Store,
+      title: t("recommendations.topClubMatchesSlide.infoDialog.highlight2Title"),
+      description: t("recommendations.topClubMatchesSlide.infoDialog.highlight2Desc"),
+    },
+  ]
   return (
     <div className="flex h-[420px] flex-col gap-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="flex items-start gap-3">
@@ -24,6 +37,12 @@ export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClub
           <p className="font-bold">{t("recommendations.topClubMatchesSlide.title")}</p>
           <p className="text-xs text-muted-foreground">{t("recommendations.topClubMatchesSlide.subtitle")}</p>
         </div>
+        <InfoDialog
+          ariaLabel={t("recommendations.topClubMatchesSlide.infoDialog.ariaLabel")}
+          title={t("recommendations.topClubMatchesSlide.infoDialog.title")}
+          subtitle={t("recommendations.topClubMatchesSlide.infoDialog.subtitle")}
+          highlights={INFO_HIGHLIGHTS}
+        />
         <Button
           type="button"
           variant="pill"
