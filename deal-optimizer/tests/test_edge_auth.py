@@ -26,6 +26,17 @@ def client():
 
 
 @pytest.fixture(autouse=True)
+def known_user(monkeypatch):
+    """Eligibility resolution is not what these tests are about — see test_user_source.py.
+
+    Without this the endpoint would try to read the users collection out of a database
+    that isn't there, and every "the edge let this through" assertion would fail on the
+    lookup rather than on the gate.
+    """
+    monkeypatch.setattr(api, "member_source_ids_for", lambda email: [])
+
+
+@pytest.fixture(autouse=True)
 def stocked_store(monkeypatch):
     """One deal at store_1 — enough that a permitted request has something to return."""
     deals = [

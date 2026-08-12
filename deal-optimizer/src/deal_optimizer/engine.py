@@ -55,6 +55,21 @@ class UserContext:
     preferred_store_types: list[str] = field(default_factory=list)  # outlets|online|physical
     uses_this_month: dict[str, int] = field(default_factory=dict)  # {deal_id: uses_in_current_month}
 
+    require_source_membership: bool = False
+    """Offer only deals from programs the user has actually joined.
+
+    Every deal reaches us through a club — HOT, Mastercard, Behatsdaa, PaisPlus — and you
+    cannot redeem a club's benefit without belonging to that club. The membership check
+    below is not enough on its own to express that, because it fires only when a deal
+    *declares* ``eligibility.membership_required``, and that field is parsed from free
+    text by an LLM: of 10,137 real deals, 911 leave it null or "unknown", including every
+    Mastercard one. Trusting it alone quietly offers a non-member deals they cannot use.
+
+    Off by default so the CLI and the engine's own tests keep their optimistic behaviour;
+    the HTTP surface turns it on, because there the caller's clubs are a verified fact
+    rather than something passed in on the command line.
+    """
+
 
 # preferred_store_type value → store_coverage key
 _STORE_TYPE_KEYS = {
@@ -87,6 +102,14 @@ def deal_eligibility(deal: dict[str, Any], ctx: UserContext) -> tuple[bool, str]
     # No source_id on the deal means nothing to verify against — optimistic
     # keep (mirrors unknown_as_yes elsewhere; should be rare, since source_id
     # is populated on every real deal).
+    # The deal's club gates the deal, whatever the deal says about itself. Checked before
+    # the declared-membership rule below because it subsumes it: a deal from a program the
+    # user has not joined is unusable regardless of how its terms were parsed.
+    if ctx.require_source_membership and source_id is not None and source_id not in ctx.member_source_ids:
+        return False, (
+            f"source_id={source_id!r} is not a program the user has joined {ctx.member_source_ids}"
+        )
+
     membership_required = elig.get("membership_required")
     if membership_required is True or membership_required == "yes":
         if source_id is not None and source_id not in ctx.member_source_ids:

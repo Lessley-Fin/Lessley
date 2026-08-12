@@ -17,13 +17,17 @@ export interface OptimizeParams {
   /** Longest combination to search for — the most deals one option may stack. */
   maxDeals?: number
   strict?: boolean
-  memberSourceIds?: string[]
 }
 
 /**
  * Caddy routes /api/v1/optimizer/* straight to the deal-optimizer service — the Gateway
  * is not in this path — so the body is snake_case, matching that service's own request
  * model (and the snake_case `OptimizeResponse` it already returns).
+ *
+ * Which loyalty clubs the user belongs to is deliberately *not* sent. Caddy authenticates
+ * the request and injects the verified identity, and the optimizer resolves the caller's
+ * saved clubs itself, so a client cannot claim a membership it does not have. Deals the
+ * user is not eligible for are already pruned by the time the response arrives.
  */
 export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> {
   return apiFetch<OptimizeResponse>(
@@ -36,7 +40,6 @@ export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> 
         top_n: params.topN ?? 5,
         max_deals: params.maxDeals ?? DEFAULT_MAX_DEALS,
         strict: params.strict ?? false,
-        member_source_ids: params.memberSourceIds ?? [],
       }),
       errorMessage: "Could not optimize this cart.",
     },

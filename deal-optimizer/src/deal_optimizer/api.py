@@ -27,6 +27,7 @@ from .auth import authenticated_email
 from .deals_source import get_database, load_store, load_store_deals, summarize_deals
 from .edge_auth import EdgeAuthMiddleware, dev_bypass_active
 from .engine import DEFAULT_MAX_DEALS, UserContext, build_export_payload, optimize
+from .user_source import member_source_ids_for
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +62,10 @@ class OptimizeRequest(BaseModel):
         description="Longest combination to search for — the most deals one ranked option may stack",
     )
     strict: bool = Field(False, description="Treat combinability 'unknown' as 'no' instead of 'yes'")
-    member_source_ids: list[str] = Field(
-        default_factory=list,
-        description="source_ids the user has access to — loyalty programs joined and cards held",
-    )
+    # No member_source_ids here on purpose. Which loyalty programs the caller belongs to is
+    # resolved from the verified X-Auth-Email against the users collection (see
+    # user_source.py) — a client that could name its own memberships could hand itself every
+    # members-only deal in the database. A body that still sends the field is ignored.
     preferred_store_types: list[str] = Field(default_factory=list)
     uses_this_month: dict[str, int] = Field(
         default_factory=dict, description="deal_id → times already used this month, for monthly-cap pruning"
@@ -112,8 +113,8 @@ def health() -> dict[str, str]:
 def optimize_cart(request: OptimizeRequest, email: str = Depends(authenticated_email)) -> OptimizeResponse:
     """Rank the cheapest legal deal stacks for a cart at one store.
 
-    ``email`` is not used to select data — memberships come from the request body —
-    it is required so an unauthenticated caller cannot reach the engine at all.
+    ``email`` is the identity Caddy verified against the Gateway, and it is what decides
+    eligibility: the caller's saved clubs become the ``source_id``s the engine prunes on.
     """
     try:
         deals = load_store_deals(request.store_id)
@@ -123,16 +124,34 @@ def optimize_cart(request: OptimizeRequest, email: str = Depends(authenticated_e
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Could not read deals: {exc}"
         ) from exc
 
-    # No wallet data in the request means "unknown user", which the engine treats
-    # optimistically (no eligibility pruning) — same convention as the CLI, where
-    # a UserContext is only built once there's something to put in it.
-    user_context = None
-    if request.member_source_ids or request.preferred_store_types or request.uses_this_month:
-        user_context = UserContext(
-            member_source_ids=request.member_source_ids,
-            preferred_store_types=request.preferred_store_types,
-            uses_this_month=request.uses_this_month,
-        )
+    # Eligibility comes from who the caller is, never from what they sent. Caddy has
+    # already authenticated them against the Gateway, so this is a lookup, not a claim.
+    try:
+        member_source_ids = member_source_ids_for(email)
+    except PyMongoError as exc:
+        logger.exception("Failed to resolve clubs for the caller")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Could not read user clubs: {exc}"
+        ) from exc
+
+    if member_source_ids is None:
+        # Authenticated by the edge, but no such user in our database. Answering with
+        # prices computed as an unknown user would quietly offer members-only deals.
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # A context is always built, even for a user who has joined nothing: an empty list is
+    # a *known* user with no memberships, and pruning members-only deals is the whole point.
+    # (`None` — the unknown user the engine treats optimistically — is what the CLI passes;
+    # an authenticated request is never that.)
+    user_context = UserContext(
+        member_source_ids=member_source_ids,
+        preferred_store_types=request.preferred_store_types,
+        uses_this_month=request.uses_this_month,
+        # Only offer deals from programs this caller has actually joined. Their clubs are
+        # verified here, so a deal from a club they are not in is never usable — and the
+        # deal's own membership_required flag is too often unset to rely on.
+        require_source_membership=True,
+    )
 
     ranked = optimize(
         deals,
