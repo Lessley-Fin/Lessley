@@ -40,17 +40,17 @@ Reference data lives in `main/resources/`. From this folder, for each collection
 
 #### clubs
 ```bash
-docker cp ..\main\resources\clubs.json mongodb:/tmp/club_list.json
+docker cp ..\main\resources\clubs.json mongodb:/tmp/clubs.json
 ```
 ```bash
-docker exec -it mongodb mongoimport --db lessley --collection club_list --file /tmp/club_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+docker exec -it mongodb mongoimport --db lessley --collection clubs --file /tmp/clubs.json --jsonArray --username guest --password guest --authenticationDatabase admin
 ```
 #### deals
 ```bash
-docker cp ..\main\resources\deals.json mongodb:/tmp/deal_list.json
+docker cp ..\main\resources\deals.json mongodb:/tmp/deals.json
 ```
 ```bash
-docker exec -it mongodb mongoimport --db lessley --collection deal_list --file /tmp/deal_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+docker exec -it mongodb mongoimport --db lessley --collection deals --file /tmp/deals.json --jsonArray --username guest --password guest --authenticationDatabase admin
 ```
 
 #### mccs
@@ -63,10 +63,10 @@ docker exec -it mongodb mongoimport --db lessley --collection mccs --file /tmp/m
 
 #### stores
 ```bash
-docker cp ..\main\resources\stores.json mongodb:/tmp/store_list.json
+docker cp ..\main\resources\stores.json mongodb:/tmp/stores.json
 ```
 ```bash
-docker exec -it mongodb mongoimport --db lessley --collection store_list --file /tmp/store_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+docker exec -it mongodb mongoimport --db lessley --collection stores --file /tmp/stores.json --jsonArray --username guest --password guest --authenticationDatabase admin
 ```
 
 Repeat with the remaining three, substituting file and collection:
