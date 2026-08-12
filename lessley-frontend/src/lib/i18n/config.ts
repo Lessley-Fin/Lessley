@@ -19,8 +19,26 @@ export function getDirection(language: string): "rtl" | "ltr" {
   return (RTL_LANGUAGES as readonly string[]).includes(language) ? "rtl" : "ltr"
 }
 
+// This module runs at import time — including from the test setup file, where
+// localStorage may be absent. Treat storage as best-effort rather than assuming it.
+function readStoredLanguage(): string | null {
+  try {
+    return globalThis.localStorage?.getItem(LANGUAGE_STORAGE_KEY) ?? null
+  } catch {
+    return null
+  }
+}
+
+function storeLanguage(language: SupportedLanguage) {
+  try {
+    globalThis.localStorage?.setItem(LANGUAGE_STORAGE_KEY, language)
+  } catch {
+    // Private-mode / storage-disabled browsers: the language still applies for this session.
+  }
+}
+
 function getInitialLanguage(): SupportedLanguage {
-  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY)
+  const stored = readStoredLanguage()
   if (isSupportedLanguage(stored)) return stored
   return "en"
 }
@@ -39,7 +57,7 @@ document.documentElement.lang = initialLanguage
 document.documentElement.dir = getDirection(initialLanguage)
 
 export function setLanguage(language: SupportedLanguage) {
-  localStorage.setItem(LANGUAGE_STORAGE_KEY, language)
+  storeLanguage(language)
   document.documentElement.lang = language
   document.documentElement.dir = getDirection(language)
   void i18n.changeLanguage(language)

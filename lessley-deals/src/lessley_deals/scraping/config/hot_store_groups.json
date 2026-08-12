@@ -1,0 +1,317 @@
+{
+  "_comment": "HOT store-group configuration. When item_brand matches a key here, the resolver extracts the real store name from the deal title using the given title_prefix to strip.",
+  "קבוצת פוקס - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      {
+        "name": "minene",
+        "store_id": "019d209fae73_acf17ccb777df5b8",
+        "confidence": 1.0
+      },
+      {
+        "name": "terminal x",
+        "store_id": "019d209bd92a_e3cb71c9a52ce477",
+        "confidence": 1.0
+      },
+      {
+        "name": "ruby bay",
+        "store_id": "019d82f71d57_5647fe058badc6ef",
+        "confidence": 1.0
+      },
+      {
+        "name": "fox",
+        "store_id": "019d4dd30814_382895550b837951",
+        "confidence": 1.0
+      },
+      {
+        "name": "mango",
+        "store_id": "019d82f9fd97_10eb28f680e16a6a",
+        "confidence": 1.0
+      },
+      {
+        "name": "foot locker",
+        "store_id": "019d82f96213_75b192092d68c2e4",
+        "confidence": 1.0
+      },
+      {
+        "name": "the children's place",
+        "store_id": "019d82f8bfed_6b186416e8d9823e",
+        "confidence": 1.0
+      },
+      {
+        "name": "fox home",
+        "store_id": "019d246e9986_508022dad539f132",
+        "confidence": 1.0
+      },
+      {
+        "name": "laline",
+        "store_id": "019d246e3eed_4a657b4a014914e8",
+        "confidence": 1.0
+      },
+      {
+        "name": "שילב",
+        "store_id": "019d4dd2ace4_d9733e6a8e3fabb9",
+        "confidence": 1.0
+      },
+      {
+        "name": "BILLABONG",
+        "store_id": "019d82f6708b_a834b082bd37f163",
+        "confidence": 1.0
+      },
+      {
+        "name": "AMERICAN EAGLE",
+        "store_id": "019d82f86abb_26cac75463d57d24",
+        "confidence": 1.0
+      },
+      {
+        "name": "FLYING TIGER",
+        "store_id": "019d82f8eae5_c97f5d2be5e23fd5",
+        "confidence": 1.0
+      }
+    ],
+    "sub_groups": {
+      "dream card family": [
+        {
+          "name": "fox",
+          "store_id": "019d4dd30814_382895550b837951",
+          "confidence": 1.0
+        },
+        {
+          "name": "fox home",
+          "store_id": "019d246e9986_508022dad539f132",
+          "confidence": 1.0
+        },
+        {
+          "name": "שילב",
+          "store_id": "019d4dd2ace4_d9733e6a8e3fabb9",
+          "confidence": 1.0
+        },
+        {
+          "name": "the children's place",
+          "store_id": "019d82f8bfed_6b186416e8d9823e",
+          "confidence": 1.0
+        },
+        {
+          "name": "laline",
+          "store_id": "019d246e3eed_4a657b4a014914e8",
+          "confidence": 1.0
+        },
+        {
+          "name": "minene",
+          "store_id": "019d209fae73_acf17ccb777df5b8",
+          "confidence": 1.0
+        }
+      ]
+    }
+  },
+  "קבוצת קסטרו - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      {
+        "name": "castro",
+        "store_id": "019dbe3647b5_0406f1fdd94ea3a1",
+        "confidence": 1.0
+      },
+      {
+        "name": "castro home",
+        "store_id": "019dbfbfd916_7d79f608360b3c5c",
+        "confidence": 1.0
+      },
+      {
+        "name": "hoodies",
+        "store_id": "019dbfc021b3_1d483a5c7088682e",
+        "confidence": 1.0
+      },
+      {
+        "name": "urbanica",
+        "store_id": "019dbfc061cb_876f9eef1f682a71",
+        "confidence": 1.0
+      },
+      {
+        "name": "carolina lemke",
+        "store_id": "019dbfc0e102_37c43b550e5c79e4",
+        "confidence": 1.0
+      },
+      {
+        "name": "topten",
+        "store_id": "019dbfc0f932_f9de6650ba3a38ea",
+        "confidence": 1.0
+      },
+      {
+        "name": "kiko milano",
+        "store_id": "019dbfc12a14_39e9c90d68fe3990",
+        "confidence": 1.0
+      },
+      {
+        "name": "yves rocher",
+        "store_id": "019dbfc19230_183752f785f20df2",
+        "confidence": 1.0
+      },
+      {
+        "name": "קסטרו",
+        "store_id": "019dbe3647b5_0406f1fdd94ea3a1",
+        "confidence": 1.0
+      },
+      {
+        "name": "קסטרו הום",
+        "store_id": "019dbfbfd916_7d79f608360b3c5c",
+        "confidence": 1.0
+      },
+      {
+        "name": "הודיס",
+        "store_id": "019dbfc021b3_1d483a5c7088682e",
+        "confidence": 1.0
+      },
+      {
+        "name": "אורבניקה",
+        "store_id": "019dbfc061cb_876f9eef1f682a71",
+        "confidence": 1.0
+      },
+      {
+        "name": "קרולינה למקה",
+        "store_id": "019dbfc0e102_37c43b550e5c79e4",
+        "confidence": 1.0
+      },
+      {
+        "name": "טופ טן",
+        "store_id": "019dbfc0f932_f9de6650ba3a38ea",
+        "confidence": 1.0
+      },
+      {
+        "name": "קיקו מילאנו",
+        "store_id": "019dbfc12a14_39e9c90d68fe3990",
+        "confidence": 1.0
+      },
+      {
+        "name": "איב רושה",
+        "store_id": "019dbfc19230_183752f785f20df2",
+        "confidence": 1.0
+      }
+    ]
+  },
+  "קבוצת בריל - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      {
+        "name": "Emporium",
+        "store_id": "019d209f5a3c_1d349739f5f1b4ba",
+        "confidence": 1.0
+      },
+      {
+        "name": "NAUTICA",
+        "store_id": "019d20a0710e_cf8c9e8646d95d5c",
+        "confidence": 1.0
+      },
+      {
+        "name": "Lee Cooper",
+        "store_id": "019d209b8101_f9b9017f2ef608d3",
+        "confidence": 1.0
+      },
+      {
+        "name": "ALDO",
+        "store_id": "019d209ff7d1_71fbdfb6d01ab799",
+        "confidence": 1.0
+      },
+      {
+        "name": "Timberland",
+        "store_id": "019d20a099e0_10c58ed3f9225171",
+        "confidence": 1.0
+      },
+      {
+        "name": "נעלי GALI",
+        "store_id": "019d20a0333f_6c51506dd74c497f",
+        "confidence": 1.0
+      },
+      {
+        "name": "GALI",
+        "store_id": "019d20a0333f_6c51506dd74c497f",
+        "confidence": 1.0
+      }
+    ]
+  },
+  "אקסטרה ריטייל - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      {
+        "name": "ורדינון",
+        "store_id": "019d4dd7de64_f3fbfd73b5f92ad9",
+        "confidence": 0.9104
+      },
+      {
+        "name": "נעמן",
+        "store_id": "019d4dcb7ccc_5994c9109a057a6e",
+        "confidence": 1.0
+      },
+      {
+        "name": "הום סטייל",
+        "store_id": "019dbe364854_f766418d4f187847",
+        "confidence": 1.0
+      },
+      {
+        "name": "בוניטה דה מאס",
+        "store_id": "019dbe364846_cbe1478b3d4d3a79",
+        "confidence": 1.0
+      },
+      {
+        "name": "מגנוליה",
+        "store_id": "019dbfc35361_0b9f316ceb58b920",
+        "confidence": 1.0
+      }
+    ]
+  },
+  "קבוצת גולף - תווים": {
+    "title_prefix": "תו קניה",
+    "stores": [
+      {
+        "name": "sabon",
+        "store_id": "019d4de36536_16b4c98df93014a1",
+        "confidence": 1.0
+      },
+      {
+        "name": "golf&co",
+        "store_id": "019d4dc5f336_5d94810c7b81c080",
+        "confidence": 1.0
+      },
+      {
+        "name": "כיתן",
+        "store_id": "019d4dcf6282_cccea963dc47074d",
+        "confidence": 1.0
+      },
+      {
+        "name": "גולף קידס",
+        "store_id": "019d4dcbc8ef_cf5bc3c452d0d6e1",
+        "confidence": 1.0
+      },
+      {
+        "name": "אינטימה",
+        "store_id": "019d4dd9d4b6_f78a3794da181fe7",
+        "confidence": 1.0
+      },
+      {
+        "name": "polgat",
+        "store_id": "019d4e58daad_075841947ea77ead",
+        "confidence": 1.0
+      },
+      {
+        "name": "golf",
+        "store_id": "019d246652be_c51c37e939722bd8",
+        "confidence": 1.0
+      }
+    ]
+  },
+  "swish:101": {
+    "managed_by": "swish_scraper",
+    "source_id": "swish",
+    "benefit_id": "101",
+    "display_name": "A",
+    "title_prefix": "תו קניה",
+    "last_scraped": "2026-08-07T12:46:45.385610+00:00",
+    "stores": [
+      {
+        "name": "רנואר",
+        "store_id": null,
+        "confidence": null
+      }
+    ]
+  }
+}

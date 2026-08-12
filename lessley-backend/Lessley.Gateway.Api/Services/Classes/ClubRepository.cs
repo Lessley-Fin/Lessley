@@ -11,12 +11,17 @@ public class ClubRepository : IClubRepository
 
     public ClubRepository(IMongoClient client)
     {
-        _collection = client.GetDatabase("lessley").GetCollection<BsonDocument>("club_list");
+        // The pipeline's own collection, shared with Personalization and the scraper.
+        _collection = client.GetDatabase("lessley").GetCollection<BsonDocument>("clubs");
     }
 
     public async Task<List<ClubDto>> GetClubsAsync(CancellationToken ct = default)
     {
-        var projection = Builders<BsonDocument>.Projection.Include("id").Include("name").Exclude("_id");
+        // The business key lives in one of two places, so both are projected: rows the
+        // pipeline seeds put it in _id ("club_hot"), while rows imported from
+        // main/resources/clubs.json keep it in `id` and get a generated ObjectId _id.
+        // Reading only _id throws InvalidCastException on the imported shape.
+        var projection = Builders<BsonDocument>.Projection.Include("_id").Include("id").Include("name");
 
         var docs = await _collection
             .Find(FilterDefinition<BsonDocument>.Empty)
@@ -24,7 +29,17 @@ public class ClubRepository : IClubRepository
             .ToListAsync(ct);
 
         return docs
-            .Select(d => new ClubDto(d["id"].AsString, d["name"].AsString))
+            .Select(d => new ClubDto(BusinessId(d), d.GetValue("name", "").AsString))
             .ToList();
+    }
+
+    /// <summary>The club's business id, from <c>id</c> when present and <c>_id</c> otherwise.</summary>
+    private static string BusinessId(BsonDocument doc)
+    {
+        var id = doc.GetValue("id", BsonNull.Value);
+        if (id.IsString && !string.IsNullOrEmpty(id.AsString)) return id.AsString;
+
+        var mongoId = doc.GetValue("_id", BsonNull.Value);
+        return mongoId.IsBsonNull ? "" : mongoId.ToString()!;
     }
 }

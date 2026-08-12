@@ -1,0 +1,26 @@
+[
+  {
+    "site_id": "llm:paisplus",
+    "url": "https://paisplus.co.il/",
+    "instructions": "Extract every store/brand benefit or deal on the page. For each: store_name (the brand or business), deal_description (the benefit/discount text in Hebrew as shown), and price_text (percent off, amount, or empty). Include the deal URL when present."
+  },
+  {
+    "site_id": "llm:max",
+    "url": "https://www.max.co.il/benefits/lobby",
+    "instructions": "Extract every Max credit-card benefit/deal in the benefits lobby. For each: store_name (the brand or business offering the benefit), deal_description (the benefit/discount text in Hebrew as shown), and price_text (percent off, amount in shekels, or empty). Include the deal URL when present."
+  },
+  {
+    "site_id": "llm:mastercard-day",
+    "url": "https://www.mastercard.com/il/he/personal/find-a-card/card-benefits/mastercard-day.html",
+    "instructions": "Extract every distinct Mastercard Day store benefit on the page. Rules: (1) Return each offer ONCE — the page repeats each benefit in Hebrew and in expanded text; merge duplicates of the same store+offer into a single entry. (2) store_name: use the brand's Latin/English name when the brand has one (e.g. 'Adidas', \"McDonald's\", 'Aeroflex', 'Opticana', 'Nine West'); otherwise the Hebrew name as shown. (3) deal_description: the full benefit text in Hebrew. (4) price_text: the discount as a percent or shekel amount (e.g. '20%', '50 ₪'); empty if none. Ignore navigation, category headers, footer links, and generic banners; return only real store offers."
+  },
+  {
+    "site_id": "llm:topcash",
+    "url": "https://www.topcash.co.il/all-stores",
+    "max_len": 1500,
+    "crawl_details": true,
+    "detail_concurrency": 2,
+    "instructions": "The page is a list of store rows. Each store-name line has the form 'EngName | HebName (URL)' followed by a cashback line. Extract EVERY store row VERBATIM. For each: store_name = the store-name text exactly as shown including both languages and the '|', WITHOUT the URL (e.g. 'Soltam | סולתם', 'AliExpress | אליאקספרס'); price_text = the cashback text exactly as shown (e.g. '3% קאשבק', 'עד 11% קאשבק'); deal_description = the same cashback text; detail_url = the URL in parentheses on the store-name line (e.g. '/store/Aliexpress/1786'). Ignore the 'לפרטים נוספים' and 'לקנייה' lines.",
+    "detail_instructions": "This is a single store's TopCash page. Extract: deal_description = the store's descriptive blurb paragraph (what the store is/sells), in Hebrew as shown; terms_and_conditions = the full cashback terms text under 'תנאים לקבלת קאשבק'; coupon_code = a coupon code if one is shown (after 'קוד קופון'), else null."
+  }
+]

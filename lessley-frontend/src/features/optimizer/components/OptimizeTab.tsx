@@ -1,103 +1,210 @@
 import { useState } from "react"
-import { Sparkles } from "lucide-react"
-import { toast } from "sonner"
+import { Check, Layers, Loader2, Search, Sparkles, Store } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { formatAmount } from "@/lib/formatters"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
+import type { StoreDocument } from "@/lib/types"
+import { useOptimizeCart, useStoreSearch } from "../hooks"
+import { DEFAULT_MAX_DEALS, MAX_DEALS_OPTIONS, type OptimizeParams } from "../api"
+import { RankedOptions } from "./RankedOptions"
+import { WinningStack } from "./WinningStack"
 
-const EXAMPLE = {
-  store: "KSP",
-  listed: 899,
-  coupon: 72,
-  cashback: 35.96,
+/** Card-shaped one-liner used for the prompt / loading / empty / error states. */
+function Notice({ children, tone }: { children: React.ReactNode; tone?: "error" }) {
+  return (
+    <p
+      className={cn(
+        "rounded-3xl bg-card p-6 text-center text-sm shadow-[var(--shadow-card)]",
+        tone === "error" ? "text-destructive" : "text-muted-foreground"
+      )}
+    >
+      {children}
+    </p>
+  )
 }
 
-interface OptimizeResult {
-  store: string
-  listed: number
-}
-
-// There is no backend endpoint for a real stacked-price calculation, so this tab is a clearly
-// labeled illustrative demo: it applies fixed 8%/4% example rates to whatever the user enters,
-// the same ratios the example card itself uses (72/899 ≈ 8%, 35.96/899 = 4%).
 export function OptimizeTab() {
   const { t } = useTranslation()
-  const [store, setStore] = useState("")
-  const [total, setTotal] = useState("")
-  const [result, setResult] = useState<OptimizeResult | null>(null)
+  const [storeText, setStoreText] = useState("")
+  const [selectedStore, setSelectedStore] = useState<StoreDocument | null>(null)
+  const [cartTotal, setCartTotal] = useState("")
+  const [maxDeals, setMaxDeals] = useState<number>(DEFAULT_MAX_DEALS)
+  const [submitted, setSubmitted] = useState<{ params: OptimizeParams; storeName: string } | null>(null)
 
-  const canSubmit = store.trim().length > 0 && Number(total) > 0
+  // Searching while a store is picked would re-open the suggestion list under the user.
+  const { data: stores = [], isFetching: isSearchingStores } = useStoreSearch(selectedStore ? "" : storeText)
+  const { data, isLoading, error } = useOptimizeCart(submitted?.params ?? null)
 
-  const listed = result?.listed ?? EXAMPLE.listed
-  const coupon = result ? +(listed * 0.08).toFixed(2) : EXAMPLE.coupon
-  const cashback = result ? +(listed * 0.04).toFixed(2) : EXAMPLE.cashback
-  const finalPrice = +(listed - coupon - cashback).toFixed(2)
+  const total = Number(cartTotal)
+  const canSubmit = selectedStore !== null && Number.isFinite(total) && total > 0
 
-  function handleSubmit() {
-    setResult({ store: store.trim(), listed: Number(total) })
-    toast.success(t("optimizer.optimizeTab.toastSuccess"))
+  function handleSelectStore(store: StoreDocument) {
+    setSelectedStore(store)
+    setStoreText(store.name)
   }
+
+  function handleMaxDealsChange(value: string) {
+    const next = Number(value)
+    setMaxDeals(next)
+    // With results already on screen the cap reads as a refinement of that
+    // answer, not a new query to compose — so re-price immediately instead of
+    // waiting for another submit (store and total are unchanged either way).
+    setSubmitted((prev) => (prev ? { ...prev, params: { ...prev.params, maxDeals: next } } : prev))
+  }
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!canSubmit || !selectedStore) return
+    setSubmitted({
+      // The engine still requires a quantity; the cart total is what actually
+      // drives the stack, so we always price a single-line cart.
+      params: { storeId: selectedStore.storeId, cartTotal: total, cartQuantity: 1, maxDeals },
+      storeName: selectedStore.name,
+    })
+  }
+
+  const [winner, ...runnersUp] = data?.results ?? []
 
   return (
     <>
-      <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
+      <form onSubmit={handleSubmit} className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           {t("optimizer.optimizeTab.searchWholeMarket")}
         </p>
-        <Input
-          value={store}
-          onChange={(e) => setStore(e.target.value)}
-          placeholder={t("optimizer.optimizeTab.storeNamePlaceholder")}
-          autoComplete="off"
-          className="h-12 rounded-2xl bg-secondary"
-        />
-        <Input
-          type="number"
-          inputMode="decimal"
-          min="0"
-          value={total}
-          onChange={(e) => setTotal(e.target.value)}
-          placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
-          className="h-12 rounded-2xl bg-secondary"
-        />
-        <Button type="button" variant="hero" size="xl" disabled={!canSubmit} onClick={handleSubmit}>
-          <Sparkles />
-          {t("optimizer.optimizeTab.findBestPrices")}
+
+        <div className="relative">
+          {isSearchingStores ? (
+            <Loader2 className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          ) : (
+            <Search className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          )}
+          <Input
+            type="search"
+            value={storeText}
+            onChange={(e) => {
+              setStoreText(e.target.value)
+              if (selectedStore) setSelectedStore(null)
+            }}
+            placeholder={t("optimizer.optimizeTab.storeNamePlaceholder")}
+            autoComplete="off"
+            className="h-12 rounded-2xl bg-secondary ps-11"
+          />
+        </div>
+
+        {selectedStore ? (
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-primary">
+            <Check className="size-3.5" aria-hidden />
+            {t("optimizer.optimizeTab.pricingAgainst", { store: selectedStore.name })}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedStore(null)
+                setStoreText("")
+              }}
+              className="underline underline-offset-2"
+            >
+              {t("optimizer.optimizeTab.changeStore")}
+            </button>
+          </p>
+        ) : stores.length > 0 ? (
+          <ul className="no-scrollbar max-h-52 space-y-1 overflow-y-auto rounded-2xl border border-border p-1">
+            {stores.map((store) => (
+              <li key={store.storeId}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectStore(store)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-start text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Store className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  {store.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : storeText.trim().length >= 2 && !isSearchingStores ? (
+          <p className="text-xs text-muted-foreground">
+            {t("optimizer.optimizeTab.noStoreMatches", { query: storeText.trim() })}
+          </p>
+        ) : null}
+
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="0.01"
+            value={cartTotal}
+            onChange={(e) => setCartTotal(e.target.value)}
+            placeholder={t("optimizer.optimizeTab.totalPricePlaceholder")}
+            className="h-12 flex-1 rounded-2xl bg-secondary"
+          />
+
+          {/* How many deals a single option may stack. Sits alongside the price
+              because both are "what am I pricing", not a result-list setting. */}
+          <Select value={String(maxDeals)} onValueChange={handleMaxDealsChange}>
+            <SelectTrigger
+              aria-label={t("optimizer.optimizeTab.maxDeals.label")}
+              title={t("optimizer.optimizeTab.maxDeals.hint")}
+              className="h-12 w-[7.5rem] shrink-0 rounded-2xl bg-secondary px-3.5"
+            >
+              <span className="flex items-center gap-2 truncate">
+                <Layers className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <SelectValue />
+              </span>
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              {MAX_DEALS_OPTIONS.map((count) => (
+                <SelectItem key={count} value={String(count)} className="rounded-xl">
+                  {t("optimizer.optimizeTab.maxDeals.option", { count })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button type="submit" variant="hero" size="xl" disabled={!canSubmit || isLoading}>
+          {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+          {isLoading ? t("optimizer.optimizeTab.optimizing") : t("optimizer.optimizeTab.findBestPrices")}
         </Button>
         {!canSubmit ? (
           <p className="text-center text-xs text-muted-foreground">{t("optimizer.optimizeTab.requiredNotice")}</p>
         ) : null}
-      </div>
+      </form>
 
-      <div className="rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          {result ? t("optimizer.optimizeTab.result") : t("optimizer.optimizeTab.exampleResult")}
-        </p>
-        <div className="rounded-2xl border border-dashed border-border p-4">
-          <p className="mb-3 font-semibold">{result?.store ?? EXAMPLE.store}</p>
-          <ResultRow label={t("optimizer.optimizeTab.listedPrice")} value={formatAmount(listed)} />
-          <ResultRow label={t("optimizer.optimizeTab.couponLabel")} value={`−${formatAmount(coupon)}`} accent />
-          <ResultRow label={t("optimizer.optimizeTab.cashbackLabel")} value={`−${formatAmount(cashback)}`} accent />
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-            <span className="font-semibold">{t("optimizer.optimizeTab.yourPrice")}</span>
-            <span className="text-xl font-bold text-primary">{formatAmount(finalPrice)}</span>
-          </div>
-        </div>
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">
-          {t("optimizer.optimizeTab.illustrativeNotice")}
-        </p>
+      <div className="space-y-3">
+        {!submitted ? (
+          <Notice>{t("optimizer.optimizeTab.prompt")}</Notice>
+        ) : isLoading ? (
+          <Notice>{t("optimizer.optimizeTab.optimizing")}</Notice>
+        ) : error ? (
+          <Notice tone="error">
+            {error instanceof Error ? error.message : t("optimizer.optimizeTab.optimizeFailed")}
+          </Notice>
+        ) : data && !winner ? (
+          <Notice>
+            {data.deals_considered === 0
+              ? t("optimizer.optimizeTab.noDealsAtStore", { store: submitted.storeName })
+              : t("optimizer.optimizeTab.noStackApplies", {
+                  count: data.deals_considered,
+                  store: submitted.storeName,
+                })}
+          </Notice>
+        ) : data && winner ? (
+          <>
+            <WinningStack result={winner} deals={data.deals} storeName={submitted.storeName} store={data.store} />
+            <RankedOptions results={runnersUp} deals={data.deals} store={data.store} />
+            <p className="text-center text-xs text-muted-foreground">
+              {t("optimizer.optimizeTab.rankedFrom", {
+                count: data.deals_considered,
+                store: submitted.storeName,
+              })}
+            </p>
+          </>
+        ) : null}
       </div>
     </>
-  )
-}
-
-function ResultRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="flex items-center justify-between py-1 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={accent ? "font-semibold text-primary" : "font-semibold"}>{value}</span>
-    </div>
   )
 }

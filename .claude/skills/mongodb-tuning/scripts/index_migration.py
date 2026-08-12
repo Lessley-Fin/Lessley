@@ -35,106 +35,71 @@ class MongoIndexManager:
     # Index Definitions: Production Indexes for Lessley
     # =========================================================================
     
+    # Every index below is one the application actually creates at startup. Keep this
+    # dict in step with those two places rather than inventing indexes here:
+    #   * Lessley.Gateway.Api/Data/MongoIndexInitializer.cs  (deal search, users, notifications)
+    #   * lessley-deals/src/lessley_deals/persistence/repositories/mongo/*  (pipeline writes)
+    #
+    # The field names are the stored ones. `deals`/`stores`/`clubs`/`mccs` are the shared
+    # collections every service reads — the scraper writes them, and the Gateway,
+    # Personalization and deal-optimizer read them directly.
     INDEXES = {
         "deals": [
             {
-                "name": "idx_store_active_deals",
-                "keys": [("store_id", 1), ("valid_until", -1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Query: all active deals for a store, sorted by expiry"
+                "name": "idx_deal_store_id",
+                "keys": [("store_id", 1)],
+                "options": {"background": True, "unique": False},
+                "reason": "Deal search joins from matching store ids; the pipeline indexes it too",
             },
             {
-                "name": "idx_deal_list_view",
-                "keys": [("store_id", 1), ("deal_name", 1), ("discount_value", 1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Covered query: mobile app list view (no document lookup needed)"
+                "name": "idx_deal_title",
+                "keys": [("title", 1)],
+                "options": {"background": True, "unique": False},
+                "reason": "$regex deal-text search from the Gateway",
             },
-            {
-                "name": "idx_deal_category",
-                "keys": [("category", 1), ("popularity", -1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Browse deals by category, sorted by popularity"
-            }
         ],
         "stores": [
             {
-                "name": "idx_store_location",
-                "keys": [("location", "2dsphere")],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Geospatial query: find stores within radius"
+                "name": "idx_store_mcc_codes",
+                "keys": [("metadata.mcc_codes", 1)],
+                "options": {"background": True, "unique": False},
+                "reason": "Multikey: the MCC category $in filter in deal search",
             },
             {
-                "name": "idx_store_chain",
-                "keys": [("chain_id", 1), ("branch_id", 1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Find all branches of a chain"
-            }
+                "name": "idx_store_name",
+                "keys": [("name", 1)],
+                "options": {"background": True, "unique": False},
+                "reason": "Store-name $regex filter and sort",
+            },
+            {
+                "name": "idx_store_name_normalized",
+                "keys": [("name_forms.normalized", 1)],
+                "options": {"background": True, "unique": False},
+                "reason": "The scraper's store-resolution lookups",
+            },
+        ],
+        "clubs": [
+            {
+                "name": "idx_club_source_id",
+                "keys": [("source_id", 1)],
+                "options": {"background": True, "unique": True},
+                "reason": "One club per scraping source; also how deals resolve their club",
+            },
         ],
         "users": [
             {
-                "name": "idx_user_email",
-                "keys": [("email", 1)],
-                "options": {
-                    "background": True,
-                    "unique": True,
-                    "sparse": True
-                },
-                "reason": "Unique email constraint + fast user lookup by email"
+                "name": "uq_users_normalizedEmail",
+                "keys": [("NormalizedEmail", 1)],
+                "options": {"background": True, "unique": True},
+                "reason": "Identity lookup. ASP.NET Identity fields are PascalCase",
             },
             {
-                "name": "idx_user_clubs",
-                "keys": [("clubs.name", 1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Find users with specific club membership"
+                "name": "idx_tags",
+                "keys": [("Tags", 1)],
+                "options": {"background": True, "unique": False},
+                "reason": "Notification fan-out to everyone carrying a tag",
             },
-            {
-                "name": "idx_user_updated",
-                "keys": [("updated_at", -1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Recent user updates, for audit/sync"
-            }
         ],
-        "analytics": [
-            {
-                "name": "idx_analytics_user",
-                "keys": [("user_id", 1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Fast analytics lookup by user"
-            },
-            {
-                "name": "idx_analytics_updated",
-                "keys": [("updated_at", -1)],
-                "options": {
-                    "background": True,
-                    "unique": False
-                },
-                "reason": "Recent analytics updates for recomputation"
-            }
-        ]
     }
     
     # =========================================================================

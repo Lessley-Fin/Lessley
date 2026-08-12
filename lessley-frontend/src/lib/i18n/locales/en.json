@@ -314,17 +314,26 @@
     "optimizeTab": {
       "searchWholeMarket": "Search the whole market",
       "storeNamePlaceholder": "Store name",
+      "pricingAgainst": "Pricing against {{store}}",
+      "changeStore": "change",
+      "noStoreMatches": "No stores matched “{{query}}”.",
       "totalPricePlaceholder": "Total price ₪",
+      "maxDeals": {
+        "label": "Max deals per option",
+        "hint": "The most deals a single option may stack.",
+        "option_one": "1 deal",
+        "option_other": "{{count}} deals"
+      },
       "findBestPrices": "Find best prices",
-      "requiredNotice": "Store and total are required.",
-      "result": "Result",
-      "exampleResult": "Example result",
-      "listedPrice": "Listed price",
-      "yourPrice": "Your price",
-      "illustrativeNotice": "Illustrative estimate — not a live market quote.",
-      "toastSuccess": "Best stacked price found 🎉",
-      "couponLabel": "Club coupon (Behatsdaa)",
-      "cashbackLabel": "Card cashback (Mastercard)"
+      "optimizing": "Stacking deals…",
+      "requiredNotice": "Pick a store and enter a cart total.",
+      "prompt": "Pick a store and enter your cart total — we'll find the cheapest legal combination of deals you can stack.",
+      "optimizeFailed": "Failed to optimize this cart.",
+      "noDealsAtStore": "We have no deals on file for {{store}} yet.",
+      "noStackApplies_one": "The single deal at {{store}} doesn't apply to this cart.",
+      "noStackApplies_other": "None of the {{count}} deals at {{store}} apply to this cart.",
+      "rankedFrom_one": "Ranked from 1 deal at {{store}}",
+      "rankedFrom_other": "Ranked from {{count}} deals at {{store}}"
     },
     "engineInfoDialog": {
       "ariaLabel": "How the engine works",
@@ -336,6 +345,38 @@
       "highlight2Desc": "We price the item you actually want, not a lookalike.",
       "highlight3Title": "Ephemeral coupons",
       "highlight3Desc": "Scraped from retailers and forums minutes after they appear."
+    },
+    "winningStack": {
+      "title": "Best stack",
+      "subtitle_one": "{{store}} · 1 deal applied",
+      "subtitle_other": "{{store}} · {{count}} deals applied",
+      "cartTotal": "Cart total",
+      "youPay": "You pay",
+      "savePill": "Save {{amount}} ({{percent}}%)",
+      "howItStacks": "How it stacks"
+    },
+    "rankedOptions": {
+      "title": "Other options",
+      "subtitle_one": "1 more ranked combination",
+      "subtitle_other": "{{count}} more ranked combinations",
+      "saves_one": "saves {{amount}} · 1 deal",
+      "saves_other": "saves {{amount}} · {{count}} deals"
+    },
+    "stackSteps": {
+      "percentOff": "{{percent}} off",
+      "discountAppliesTo": "Discount applies to",
+      "youPayOnIt": "You pay on it",
+      "billLeftToPay": "Bill left to pay",
+      "atRate": "at {{rate}}",
+      "moreInfo": "Details",
+      "openDeal": "Open deal"
+    },
+    "dealInfo": {
+      "deal": "Deal",
+      "savedHere": "Saved at this step",
+      "openDeal": "Open this deal",
+      "visitStore": "Visit store",
+      "ariaLabel": "More information about this deal"
     }
   },
   "admin": {
@@ -422,6 +463,37 @@
       "hadDealsAt": "had deals at {{stores}}",
       "moreClubsWithDeals_one": "+{{count}} more club with deals",
       "moreClubsWithDeals_other": "+{{count}} more clubs with deals"
+    },
+    "discount": {
+      "percentOff": "{{percent}} off",
+      "amountOff": "{{amount}} off",
+      "fixedPrice": "Only {{amount}}",
+      "fromAmount": "From {{amount}}"
+    },
+    "dealTerms": {
+      "title": "Benefit terms",
+      "minimumPurchase": "Minimum purchase",
+      "maxDiscount": "Maximum discount",
+      "usesPerTransaction": "Uses per transaction",
+      "usesPerMonth": "Uses per month",
+      "membershipRequired": "Membership required",
+      "membershipRequiredValue": "Yes",
+      "redeemAt": "Redeem at",
+      "fineprintTitle": "Terms and conditions",
+      "channels": {
+        "website": "Online",
+        "physical_store": "In store",
+        "app": "App",
+        "phone": "Phone"
+      }
+    },
+    "dealTypes": {
+      "cashback": "Cashback",
+      "coupon": "Coupon",
+      "giftcard_discount": "Gift card",
+      "payment_discount": "Card discount",
+      "tender_tiered": "Tiered card",
+      "tender_flat": "Card benefit"
     }
   },
   "notifications": {

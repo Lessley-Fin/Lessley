@@ -56,26 +56,26 @@ goto end
 :: ==========================================
 :app
 if /I "%~2"=="up" (
-    echo [!] Starting Lessley core service: Personalization, Gateway...
-    docker compose up -d personalization gateway
+    echo [!] Starting Lessley core service: Personalization, Gateway, Deal Optimizer...
+    docker compose up -d personalization gateway deal-optimizer
     goto end
 )
 
 if /I "%~2"=="build" (
     echo [!] Rebuilding and starting core service...
-    docker compose up -d --build personalization gateway
+    docker compose up -d --build personalization gateway deal-optimizer
     goto end
 )
 
 if /I "%~2"=="down" (
     echo [!] Stopping core service...
-    docker compose rm -sf personalization gateway
+    docker compose rm -sf personalization gateway deal-optimizer
     goto end
 )
 
 if /I "%~2"=="status" (
     echo [!] Checking core service status...
-    docker compose ps personalization gateway
+    docker compose ps personalization gateway deal-optimizer
     goto end
 )
 
@@ -97,7 +97,7 @@ echo   manage.bat infra up        - Starts infrastructure containers
 echo   manage.bat infra down      - Removes containers (-v to wipe volumes)
 echo   manage.bat infra status    - Shows status of infrastructure
 echo.
-echo Core Services (Personalization, Gateway):
+echo Core Services (Personalization, Gateway, Deal Optimizer):
 echo   manage.bat app up      - Starts application containers
 echo   manage.bat app build   - Rebuilds code and starts containers
 echo   manage.bat app down    - Removes application containers

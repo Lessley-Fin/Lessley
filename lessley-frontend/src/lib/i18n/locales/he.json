@@ -314,17 +314,29 @@
     "optimizeTab": {
       "searchWholeMarket": "חיפוש בכל השוק",
       "storeNamePlaceholder": "שם חנות",
+      "pricingAgainst": "מתמחרים מול {{store}}",
+      "changeStore": "שינוי",
+      "noStoreMatches": "לא נמצאו חנויות שתואמות ל־„{{query}}”.",
       "totalPricePlaceholder": "מחיר כולל ₪",
+      "maxDeals": {
+        "label": "מקסימום דילים בשילוב",
+        "hint": "מספר הדילים המרבי שאפשר לשלב בהצעה אחת.",
+        "option_one": "דיל אחד",
+        "option_two": "2 דילים",
+        "option_other": "{{count}} דילים"
+      },
       "findBestPrices": "מציאת המחירים הטובים ביותר",
-      "requiredNotice": "יש להזין חנות ומחיר כולל.",
-      "result": "תוצאה",
-      "exampleResult": "תוצאת דוגמה",
-      "listedPrice": "מחיר מחירון",
-      "yourPrice": "המחיר שלכם",
-      "illustrativeNotice": "הערכה להמחשה — לא מחיר שוק בזמן אמת.",
-      "toastSuccess": "נמצא המחיר המשולב הטוב ביותר 🎉",
-      "couponLabel": "קופון מועדון (בהצדעה)",
-      "cashbackLabel": "החזר כספי בכרטיס (Mastercard)"
+      "optimizing": "משלבים דילים…",
+      "requiredNotice": "יש לבחור חנות ולהזין סכום עגלה.",
+      "prompt": "בחרו חנות והזינו את סכום העגלה — נמצא את השילוב החוקי והזול ביותר של דילים.",
+      "optimizeFailed": "לא הצלחנו לחשב את העגלה הזו.",
+      "noDealsAtStore": "עדיין אין לנו דילים עבור {{store}}.",
+      "noStackApplies_one": "הדיל היחיד ב-{{store}} לא מתאים לעגלה הזו.",
+      "noStackApplies_two": "שני הדילים ב-{{store}} לא מתאימים לעגלה הזו.",
+      "noStackApplies_other": "אף אחד מ-{{count}} הדילים ב-{{store}} לא מתאים לעגלה הזו.",
+      "rankedFrom_one": "דורג מתוך דיל אחד ב-{{store}}",
+      "rankedFrom_two": "דורג מתוך שני דילים ב-{{store}}",
+      "rankedFrom_other": "דורג מתוך {{count}} דילים ב-{{store}}"
     },
     "engineInfoDialog": {
       "ariaLabel": "איך המנוע עובד",
@@ -336,6 +348,41 @@
       "highlight2Desc": "אנחנו מתמחרים את הפריט שאתם באמת רוצים, לא פריט דומה.",
       "highlight3Title": "קופונים חולפים",
       "highlight3Desc": "נאספים מקמעונאים ופורומים דקות ספורות אחרי שהם מופיעים."
+    },
+    "winningStack": {
+      "title": "השילוב הטוב ביותר",
+      "subtitle_one": "{{store}} · דיל אחד הופעל",
+      "subtitle_two": "{{store}} · שני דילים הופעלו",
+      "subtitle_other": "{{store}} · {{count}} דילים הופעלו",
+      "cartTotal": "סכום העגלה",
+      "youPay": "אתם משלמים",
+      "savePill": "חיסכון {{amount}} ({{percent}}%)",
+      "howItStacks": "איך זה מצטבר"
+    },
+    "rankedOptions": {
+      "title": "אפשרויות נוספות",
+      "subtitle_one": "שילוב מדורג נוסף אחד",
+      "subtitle_two": "שני שילובים מדורגים נוספים",
+      "subtitle_other": "עוד {{count}} שילובים מדורגים",
+      "saves_one": "חוסך {{amount}} · דיל אחד",
+      "saves_two": "חוסך {{amount}} · שני דילים",
+      "saves_other": "חוסך {{amount}} · {{count}} דילים"
+    },
+    "stackSteps": {
+      "percentOff": "{{percent}} הנחה",
+      "discountAppliesTo": "ההנחה חלה על",
+      "youPayOnIt": "משלמים עליו",
+      "billLeftToPay": "נשאר לתשלום",
+      "atRate": "בשיעור {{rate}}",
+      "moreInfo": "פרטים",
+      "openDeal": "מעבר לדיל"
+    },
+    "dealInfo": {
+      "deal": "דיל",
+      "savedHere": "נחסך בשלב הזה",
+      "openDeal": "מעבר לדיל",
+      "visitStore": "מעבר לאתר החנות",
+      "ariaLabel": "מידע נוסף על הדיל"
     }
   },
   "admin": {
@@ -423,6 +470,37 @@
       "moreClubsWithDeals_one": "+ עוד מועדון אחד עם דילים",
       "moreClubsWithDeals_two": "+ עוד שני מועדונים עם דילים",
       "moreClubsWithDeals_other": "+ עוד {{count}} מועדונים עם דילים"
+    },
+    "discount": {
+      "percentOff": "{{percent}} הנחה",
+      "amountOff": "{{amount}} הנחה",
+      "fixedPrice": "רק {{amount}}",
+      "fromAmount": "מ-{{amount}}"
+    },
+    "dealTerms": {
+      "title": "תנאי ההטבה",
+      "minimumPurchase": "רכישת מינימום",
+      "maxDiscount": "הנחה מרבית",
+      "usesPerTransaction": "שימושים בעסקה",
+      "usesPerMonth": "שימושים בחודש",
+      "membershipRequired": "נדרשת חברות",
+      "membershipRequiredValue": "כן",
+      "redeemAt": "מימוש ב",
+      "fineprintTitle": "תנאים והגבלות",
+      "channels": {
+        "website": "אונליין",
+        "physical_store": "בחנות",
+        "app": "אפליקציה",
+        "phone": "טלפון"
+      }
+    },
+    "dealTypes": {
+      "cashback": "החזר כספי",
+      "coupon": "קופון",
+      "giftcard_discount": "כרטיס מתנה",
+      "payment_discount": "הנחה בכרטיס",
+      "tender_tiered": "כרטיס נטען מדורג",
+      "tender_flat": "הטבת כרטיס"
     }
   },
   "notifications": {

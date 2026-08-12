@@ -123,6 +123,28 @@ export interface ClubDto {
   name: string
 }
 
+/**
+ * What a deal is worth. The pipeline splits the raw discount logic by reward
+ * type, so at most one value field is set: `percentOff` is a ratio (0.3 = 30%
+ * off), `amountOff` is ILS taken off, `fixedPrice` is a price paid instead.
+ */
+export interface DealDiscount {
+  rewardType?: string | null
+  percentOff?: number | null
+  amountOff?: number | null
+  fixedPrice?: number | null
+  maxDiscountAmount?: number | null
+  conditionType?: string | null
+  minSpend?: number | null
+  minQuantity?: number | null
+}
+
+export interface DealLimits {
+  minimumPurchase?: number | null
+  maxUsesPerTransaction?: number | null
+  maxUsesPerMonth?: number | null
+}
+
 export interface DealDocument {
   dealId: string
   storeId: string
@@ -135,6 +157,12 @@ export interface DealDocument {
   url?: string
   redeemChannels: string[]
   couponCode?: string
+  dealType?: string | null
+  currency?: string | null
+  termsAndConditions?: string | null
+  discount?: DealDiscount | null
+  limits?: DealLimits | null
+  membershipRequired?: boolean | null
 }
 
 export interface StoreMetadata {
@@ -194,4 +222,104 @@ export interface TopStoreInsight {
     transaction_count?: number
     transaction_amount?: number
   }>
+}
+
+// ── Deal optimizer ─────────────────────────────────────────────────────────────
+// The optimizer service speaks snake_case and the Gateway passes its envelope
+// through untouched, so these mirror deal-optimizer's own field names.
+
+/**
+ * One rung of a tiered loadable card (e.g. 25% on the first 600 ILS, then 15%
+ * up to 1500) and the slice of the bill routed through it.
+ */
+export interface OptimizerSegment {
+  /** 0-based position in the card's ladder. */
+  tier_index: number
+  /** Savings per ILS at this rung, as a ratio (0.25 === 25%). */
+  rate: number
+  ils_covered: number
+  savings: number
+}
+
+/**
+ * One deal applied along a path. Fields split into whole-cart running state
+ * (`bill_before`/`bill_after`) and this-step-only state (`ils_covered`,
+ * `discount_rate`, `savings`) — a card capped at 1000 on a 1200 cart still
+ * reports `bill_before: 1200`; `ils_covered` is what that card actually touched.
+ */
+export interface OptimizerStep {
+  deal_id: string
+  bill_before: number
+  bill_after: number
+  /** ILS routed through this payment instrument; null for price-level deals. */
+  ils_covered: number | null
+  discount_rate: number
+  savings: number
+  amount_paid_on_covered: number
+  /** Bill ILS not yet routed to an instrument; null until the first tender step. */
+  remaining_to_allocate: number | null
+  cumulative_savings: number
+  cumulative_discount_rate: number
+  /**
+   * Per-rung split of `ils_covered` for a tiered loadable card; null for flat
+   * deals. Entries sum to this step's `ils_covered` and `savings`, so
+   * `discount_rate` is their blended average rather than any single rung's rate.
+   */
+  segments: OptimizerSegment[] | null
+}
+
+export interface OptimizerResult {
+  rank: number
+  /** Deal ids in application order — resolve against `deals` for display. */
+  path: string[]
+  starting_price: number
+  final_price: number
+  total_savings: number
+  per_step: OptimizerStep[]
+}
+
+export interface OptimizerDealSummary {
+  deal_id: string
+  title?: string | null
+  description?: string | null
+  deal_type?: string | null
+  source_id?: string | null
+  club_id?: string | null
+  /** Where the benefit is claimed (benefit_url, falling back to the merchant site). */
+  url?: string | null
+  /** The merchant's own site, when the deal also carries a claim link. */
+  store_url?: string | null
+  terms_and_conditions?: string | null
+  minimum_purchase?: number | null
+  max_uses_per_transaction?: number | null
+  max_uses_per_month?: number | null
+  max_discount_amount?: number | null
+  /** Tri-state on the wire: true / "yes" / null. */
+  membership_required?: boolean | string | null
+}
+
+/**
+ * The store a cart was priced at. Snake_case because the Gateway passes the
+ * optimizer's own payload through untouched. Deals carry no imagery of their
+ * own — the pipeline hangs scraped images off the store.
+ */
+export interface OptimizerStore {
+  store_id: string
+  name?: string | null
+  store_url?: string | null
+  image_urls: string[]
+  mcc_codes: string[]
+}
+
+export interface OptimizeResponse {
+  generated_at: string
+  store_id: string
+  cart_total: number
+  cart_quantity: number
+  wallet_id: string | null
+  store?: OptimizerStore | null
+  /** Ranked cheapest-first; `results[0]` is the winning stack. */
+  results: OptimizerResult[]
+  deals: Record<string, OptimizerDealSummary>
+  deals_considered: number
 }

@@ -40,6 +40,11 @@ export const queryKeys = {
   mcc: {
     categories: () => ["mcc", "categories"] as const,
   },
+  optimizer: {
+    all: ["optimizer"] as const,
+    stores: (storeText: string) => ["optimizer", "stores", storeText] as const,
+    optimize: (params: object) => ["optimizer", "optimize", params] as const,
+  },
   clubs: {
     all: () => ["clubs"] as const,
   },

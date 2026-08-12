@@ -33,7 +33,10 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 gap-4 bg-card p-6 shadow-[var(--shadow-float)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        // Bounded by the viewport (dvh, so mobile browser chrome is accounted
+        // for) and laid out as a column: content longer than the screen scrolls
+        // inside DialogBody instead of growing past the top and bottom edges.
+        "fixed left-1/2 top-1/2 z-50 flex max-h-[85dvh] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-hidden bg-card p-6 shadow-[var(--shadow-float)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className
       )}
       {...props}
@@ -49,9 +52,33 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-1.5 text-start", className)} {...props} />
+  <div className={cn("flex shrink-0 flex-col space-y-1.5 text-start", className)} {...props} />
 )
 DialogHeader.displayName = "DialogHeader"
+
+/**
+ * The scrolling middle of a dialog. Put everything variable-length in here so
+ * the title and the call to action stay put while the content moves — the
+ * negative margins let the scrollbar sit against the dialog edge rather than
+ * inside its padding.
+ */
+const DialogBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  // Block flow inside, not a flex column: overflowing content in a flex column
+  // gets *shrunk* to fit, which silently collapsed an image strip to a few
+  // pixels and let it spill over the footer. Blocks keep their natural height
+  // and let the scroll do the work.
+  <div
+    className={cn("-mx-6 min-h-0 flex-1 space-y-4 overflow-y-auto px-6", className)}
+    {...props}
+  />
+)
+DialogBody.displayName = "DialogBody"
+
+/** Pinned below the scroll area — where the primary action belongs. */
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex shrink-0 flex-col gap-2", className)} {...props} />
+)
+DialogFooter.displayName = "DialogFooter"
 
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
@@ -81,6 +108,8 @@ export {
   DialogClose,
   DialogContent,
   DialogHeader,
+  DialogBody,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 }

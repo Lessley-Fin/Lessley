@@ -1,8 +1,9 @@
 # ── Lessley PRODUCTION deployment ─────────────────────────────────────────────
 # The only intentional differences from the dev docker-compose.yaml:
 #   1. Ports    — Caddy is the ONLY service that publishes ports to the host (80/443).
-#                 MongoDB, RabbitMQ, gateway, personalization, loki, grafana are on a
-#                 PRIVATE network and are NOT reachable from the host — only by service name.
+#                 MongoDB, RabbitMQ, gateway, personalization, deal-optimizer, loki and
+#                 grafana are on a PRIVATE network and are NOT reachable from the host —
+#                 only by service name.
 #   2. URLs     — DOMAIN/ACME_EMAIL/EDGE_API_KEY are required here (no dev-only fallback
 #                 default). DOMAIN is our private college DNS name; CADDY_TLS_DIRECTIVE
 #                 (required, see CUSTOM-CA-CERT.md) loads our pre-issued cert for it — no
@@ -63,6 +64,7 @@ services:
     depends_on:
       - gateway
       - personalization
+      - deal-optimizer
       - rabbitmq
       - grafana
       - mongo-express
@@ -227,6 +229,35 @@ services:
         condition: service_healthy
       loki:
         condition: service_started
+
+  # ── Deal optimizer (reached only via Caddy; gated by X-Edge-Key) ────────────
+  # Caddy forward_auths /api/v1/optimizer/* against the Gateway and proxies it here.
+  # The Gateway itself has no knowledge of this service.
+  deal-optimizer:
+    image: lessley/deal-optimizer:prod
+    build:
+      context: ../deal-optimizer
+      target: service
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_PORT=5003
+      - Environment=Production
+      # Reads the deals collection the deals pipeline writes to.
+      - MONGO_URI=mongodb://${DB_USER}:${DB_PASS}@mongodb:27017/${DB_NAME}?authSource=admin
+      - MONGO_DB=${DB_NAME}
+      # Reject any request that does not carry X-Edge-Key: $EDGE_API_KEY.
+      - Edge_ApiKey=${EDGE_API_KEY}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/optimizer/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
 volumes:
   rabbitmq_data:

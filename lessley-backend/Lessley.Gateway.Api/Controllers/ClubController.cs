@@ -17,7 +17,7 @@ public class ClubController : ControllerBase
         _clubRepository = clubRepository;
     }
 
-    /// <summary>Returns all loyalty clubs, sourced from the club_list collection.</summary>
+    /// <summary>Returns all loyalty clubs, sourced from the clubs collection.</summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -11,7 +11,7 @@ public class MccRepository : IMccRepository
 
     public MccRepository(IMongoClient client)
     {
-        _collection = client.GetDatabase("lessley").GetCollection<BsonDocument>("mcc_list");
+        _collection = client.GetDatabase("lessley").GetCollection<BsonDocument>("mccs");
     }
 
     public async Task<List<MccCategoryDto>> GetCategoriesAsync(CancellationToken ct = default)

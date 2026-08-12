@@ -13,21 +13,34 @@ public class DealFinderRepository : IDealFinderRepository
 
     public DealFinderRepository(IMongoClient client)
     {
+        // The scraping pipeline's own collections — the same ones deal-optimizer and
+        // Personalization read. There is no longer a projected read model in between.
         var db           = client.GetDatabase("lessley");
-        _storeCollection = db.GetCollection<StoreDocument>("store_list");
-        _dealCollection  = db.GetCollection<DealDocument>("deal_list");
+        _storeCollection = db.GetCollection<StoreDocument>("stores");
+        _dealCollection  = db.GetCollection<DealDocument>("deals");
     }
+
+    /// <summary>
+    /// Matches a business key in either of the two places it can live: <c>id</c> on rows
+    /// imported from <c>main/resources/*.json</c> (whose <c>_id</c> is a generated ObjectId),
+    /// or <c>_id</c> on rows the pipeline wrote. Both shapes occur in live databases, so a
+    /// lookup that checks only one silently finds nothing.
+    /// </summary>
+    private static FilterDefinition<T> ByBusinessId<T>(string id) =>
+        Builders<T>.Filter.Or(
+            Builders<T>.Filter.Eq("id", id),
+            Builders<T>.Filter.Eq("_id", id));
 
     public async Task<DealSearchResult?> GetByIdAsync(string dealId, CancellationToken ct = default)
     {
         var deal = await _dealCollection
-            .Find(d => d.DealId == dealId)
+            .Find(ByBusinessId<DealDocument>(dealId))
             .FirstOrDefaultAsync(ct);
 
         if (deal is null) return null;
 
         var store = await _storeCollection
-            .Find(s => s.StoreId == deal.StoreId)
+            .Find(ByBusinessId<StoreDocument>(deal.StoreId))
             .FirstOrDefaultAsync(ct);
 
         if (store is null) return null;

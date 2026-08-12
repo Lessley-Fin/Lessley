@@ -4,6 +4,7 @@
 .env.*.local
 # Explicit project env file
 /lessley-cd/.env
+/lessley-backend/Scraper/.venv
 
 # IDE
 .vscode/
@@ -21,6 +22,8 @@ bin/
 obj/
 dist/
 build/
+__pycache__/
+*.pyc
 
 # Dependencies
 node_modules/
@@ -32,4 +35,27 @@ __pycache__/
 *.log
 logs/
 
+/lessley-backend/Scraper/hot/outputs/*
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.cluade/
+
+# Deals data (keep seed files only)
+lessley-deals/data/*.json
+!lessley-deals/data/
+lessley-deals/.venv/
+lessley-deals/swish_session/
+# Git worktrees
+.worktrees/
+lessley-deals/src/lessley_deals/enrichment/data/*
+
+# Local Claude settings
 .claude/settings.json
+
+# Backups of env files — these hold the same secrets as the originals
+.env.bak*

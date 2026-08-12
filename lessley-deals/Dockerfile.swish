@@ -1,0 +1,38 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# System deps: cron + tini (PID 1 signal handling) + Chromium system libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
+    tini \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python package + browser extra (playwright + playwright-stealth)
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+RUN pip install --no-cache-dir -e ".[browser]"
+RUN playwright install --with-deps chromium
+
+# Cron setup
+COPY docker/swish-crontab /etc/cron.d/swish
+RUN chmod 0644 /etc/cron.d/swish
+
+# Entrypoint
+COPY docker/swish-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Environment defaults (all overridable via docker-compose / docker run -e)
+ENV SWISH_DATA_DIR=/app/data/swish
+ENV DEALS_DATA_DIR=/app/data
+ENV SWISH_CRON="0 3 1 * *"
+ENV SWISH_RUN_ON_START=0
+ENV SWISH_HEADLESS=1
+ENV SWISH_CATALOG_SLEEP_S=30
+
+# Mount point for all persistent state (swish + deals data)
+VOLUME ["/app/data"]
+
+# tini as PID 1 prevents Chromium zombie processes
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]

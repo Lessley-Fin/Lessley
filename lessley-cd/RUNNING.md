@@ -16,8 +16,9 @@ Caddy → gateway); Mode 1 is the local debug loop. Pick one:
 
 ## Mode 1 — Local debug (services run on your machine)
 
-Infra runs in Docker; the gateway, personalization, and frontend run locally so you can attach
-a debugger and get hot-reload. (Caddy is **not** used here — you hit Vite directly.)
+Infra runs in Docker; the gateway, personalization, deal-optimizer and frontend run locally so
+you can attach a debugger and get hot-reload. (Caddy is **not** used here — you hit Vite
+directly.)
 
 1. **Start infra only (no edge, no app containers):**
    ```bash
@@ -35,15 +36,24 @@ a debugger and get hot-reload. (Caddy is **not** used here — you hit Vite dire
    .venv\Scripts\activate            # (create with: python -m venv .venv && pip install -r requirements.txt)
    uvicorn main:app --reload --port 8002
    ```
-4. **Frontend**:
+4. **deal-optimizer**:
+   ```bash
+   cd deal-optimizer
+   .venv\Scripts\activate            # (create with: python -m venv .venv && pip install -e ".[service]")
+   uvicorn deal_optimizer.api:app --reload --port 8003
+   ```
+5. **Frontend**:
    ```bash
    cd lessley-frontend && npm run dev
    ```
-5. Open **http://localhost:8000**. Vite proxies `/api` + `/hubs` to the gateway, so it's
-   same-origin — no CORS. Cookies are non-Secure over http (normal for debug).
+6. Open **http://localhost:8000**. The Vite proxy stands in for Caddy: it routes each
+   edge-owned prefix to its own service (`/api/v1/insights` and `/api/v1/open-finance` to
+   Personalization, `/api/v1/optimizer` to deal-optimizer) and everything else to the
+   Gateway, so the browser sees one origin — no CORS. Cookies are non-Secure over http
+   (normal for debug).
 
-✅ *Works when:* login succeeds at `localhost:8000`, `localhost:8001/swagger` loads, and
-`localhost:8002/docs` loads.
+✅ *Works when:* login succeeds at `localhost:8000`, `localhost:8001/swagger`,
+`localhost:8002/docs` and `localhost:8003/docs` all load.
 
 ---
 
@@ -55,7 +65,7 @@ on `localhost` with Swagger/mongo-express enabled.
 ```bash
 cd lessley-cd
 .\manage.bat infra up      # mongo, rabbit, loki, grafana, mongo-express, CADDY
-.\manage.bat app build     # gateway + personalization
+.\manage.bat app build     # gateway + personalization + deal-optimizer
 ```
 
 1. **Trust the local cert once** (see First-time config), then open **https://localhost**.
@@ -65,7 +75,8 @@ cd lessley-cd
    ```
 
 Dev-only tooling: Swagger `http://localhost:8001/swagger`, FastAPI docs
-`http://localhost:8002/docs`, mongo-express `http://localhost:8081`,
+`http://localhost:8002/docs` (personalization) and `http://localhost:8003/docs`
+(deal-optimizer), mongo-express `http://localhost:8081`,
 RabbitMQ UI `http://localhost:15672`, Grafana `http://localhost:3000`.
 
 ✅ *Works when:* `https://localhost` loads over HTTPS with no cert warning (CA trusted), login
@@ -78,12 +89,15 @@ sets `Secure; HttpOnly; SameSite=Strict` cookies, and notifications arrive (Sign
 Same as Mode 2 but with the prod compose and a real domain; **no** Swagger, **no** mongo-express.
 
 1. On the prod host: `copy .env.template .env` and set **all** secrets, plus `DOMAIN`,
-   `ACME_EMAIL`, and `EDGE_API_KEY`. Point DNS for `DOMAIN` at this host (ports 80/443 open).
+   `EDGE_API_KEY` and `CADDY_TLS_DIRECTIVE` (the pre-issued cert — see `CUSTOM-CA-CERT.md`).
+   `ACME_EMAIL` is required by Caddy's global block but never used. Point DNS for `DOMAIN`
+   at this host (ports 80/443 open).
 2. Deploy:
    ```bash
    docker compose -f docker-compose.prod.yaml up -d --build
    ```
-   Caddy auto-provisions a Let's Encrypt cert. Open **https://<DOMAIN>**.
+   Caddy serves the cert named by `CADDY_TLS_DIRECTIVE` — there is no ACME in this setup,
+   in either environment. Open **https://<DOMAIN>**.
 
 ✅ *Works when:* `curl -skI https://<DOMAIN>/` shows a valid cert + HSTS; `GET /swagger` and
 `/docs` return 404; Mongo/RabbitMQ are unreachable from the host (only Caddy publishes ports).
@@ -102,25 +116,33 @@ CA or certificate you already have instead of Let's Encrypt? See
    and `EDGE_API_KEY`.
 2. **`lessley-backend/Lessley.Personalization/.env`** — `copy .env.template .env`; for debug use
    `localhost` connections and set `RabbitMQ_Enabled=True` (rabbit is up) or `False` (no broker).
-3. **`lessley-frontend/.env`** — already present (relative API URLs;
-   `VITE_GATEWAY_PROXY_TARGET=http://localhost:8001` for Mode 1). No changes needed.
+3. **`lessley-frontend/.env`** — already present. These are read by `vite.config.ts` in
+   Node to point the dev proxy, and are deliberately **not** `VITE_`-prefixed, so none of
+   them reach the browser bundle (the SPA's own API calls are always relative):
+   ```
+   GATEWAY_PROXY_TARGET=http://localhost:8001
+   PERSONALIZATION_PROXY_TARGET=http://localhost:8002
+   OPTIMIZER_PROXY_TARGET=http://localhost:8003
+   ```
 4. **Mode 1 edge bypass.** Caddy is what authenticates callers and injects identity, so with
-   no Caddy in front both services would reject every request. Enable the bypass — it needs
-   *two* conditions, so production cannot be opened by one stray flag:
+   no Caddy in front the services would reject every request. Enable the bypass — it needs
+   *two* conditions each, so production cannot be opened by one stray flag:
    ```
    # Gateway
    ASPNETCORE_ENVIRONMENT=Development   Edge__AllowUnverifiedEdge=true
    # Personalization .env
    Environment=Development   Edge_AllowUnverified=True
-   # lessley-frontend/.env
-   VITE_PERSONALIZATION_PROXY_TARGET=http://localhost:8002
+   # deal-optimizer (same variable names as Personalization)
+   Environment=Development   Edge_AllowUnverified=True
    ```
-   Both services log a loud warning at startup while the bypass is active. If you see that
-   warning anywhere but your own machine, something is badly misconfigured.
+   Each logs a loud warning at startup while the bypass is active. If you see that warning
+   anywhere but your own machine, something is badly misconfigured.
 
-   Personalization still needs to know who you are — it decodes the email claim straight out
-   of the Gateway's `access_token` cookie (the same cookie your browser already sends it,
-   Caddy or not). Log in through the Gateway first; nothing else to configure.
+   Personalization and deal-optimizer still need to know who you are — they decode the email
+   claim straight out of the Gateway's `access_token` cookie (the same cookie your browser
+   already sends, Caddy or not). Log in through the Gateway first; nothing else to configure.
+   deal-optimizer then reads that user's saved clubs to decide which deals you are eligible
+   for, so a user with no clubs is correctly offered nothing.
 
 5. **Local gateway secrets (Mode 1 only).** The committed `appsettings.json` ships these **blank**,
    so provide them via environment variables or `dotnet user-secrets` (values must match your
@@ -139,7 +161,7 @@ CA or certificate you already have instead of Let's Encrypt? See
    docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .\caddy-local-ca.crt
    # double-click → Install Certificate → Local Machine → Trusted Root Certification Authorities
    ```
-7. **Seed MongoDB reference data** (mcc/stores/deals/clubs) — see `README.md` → *MongoDB Initialization*.
+7. **Seed MongoDB reference data** into `mccs`/`stores`/`deals`/`clubs` — see `README.md` → *Seeding MongoDB*.
 8. **Create the first admin** — call the bootstrap endpoint with `Bootstrap__Key` once the gateway is up.
 
 ## Adding a client-facing service
@@ -156,9 +178,10 @@ service therefore needs no proxy code anywhere:
 
 Two constraints worth knowing before you design around them:
 
-- **Shared database.** Gateway and Personalization share the `lessley` database.
-  Personalization reads `users` **read-only**; every write goes through the Gateway or
-  RabbitMQ. Keep that discipline.
+- **Shared database.** Gateway, Personalization and deal-optimizer share the `lessley`
+  database, reading the same `deals`, `stores`, `clubs` and `mccs` the scraping pipeline
+  writes — one shape, no projected copies. Personalization and deal-optimizer read `users`
+  **read-only**; every write goes through the Gateway or RabbitMQ. Keep that discipline.
 - **Email is the cross-service key.** It is also what Open Finance keys accounts by, so
   changing a user's email would orphan their bank data. Email changes are unsupported.
 

@@ -1,0 +1,58 @@
+{
+  "_comment": "One entry per Behatsdaa wallet/giftcard, keyed by wallet id (the number at the end of its saved filename). 'file' must match a JSON file in this same data/ folder — a saved copy of https://back.behatsdaa.org.il/api/cards/GetWalletChain?walletId=<id>. Fill in name / discount_percent / max_deposit_per_month for each entry below, then run: python -m deals scrape --source behatsdaa. Entries missing discount_percent (or with active:false) are skipped with a warning, not an error. Keys starting with '_' (like this one) are comments and are ignored by the loader.",
+  "_example": {
+    "file": "behatsdaa_example_9999.json",
+    "name": "ארנק לדוגמה - 10% הנחה",
+    "discount_percent": 10,
+    "max_deposit_per_month": 500,
+    "currency": "ILS",
+    "active": true,
+    "notes": ""
+  },
+
+  "2110": {
+    "file": "behatsdaa_15_perc_2110.json",
+    "name": "רשתות בהצדעה 15%",
+    "discount_percent": 15,
+    "max_deposit_per_month": 1000,
+    "currency": "ILS",
+    "active": true,
+    "notes": ""
+  },
+  "2809": {
+    "file": "behatsdaa_20_perc_2809.json",
+    "name": "בהצדעה- ארנק רשתות 20%",
+    "discount_percent": 20,
+    "max_deposit_per_month": 500,
+    "currency": "ILS",
+    "active": true,
+    "notes": ""
+  },
+  "3336": {
+    "file": "behatsdaa_fighter_3336.json",
+    "name": "ארנק בתשלום עם כרטיס פייטר 15% הנחה",
+    "discount_percent": 15,
+    "max_deposit_per_month": 2500,
+    "currency": "ILS",
+    "active": true,
+    "notes": ""
+  },
+  "2595": {
+    "file": "behatsdaa_food_2595.json",
+    "name": "בהצדעה - מזון + אתרי אונליין 7% הנחה",
+    "discount_percent": 7,
+    "max_deposit_per_month": 700,
+    "currency": "ILS",
+    "active": true,
+    "notes": ""
+  },
+  "2868": {
+    "file": "behatsdaa_resturant_2868.json",
+    "name": "בהצדעה  – מסעדות 20% הנחה ",
+    "discount_percent": 20,
+    "max_deposit_per_month": 500,
+    "currency": "ILS",
+    "active": true,
+    "notes": ""
+  }
+}

@@ -1,0 +1,63 @@
+# Scraper worker — scheduled, concurrent, versioned ingestion.
+#
+#   docker compose -f docker-compose.worker.yml up -d --build
+#   docker compose -f docker-compose.worker.yml logs -f scraper-worker
+#
+# Scale out with `--scale scraper-worker=3`: the Mongo lease lock guarantees
+# each source is still scraped by exactly one replica at a time.
+services:
+  scraper-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    environment:
+      # --- storage -------------------------------------------------------
+      DEALS_STORAGE: mongo
+      MONGO_URI: ${MONGO_URI:?set MONGO_URI in .env}
+      MONGO_DB: ${MONGO_DB:-lessley}
+      DEALS_DATA_DIR: /app/data
+
+      # --- versioning / expiry heuristics --------------------------------
+      DEALS_VERSIONING: "1"
+      DEALS_ABSENCE_THRESHOLD: "2"        # consecutive misses before expiry
+      DEALS_ABSENCE_GRACE_HOURS: "24"     # ...and at least this long
+      DEALS_MIN_COVERAGE_RATIO: "0.5"     # skip the sweep on partial scrapes
+      DEALS_WRITE_LEGACY: "0"             # "1" while migrating off `deals`
+
+      # --- scheduling ----------------------------------------------------
+      DEALS_MAX_CONCURRENCY: "3"
+      DEALS_SHUTDOWN_GRACE: "60"
+      DEALS_RUN_RETENTION_DAYS: "90"
+      # Per-source overrides, e.g.:
+      # DEALS_SCHEDULE_HOT: "0 */6 * * *"
+      # DEALS_SCHEDULE_SWISH: "off"
+
+      # --- misc ----------------------------------------------------------
+      DEALS_LOG_LEVEL: INFO
+      DEALS_ENRICH_CONSTRAINTS: "0"       # "1" costs an LLM call per new deal
+
+      # --- LLM (constraints enrichment) ----------------------------------
+      # `college` (default) targets the faculty's self-hosted gpt-oss-120b over
+      # an internal IP — the host must be on the college network. `azure` falls
+      # back to OPENAI_API_KEY. Unset/unreachable → every parse is logged and
+      # skipped, never fatal.
+      LLM_PROVIDER: ${LLM_PROVIDER:-college}
+      COLLEGE_API_BASE: ${COLLEGE_API_BASE:-}
+      COLLEGE_MODEL_HOST: ${COLLEGE_MODEL_HOST:-}
+      COLLEGE_MODEL_NAME: ${COLLEGE_MODEL_NAME:-}
+      COLLEGE_API_KEY: ${COLLEGE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      # Raw payloads and the review queue stay on disk for replay/auditing.
+      - scraper-data:/app/data
+    restart: unless-stopped
+    stop_grace_period: 90s                # > DEALS_SHUTDOWN_GRACE
+    deploy:
+      resources:
+        limits:
+          # Chromium is the memory hog; raise if DEALS_MAX_CONCURRENCY goes up.
+          memory: 2G
+
+volumes:
+  scraper-data:

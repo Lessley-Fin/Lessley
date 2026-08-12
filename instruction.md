@@ -19,11 +19,14 @@ Caddy  ← THE ONLY public entry point: TLS, SPA, routing, authentication
     │   strips inbound X-Edge-Key / X-Auth-Email, then:
     │   forward_auth → Gateway /api/auth/verify  (validates JWT + CSRF)
     │   stamps X-Edge-Key + X-Auth-Email + X-Request-ID inward
-    ├── /api/v1/insights|open-finance|clubs/*  →  Personalization (Python FastAPI)
+    ├── /api/v1/insights|open-finance/*        →  Personalization (Python FastAPI)
+    ├── /api/v1/optimizer/*                    →  deal-optimizer  (Python FastAPI)
     ├── /api/v1/*                              →  Gateway.API      (C# .NET 8)
     └── /hubs/*                                →  Gateway.API      (SignalR)
 
 Gateway ──✗──► Personalization        no HTTP between services, ever
+Gateway ──✗──► deal-optimizer         the edge routes to it; the Gateway does not proxy it
+(/api/v1/clubs is the GATEWAY's — a prefix that looks like Personalization's but is not)
 Gateway ◄── RabbitMQ ──► Personalization   async work only (lessley_events)
     ↓
 MongoDB  (lessley database)
@@ -45,8 +48,9 @@ MongoDB  (lessley database)
 | `Caddy` | — | 80/443 | TLS, SPA host, routing, edge authentication |
 | `Lessley.Gateway.Api` | C# .NET 8 | 8001 | Auth authority, users/deals/notifications REST, SignalR, MassTransit |
 | `Lessley.Personalization` | Python FastAPI | 8002 | Async engine: spending analysis, recommendations, RabbitMQ consumer |
+| `deal-optimizer` | Python FastAPI | 8003 | Layered-DAG deal stacking; prunes by the caller's own clubs |
 | `Lessley.CategoriesEnricher` | Python FastAPI | — | Enriches transaction categories via RabbitMQ events |
-| `lessley-frontend` | React + Vite + TS | 5173 | SPA client |
+| `lessley-frontend` | React + Vite + TS | 8000 | SPA client (Vite `strictPort`) |
 
 ### Message Bus
 

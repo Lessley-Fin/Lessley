@@ -1,0 +1,276 @@
+{
+    "status": true,
+    "data": [
+        {
+            "tagName": "רשתות שיווק מזון ופארמה",
+            "tagDescription": null,
+            "tagSort": 1,
+            "tagType": 2,
+            "tagId": 41,
+            "tagImg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJCSURBVHgBzVb/UepAEP54w/8vHbx7FUgHxgqADmIFaAViBWoFagXSAaECsIKECsAK8HayK3t7+YEMMn4zO8llf3x7e3t3Ab6PRy87JTc4An/wfSRe7r30vLzy+CzEJ8GvIR54cejGpZeplwscCUs88nLX4ZNjn5zj8dHERFhwkBHLvMGHmukd1YxzHFahVkyZvGDSOmLH+ozH9FyiWqKiQZbK/gs9M6Y9OuH33MuV0b95WSPcu3Mm3npZIAb1wcrLNVpAZdwgPCAo6xEH3yDet4myXWJfLZEd+7figYPPeVaOnehbhuZ1l7K6Gp3EakTW4kwlltkQUrYXkcTqkLI+QN8YPHkpa5zXrKe1SjiB3NiUNeRbtkvaiMlxyMGHHGTMjvRNmk6C6MYrOLEJ2wocqslE0AcIdTQ1EJW1p0iBww+JFSckskDDJaKJt5wdOc9QnWAZ60qcGLKPn1GVhbIbKP2KEyKk/F6yTa7sUv6eICy17G+n7MnutsdOVN5bnAe0Zcd97GfkcEZIqaeorjoqzQw/AzqIcuwvmC/I0XfUr0wHoti2q0uEzSVXpMYb4uQejF9m/EinGzX6EViYAESQIsZfM5YLRDDUJKxfawdLvDJEOeLfmw8v/xHjQ707hNvqEh2HkM2cUJgxnXC2/Il5Xxr9BmEla2dM+Ge+aact4jWeqHdb1oGJXUssBvoCoHVPO4gzQ5SrsYMhJfQR4x3hDGeGaIawcQjjFn3KMTtBhhuc5iSjhOXX6SBQA+1OJC91BJ8y2K2e62OqNgAAAABJRU5ErkJggg==",
+            "subBranchRegions": "1,2,3,4",
+            "subBranchCities": "1,3,6,36,64,89,256,270,510,542,565,819,917,931,1057,1119,1247,2298,2321,2331,2528",
+            "walletChainData": [
+                {
+                    "errorID": "0",
+                    "chainID": "107",
+                    "chainName": "קינג סטור",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/6e4d0cba-6b78-47b8-8c11-dea76a64b035.jpg",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.kingstore.co.il",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "1,3,6,36,64,89,256,270,510,542,565,819,917,931,1057,1119,1247,2298,2321,2331,2528"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "207",
+                    "chainName": "ויקטורי ",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/8835ad10-0a91-4bf6-9737-5542eddb4dd9.jpg",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.victory.co.il/",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "1,2,3,4,5,6,7,8,10,12,13,14,15,17,19,24,30,32,35,36,41,54,62,64,82,97,134,151,152,157,175,177,188,203,209,213,214,229,232,259,265,277,320,398,770,2221,2441,2851,2865,2874"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "208",
+                    "chainName": "שפע ברכת השם",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/580d332e-daec-4a71-8150-4e6f0fc47e52.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.facebook.com/p/%D7%A9%D7%A4%D7%A2-%D7%91%D7%A8%D7%9B%D7%AA-%D7%94%D7%A9%D7%9D-%D7%A7%D7%95%D7%A0%D7%99%D7%9D-%D7%91%D7%A9%D7%A4%D7%A2-100095551981262/?locale=he_IL",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "1,7,8,11,28,32,73,108,156,188,229,991"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "239",
+                    "chainName": "שוק העיר",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/9afe0265-6a5b-423c-b46d-7f1c7d9ac340.jpg",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.shukcity.co.il/",
+                    "subBranchRegions": "2,3,4",
+                    "subBranchCities": "1,4,8,11,12,24,35,41,64,68,213,223,229,447"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "642",
+                    "chainName": "ניצת הדובדבן",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/d38e8bc7-cc00-4e15-b72e-bd9b46023abc.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.nizat.com/\t",
+                    "subBranchRegions": "1,2,3,4,מרכז                ",
+                    "subBranchCities": "1,2,3,4,5,6,7,8,9,12,13,15,16,17,18,23,24,27,29,33,35,54,65,68,76,128,134,152,171,182,188,213,214,232,233,239,251,256,259,261,262,281,320,392,398,556,606,660"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1374",
+                    "chainName": "שוקיט- shookit",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/c9110a08-9d5c-4008-bbcd-8efa94caaaf1.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.shookit.com",
+                    "subBranchRegions": "0,1,2",
+                    "subBranchCities": "12,188,834,2229"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1405",
+                    "chainName": "רשת אניס",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/8c460390-7de9-4b34-b30f-acdb4411da3d.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.anise-teva.co.il/",
+                    "subBranchRegions": "1,2,3",
+                    "subBranchCities": "1,2,3,4,5,9,10,12,15,18,19,30,54,71,160,182,262"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1624",
+                    "chainName": "יום ביום",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/e8693542-4b0b-47b1-9fe4-093a8df32299.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": null,
+                    "subBranchRegions": "1,2",
+                    "subBranchCities": "2,90,2300"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1680",
+                    "chainName": "סופר ספיר",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/2a61563f-41d5-470a-8ee1-df6299f6fd76.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://sapir-group.co.il/",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "1,3,5,8,14,25,32,35,45,51,65,111,125,131,171,191,208,211,233,239,251,261,264,265,277,288,427,556,629,1099"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1682",
+                    "chainName": "נטו חיסכון",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/26f62667-154c-4018-8b1e-abeb39cc02e6.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": null,
+                    "subBranchRegions": "1",
+                    "subBranchCities": "171"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1711",
+                    "chainName": "טיב טעם",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/bb5c0a49-fe4a-480a-871f-3f4df5c7f66b.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": " https://www.tivtaam.co.il/",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "2,3,4,5,6,8,9,12,14,15,16,17,18,24,29,65,71,164,213,251,256,282,424,560,611"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1990",
+                    "chainName": "מחסני השוק",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/889b0010-a091-493f-89bc-0ad0fd4430a4.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://m-shuk.net/",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "1,5,6,8,10,12,17,19,21,23,27,29,32,41,45,65,68,82,108,124,132,134,158,160,188,208,209,214,261,264,269,270,279,305,318,405,818,822"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "2031",
+                    "chainName": "גוד פארם- good pharm",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/2939ba51-f643-4612-b199-4cb6087979e2.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://goodpharm.co.il/",
+                    "subBranchRegions": "1,2,3,4",
+                    "subBranchCities": "2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,24,29,30,35,41,71,90,134,188,213,229,233,239,251,256,259,261,269,270,277,424"
+                }
+            ]
+        },
+        {
+            "tagName": "רכישה אונליין",
+            "tagDescription": " ",
+            "tagSort": 3,
+            "tagType": 2,
+            "tagId": 79,
+            "tagImg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAeCAYAAABNChwpAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAHFSURBVHgBxVeNVcJADP7gOQBOQDYQJ7BuoBPIBuIE1g1kAtlAnYA6AToBdQLYABMu9zj7ynEptHzvfa8/d2lyuSSXAmdGL7gfMMd6bRszZhkaQMwF89sPtAhijpi3qm8LUZ6jO7wy5+GLjVplwTFbRaoT/eDlCmnwinPsvNbYGB8DG7XqN0FGXPep92vmkJnB7WkqiLkM9G8NGBqEJ8Fzru8sINWJC9jwrsKyWvGEuL7ALn5KGNE3zp8yX/T+R6+XzGc4lwonMMBqQMG8giskksO+eF2rYkLDOmKJgVwVkcoNlFJL5onf8LKNDAghLn9T+Tx47syAmcr66wppFZVQY8AdXD57Cg5Vx1EwV+RTA5DqDFhWmMGlXRsgnGgLjjYgLMXnQC+shFLdStjgU7CEDYSa49i6BaJ4pbSehoTKcVwy72HHWmlFhkpLJukj9XyK9luyoep7Ys7CpnTMfDggLK6W3C/2jGdwZ0TMKzI2jXwjCik2i8j4Uuckw3oayupjXdMXdpWxFQNuEHeduJ/QIiTlssh4hvTmdotDLdkYbtUeEoSP2B+svjDJGeIDURrYjz3z//2a1UECyvq/UEWBhhHfCf4AdQBprpk7fswAAAAASUVORK5CYII=",
+            "subBranchRegions": "3",
+            "subBranchCities": "1",
+            "walletChainData": [
+                {
+                    "errorID": "0",
+                    "chainID": "2506",
+                    "chainName": "מקדונלדס אונליין",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/7139a195f06b46e5b0a60a09c311844d.jpg",
+                    "searchKeyWords": null,
+                    "isWebOnline": true,
+                    "webSite": "https://www.mcdonalds.co.il/",
+                    "subBranchRegions": "3",
+                    "subBranchCities": "1"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1493",
+                    "chainName": "ויקטורי אונליין",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/0b382df4-99ee-48e0-b03f-69689852addc.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": true,
+                    "webSite": "https://www.victory.co.il/",
+                    "subBranchRegions": "0",
+                    "subBranchCities": "2229"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "1580",
+                    "chainName": "סנו עד הבית אונליין",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/aa61adef-ac43-4f97-84a0-c812f6b03261.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": true,
+                    "webSite": "https://shop.sano.co.il/",
+                    "subBranchRegions": "0",
+                    "subBranchCities": "2229"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "2051",
+                    "chainName": "טיב טעם אונליין",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/aac916ed-c0a2-437b-9b39-8fc752b51d28.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": true,
+                    "webSite": " https://www.tivtaam.co.il/",
+                    "subBranchRegions": "0",
+                    "subBranchCities": "2229"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "2085",
+                    "chainName": "BEENY ONLINE",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/5113c07a-1eed-4ac5-92f2-94c318d944c6.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": true,
+                    "webSite": "https://www.beeny.co.il/",
+                    "subBranchRegions": "0",
+                    "subBranchCities": "2229"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "2421",
+                    "chainName": "משלוחה",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/1eae2db9-a201-4076-9546-fc5d05da1147.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.mishloha.co.il/",
+                    "subBranchRegions": "2",
+                    "subBranchCities": "11"
+                }
+            ]
+        },
+        {
+            "tagName": "מסעדות ובתי קפה",
+            "tagDescription": null,
+            "tagSort": 6,
+            "tagType": 2,
+            "tagId": 38,
+            "tagImg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAANzSURBVHgBvVfPS+NQEH4pxR8H2VQU1MumgnjwklVURMEURBCRLogiiNiePIhuexcSEbxWPQie3OJNRbt48Nj2DxCzHvQkyUHwmIoKokJ2vpBIrK3aNu4H4T3nvb55M/O9mZGxIpiZmTlcXFzU3LJkMim3tbVppmnyLrEwNDRkKIoSYZVia2vrJw1mV1fXtiODMlEUzd7eXigWHHlHR0daEATT/k1liEQiCnSl02nJpRhzU5Ikxb2X/jb7+/tPWYnwFRJ2dnbmMKqqGnaJdZ63PDzo3ltbW6s/PDwIbi+UDbgVsSRFr6xG3LFM8VQc2cbGRgz7JiYm0swLQCEOHB0dfRVniruBOLv3Dg8PH2IvQfzs+b5iCxQ7HePT01PAkXEcl7u7u9Ofn5/drGbV1dU5AqY8qxRzc3Ow1Nzd3Y04Mntu2msWENtAIGAgNMwLLCwsxPr6+tbcMlIswq1uIsH9iK8nz+l/gAOJNjc3BfZFIC9liBv6mwUkABq+7KPQpApdiIPi6+trlZ7mOvMQdXV1/Pz8fKKhoQF0t5S3tLQgF2QnJyd/c3iT9fX17Pj4OMg8hM12i+l2xmN4cviIuHGf3+/PkcUC8xiZTEaAkmg0uq5pWhCfYRg/KAHlLi4uZB/d6q+u67jhd+YhDg4OrCx2f39vkcv+VAqBigTkCwaDKm62vLwcYh6CzhyEi+l962757e2tCE7BUjE/J3sBZLL8nP4m842MjGhI/nmdRdmgFyKxvNTq6EHTAOJZRYJuljw5OeHJ3THmAciVsxinpqaSGGEQ1fhtejlCd3f3+ktCwYKT6Cu1GtbAKliHs5DDMcdSwZrttDvuIl8O7MPRrxno0TDHReLx+Fqxm1pdBzahCrEykM1mZRzV2tpq9PT0aOFw+BSGfNgWgRRQbLtcKEXp/v7+bCm/5WDd2dnZS1ybmprkpaUlqb29XadGLjowMPDRGXg6g7IsK8gH09PTceKL6qytrKzoBasTYsG+sDpRUShYnfxVVVWg/C9ino5nxTzANwLFO5ZKpdjY2FhqZ2fn7SaQyqE7/nOotD9GY+GcNz4+vlZsH2crF6hGbu/t7YFc6BrV5ubmXGNjI/ssHh8f+aurK+Hy8tLiC6pSIpGIvavYAXLp0dFR+Pz8XEIhZyWipqZGv7m5+bO6upoKhUKZ9/b+A6EE/gxyPM1BAAAAAElFTkSuQmCC",
+            "subBranchRegions": "1,2,3,4,דרום                ,מרכז                ,צפון                ",
+            "subBranchCities": "1,2,3,4,5,6,8,9,10,12,14,15,16,17,18,19,21,23,24,27,29,30,32,33,35,36,41,54,62,64,65,71,82,88,89,90,97,105,134,152,160,171,175,177,178,179,182,188,189,194,195,209,213,214,220,223,228,229,231,232,239,251,256,258,259,261,262,269,270,318,341,346,384,398,510,542,556,564,606,656,671,694,769,822,834,917,982,995,1067,1184,1199,1247,2228,2236,2340,2393,2578,2874,2882,2972,2974,2975",
+            "walletChainData": [
+                {
+                    "errorID": "0",
+                    "chainID": "2517",
+                    "chainName": "מקדונלדס  ישראל",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/667d825b-7cdb-40ad-9eba-7876574c3bdb.jpg",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.mcdonalds.co.il/",
+                    "subBranchRegions": "1,2,3,4,דרום                ,מרכז                ,צפון                ",
+                    "subBranchCities": "1,2,3,4,5,6,8,9,10,12,14,15,16,17,18,19,21,23,24,27,29,30,32,33,35,36,41,54,62,64,65,71,82,88,89,90,97,105,134,152,160,171,175,177,178,179,182,188,189,194,195,209,213,214,220,223,228,229,231,232,239,251,256,258,259,261,262,269,270,318,341,346,384,398,510,542,556,564,606,656,671,694,769,822,834,917,982,995,1067,1184,1199,1247,2228,2236,2340,2393,2578,2874,2882,2972,2974,2975"
+                },
+                {
+                    "errorID": "0",
+                    "chainID": "2519",
+                    "chainName": "גלידה גולדה ",
+                    "logoURL": "https://pics.k4a.co.il/share/NewUploads/BusinessLogo/edce3514-66a0-450e-8970-335b3a62344c.png",
+                    "searchKeyWords": null,
+                    "isWebOnline": false,
+                    "webSite": "https://www.goldaglida.co.il",
+                    "subBranchRegions": "1,2,3,4,דרום                ,ירושלים והסביבה     ,מרכז                ,צפון                ",
+                    "subBranchCities": "1,2,3,4,5,6,7,8,9,10,12,13,15,16,17,19,23,24,27,28,29,30,32,33,35,36,40,41,54,62,64,71,82,90,97,134,152,157,160,171,175,178,182,188,194,209,213,214,228,229,231,233,239,246,251,256,259,261,262,265,277,318,341,611,671,769,948,1184,2236,2874"
+                }
+            ]
+        }
+    ],
+    "message": null,
+    "errorId": null,
+    "errorDescription": null,
+    "errorHTML": null
+}
