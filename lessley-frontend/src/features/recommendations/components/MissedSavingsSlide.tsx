@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ChevronDown, RefreshCw, TrendingDown } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { InfoDialog } from "@/components/shared/InfoDialog"
 import { Button } from "@/components/ui/button"
 import { formatAmount } from "@/lib/formatters"
 import type { ClubDto, TransactionInsight } from "@/lib/types"
@@ -29,6 +30,12 @@ export function MissedSavingsSlide({ insights, clubs, onRecalculate, isPending }
           <p className="font-bold">{t("recommendations.missedSavingsSlide.title")}</p>
           <p className="text-xs text-muted-foreground">{t("recommendations.missedSavingsSlide.subtitle")}</p>
         </div>
+        <InfoDialog
+          ariaLabel={t("recommendations.missedSavingsSlide.infoDialog.ariaLabel")}
+          title={t("recommendations.missedSavingsSlide.infoDialog.title")}
+        >
+          <p className="text-sm text-muted-foreground">{t("recommendations.missedSavingsSlide.infoDialog.body")}</p>
+        </InfoDialog>
         <Button
           type="button"
           variant="pill"

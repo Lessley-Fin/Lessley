@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import { DealDetailDialog } from "@/components/shared/DealDetailDialog"
 import { DealResultCard } from "@/components/shared/DealResultCard"
+import { InfoDialog } from "@/components/shared/InfoDialog"
 import { useClubs } from "@/features/clubs/hooks"
 import { useDealSearch } from "@/features/deal-finder/hooks"
 import type { DealSearchResultItem } from "@/lib/types"
@@ -24,12 +25,20 @@ export function HotDealsPage() {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-          {t("dealFinder.hotDeals.title")}
-          <Flame className="size-6 text-warning" aria-hidden />
-        </h1>
-        <p className="text-sm text-muted-foreground">{t("dealFinder.hotDeals.subtitle")}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            {t("dealFinder.hotDeals.title")}
+            <Flame className="size-6 text-warning" aria-hidden />
+          </h1>
+          <p className="text-sm text-muted-foreground">{t("dealFinder.hotDeals.subtitle")}</p>
+        </div>
+        <InfoDialog
+          ariaLabel={t("dealFinder.hotDeals.infoDialog.ariaLabel")}
+          title={t("dealFinder.hotDeals.infoDialog.title")}
+        >
+          <p className="text-sm text-muted-foreground">{t("dealFinder.hotDeals.infoDialog.body")}</p>
+        </InfoDialog>
       </div>
 
       <div className="no-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
