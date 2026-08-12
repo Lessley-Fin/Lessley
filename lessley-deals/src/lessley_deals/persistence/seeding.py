@@ -119,8 +119,8 @@ def seed_clubs_json(clubs_path: Path, data_dir: str | Path = "data") -> int:
     return len(clubs)
 
 
-def seed_mcc_list(db: Any, data_dir: str | Path = "data") -> int:
-    """Upsert the MCC category catalogue into ``mcc_list``; return how many were new.
+def seed_mccs(db: Any, data_dir: str | Path = "data") -> int:
+    """Upsert the MCC category catalogue into ``mccs``; return how many were new.
 
     Keyed on ``mcc`` rather than routed through :func:`upsert_seed_file`, because
     this collection is read by two services that both bind ``_id`` to a real
@@ -133,19 +133,19 @@ def seed_mcc_list(db: Any, data_dir: str | Path = "data") -> int:
 
     Guarded on its own emptiness rather than on ``stores``: the two are
     independent, and the catalogue is what the app's category filter is built
-    from — an empty ``mcc_list`` means the UI offers no categories at all.
+    from — an empty ``mccs`` means the UI offers no categories at all.
     """
-    if db["mcc_list"].count_documents({}, limit=1) > 0:
+    if db["mccs"].count_documents({}, limit=1) > 0:
         return 0
 
     for seed_dir in seed_candidate_dirs(data_dir):
-        path = seed_dir / "mcc_list.json"
+        path = seed_dir / "mccs.json"
         if not path.exists():
             continue
         rows = json.loads(path.read_text(encoding="utf-8"))
         inserted = 0
         for row in rows:
-            result = db["mcc_list"].update_one(
+            result = db["mccs"].update_one(
                 {"mcc": row["mcc"]},
                 {"$setOnInsert": {"mcc": row["mcc"], "category": row["category"]}},
                 upsert=True,
@@ -156,7 +156,7 @@ def seed_mcc_list(db: Any, data_dir: str | Path = "data") -> int:
         return inserted
 
     logger.warning(
-        "No mcc_list.json found in any of %s — the category filter will be empty",
+        "No mccs.json found in any of %s — the category filter will be empty",
         ", ".join(str(d) for d in seed_candidate_dirs(data_dir)),
     )
     return 0
@@ -172,7 +172,7 @@ def seed_mongo_if_empty(db: Any, data_dir: str | Path = "data") -> None:
     returns immediately once the collection has anything in it.
     """
     seed_clubs(db, data_dir)
-    seed_mcc_list(db, data_dir)
+    seed_mccs(db, data_dir)
 
     if db["stores"].count_documents({}, limit=1) > 0:
         return

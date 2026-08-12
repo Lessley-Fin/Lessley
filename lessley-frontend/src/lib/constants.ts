@@ -1,6 +1,6 @@
 // Clubs are no longer hard-coded here — they come from the Gateway's
 // /api/v1/clubs endpoint (club_list collection) via useClubs().
-// Sourced from the MongoDB mcc_list collection; keep in sync when categories are added.
+// Sourced from the MongoDB mccs collection; keep in sync when categories are added.
 
 export const MATCH_LEVELS = ["Low", "Medium", "High"] as const
 

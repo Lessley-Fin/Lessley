@@ -98,11 +98,16 @@ class ReferenceDataRepository:
                 .to_dict()                                 # so we can find a club by id
             )
 
+            self._attach_club_stores()
+
             logger.info(
                 "Clubs loaded",
                 extra={
                     "reason": "Data preparation for missed savings analysis",
-                    "extra_data": {"club_count": len(self._clubs)},
+                    "extra_data": {
+                        "club_count": len(self._clubs),
+                        "club_store_links": sum(len(c.stores or []) for c in self._clubs.values()),
+                    },
                 },
             )
 
@@ -117,6 +122,33 @@ class ReferenceDataRepository:
                 },
             )
             raise
+
+    def _attach_club_stores(self) -> None:
+        """Give every club the shops it actually has deals at.
+
+        Both club-aware features — club recommendations and missed-savings alternatives —
+        answer "which of this club's shops sell what the user buys" by reading
+        ``club.stores``. That field is filled incrementally by the pipeline's
+        ``PersistStage._update_club_stores`` as deals are persisted, so a database whose
+        clubs were imported rather than scraped has it empty on every club. The symptom is
+        silent: ``recommend_clubs`` drops any club with no stores, so every recommendation
+        list comes back empty with nothing logged.
+
+        The relation is already implied by the data we just loaded — a deal names both its
+        club and its store — so it is derived here instead of depended upon. Whatever the
+        stored field holds is kept and unioned in, so an explicitly curated membership is
+        never lost; deriving only ever adds the shops a club currently has live deals at.
+        """
+        derived: Dict[str, set] = {}
+        for deal in self._deals_by_id.values():
+            if deal.club_id and deal.store_id:
+                derived.setdefault(deal.club_id, set()).add(deal.store_id)
+
+        for club_id, club in self._clubs.items():
+            from_deals = derived.get(club_id, set())
+            if not from_deals:
+                continue
+            club.stores = sorted(set(club.stores or []) | from_deals)
 
     # ── Lookups ───────────────────────────────────────────────────────────────
 

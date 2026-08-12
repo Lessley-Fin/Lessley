@@ -55,10 +55,10 @@ docker exec -it mongodb mongoimport --db lessley --collection deal_list --file /
 
 #### mccs
 ```bash
-docker cp ..\main\resources\mccs.json mongodb:/tmp/mcc_list.json
+docker cp ..\main\resources\mccs.json mongodb:/tmp/mccs.json
 ```
 ```bash
-docker exec -it mongodb mongoimport --db lessley --collection mcc_list --file /tmp/mcc_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+docker exec -it mongodb mongoimport --db lessley --collection mccs --file /tmp/mccs.json --jsonArray --username guest --password guest --authenticationDatabase admin
 ```
 
 #### stores

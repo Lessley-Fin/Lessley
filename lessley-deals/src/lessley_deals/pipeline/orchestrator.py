@@ -31,7 +31,6 @@ class PipelineOrchestrator:
         alias_repo: AliasRepository,
         constraints_stage: ConstraintsStage | None = None,
         ingest_stage: IngestStage | None = None,
-        publish: Callable[[], Any] | None = None,
     ) -> None:
         self._scrape = scrape_stage
         self._normalize = normalize_stage
@@ -41,9 +40,6 @@ class PipelineOrchestrator:
         self._alias_repo = alias_repo
         self._constraints = constraints_stage
         self._ingest = ingest_stage
-        self._publish = publish
-        """Optional post-ingest hook that refreshes the Gateway's read model.
-        Runs after ingestion so it publishes the state this run just produced."""
 
     async def run(
         self,
@@ -107,15 +103,8 @@ class PipelineOrchestrator:
             logger.info("Starting ingestion stage...")
             summary = await self._ingest.run(built_deals, scrape, run_id=run_id)
 
-        # Stage 6: publish the Gateway read model (optional).
-        # Never fatal: the scrape and its version history are already durable, so
-        # a projection failure must not fail the run — the next one republishes.
-        if self._publish is not None:
-            try:
-                logger.info("Publishing gateway view...")
-                self._publish()
-            except Exception:  # noqa: BLE001
-                logger.exception("Publishing the gateway view failed — data is safe, view is stale")
+        # No publish stage: the Gateway and Personalization read `deals`/`stores`/`clubs`
+        # directly now, so what this run just persisted is already what they serve.
 
         ctx.finish()
         report = PipelineReport.from_context(ctx, scrape=scrape, ingest=summary)

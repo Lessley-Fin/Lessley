@@ -7,26 +7,20 @@ embedded, which is already the plain-dict shape ``adapter.py`` accepts — so
 there is no unwrapping to do. ``stores`` is its counterpart for store display
 fields.
 
-There is a second pair, ``deal_list``/``store_list``: the projection
-``lessley-deals``' ``persistence/gateway_view.py`` builds for the C# Gateway,
-and what the application serves deal search from. Which pair is correct is a
-per-environment question, so both are overridable via ``DEALS_COLLECTION`` /
-``STORES_COLLECTION`` rather than hardcoded:
+``Lessley.Gateway.Api`` and ``Lessley.Personalization`` read these same two
+collections, so all three consumers now share one shape. There is no longer a
+``deal_list``/``store_list`` projection in between — the C# and Python DTOs bind
+the pipeline's documents directly.
 
-* ``deals`` is only as fresh as the last pipeline run that used Mongo storage
-  (``DEALS_STORAGE=mongo``). A database whose scrapes ran against the default
-  JSON storage will have a stale ``deals`` — and a stale copy predating
-  ``discount_logic.reward.tiers`` makes a tiered loadable card look like an
-  uncapped flat rate, quoting 25% of a 10,000 ILS cart instead of stopping at
-  the card's 1,500 ILS ceiling.
-* ``deal_list`` tracks whatever last regenerated the view, but it is a display
-  projection: it need not carry ``constraints``, and without those the engine
-  falls back to ``unknown``, which under the default ``unknown_as_yes=True``
-  means every deal stacks with every other.
-
-Neither is safe to assume. Check both before pointing this at one — the failure
-is silent either way, since a wrong-but-populated collection returns plausible
-deals rather than erroring.
+The names stay overridable via ``DEALS_COLLECTION`` / ``STORES_COLLECTION``
+rather than hardcoded, for pointing a debugging session at a copy. Note that
+``deals`` is only as fresh as the last pipeline run that used Mongo storage
+(``DEALS_STORAGE=mongo``): a database whose scrapes ran against the default JSON
+storage will have a stale ``deals`` — and a stale copy predating
+``discount_logic.reward.tiers`` makes a tiered loadable card look like an
+uncapped flat rate, quoting 25% of a 10,000 ILS cart instead of stopping at the
+card's 1,500 ILS ceiling. The failure is silent, since a stale-but-populated
+collection returns plausible deals rather than erroring.
 
 ``deals_current``/``deal_versions`` are still written by the pipeline's
 versioning layer, but they are history rather than the read path: they carry a
@@ -34,12 +28,13 @@ versioning layer, but they are history rather than the read path: they carry a
 of whichever run last populated them. Reading them is what previously hid every
 HOT deal from the optimizer.
 
-Two consequences of ``deal_list`` being the source of truth, both deliberate:
+Two consequences of ``deals`` being the source of truth, both deliberate:
 
 * there is no ``status`` field to filter on, so an expired deal keeps being
   returned until it is deleted — the collection has no lifecycle of its own;
-* the business key lives in ``id``, not ``_id`` (``_id`` is an ObjectId on
-  imported rows), so it has to be read off the field rather than the key.
+* the business key is ``_id`` on rows the pipeline writes, but imported rows
+  keep an ObjectId ``_id`` plus a real ``id``, so it is read off whichever is
+  present (see ``_to_engine_dict``).
 
 Store matching happens in the query rather than via ``engine._deal_matches_store``
 so group-wide deals are caught in all the shapes the pipeline produces:

@@ -66,15 +66,10 @@ class PipelineConfig:
     review_no_match: bool = field(default_factory=lambda: _env_flag("DEALS_REVIEW_NO_MATCH", False))
     write_deals: bool = field(default_factory=lambda: _env_flag("DEALS_WRITE_LEGACY", True))
     """Write the ``deals`` collection — the source of truth every consumer reads
-    (``deal-optimizer``'s ``deals_source``, and ``gateway_view``'s projection
-    into ``deal_list``).  ``deals_current``/``deal_versions`` are still written
-    when versioning is on, but as history only.  Turning this off leaves both
-    consumers reading whatever was in ``deals`` before the run."""
-    publish_gateway_view: bool = field(
-        default_factory=lambda: _env_flag("DEALS_PUBLISH_GATEWAY_VIEW", True)
-    )
-    """Refresh ``deal_list``/``store_list`` — the read model the Gateway's deal
-    search queries — after each run.  Mongo-only; no-op on JSON storage."""
+    directly: ``deal-optimizer``'s ``deals_source``, the Gateway's deal search and
+    Personalization's reference data.  ``deals_current``/``deal_versions`` are still
+    written when versioning is on, but as history only.  Turning this off leaves every
+    consumer reading whatever was in ``deals`` before the run."""
 
     @property
     def use_mongo(self) -> bool:
@@ -258,14 +253,6 @@ def build_pipeline(config: PipelineConfig | None = None) -> PipelineBundle:
                 config=IngestionTuning.from_env(),
             )
         )
-
-    # Keep the Gateway's read model (deal_list/store_list) in step with every
-    # run. Mongo-only: the Gateway has no JSON backend to read from.
-    publish = None
-    if db is not None and config.publish_gateway_view:
-        from lessley_deals.persistence.gateway_view import sync_gateway_view
-
-        publish = lambda: sync_gateway_view(db)  # noqa: E731
 
     pipeline = PipelineOrchestrator(
         scrape_stage=scrape_stage,

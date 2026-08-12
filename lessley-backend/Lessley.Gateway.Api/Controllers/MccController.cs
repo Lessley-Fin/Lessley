@@ -18,7 +18,7 @@ public class MccController : ControllerBase
         _mccRepository = mccRepository;
     }
 
-    /// <summary>Returns all MCC categories with their associated MCC codes, sourced from the mcc_list collection.</summary>
+    /// <summary>Returns all MCC categories with their associated MCC codes, sourced from the mccs collection.</summary>
     [HttpGet("categories")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

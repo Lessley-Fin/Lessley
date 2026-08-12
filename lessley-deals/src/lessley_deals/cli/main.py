@@ -1797,31 +1797,50 @@ def run_all_cmd(
         raise typer.Exit(code=1)
 
 
-@app.command(name="publish-gateway-view")
-def publish_gateway_view_cmd(
+@app.command(name="backfill-club-ids")
+def backfill_club_ids_cmd(
+    dry_run: bool = typer.Option(False, "--dry-run", help="Report what would change, write nothing"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
-    """Rebuild ``deal_list``/``store_list`` — the collections the Gateway reads.
+    """Fill ``club_id`` on ``deals`` rows that have none, joined via ``source_id``.
 
-    Runs automatically after every scrape; this is for republishing on demand,
-    e.g. after a manual edit or to backfill a database scraped before the
-    projection existed. Idempotent.
+    ``PersistStage`` stamps every deal it builds with the club owning its source, but
+    rows written before that map existed carry ``club_id: null``. That used to be
+    papered over by the ``deal_list`` projection, which re-joined the club on the way
+    out; now that the Gateway and Personalization read ``deals`` directly, the join has
+    to be in the data.
+
+    Idempotent — only rows missing a club are touched, so it is safe to re-run.
     """
     _setup_logging(log_level)
 
     storage = os.environ.get("DEALS_STORAGE", "json").lower()
     if storage != "mongo":
-        console.print("[red]publish-gateway-view requires DEALS_STORAGE=mongo.[/red]")
+        console.print("[red]backfill-club-ids requires DEALS_STORAGE=mongo.[/red]")
         raise typer.Exit(code=1)
 
-    from lessley_deals.persistence.gateway_view import sync_gateway_view
+    from lessley_deals.persistence.club_backfill import backfill_club_ids
     from lessley_deals.persistence.mongo_client import get_database
 
-    result = sync_gateway_view(get_database())
-    for collection, counts in result.items():
+    result = backfill_club_ids(get_database(), dry_run=dry_run)
+
+    if not result.club_by_source:
+        console.print("[yellow]No clubs found — nothing can be joined. Seed clubs first.[/yellow]")
+        raise typer.Exit(code=1)
+
+    verb = "would update" if dry_run else "updated"
+    console.print(f"[bold]{result.matched}[/bold] deal(s) {verb}:")
+    for source_id, count in sorted(result.by_source.items()):
+        club_id = result.club_by_source.get(source_id, "?")
+        console.print(f"  {source_id} -> {club_id}: {count}")
+
+    if result.unmatched_sources:
         console.print(
-            f"  [bold]{collection}[/bold]: {counts['written']} written, {counts['removed']} removed"
+            "[yellow]No club for these sources, left as-is: "
+            f"{', '.join(f'{s} ({n})' for s, n in sorted(result.unmatched_sources.items()))}[/yellow]"
         )
+    if dry_run:
+        console.print("[dim]--dry-run: nothing was written.[/dim]")
 
 
 @app.command(name="deal-history")
