@@ -5,10 +5,11 @@ import { ROUTES } from "@/lib/routes"
 
 export function GuestRoute() {
   const status = useAuthStore((s) => s.status)
+  const registrationInProgress = useAuthStore((s) => s.registrationInProgress)
 
   if (status === "loading") return null
 
-  if (status === "authenticated") {
+  if (status === "authenticated" && !registrationInProgress) {
     return <Navigate to={ROUTES.OPTIMIZER} replace />
   }
 

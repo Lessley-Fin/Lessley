@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next"
 
 import { StepIndicator } from "@/components/shared/StepIndicator"
 import { Form } from "@/components/ui/form"
+import { useAuthStore } from "@/features/auth/store"
 import { ROUTES } from "@/lib/routes"
 import { loginWithGateway, registerWithGateway } from "../api"
 import { registerSchema, type RegisterValues } from "../schemas"
@@ -39,6 +40,10 @@ export function RegisterWizard() {
   // authenticated session for its own connect-bank call, so registration can't wait any longer.
   async function handleContinueFromClubs() {
     const values = form.getValues()
+    if (!values.clubs?.length) {
+      form.setError("clubs", { message: t("auth.register.clubs.selectAtLeastOne") })
+      return
+    }
     setIsSubmitting(true)
     try {
       await registerWithGateway({
@@ -48,6 +53,9 @@ export function RegisterWizard() {
         clubs: values.clubs?.length ? values.clubs : undefined,
       })
       const data = await loginWithGateway({ userName: values.userName, password: values.password })
+      // Set before applyAuthProfile flips auth status, so GuestRoute doesn't bounce the user
+      // out of /register before the wizard reaches the Banking step.
+      useAuthStore.getState().setRegistrationInProgress(true)
       await applyAuthProfile({ userName: data.userName ?? values.userName, email: data.email ?? values.email })
       setStep(2)
     } catch (error) {
@@ -65,6 +73,7 @@ export function RegisterWizard() {
   }
 
   function handleFinish() {
+    useAuthStore.getState().setRegistrationInProgress(false)
     navigate(ROUTES.OPTIMIZER, { replace: true })
   }
 

@@ -20,6 +20,7 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
   const { t } = useTranslation()
   const { data: clubs = [] } = useClubs()
   const selected = form.watch("clubs") ?? []
+  const clubsError = form.formState.errors.clubs?.message
 
   return (
     <div className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
@@ -35,7 +36,10 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
               key={club.id}
               type="button"
               disabled={isLoading}
-              onClick={() => form.setValue("clubs", toggleArrayValue(selected, club.id))}
+              onClick={() => {
+                form.setValue("clubs", toggleArrayValue(selected, club.id))
+                form.clearErrors("clubs")
+              }}
               className={cn(
                 "flex flex-col items-start gap-2 rounded-2xl border p-4 text-start transition-all",
                 isSelected ? "border-primary bg-accent" : "border-border bg-secondary hover:border-primary/40"
@@ -52,7 +56,7 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
           )
         })}
       </div>
-      <ErrorAlert message={serverError} />
+      <ErrorAlert message={clubsError ?? serverError} />
       <Button type="button" variant="hero" size="xl" disabled={isLoading} onClick={onContinue}>
         {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
         {isLoading ? t("auth.register.clubs.creatingAccount") : t("common.continue")}
