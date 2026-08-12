@@ -83,8 +83,9 @@
       },
       "clubs": {
         "title": "Which clubs do you own? 🎟️",
-        "subtitle": "Optional — pick what you already have and we'll start matching deals right away.",
+        "subtitle": "Pick what you already have and we'll start matching deals right away.",
         "selected": "Selected",
+        "selectAtLeastOne": "Please select at least one club to continue.",
         "creatingAccount": "Creating account..."
       },
       "banking": {
