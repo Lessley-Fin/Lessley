@@ -14,7 +14,10 @@ from conftest import mk_deal
 
 @pytest.fixture
 def client():
-    return TestClient(api.app)
+    # X-Auth-Email is what Caddy's forward_auth copies onto every proxied request;
+    # /optimizer/optimize refuses to run without it. Edge-key and identity enforcement
+    # get their own coverage in test_edge_auth.py.
+    return TestClient(api.app, headers={"X-Auth-Email": "user@example.com"})
 
 
 @pytest.fixture
@@ -34,7 +37,7 @@ def stocked_store(monkeypatch):
 
 def test_optimize_returns_ranked_results(client, stocked_store):
     response = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
     )
 
     assert response.status_code == 200
@@ -54,7 +57,7 @@ def test_optimize_returns_ranked_results(client, stocked_store):
 
 def test_optimize_ships_a_deal_lookup_for_the_paths(client, stocked_store):
     body = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
     ).json()
 
     # build_export_payload reduces paths to bare ids; every one must be resolvable
@@ -67,7 +70,7 @@ def test_optimize_ships_a_deal_lookup_for_the_paths(client, stocked_store):
 
 def test_store_with_no_deals_is_an_empty_result_not_an_error(client, stocked_store):
     response = client.post(
-        "/optimize", json={"store_id": "store_unknown", "cart_total": 100, "cart_quantity": 1}
+        "/optimizer/optimize", json={"store_id": "store_unknown", "cart_total": 100, "cart_quantity": 1}
     )
 
     assert response.status_code == 200
@@ -88,7 +91,7 @@ def test_store_with_no_deals_is_an_empty_result_not_an_error(client, stocked_sto
     ],
 )
 def test_invalid_requests_are_rejected(client, stocked_store, payload):
-    assert client.post("/optimize", json=payload).status_code == 422
+    assert client.post("/optimizer/optimize", json=payload).status_code == 422
 
 
 def test_strict_mode_is_passed_through(client, monkeypatch):
@@ -100,10 +103,10 @@ def test_strict_mode_is_passed_through(client, monkeypatch):
     monkeypatch.setattr(api, "load_store_deals", lambda store_id: deals)
 
     optimistic = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "strict": False}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "strict": False}
     ).json()
     strict = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "strict": True}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "strict": True}
     ).json()
 
     # Optimistic can chain both; strict can only ever apply one at a time.
@@ -126,7 +129,7 @@ def membership_gated(monkeypatch):
 
 def test_membership_deal_is_offered_to_a_member(client, membership_gated):
     body = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "member_source_ids": ["hot"]}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "member_source_ids": ["hot"]}
     ).json()
 
     assert any("gated" in r["path"] for r in body["results"])
@@ -135,7 +138,7 @@ def test_membership_deal_is_offered_to_a_member(client, membership_gated):
 def test_membership_deal_is_pruned_for_a_non_member(client, membership_gated):
     # A wallet that exists but doesn't include 'hot' — this is what prunes.
     body = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "member_source_ids": ["mastercard"]}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "member_source_ids": ["mastercard"]}
     ).json()
 
     assert body["results"]
@@ -145,7 +148,7 @@ def test_membership_deal_is_pruned_for_a_non_member(client, membership_gated):
 def test_no_wallet_in_the_request_is_optimistic(client, membership_gated):
     # An absent wallet means "unknown user", not "user has nothing" — the engine
     # keeps gated deals rather than hiding savings the user may well be entitled to.
-    body = client.post("/optimize", json={"store_id": "store_1", "cart_total": 100}).json()
+    body = client.post("/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100}).json()
 
     assert any("gated" in r["path"] for r in body["results"])
 
@@ -331,7 +334,7 @@ def test_optimize_response_carries_the_store_for_display(client, stocked_store, 
     )
 
     body = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
     ).json()
 
     assert body["store"] == {"store_id": "store_1", "name": "KSP", "image_urls": ["u"]}
@@ -344,7 +347,7 @@ def test_a_broken_store_lookup_does_not_cost_the_caller_its_prices(client, stock
     monkeypatch.setattr(api, "load_store", _boom)
 
     response = client.post(
-        "/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
+        "/optimizer/optimize", json={"store_id": "store_1", "cart_total": 100, "cart_quantity": 1}
     )
 
     assert response.status_code == 200

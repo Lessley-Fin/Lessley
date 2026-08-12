@@ -38,11 +38,35 @@ After editing the SPA, rebuild the edge image that carries it:
 
 Reference data lives in `main/resources/`. From this folder, for each collection:
 
+#### clubs
+```bash
+docker cp ..\main\resources\clubs.json mongodb:/tmp/club_list.json
+```
+```bash
+docker exec -it mongodb mongoimport --db lessley --collection club_list --file /tmp/club_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+```
+#### deals
+```bash
+docker cp ..\main\resources\deals.json mongodb:/tmp/deal_list.json
+```
+```bash
+docker exec -it mongodb mongoimport --db lessley --collection deal_list --file /tmp/deal_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+```
+
+#### mccs
 ```bash
 docker cp ..\main\resources\mccs.json mongodb:/tmp/mcc_list.json
-docker exec -it mongodb mongoimport --db lessley --collection mcc_list \
-  --file /tmp/mcc_list.json --jsonArray \
-  --username guest --password guest --authenticationDatabase admin
+```
+```bash
+docker exec -it mongodb mongoimport --db lessley --collection mcc_list --file /tmp/mcc_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
+```
+
+#### stores
+```bash
+docker cp ..\main\resources\stores.json mongodb:/tmp/store_list.json
+```
+```bash
+docker exec -it mongodb mongoimport --db lessley --collection store_list --file /tmp/store_list.json --jsonArray --username guest --password guest --authenticationDatabase admin
 ```
 
 Repeat with the remaining three, substituting file and collection:

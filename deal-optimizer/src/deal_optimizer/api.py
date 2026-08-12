@@ -5,9 +5,13 @@ requested store out of MongoDB, builds a ``UserContext`` from the request, and
 returns ``build_export_payload``'s envelope plus a ``deals`` lookup so a client
 can render the resulting paths without resolving each ``deal_id`` itself.
 
+Exposed at the edge (Caddy) on ``/api/v1/optimizer/*``, never through the Gateway.
+Caddy strips ``/api/v1`` and this app carries the ``/optimizer`` prefix itself —
+the same split Personalization uses, so one edge rule covers both services.
+
 Run it with::
 
-    uvicorn deal_optimizer.api:app --host 0.0.0.0 --port 8003
+    uvicorn deal_optimizer.api:app --host 0.0.0.0 --port 5003
 """
 
 from __future__ import annotations
@@ -15,11 +19,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 from pymongo.errors import PyMongoError
 
+from .auth import authenticated_email
 from .deals_source import get_database, load_store, load_store_deals, summarize_deals
+from .edge_auth import EdgeAuthMiddleware, dev_bypass_active
 from .engine import DEFAULT_MAX_DEALS, UserContext, build_export_payload, optimize
 
 logger = logging.getLogger(__name__)
@@ -29,6 +35,18 @@ app = FastAPI(
     description="Layered-DAG deal stacking engine — cheapest legal combination of compatible deals.",
     version="0.1.0",
 )
+
+# Every route lives under /optimizer so the edge can strip a single /api/v1 prefix.
+router = APIRouter(prefix="/optimizer")
+
+app.add_middleware(EdgeAuthMiddleware)  # Enforce edge-only access
+
+if dev_bypass_active():
+    logger.warning(
+        "EDGE VERIFICATION BYPASSED — X-Edge-Key is not required and identity falls back to "
+        "decoding the access_token cookie directly. Development only; never enable "
+        "Edge_AllowUnverified outside local debugging."
+    )
 
 
 class OptimizeRequest(BaseModel):
@@ -78,7 +96,7 @@ def _store_for_display(store_id: str) -> dict[str, Any] | None:
         return None
 
 
-@app.get("/health")
+@router.get("/health")
 def health() -> dict[str, str]:
     """Liveness probe — also verifies the deals database is reachable."""
     try:
@@ -90,9 +108,13 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/optimize", response_model=OptimizeResponse)
-def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
-    """Rank the cheapest legal deal stacks for a cart at one store."""
+@router.post("/optimize", response_model=OptimizeResponse)
+def optimize_cart(request: OptimizeRequest, email: str = Depends(authenticated_email)) -> OptimizeResponse:
+    """Rank the cheapest legal deal stacks for a cart at one store.
+
+    ``email`` is not used to select data — memberships come from the request body —
+    it is required so an unauthenticated caller cannot reach the engine at all.
+    """
     try:
         deals = load_store_deals(request.store_id)
     except PyMongoError as exc:
@@ -137,10 +159,11 @@ def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
     )
 
     logger.info(
-        "Optimized store=%s cart=%.2f max_deals=%d — %d deal(s) considered, %d ranked option(s)",
+        "Optimized store=%s cart=%.2f max_deals=%d for %s — %d deal(s) considered, %d ranked option(s)",
         request.store_id,
         request.cart_total,
         request.max_deals,
+        email,
         len(deals),
         len(results),
     )
@@ -151,3 +174,6 @@ def optimize_cart(request: OptimizeRequest) -> OptimizeResponse:
         deals=summarize_deals(deals),
         deals_considered=len(deals),
     )
+
+
+app.include_router(router)

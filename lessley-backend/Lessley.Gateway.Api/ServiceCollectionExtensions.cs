@@ -155,7 +155,7 @@ namespace Lessley.Gateway.Api.Extensions
 
                     return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit       = 10,
+                        PermitLimit       = 20,
                         Window            = TimeSpan.FromSeconds(5),
                         QueueLimit        = 2,
                         AutoReplenishment = true
@@ -169,7 +169,7 @@ namespace Lessley.Gateway.Api.Extensions
                         $"auth:{httpContext.Connection.RemoteIpAddress}",
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit       = 5,
+                            PermitLimit       = 10,
                             Window            = TimeSpan.FromMinutes(1),
                             QueueLimit        = 0,
                             AutoReplenishment = true

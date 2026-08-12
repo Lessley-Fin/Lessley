@@ -219,17 +219,49 @@ the wallet file.
 
 ## HTTP service
 
-`api.py` puts a thin FastAPI surface over the same engine, so the Lessley
-Gateway (and through it, the web UI) can price a cart without shelling out to
-the CLI. The engine itself stays a library — the HTTP deps live behind the
-`service` extra, and nothing in `engine.py` knows the API exists.
+`api.py` puts a thin FastAPI surface over the same engine, so the web UI can
+price a cart without shelling out to the CLI. The engine itself stays a library —
+the HTTP deps live behind the `service` extra, and nothing in `engine.py` knows
+the API exists.
+
+The service is exposed **by Caddy, not by the Gateway**: the edge routes
+`/api/v1/optimizer/*` here, so the Gateway has no knowledge of this service at
+all. Caddy strips `/api/v1` and every route below carries the `/optimizer`
+prefix itself — the same split Personalization uses.
+
+Ports follow the workspace convention: **5003 in the container (and in
+production), published on 8003 in dev.**
 
 ```bash
 pip install -e ".[service]"
-uvicorn deal_optimizer.api:app --host 0.0.0.0 --port 8003
+uvicorn deal_optimizer.api:app --host 0.0.0.0 --port 5003
 ```
 
-`POST /optimize` takes the cart and (optionally) what's in the user's wallet:
+### Security
+
+Two controls, both ported from Personalization — keep them in step:
+
+- **`EdgeAuthMiddleware`** (`edge_auth.py`) rejects any request without
+  `X-Edge-Key: $Edge_ApiKey`, which only Caddy can stamp. Defense in depth: the
+  primary control is that production publishes no port for this service.
+  `/optimizer/health` is exempt so Docker's healthcheck can reach it directly.
+- **`authenticated_email`** (`auth.py`) requires `X-Auth-Email`, which Caddy sets
+  from the Gateway's verified JWT claims via `forward_auth` and strips from
+  anything a client sends. `/optimizer/optimize` refuses to run without it.
+  Memberships still come from the request body — identity gates access to the
+  endpoint, it does not select data.
+
+| Variable | Meaning |
+|---|---|
+| `Edge_ApiKey` | Shared edge secret. Blank disables the check. |
+| `Environment` | `Development` enables `/docs`; defaults to `Production`. |
+| `Edge_AllowUnverified` | Mode 1 escape hatch — only honoured when `Environment=Development`. Drops the edge-key requirement and decodes identity out of the Gateway's `access_token` cookie. |
+
+Running locally with no Caddy in front (Mode 1) means no `X-Edge-Key` and no
+`X-Auth-Email`, so set **both** `Environment=Development` and
+`Edge_AllowUnverified=True` or every call comes back 403/401.
+
+`POST /optimizer/optimize` takes the cart and (optionally) what's in the user's wallet:
 
 ```jsonc
 {
@@ -269,13 +301,13 @@ collection is **not** read: with `DEALS_VERSIONING` on (the default) the pipelin
 stops writing it unless `DEALS_WRITE_LEGACY=1`, so reading it would silently
 return nothing. Store matching covers `store_id`, `snapshot.group_member_store_ids`
 and `snapshot.group_member_stores` so group-wide deals surface for any member
-store. `GET /health` pings that database.
+store. `GET /optimizer/health` pings that database.
 
 ## Docker
 
 ```bash
 docker build -t deal-optimizer .
-docker build --target service -t deal-optimizer-api . && docker run --rm -p 8003:8003 deal-optimizer-api
+docker build --target service -t deal-optimizer-api . && docker run --rm -p 8003:5003 deal-optimizer-api
 docker build --target test -t deal-optimizer-test . && docker run --rm deal-optimizer-test
 ```
 

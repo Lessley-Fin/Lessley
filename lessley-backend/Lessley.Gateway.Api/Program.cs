@@ -59,15 +59,6 @@ builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =
 builder.Services.Configure<EdgeConfig>(builder.Configuration.GetSection("Edge"));
 builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 
-builder.Services.AddHttpClient<IOptimizerProxyService, OptimizerProxyService>(client =>
-{
-    var baseUrl = builder.Configuration["OptimizerConfig:BaseUrl"]
-        ?? throw new InvalidOperationException("Optimizer BaseUrl must be configured");
-    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-});
-
-builder.Services.Configure<OptimizerConfig>(builder.Configuration.GetSection("OptimizerConfig"));
-
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();

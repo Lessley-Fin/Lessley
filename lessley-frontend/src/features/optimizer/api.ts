@@ -20,18 +20,23 @@ export interface OptimizeParams {
   memberSourceIds?: string[]
 }
 
+/**
+ * Caddy routes /api/v1/optimizer/* straight to the deal-optimizer service — the Gateway
+ * is not in this path — so the body is snake_case, matching that service's own request
+ * model (and the snake_case `OptimizeResponse` it already returns).
+ */
 export function optimizeCart(params: OptimizeParams): Promise<OptimizeResponse> {
   return apiFetch<OptimizeResponse>(
     "/api/v1/optimizer/optimize",
     {
       ...jsonBody({
-        storeId: params.storeId,
-        cartTotal: params.cartTotal,
-        cartQuantity: params.cartQuantity,
-        topN: params.topN ?? 5,
-        maxDeals: params.maxDeals ?? DEFAULT_MAX_DEALS,
+        store_id: params.storeId,
+        cart_total: params.cartTotal,
+        cart_quantity: params.cartQuantity,
+        top_n: params.topN ?? 5,
+        max_deals: params.maxDeals ?? DEFAULT_MAX_DEALS,
         strict: params.strict ?? false,
-        memberSourceIds: params.memberSourceIds ?? [],
+        member_source_ids: params.memberSourceIds ?? [],
       }),
       errorMessage: "Could not optimize this cart.",
     },

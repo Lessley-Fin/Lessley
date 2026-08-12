@@ -62,6 +62,30 @@
 		}
 	}
 
+	# ── Deal-optimizer ──────────────────────────────────────────────────────────
+	# Same contract as the personalization block above, and for the same reason: the
+	# optimizer is a service at the edge, not something the Gateway proxies. It has no
+	# user-level authorization of its own, so forward_auth is what makes exposing it
+	# safe — only an authenticated caller ever reaches the engine. Must precede the
+	# general /api/v1/* handler.
+	#
+	# Only /api/v1/optimizer/* is routed here, so the service's FastAPI /docs is not
+	# reachable through the edge at all — it exists only on the dev-published port.
+	@optimizer path /api/v1/optimizer/*
+	handle @optimizer {
+		forward_auth gateway:5001 {
+			uri /api/auth/verify
+			copy_headers X-Auth-Email
+			header_up X-Edge-Key {$EDGE_API_KEY}
+		}
+
+		uri strip_prefix /api/v1
+		reverse_proxy deal-optimizer:5003 {
+			header_up X-Edge-Key {$EDGE_API_KEY}
+			header_up X-Request-ID {http.request.uuid}
+		}
+	}
+
 	# ── Gateway ─────────────────────────────────────────────────────────────────
 	# Rewritten back to /api/* so the Gateway's existing controller routes are unchanged.
 	# Not forward_auth'd: the Gateway authenticates its own requests, as it always has.
