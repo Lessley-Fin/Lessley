@@ -52,8 +52,9 @@ cp .env.example .env
 | `DEALS_AUTO_MATCH_THRESHOLD` | Minimum score for automatic match | `0.90` |
 | `DEALS_REVIEW_THRESHOLD` | Minimum score to enter review queue | `0.50` |
 | `DEALS_LOG_LEVEL` | Logging level | `INFO` |
-| `MONGO_URI` | MongoDB connection string (future) | -- |
-| `MONGO_DB_NAME` | MongoDB database name (future) | -- |
+| `DEALS_STORAGE` | `json` (files in `DEALS_DATA_DIR`) or `mongo` | `json` |
+| `MONGO_URI` | MongoDB connection string (used when `DEALS_STORAGE=mongo`) | `mongodb://guest:guest@localhost:27017/lessley?authSource=admin` |
+| `MONGO_DB` | MongoDB database name | `lessley` |
 
 ---
 

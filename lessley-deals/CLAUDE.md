@@ -112,12 +112,18 @@ The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json`
 
 ### Storage
 - Default: JSON files in `data/` (configurable via `DEALS_DATA_DIR`)
-- Optional: MongoDB (set `DEALS_STORAGE=mongo`, `MONGO_URI`, `MONGO_DB_NAME`)
+- Optional: MongoDB (set `DEALS_STORAGE=mongo`, `MONGO_URI`, `MONGO_DB`)
 - Raw scraped data is always preserved verbatim for auditability and replay
-- Deal state lives in `deals_current` (head, one row per deal) + `deal_versions`
-  (append-only history). The legacy append-only `deals` collection is only
-  written when `DEALS_WRITE_LEGACY=1` — see the migration notes in
-  `docs/orchestration.md#5`.
+- **`deals`, `stores`, `clubs` and `mccs` are the shared read path.** Every consumer
+  reads them directly — `deal-optimizer`'s `deals_source`, the Gateway's deal search
+  and Personalization's reference data — so they are what a scrape run must leave
+  correct. Written by default (`DEALS_WRITE_LEGACY=1`); turning that off leaves every
+  consumer reading whatever was there before the run.
+- `deals_current` (head, one row per deal) + `deal_versions` (append-only history) are
+  the pipeline's own change tracking, written when `DEALS_VERSIONING=1`. They carry the
+  deal under a `snapshot` sub-document and only cover the sources of whichever run last
+  populated them — reading them from a consumer is what once hid every HOT deal from
+  the optimizer. See `docs/orchestration.md`.
 - Operational collections: `scrape_runs` (run journal, 90-day TTL) and
   `scheduler_locks` (lease locks for multi-replica workers)
 
@@ -188,9 +194,9 @@ in messy freeform text; skip it when they're already named JSON/HTML fields.
 | `COLLEGE_API_KEY` | `not-needed` | Optional — the college endpoint does not check it |
 | `DEALS_ENRICH_CONSTRAINTS` | — | Worker only: `1` runs the constraints stage on every scrape |
 | `MONGO_URI` | — | MongoDB connection string |
-| `MONGO_DB_NAME` | — | MongoDB database name |
+| `MONGO_DB` | `lessley` | MongoDB database name |
 | `DEALS_VERSIONING` | `1` | SCD Type 2 deal history (see `docs/orchestration.md`) |
-| `DEALS_WRITE_LEGACY` | `0` | Also write the old append-only `deals` collection |
+| `DEALS_WRITE_LEGACY` | `1` | Write the shared `deals` collection every consumer reads |
 | `DEALS_MAX_CONCURRENCY` | `3` | Sources scraped in parallel by the worker |
 | `DEALS_SCHEDULE_<SOURCE>` | — | Per-source override: `off`, a cron string, or `15m`/`6h` |
 | `DEALS_ABSENCE_THRESHOLD` / `DEALS_ABSENCE_GRACE_HOURS` | `2` / `24` | Misses + wall-clock before a deal expires |

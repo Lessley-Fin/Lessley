@@ -17,11 +17,9 @@ namespace Lessley.Gateway.Api.Models.DealSearch;
 /// * timestamps are ISO strings, which is what <see cref="FlexibleDateTimeSerializer"/> is for.
 ///
 /// The display fields a client renders — discount, limits, redemption channels, membership —
-/// live nested under <c>discount_logic</c>/<c>constraints</c> here, whereas the old
-/// <c>deal_list</c> projection pre-flattened them. The computed properties below reproduce
-/// that flattening exactly (it was <c>gateway_view.py</c>'s <c>_discount_summary</c>,
-/// <c>_deal_limits</c>, <c>_redeem_channels</c> and <c>_membership_required</c>), so the JSON
-/// the SPA receives is unchanged.
+/// live nested under <c>discount_logic</c>/<c>constraints</c> in the stored document. The
+/// computed properties below flatten them into the shape the SPA consumes, so a client never
+/// has to re-derive what a deal is worth from the raw sub-documents.
 /// </remarks>
 [BsonIgnoreExtraElements]
 public class DealDocument
@@ -80,9 +78,9 @@ public class DealDocument
     public string? TermsAndConditions { get; set; }
 
     // Both raw sub-documents are [JsonIgnore]d: the client contract is the flattened view
-    // below, exactly as the old deal_list projection served it. Keeping them out of the
-    // response also keeps System.Text.Json away from their BsonValue members, whose
-    // As* accessors throw when the stored type is not the one being asked for.
+    // below. Keeping them out of the response also keeps System.Text.Json away from their
+    // BsonValue members, whose As* accessors throw when the stored type is not the one
+    // being asked for — that failure took down every deal search once.
 
     /// <summary>Raw offer terms; <see cref="Discount"/> is what a client renders.</summary>
     [BsonElement("discount_logic")]
@@ -228,7 +226,7 @@ public class ConstraintEligibility
     };
 }
 
-// ── Client-facing shapes (unchanged from the old deal_list projection) ───────────
+// ── Client-facing shapes ─────────────────────────────────────────────────────────
 
 /// <summary>
 /// What the deal is worth. The raw <c>discount_logic</c> carries the amount's meaning in

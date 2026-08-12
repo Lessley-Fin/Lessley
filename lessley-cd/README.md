@@ -9,11 +9,11 @@ Docker Compose environment: `manage.bat` shortcuts and database seeding.
 Dev and prod run the same topology and the **same Caddyfile**. In both, the browser talks
 only to Caddy, which terminates TLS, serves the SPA, and routes `/api/v1` to whichever
 service owns the prefix over a private network. Container ports are identical (gateway
-`5001`, personalization `5002`), so the one Caddyfile works unchanged.
+`5001`, personalization `5002`, deal-optimizer `5003`), so the one Caddyfile works unchanged.
 
 | | Dev | Prod |
 |---|---|---|
-| App URL | `https://localhost` (internal-CA cert) | `https://<DOMAIN>` (Let's Encrypt) |
+| App URL | `https://localhost` (internal-CA cert) | `https://<DOMAIN>` (pre-issued cert, see `CUSTOM-CA-CERT.md`) |
 | Swagger, FastAPI `/docs` | on | off |
 | mongo-express | included | removed |
 | HSTS | `max-age=0` | strong default |
@@ -29,7 +29,7 @@ Splits application from infrastructure, so `app down` leaves MongoDB and RabbitM
 | `.\manage.bat help` | Show help menu |
 | `.\manage.bat status` | Status of all containers |
 | `.\manage.bat infra up\|down\|status` | Infra + Caddy edge (MongoDB, RabbitMQ, Loki, Grafana) |
-| `.\manage.bat app up\|build\|down\|status` | Gateway + Personalization (`build` recompiles first) |
+| `.\manage.bat app up\|build\|down\|status` | Gateway + Personalization + deal-optimizer (`build` recompiles first) |
 
 After editing the SPA, rebuild the edge image that carries it:
 `docker compose up -d --build caddy`.
@@ -69,10 +69,11 @@ docker cp ..\main\resources\stores.json mongodb:/tmp/stores.json
 docker exec -it mongodb mongoimport --db lessley --collection stores --file /tmp/stores.json --jsonArray --username guest --password guest --authenticationDatabase admin
 ```
 
-Repeat with the remaining three, substituting file and collection:
+Those four collections — `clubs`, `deals`, `mccs`, `stores` — are the only ones this data
+goes into. The scraping pipeline writes the same four, and the Gateway, Personalization and
+deal-optimizer all read them directly; there is no projected copy in between.
 
-| File | Collection |
-|---|---|
-| `stores.json` | `store_list` |
-| `deals.json` | `deal_list` |
-| `clubs.json` | `club_list` |
+> **Note on `_id`.** `mongoimport` gives every row a generated ObjectId `_id` and leaves the
+> business key in `id`, whereas the pipeline writes the business key *as* `_id`. All three
+> services read either shape, but the pipeline upserts on `_id`, so a scrape run against
+> imported rows inserts duplicates rather than updating them.

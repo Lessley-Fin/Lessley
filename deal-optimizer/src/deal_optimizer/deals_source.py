@@ -8,9 +8,8 @@ there is no unwrapping to do. ``stores`` is its counterpart for store display
 fields.
 
 ``Lessley.Gateway.Api`` and ``Lessley.Personalization`` read these same two
-collections, so all three consumers now share one shape. There is no longer a
-``deal_list``/``store_list`` projection in between — the C# and Python DTOs bind
-the pipeline's documents directly.
+collections, so all three consumers share one shape: the C# and Python DTOs bind
+the pipeline's documents directly, with no projected copy in between.
 
 The names stay overridable via ``DEALS_COLLECTION`` / ``STORES_COLLECTION``
 rather than hardcoded, for pointing a debugging session at a copy. Note that
@@ -56,8 +55,8 @@ DEFAULT_MONGO_URI = "mongodb://guest:guest@localhost:27017/lessley?authSource=ad
 DEFAULT_MONGO_DB = "lessley"
 
 # Defaults are the long-standing names, so an environment that was already
-# working keeps working. Set these to "deal_list"/"store_list" where the Gateway
-# projection is the fresher copy — see the module docstring for the trade-off.
+# working keeps working. Override them only to point a debugging session at a
+# restored copy — see the module docstring for why a wrong choice fails silently.
 DEALS_COLLECTION = os.environ.get("DEALS_COLLECTION", "deals")
 STORES_COLLECTION = os.environ.get("STORES_COLLECTION", "stores")
 

@@ -293,15 +293,18 @@ Two behaviours worth knowing, both matching the CLI:
   offering, so `results` comes back empty when nothing stacks. Callers render
   "no stack found" off an empty list rather than off a zero-savings result.
 
-Deals are read from `lessley-deals`' MongoDB (`MONGO_URI` / `MONGO_DB`) —
-specifically the `deals_current` head collection filtered on `status: "active"`,
-which is what product code is meant to read. Each head's `snapshot` field holds
-the serialized deal the engine consumes. The older append-only `deals`
-collection is **not** read: with `DEALS_VERSIONING` on (the default) the pipeline
-stops writing it unless `DEALS_WRITE_LEGACY=1`, so reading it would silently
-return nothing. Store matching covers `store_id`, `snapshot.group_member_store_ids`
-and `snapshot.group_member_stores` so group-wide deals surface for any member
-store. `GET /optimizer/health` pings that database.
+Deals are read from `lessley-deals`' MongoDB (`MONGO_URI` / `MONGO_DB`) — the shared
+`deals` collection, alongside `stores` for display and `clubs`/`users` for eligibility.
+The Gateway's deal search and Personalization read those same collections, so all three
+services see one shape and there is no projected copy to keep in step.
+
+`deals_current`/`deal_versions` are the pipeline's change history, not this read path:
+they carry the deal under a `snapshot` sub-document and only cover the sources of
+whichever run last populated them — reading them is what once hid every HOT deal from
+this engine.
+
+Store matching covers `store_id`, `group_member_store_ids` and `group_member_stores`, so
+group-wide deals surface for any member store. `GET /optimizer/health` pings that database.
 
 ## Docker
 
@@ -329,5 +332,6 @@ pytest -q          # all Part 5 verification scenarios + adapter + eligibility
 | `engine.py` | `UserContext`, `deal_eligibility` prune (source/card/store-type/monthly-cap), 2-phase state-DP `find_top_paths` (chain → tender, ranked) + `find_best_path` convenience wrapper, `optimize`, `get_optimal_deal_path` |
 | `wallet.py` | `UserWallet`/`WalletCard` mock demo model, `wallet_to_user_context` bridging, `get_eligible_deals()` standalone pre-filter, `load_wallets()` JSON loader |
 | `cli.py` | Command-line entry point |
-| `deals_source.py` | `deals_current` → engine-dict loading (`load_store_deals`), plus the `summarize_deals` display lookup |
-| `api.py` | FastAPI surface — `POST /optimize`, `GET /health` |
+| `deals_source.py` | `deals`/`stores` → engine-dict loading (`load_store_deals`, `load_store`), plus the `summarize_deals` display lookup |
+| `user_source.py` | The caller's clubs → `source_id`s, from the verified `X-Auth-Email` (`users`, `clubs`) |
+| `api.py` | FastAPI surface — `POST /optimizer/optimize`, `GET /optimizer/health` |

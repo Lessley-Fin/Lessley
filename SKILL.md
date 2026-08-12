@@ -95,17 +95,26 @@ All repositories are behind `typing.Protocol` interfaces — JSON and MongoDB im
 
 ### MongoDB collections
 
-| Collection | Model |
-|-----------|-------|
-| `stores` | CanonicalStore |
-| `store_aliases` | StoreAlias |
-| `deals` | Deal |
-| `raw_source_deals` | RawScrapedRecord |
-| `raw_source_stores` | RawStore |
-| `store_match_review` | ReviewItem |
-| `external_refs` | ExternalReference |
+| Collection | Model | Shared? |
+|-----------|-------|---------|
+| `deals` | Deal | **Yes** — Gateway deal search, Personalization, deal-optimizer |
+| `stores` | CanonicalStore | **Yes** — same three |
+| `clubs` | Club | **Yes** — Gateway `/api/v1/clubs`, Personalization, deal-optimizer |
+| `mccs` | MCC catalogue | **Yes** — Gateway category filter, Personalization |
+| `store_aliases` | StoreAlias | pipeline only |
+| `raw_source_deals` | RawScrapedRecord | pipeline only |
+| `raw_source_stores` | RawStore | pipeline only |
+| `store_match_review` | ReviewItem | pipeline only |
+| `external_refs` | ExternalReference | pipeline only |
+| `deals_current` / `deal_versions` | CurrentDeal / DealVersion | pipeline change history — **not** a read path |
 
 Document `_id` = entity `.id` (string format: `{timestamp_hex}_{random_hex}`).
+
+The four shared collections are read directly by every service — there is no projected copy,
+so a change to what the pipeline writes is immediately a change to what the API serves. Rows
+loaded by `mongoimport` instead carry an ObjectId `_id` with the business key in `id`; all
+readers accept either, but the pipeline upserts on `_id`, so importing over scraped data
+duplicates rather than updates it.
 
 ### Seed data
 

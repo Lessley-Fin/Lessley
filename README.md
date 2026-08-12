@@ -15,17 +15,28 @@ personalized deal notifications from Open Finance data.
 | Lessley.Personalization | Python / FastAPI | Spending insights and recommendations |
 | Lessley.CategoriesEnricher | Python / FastAPI | LLM-powered transaction category enrichment |
 | deal-optimizer | Python / FastAPI | Layered-DAG deal stacking engine — cheapest legal combination of deals for a cart |
-| lessley-deals | Python | Scraper/normalizer worker that keeps the shared `deals_current` collection fresh |
+| lessley-deals | Python | Scraper/normalizer worker that keeps the shared `deals`, `stores` and `clubs` collections fresh |
 
 ## How traffic flows
 
 ```
-Client ──► Caddy ──┬──► Gateway          /api/v1/*
-                   ├──► Personalization  /api/v1/insights|open-finance|clubs/*
-                   └──► Gateway          /hubs/*  (SignalR)
+Client ──► Caddy ──┬──► Gateway          /api/v1/*  ·  /hubs/*  (SignalR)
+                   ├──► Personalization  /api/v1/insights|open-finance/*
+                   └──► deal-optimizer   /api/v1/optimizer/*
 
-Gateway ──HTTP──► deal-optimizer ──► MongoDB (deals_current)
+                        Gateway · Personalization · deal-optimizer
+                                        └──► MongoDB (deals, stores, clubs, mccs)
 ```
+
+Personalization and deal-optimizer are edge services, not things the Gateway proxies: Caddy
+routes their prefixes straight to them. Both are `forward_auth`'d against the Gateway, which
+is what lets them trust the injected identity.
+
+## Shared collections
+
+`deals`, `stores`, `clubs` and `mccs` are written by the scraping pipeline and read directly
+by all three services — one shape, no projected copies. `deals_current` and `deal_versions`
+hold the pipeline's own change history, not the read path.
 
 Caddy authenticates every request once — validating the JWT cookie and CSRF token against
 the Gateway — then injects the verified identity inward. Services never trust a

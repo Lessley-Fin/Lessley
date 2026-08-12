@@ -95,7 +95,12 @@ Indexes:
 The partial unique index is the important one: the "at most one current version"
 invariant is enforced by MongoDB, not by application discipline.
 
-### `deals_current` — head table (read this one)
+### `deals_current` — head table (pipeline history, not the consumer read path)
+
+> Consumers read the shared `deals` collection, not this one. `deals_current` keys on
+> `deal_key` and carries the deal under `snapshot`, and it only covers the sources of
+> whichever run last populated it — pointing the optimizer at it once hid every HOT deal.
+> Use it for lifecycle questions (what changed, what expired), not to serve deals.
 
 One document per `deal_key` (`_id = deal_key`), always the latest state, plus
 `first_seen_at`, `last_seen_at`, `missing_runs`, `missing_since`,
@@ -250,7 +255,7 @@ simply redoes the same work.
 | `DEALS_STORAGE` | `json` | `json` \| `mongo` |
 | `DEALS_DATA_DIR` | `./data` | Data dir; also where `seed/schedules.json` is looked up first |
 | `DEALS_VERSIONING` | `1` | Enable SCD2 ingestion |
-| `DEALS_WRITE_LEGACY` | `0` | Also write the old `deals` collection (migration only) |
+| `DEALS_WRITE_LEGACY` | `1` | Write the shared `deals` collection every consumer reads |
 | `DEALS_MAX_CONCURRENCY` | `3` | Sources in flight at once |
 | `DEALS_SHUTDOWN_GRACE` | `30` | Seconds to let in-flight runs finish |
 | `DEALS_SCHEDULE_<SOURCE>` | — | `off` \| cron \| interval (`15m`, `6h`) |
@@ -264,15 +269,18 @@ simply redoes the same work.
 
 ---
 
-## 5. Migrating consumers
+## 5. What consumers read
 
-`deals_current` replaces the append-only `deals` collection. Consumers
-(deal-optimizer, Gateway) move over in three steps:
+`deals` — flat documents, one per deal, written on every run while
+`DEALS_WRITE_LEGACY=1` (the default). `deal-optimizer`, the Gateway's deal search and
+Personalization's reference data all bind it directly, alongside `stores`, `clubs` and
+`mccs`. There is no projected copy of any of them.
 
-1. Deploy the worker with `DEALS_WRITE_LEGACY=1` — both collections are written.
-2. Point readers at `deals_current` with `{ status: "active" }`. The document
-   carries the same `Deal` fields at the top level, plus lifecycle metadata.
-3. Set `DEALS_WRITE_LEGACY=0`.
+Versioning is additive to that: `deals_current` and `deal_versions` answer "what changed,
+when, and what is live", and they are the only place lifecycle metadata (`status`,
+`missing_runs`, `valid_from`) exists. A consumer that wants to hide expired deals filters
+`deals_current` for the `deal_key`s it cares about — it does not switch its read path
+over, because `deals_current` only covers the sources of whichever run last populated it.
 
 Backfill of existing `deals` documents into the versioned collections is not
 included — the first worker run recreates every currently-listed deal as

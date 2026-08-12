@@ -1,8 +1,8 @@
 """Repair ``club_id`` on deals written before ``PersistStage`` knew the clubs.
 
-Every consumer reads ``deals`` directly now — the Gateway's deal search, Personalization's
-reference data and ``deal-optimizer`` — so a field that used to be recovered by the
-``deal_list`` projection has to be correct in the collection itself.
+Every consumer reads ``deals`` directly — the Gateway's deal search, Personalization's
+reference data and ``deal-optimizer`` — so the club a deal belongs to has to be correct in
+the collection itself rather than recovered by whoever happens to read it.
 
 The join is the same one the projection made: ``deals.source_id`` -> ``clubs.source_id``.
 Only rows with no club are touched, so re-running changes nothing, and a deal whose source

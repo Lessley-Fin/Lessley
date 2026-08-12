@@ -90,7 +90,7 @@ class TestGetDealsForStore:
         result = get_deals_for_store("", deals)
         assert result == []
 
-    def test_empty_deal_list_returns_empty(self) -> None:
+    def test_empty_deals_input_returns_empty(self) -> None:
         result = get_deals_for_store("sabon", [])
         assert result == []
 

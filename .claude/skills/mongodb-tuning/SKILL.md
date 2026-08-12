@@ -123,31 +123,46 @@ def add_club_card_with_retry(client: MongoClient, user_id: str, club_name: str, 
 
 ## Pattern 2: Wise Indexing Strategies
 
+> **The collections this database actually has.** `deals`, `stores`, `clubs` and `mccs` are
+> shared: the scraping pipeline writes them and the Gateway, Personalization and
+> deal-optimizer all read them directly. There is no projected read model. History lives in
+> `deals_current` (one head row per deal, filtered on `status: "active"`) and the append-only
+> `deal_versions`. Identity is `users`, written by ASP.NET Identity, so **its fields are
+> PascalCase** (`NormalizedEmail`, `Clubs`, `Tags`) unlike everything else.
+>
+> A deal document carries `store_id`, `source_id`, `club_id`, `title`, `deal_type`,
+> `scraped_at`, and the nested `discount_logic` / `constraints`. It has no `valid_until`,
+> `deal_name`, `discount_value` or `popularity` — index against what is stored, and check
+> `scripts/index_migration.py`, which mirrors the indexes the application really creates.
+
 ### Strategy 2a: Compound Indexes (Query-Specific)
 
-**Use Case**: API Gateway query: "Get all active deals for a specific store"
+**Use Case**: "Get the live deals for a store" — served from the versioned head collection,
+which is the only one carrying a lifecycle.
 
 ```python
-def create_compound_index(db, collection_name: str):
+def create_compound_index(db):
     """
-    Create compound index matching typical API Gateway query pattern.
-    
-    Query: db.deals.find({
-        store_id: "store-123",
-        valid_until: {$gt: now}  # Active deals only
-    }).sort({valid_until: -1})
+    Compound index matching the head-collection query.
+
+    Query: db.deals_current.find({
+        store_id: "019d2090...",
+        status: "active"
+    })
     """
-    
-    db[collection_name].create_index(
-        [("store_id", 1), ("valid_until", -1)],
-        name="idx_store_active_deals",
+
+    db.deals_current.create_index(
+        [("store_id", 1), ("status", 1)],
+        name="idx_current_store_status",
         background=True  # ← Don't lock the database
     )
 ```
 
 **Index Design**:
 - `store_id: 1` (ascending) — Equality filter
-- `valid_until: -1` (descending) — Sort order (newest first)
+- `status: 1` — Second equality filter, so the index answers both
+
+Equality fields come first; a range or sort field goes last (ESR: Equality, Sort, Range).
 
 **Result**: Index instantly finds matching documents without collection scan.
 
@@ -164,19 +179,19 @@ def create_covered_query_index(db):
     MongoDB returns results directly from index (in RAM), never touches disk.
     
     Query: db.deals.find(
-        {store_id: "store-123"},
-        {_id: 1, deal_name: 1, discount_value: 1}  # Only these fields
+        {store_id: "019d2090..."},
+        {_id: 1, title: 1, deal_type: 1}  # Only these fields
     )
     """
-    
+
     # Include all fields the query needs
     db.deals.create_index(
         [
-            ("store_id", 1),        # Filter
-            ("deal_name", 1),       # Projected field
-            ("discount_value", 1)   # Projected field
+            ("store_id", 1),   # Filter
+            ("title", 1),      # Projected field
+            ("deal_type", 1)   # Projected field
         ],
-        name="idx_deal_list_view",
+        name="idx_deal_card_view",
         background=True
     )
 ```
@@ -186,6 +201,10 @@ def create_covered_query_index(db):
 ---
 
 ### Strategy 2c: Geospatial Indexes (2dsphere)
+
+> **Not applicable to this database yet.** `stores` carries no coordinates — its `metadata`
+> holds `image_urls`, `mcc_codes` and `store_url`. Creating the index below today would
+> index a field that does not exist. Keep the pattern for when location is scraped.
 
 **Use Case**: "Find the best deals within 5km of my location"
 

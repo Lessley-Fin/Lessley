@@ -1,4 +1,4 @@
-"""The club_id backfill — the join the deal_list projection used to make at read time."""
+"""The club_id backfill — putting each deal's club into the collection every reader uses."""
 
 from __future__ import annotations
 

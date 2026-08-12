@@ -1,13 +1,13 @@
 """Which Mongo collections the engine reads.
 
-There are two candidate pairs in a live database — ``deals``/``stores`` (what
-``lessley-deals``' Mongo repository writes) and ``deal_list``/``store_list``
-(the Gateway projection the application serves). Picking the wrong one fails
-silently: the query returns plausible but stale deals rather than erroring. It
-cost real debugging time once, when a tiered PaisPlus card quoted 25% of a
-10,000 ILS cart because the collection being read predated ``reward.tiers``.
+``deals``/``stores`` — what ``lessley-deals``' Mongo repository writes, and what the
+Gateway and Personalization read too. Reading the wrong collection fails silently: the
+query returns plausible but stale deals rather than erroring. It cost real debugging time
+once, when a tiered PaisPlus card quoted 25% of a 10,000 ILS cart because the collection
+being read predated ``reward.tiers``.
 
-So the names are configurable and pinned here rather than left as bare literals.
+So the names are pinned here rather than left as bare literals, and stay overridable for
+pointing a debugging session at a copy.
 """
 
 from __future__ import annotations
@@ -66,19 +66,19 @@ def test_load_store_queries_the_configured_collection():
 
 
 def test_collections_can_be_overridden_by_environment(monkeypatch):
-    # The escape hatch for a database where the Gateway projection is the
-    # fresher copy — it must work without editing code.
-    monkeypatch.setenv("DEALS_COLLECTION", "deal_list")
-    monkeypatch.setenv("STORES_COLLECTION", "store_list")
+    # The escape hatch for pointing a debugging session at a restored copy — it must
+    # work without editing code.
+    monkeypatch.setenv("DEALS_COLLECTION", "deals_restored")
+    monkeypatch.setenv("STORES_COLLECTION", "stores_restored")
     reloaded = importlib.reload(deals_source)
     try:
-        assert reloaded.DEALS_COLLECTION == "deal_list"
-        assert reloaded.STORES_COLLECTION == "store_list"
+        assert reloaded.DEALS_COLLECTION == "deals_restored"
+        assert reloaded.STORES_COLLECTION == "stores_restored"
 
-        db = _FakeDb({"deal_list": [{"id": "d1", "store_id": "s1"}]})
+        db = _FakeDb({"deals_restored": [{"id": "d1", "store_id": "s1"}]})
         reloaded.load_store_deals("s1", db=db)
         reloaded.load_store("s1", db=db)
-        assert db.requested == ["deal_list", "store_list"]
+        assert db.requested == ["deals_restored", "stores_restored"]
     finally:
         # Other tests import the module-level constants; restore the defaults.
         monkeypatch.delenv("DEALS_COLLECTION")

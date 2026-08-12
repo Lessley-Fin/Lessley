@@ -39,7 +39,7 @@ def test_clubs_with_no_stores_are_filled_from_their_deals():
     assert clubs["club_hot"].stores == ["s1", "s2"]
 
 
-def test_an_existing_store_list_is_kept_and_unioned():
+def test_an_existing_store_membership_is_kept_and_unioned():
     # A curated membership must never be lost by deriving.
     clubs = {"c1": SimpleNamespace(club_id="c1", name="Club", stores=["curated"])}
     deals = {"d1": _deal("d1", "c1", "from_deal")}

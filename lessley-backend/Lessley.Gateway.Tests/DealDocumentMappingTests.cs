@@ -9,10 +9,10 @@ namespace Lessley.Gateway.Tests;
 /// <summary>
 /// Binding the scraping pipeline's own <c>deals</c>/<c>stores</c> documents.
 ///
-/// Deal search used to read <c>deal_list</c>/<c>store_list</c> — a projection that renamed the
-/// key, converted timestamps and pre-flattened the display fields. Those documents are read
-/// directly now, so the conversions live in the DTOs and these tests are what keep them
-/// faithful to the shapes the pipeline actually writes.
+/// Deal search reads those collections directly — the same ones the scraper writes and
+/// deal-optimizer and Personalization read. Every conversion they need (business key,
+/// ISO-string timestamps, flattened display fields) therefore lives in the DTOs, and these
+/// tests are what keep it faithful to the shapes actually stored.
 /// </summary>
 public class DealDocumentMappingTests
 {
@@ -129,9 +129,8 @@ public class DealDocumentMappingTests
         Assert.Contains("\"dealId\":\"deal_42\"", json);
         Assert.DoesNotContain("mongoId", json);
         Assert.DoesNotContain("businessId", json);
-        // The raw sub-documents are not part of the contract either — the old deal_list
-        // projection served only the flattened view, and their BsonValue members throw
-        // when System.Text.Json walks them.
+        // The raw sub-documents are not part of the contract either — the client gets the
+        // flattened view, and their BsonValue members throw when System.Text.Json walks them.
         Assert.DoesNotContain("discountLogic", json);
         Assert.DoesNotContain("constraints", json);
         // What the SPA actually reads survives.
@@ -172,8 +171,8 @@ public class DealDocumentMappingTests
     [Fact]
     public void PercentageRewardFlattensIntoPercentOffOnly()
     {
-        // Same split gateway_view._discount_summary made: the reward's *type* decides which
-        // of the three value fields is populated, so a badge can tell them apart.
+        // The reward's *type* decides which of the three value fields is populated, so a
+        // badge can tell "30% off" from "30 ILS off" from "pay 30 ILS".
         var discount = Bind(RawDeal()).Discount;
 
         Assert.Equal("percentage_off", discount.RewardType);

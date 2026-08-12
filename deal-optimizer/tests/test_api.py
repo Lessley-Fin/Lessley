@@ -239,18 +239,16 @@ def test_an_authenticated_caller_we_have_no_user_for_is_not_priced(client, membe
     assert response.json()["detail"] == "User not found"
 
 
-def test_current_deal_head_maps_onto_the_engine_dict():
-    # A deals_current head: bookkeeping at the top level, the serialized Deal
-    # under `snapshot` — that snapshot is what the engine reads.
+def test_a_deal_row_maps_onto_the_engine_dict():
+    # A `deals` row: the deal itself, flat, with the business key as _id. This is what
+    # DealMongoRepository.save writes and what every consumer reads.
     doc = {
-        "_id": "key_abc",
-        "deal_id": "deal_1",
+        "_id": "deal_1",
         "store_id": "store_1",
         "source_id": "hot",
-        "status": "active",
-        "content_hash": "abc123",
-        "version": 3,
-        "snapshot": {"id": "deal_1", "store_id": "store_1", "title": "10% off", "deal_type": "coupon"},
+        "title": "10% off",
+        "deal_type": "coupon",
+        "fingerprint": "abc123",
     }
 
     deal = _to_engine_dict(doc)
@@ -258,29 +256,20 @@ def test_current_deal_head_maps_onto_the_engine_dict():
     assert deal["id"] == "deal_1"
     assert deal["title"] == "10% off"
     assert deal["deal_type"] == "coupon"
-    # Head-level bookkeeping must not leak into the engine's deal dict.
-    assert "content_hash" not in deal
-    assert "status" not in deal
+    # Storage-level bookkeeping must not leak into the engine's deal dict.
+    assert "fingerprint" not in deal
     assert "_id" not in deal
-    # The cursor's document is not ours to mutate.
-    assert doc["snapshot"]["id"] == "deal_1"
 
 
-def test_head_without_id_in_snapshot_falls_back_to_deal_id():
-    doc = {
-        "_id": "key_abc",
-        "deal_id": "deal_1",
-        "store_id": "store_1",
-        "source_id": "hot",
-        "snapshot": {"title": "10% off"},
-    }
+def test_an_imported_row_keeps_its_own_id():
+    # mongoimport leaves the business key in `id` and generates an ObjectId `_id`; the
+    # engine keys every path entry on id, so it must resolve either way.
+    doc = {"_id": "68f0c0ffee00000000000001", "id": "deal_1", "store_id": "store_1"}
 
     deal = _to_engine_dict(doc)
 
-    # The engine keys every path entry on id — it must never come back empty.
     assert deal["id"] == "deal_1"
     assert deal["store_id"] == "store_1"
-    assert deal["source_id"] == "hot"
 
 
 class _FakeCollection:
@@ -301,27 +290,21 @@ class _FakeDb:
         return self.collections[name]
 
 
-def test_load_store_deals_reads_active_heads_from_deals_current():
-    head = {
-        "_id": "key_a",
-        "deal_id": "a",
-        "store_id": "store_1",
-        "source_id": "hot",
-        "status": "active",
-        "snapshot": {"id": "a", "store_id": "store_1", "title": "10% off"},
-    }
-    collection = _FakeCollection([head])
-    # The legacy append-only collection must not be touched — with versioning on
-    # (the default) the pipeline no longer writes it.
-    db = _FakeDb({"deals_current": collection})
+def test_load_store_deals_reads_the_shared_deals_collection():
+    row = {"_id": "a", "store_id": "store_1", "source_id": "hot", "title": "10% off"}
+    collection = _FakeCollection([row])
+    # `deals` — the collection the Gateway and Personalization read too. deals_current is
+    # the pipeline's change history and carries the deal under `snapshot`; reading it here
+    # once hid every HOT deal from the optimizer.
+    db = _FakeDb({"deals": collection})
 
     deals = load_store_deals("store_1", db=db)
 
     assert [d["id"] for d in deals] == ["a"]
-    assert collection.query["status"] == "active"
     assert {"store_id": "store_1"} in collection.query["$or"]
-    # Group-wide deals live under the snapshot, not at the head's top level.
-    assert {"snapshot.group_member_store_ids": "store_1"} in collection.query["$or"]
+    # Group-wide deals are matched in the query, in every shape the pipeline produces.
+    assert {"group_member_store_ids": "store_1"} in collection.query["$or"]
+    assert {"group_member_stores.store_id": "store_1"} in collection.query["$or"]
 
 
 def test_summarize_deals_keys_on_deal_id():

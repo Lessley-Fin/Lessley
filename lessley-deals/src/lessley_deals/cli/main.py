@@ -1805,10 +1805,9 @@ def backfill_club_ids_cmd(
     """Fill ``club_id`` on ``deals`` rows that have none, joined via ``source_id``.
 
     ``PersistStage`` stamps every deal it builds with the club owning its source, but
-    rows written before that map existed carry ``club_id: null``. That used to be
-    papered over by the ``deal_list`` projection, which re-joined the club on the way
-    out; now that the Gateway and Personalization read ``deals`` directly, the join has
-    to be in the data.
+    rows written before that map existed carry ``club_id: null`` — as do rows imported
+    from a dump. The Gateway, Personalization and deal-optimizer all read ``deals``
+    directly, so the join has to be in the data rather than redone by each reader.
 
     Idempotent — only rows missing a club are touched, so it is safe to re-run.
     """
