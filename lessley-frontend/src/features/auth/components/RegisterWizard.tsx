@@ -15,10 +15,16 @@ import { useApplyAuthProfile } from "../usePostAuth"
 import { AccountStep } from "./register-steps/AccountStep"
 import { BankingStep } from "./register-steps/BankingStep"
 import { ClubsStep } from "./register-steps/ClubsStep"
+import { MatchLevelStep } from "./register-steps/MatchLevelStep"
 
 export function RegisterWizard() {
   const { t } = useTranslation()
-  const STEPS = [t("auth.register.stepAccount"), t("auth.register.stepClubs"), t("auth.register.stepBanking")]
+  const STEPS = [
+    t("auth.register.stepAccount"),
+    t("auth.register.stepClubs"),
+    t("auth.register.stepMatchLevel"),
+    t("auth.register.stepBanking"),
+  ]
   const [step, setStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
@@ -26,7 +32,14 @@ export function RegisterWizard() {
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { userName: "", email: "", password: "", verifyPassword: "", clubs: [] },
+    defaultValues: {
+      userName: "",
+      email: "",
+      password: "",
+      verifyPassword: "",
+      clubs: [],
+      matchLevel: "Medium",
+    },
   })
 
   const serverError = form.formState.errors.root?.message
@@ -36,14 +49,19 @@ export function RegisterWizard() {
     if (valid) setStep(1)
   }
 
-  // Real account creation happens here, once clubs are picked — BankingStep needs an
-  // authenticated session for its own connect-bank call, so registration can't wait any longer.
-  async function handleContinueFromClubs() {
+  function handleContinueFromClubs() {
     const values = form.getValues()
     if (!values.clubs?.length) {
       form.setError("clubs", { message: t("auth.register.clubs.selectAtLeastOne") })
       return
     }
+    setStep(2)
+  }
+
+  // Real account creation happens here, once match level is picked — BankingStep needs an
+  // authenticated session for its own connect-bank call, so registration can't wait any longer.
+  async function handleContinueFromMatchLevel() {
+    const values = form.getValues()
     setIsSubmitting(true)
     try {
       await registerWithGateway({
@@ -51,13 +69,14 @@ export function RegisterWizard() {
         email: values.email,
         password: values.password,
         clubs: values.clubs?.length ? values.clubs : undefined,
+        matchLevel: values.matchLevel,
       })
       const data = await loginWithGateway({ userName: values.userName, password: values.password })
       // Set before applyAuthProfile flips auth status, so GuestRoute doesn't bounce the user
       // out of /register before the wizard reaches the Banking step.
       useAuthStore.getState().setRegistrationInProgress(true)
       await applyAuthProfile({ userName: data.userName ?? values.userName, email: data.email ?? values.email })
-      setStep(2)
+      setStep(3)
     } catch (error) {
       form.setError("root", {
         message: error instanceof Error ? error.message : t("auth.register.registrationFailed"),
@@ -90,15 +109,16 @@ export function RegisterWizard() {
         <StepIndicator steps={STEPS} currentIndex={step} />
         <Form {...form}>
           {step === 0 ? <AccountStep form={form} onContinue={handleContinueFromAccount} /> : null}
-          {step === 1 ? (
-            <ClubsStep
+          {step === 1 ? <ClubsStep form={form} onContinue={handleContinueFromClubs} /> : null}
+          {step === 2 ? (
+            <MatchLevelStep
               form={form}
               isLoading={isSubmitting}
               serverError={serverError}
-              onContinue={handleContinueFromClubs}
+              onContinue={handleContinueFromMatchLevel}
             />
           ) : null}
-          {step === 2 ? <BankingStep onFinish={handleFinish} /> : null}
+          {step === 3 ? <BankingStep onFinish={handleFinish} /> : null}
         </Form>
       </div>
     </div>

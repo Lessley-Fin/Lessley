@@ -70,8 +70,10 @@
       "back": "Back",
       "stepAccount": "Account",
       "stepClubs": "Clubs",
+      "stepMatchLevel": "Match level",
       "stepBanking": "Banking",
       "registrationFailed": "Registration failed. Please try again.",
+      "creatingAccount": "Creating account...",
       "account": {
         "title": "Create account",
         "username": "Username",
@@ -85,8 +87,24 @@
         "title": "Which clubs do you own? 🎟️",
         "subtitle": "Pick what you already have and we'll start matching deals right away.",
         "selected": "Selected",
-        "selectAtLeastOne": "Please select at least one club to continue.",
-        "creatingAccount": "Creating account..."
+        "selectAtLeastOne": "Please select at least one club to continue."
+      },
+      "matchLevel": {
+        "title": "How closely should we match you? 🎯",
+        "subtitle": "Choose how tightly we filter deals to your spending habits.",
+        "options": {
+          "Low": "See more deals, including some that are a looser fit.",
+          "Medium": "A balanced mix of relevance and variety.",
+          "High": "Only the deals that fit your spending best."
+        },
+        "explain": {
+          "ariaLabel": "What does match level mean?",
+          "title": "What is match level?",
+          "subtitle": "It controls how strictly we filter deals before showing them to you.",
+          "lowDesc": "Shows the top 75% of matches — more deals, including some less relevant ones.",
+          "mediumDesc": "Shows the top 50% of matches — a balanced mix of relevance and variety.",
+          "highDesc": "Shows only the top 25% of matches — fewer deals, but tightly tailored to you."
+        }
       },
       "banking": {
         "title": "Connect open banking to unlock the real savings",

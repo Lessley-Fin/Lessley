@@ -1,5 +1,5 @@
 import type { UseFormReturn } from "react-hook-form"
-import { Check, Loader2 } from "lucide-react"
+import { Check } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
@@ -11,12 +11,10 @@ import type { RegisterValues } from "../../schemas"
 
 interface ClubsStepProps {
   form: UseFormReturn<RegisterValues>
-  isLoading: boolean
-  serverError: string | undefined
   onContinue: () => void
 }
 
-export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsStepProps) {
+export function ClubsStep({ form, onContinue }: ClubsStepProps) {
   const { t } = useTranslation()
   const { data: clubs = [] } = useClubs()
   const selected = form.watch("clubs") ?? []
@@ -35,7 +33,6 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
             <button
               key={club.id}
               type="button"
-              disabled={isLoading}
               onClick={() => {
                 form.setValue("clubs", toggleArrayValue(selected, club.id))
                 form.clearErrors("clubs")
@@ -56,10 +53,9 @@ export function ClubsStep({ form, isLoading, serverError, onContinue }: ClubsSte
           )
         })}
       </div>
-      <ErrorAlert message={clubsError ?? serverError} />
-      <Button type="button" variant="hero" size="xl" disabled={isLoading} onClick={onContinue}>
-        {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
-        {isLoading ? t("auth.register.clubs.creatingAccount") : t("common.continue")}
+      <ErrorAlert message={clubsError} />
+      <Button type="button" variant="hero" size="xl" onClick={onContinue}>
+        {t("common.continue")}
       </Button>
     </div>
   )
