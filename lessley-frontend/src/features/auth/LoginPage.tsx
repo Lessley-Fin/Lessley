@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 
-import logoUrl from "../../../assets/logo.svg"
+import logoUrl from "../../../assets/logo-with-name.svg"
 import { LoginForm } from "./components/LoginForm"
 
 export function LoginPage() {

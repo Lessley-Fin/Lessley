@@ -3,7 +3,7 @@ import { Bell } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
-import logoUrl from "../../../assets/logo.svg"
+import logoUrl from "../../../assets/logo-without-name.svg"
 import { useAuthStore } from "@/features/auth/store"
 import { useUnreadCount } from "@/features/notifications/hooks"
 import { MAIN_TABS, OVERLAY_ROUTES, deriveActiveTab } from "@/lib/navigation"
