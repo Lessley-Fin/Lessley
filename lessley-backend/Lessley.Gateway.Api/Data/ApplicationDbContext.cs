@@ -10,6 +10,8 @@ namespace Lessley.Gateway.Api.Data
     {
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<PendingRegistration> PendingRegistrations { get; set; }
+        public DbSet<VerificationCode> VerificationCodes { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -29,6 +31,8 @@ namespace Lessley.Gateway.Api.Data
             builder.Entity<IdentityUserToken<string>>().ToCollection("user_tokens");
             builder.Entity<Notification>().ToCollection("notifications");
             builder.Entity<RefreshToken>().ToCollection("refresh_tokens");
+            builder.Entity<PendingRegistration>().ToCollection("pending_registrations");
+            builder.Entity<VerificationCode>().ToCollection("verification_codes");
         }
     }
 }

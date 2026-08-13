@@ -27,6 +27,7 @@ namespace Lessley.Gateway.Api.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IJwtService _jwtService;
+        private readonly IAuthSessionService _sessions;
         private readonly AuthConfig _authConfig;
 
         public AuthController(
@@ -34,37 +35,21 @@ namespace Lessley.Gateway.Api.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IJwtService jwtService,
+            IAuthSessionService sessions,
             IOptions<AuthConfig> authConfig)
         {
             _context       = context;
             _userManager   = userManager;
             _signInManager = signInManager;
             _jwtService    = jwtService;
+            _sessions      = sessions;
             _authConfig    = authConfig.Value;
         }
 
-        /// <summary>Registers a new user account with the Viewer role.</summary>
-        [HttpPost("register")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
-        {
-            var user = new ApplicationUser
-            {
-                UserName      = model.UserName,
-                Email         = model.Email,
-                Clubs         = model.Clubs ?? new(),
-                MutedTags     = model.MutedCategories ?? new(),
-                MatchingScore = model.MatchLevel?.ToMatchingScore(),
-            };
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded) return BadRequest(result.Errors);
-
-            result = await _userManager.AddToRoleAsync(user, Enums.UserRoles.Viewer.ToString());
-            if (!result.Succeeded) return BadRequest(result.Errors);
-
-            return Ok();
-        }
+        // Registration lives in RegistrationController, which stages it across start /
+        // verify-email / complete. There is deliberately no single-shot register endpoint here:
+        // creating the account in one call is what allowed abandoned signups to leave real,
+        // unverified users behind.
 
         /// <summary>Authenticates a user and issues httpOnly session cookies.</summary>
         /// <remarks>Tokens are never returned in the body — they are set as Secure/HttpOnly
@@ -85,16 +70,16 @@ namespace Lessley.Gateway.Api.Controllers
             if (!signIn.Succeeded)
                 return Unauthorized("Invalid credentials");
 
-            var accessToken            = await _jwtService.GenerateAccessToken(user);
-            var (rawRefresh, refreshEntity) = _jwtService.GenerateRefreshToken(user.Id);
+            var session = await _sessions.IssueAsync(user);
+            SetAuthCookies(session.AccessToken, session.RawRefreshToken);
 
-            _context.RefreshTokens.Add(refreshEntity);
-            await _context.SaveChangesAsync();
-
-            SetAuthCookies(accessToken, rawRefresh);
-
-            var roles = await GetUserRolesAsync(user.Id);
-            return Ok(new { userName = user.UserName, email = user.Email, userId = user.Id, roles });
+            return Ok(new
+            {
+                userName = session.Profile.UserName,
+                email    = session.Profile.Email,
+                userId   = session.Profile.UserId,
+                roles    = session.Profile.Roles,
+            });
         }
 
         /// <summary>Rotates the refresh cookie and issues a fresh access cookie.</summary>
@@ -122,7 +107,7 @@ namespace Lessley.Gateway.Api.Controllers
             // and revoke the whole chain for that user.
             if (tokenEntity.Revoked != null)
             {
-                await RevokeAllForUserAsync(tokenEntity.UserId);
+                await _sessions.RevokeAllRefreshTokensAsync(tokenEntity.UserId);
                 ClearAuthCookies();
                 return Unauthorized("Refresh token reuse detected");
             }
@@ -157,7 +142,7 @@ namespace Lessley.Gateway.Api.Controllers
                 SetAuthCookies(newAccessToken, newRaw);
             }
 
-            var roles = await GetUserRolesAsync(user.Id);
+            var roles = await _sessions.GetRolesAsync(user.Id);
             return Ok(new { userName = user.UserName, email = user.Email, userId = user.Id, roles });
         }
 
@@ -203,8 +188,10 @@ namespace Lessley.Gateway.Api.Controllers
             // The sub-request is always a GET, so CsrfProtectionMiddleware skips it. Apply the
             // same double-submit check here against the *original* method, which Caddy forwards.
             var originalMethod = Request.Headers["X-Forwarded-Method"].ToString();
+            var originalPath   = new PathString(Request.Headers["X-Forwarded-Uri"].ToString().Split('?')[0]);
             if (!string.IsNullOrEmpty(originalMethod) &&
                 !CsrfProtectionMiddleware.IsSafeMethod(originalMethod) &&
+                !CsrfProtectionMiddleware.IsAnonymousAuthPath(originalPath) &&
                 !string.IsNullOrEmpty(Request.Cookies[AuthCookieNames.Access]))
             {
                 var headerToken = Request.Headers[AuthCookieNames.CsrfHeader].ToString();
@@ -228,94 +215,13 @@ namespace Lessley.Gateway.Api.Controllers
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────
-
-        // UserManager.GetRolesAsync emits a Join the MongoDB EF provider can't translate,
-        // so resolve roles with the two-step (query + Contains) pattern used elsewhere
-        // (JwtService.GenerateAccessToken, AdminController.ChangeUserRole).
-        private async Task<List<string>> GetUserRolesAsync(string userId)
-        {
-            var roleIds = await _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .Select(ur => ur.RoleId)
-                .ToListAsync();
-
-            return await _context.Roles
-                .Where(r => roleIds.Contains(r.Id))
-                .Select(r => r.Name!)
-                .ToListAsync();
-        }
-
-        private async Task RevokeAllForUserAsync(string userId)
-        {
-            var active = await _context.RefreshTokens
-                .Where(r => r.UserId == userId && r.Revoked == null)
-                .ToListAsync();
-            var now = DateTime.UtcNow;
-            foreach (var t in active) t.Revoked = now;
-            if (active.Count > 0)
-            {
-                _context.RefreshTokens.UpdateRange(active);
-                await _context.SaveChangesAsync();
-            }
-        }
+        // Cookie shaping lives in AuthCookieWriter, shared with the registration and
+        // OTP-login controllers so every sign-in path emits identical cookies.
 
         private void SetAuthCookies(string accessToken, string? rawRefreshToken)
-        {
-            var secure   = Request.IsHttps;
-            var sameSite = ParseSameSite(_authConfig.CookieSameSite);
-            var domain   = string.IsNullOrWhiteSpace(_authConfig.CookieDomain) ? null : _authConfig.CookieDomain;
-
-            Response.Cookies.Append(AuthCookieNames.Access, accessToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure   = secure,
-                SameSite = sameSite,
-                Domain   = domain,
-                Path     = "/",
-                Expires  = DateTimeOffset.UtcNow.AddMinutes(_authConfig.AccessTimeoutMinutes),
-            });
-
-            if (rawRefreshToken is not null)
-            {
-                Response.Cookies.Append(AuthCookieNames.Refresh, rawRefreshToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure   = secure,
-                    SameSite = sameSite,
-                    Domain   = domain,
-                    Path     = AuthCookieNames.RefreshPath,
-                    Expires  = DateTimeOffset.UtcNow.AddHours(_authConfig.RefreshTimeoutHours),
-                });
-            }
-
-            // Double-submit CSRF token: readable by JS so the SPA can echo it in a header.
-            // Hex (URL-safe) so the cookie value is transported verbatim — base64 would be
-            // URL-encoded in Set-Cookie and then mismatch the decoded Request.Cookies value.
-            var csrf = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-            Response.Cookies.Append(AuthCookieNames.Csrf, csrf, new CookieOptions
-            {
-                HttpOnly = false,
-                Secure   = secure,
-                SameSite = sameSite,
-                Domain   = domain,
-                Path     = "/",
-                Expires  = DateTimeOffset.UtcNow.AddHours(_authConfig.RefreshTimeoutHours),
-            });
-        }
+            => AuthCookieWriter.SetAuthCookies(Request, Response, _authConfig, accessToken, rawRefreshToken);
 
         private void ClearAuthCookies()
-        {
-            var domain = string.IsNullOrWhiteSpace(_authConfig.CookieDomain) ? null : _authConfig.CookieDomain;
-            Response.Cookies.Delete(AuthCookieNames.Access,  new CookieOptions { Path = "/", Domain = domain });
-            Response.Cookies.Delete(AuthCookieNames.Refresh, new CookieOptions { Path = AuthCookieNames.RefreshPath, Domain = domain });
-            Response.Cookies.Delete(AuthCookieNames.Csrf,    new CookieOptions { Path = "/", Domain = domain });
-        }
-
-        private static SameSiteMode ParseSameSite(string value) => value?.Trim().ToLowerInvariant() switch
-        {
-            "none" => SameSiteMode.None,
-            "lax"  => SameSiteMode.Lax,
-            _      => SameSiteMode.Strict,
-        };
+            => AuthCookieWriter.ClearAuthCookies(Response, _authConfig);
     }
 }

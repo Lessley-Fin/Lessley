@@ -45,7 +45,41 @@ builder.Services.AddCors(options =>
 // ── Application services ───────────────────────────────────────────────────────
 builder.Services.Configure<AuthConfig>(builder.Configuration.GetSection(nameof(AuthConfig)));
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection(nameof(JwtConfig)));
+builder.Services.Configure<EmailConfig>(builder.Configuration.GetSection(nameof(EmailConfig)));
+builder.Services.Configure<VerificationConfig>(builder.Configuration.GetSection(nameof(VerificationConfig)));
 builder.Services.AddScoped<IJwtService, JwtService>();
+
+// ── Auth flows: email verification, password reset, passwordless login ─────────
+var emailConfig = builder.Configuration.GetSection(nameof(EmailConfig)).Get<EmailConfig>() ?? new EmailConfig();
+if (emailConfig.Enabled)
+{
+    if (string.IsNullOrWhiteSpace(emailConfig.Host) || string.IsNullOrWhiteSpace(emailConfig.FromAddress))
+        throw new InvalidOperationException("EmailConfig:Host and EmailConfig:FromAddress are required when EmailConfig:Enabled is true.");
+
+    builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+}
+else if (builder.Environment.IsProduction())
+{
+    // Fail at boot rather than in production traffic: without a mail transport, registration,
+    // password reset and OTP login all become silent dead ends whose only symptom is users
+    // never receiving a code.
+    throw new InvalidOperationException(
+        "EmailConfig:Enabled must be true in Production — the auth flows cannot deliver codes without SMTP.");
+}
+else
+{
+    // Dev / Testing / RealInfra: codes go to the log so the flows can be walked without credentials.
+    Log.Warning("EmailConfig:Enabled is false — auth codes will be written to the log, not emailed.");
+    builder.Services.AddScoped<IEmailSender, LoggingEmailSender>();
+}
+
+builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRepository>();
+builder.Services.AddScoped<IVerificationCodeRepository, VerificationCodeRepository>();
+builder.Services.AddScoped<IVerificationCodeService, VerificationCodeService>();
+builder.Services.AddScoped<IAuthSessionService, AuthSessionService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+builder.Services.AddScoped<ILoginOtpService, LoginOtpService>();
 
 builder.Services.AddHttpClient<IOpenFinanceService, OpenFinanceService>(client =>
 {

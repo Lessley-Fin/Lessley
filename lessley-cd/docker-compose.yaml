@@ -197,6 +197,19 @@ services:
       # edge: Caddy stamps X-Edge-Key on every request it forwards here.
       - Edge__ApiKey=${EDGE_API_KEY:-dev-edge-key}
 
+      # Transactional email. Left disabled by default in dev: the verification / reset /
+      # sign-in codes are written to the gateway's log instead, so the flows can be walked
+      # locally with no SMTP account (`docker compose logs -f gateway`). Point SMTP_HOST at a
+      # local MailHog or a Mailtrap inbox and flip SMTP_ENABLED=true to exercise real delivery.
+      - EmailConfig__Enabled=${SMTP_ENABLED:-false}
+      - EmailConfig__Host=${SMTP_HOST:-}
+      - EmailConfig__Port=${SMTP_PORT:-587}
+      - EmailConfig__UserName=${SMTP_USER:-}
+      - EmailConfig__Password=${SMTP_PASSWORD:-}
+      - EmailConfig__FromAddress=${SMTP_FROM_ADDRESS:-}
+      - EmailConfig__FromName=${SMTP_FROM_NAME:-Lessley}
+      - EmailConfig__AppUrl=https://${DOMAIN:-localhost}
+
       # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
       - AllowedHosts=${DOMAIN:-localhost}
 

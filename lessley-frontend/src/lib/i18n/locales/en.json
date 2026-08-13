@@ -98,7 +98,12 @@
       "signingIn": "Signing in...",
       "signIn": "Sign in",
       "createAccount": "Create account",
-      "signInFailed": "Sign-in failed. Please try again."
+      "signInFailed": "Sign-in failed. Please try again.",
+      "useEmailCode": "Sign in with email code",
+      "usePassword": "Sign in with password",
+      "emailCodeIntro": "We'll email you a one-time code — no password needed.",
+      "sendSignInCode": "Email me a code",
+      "codeSendFailed": "Could not send a sign-in code."
     },
     "forgotPassword": {
       "backToSignIn": "Back to sign in",
@@ -116,7 +121,9 @@
       "confirmNewPassword": "Confirm new password",
       "passwordsMismatch": "Passwords don't match.",
       "savePassword": "Save password",
-      "passwordUpdated": "Password updated"
+      "passwordUpdated": "Password updated",
+      "sendFailed": "Could not send a reset code.",
+      "resetFailed": "Could not change your password."
     },
     "register": {
       "back": "Back",
@@ -169,12 +176,27 @@
         "skipForNow": "Skip for now",
         "skipNotice": "You can skip this — but insights and recommendations stay limited until a bank or card is connected. You can connect later from Settings.",
         "dataUsageNotice": "Your data is used for internal processing in an anonymous way — powering insights, ads and marketing. It is never leaked or sold to any third party."
+      },
+      "stepVerify": "Verify",
+      "verifyEmail": {
+        "title": "Check your inbox",
+        "subtitle": "Your account is created only after this step.",
+        "sendingCode": "Sending code..."
       }
     },
     "shell": {
       "tagline": "Personal finance, optimized for you",
       "bankGradeSecurity": "Bank-grade security",
       "encryptionNotice": "Your credentials are encrypted in transit. We never store your banking passwords."
+    },
+    "code": {
+      "sentTo": "Enter the {{length}}-digit code sent to {{email}}.",
+      "label": "Verification code",
+      "verify": "Verify",
+      "resend": "Send a new code",
+      "resendIn": "Send a new code in {{seconds}}s",
+      "verifyFailed": "That code could not be verified.",
+      "resendFailed": "Could not send another code."
     }
   },
   "matchLevels": {

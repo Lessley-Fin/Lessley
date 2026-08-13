@@ -1,20 +1,20 @@
 import { useState } from "react"
-import { ArrowLeft, Loader2, MailCheck, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Loader2, MailCheck } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 
+import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ROUTES } from "@/lib/routes"
+import { requestPasswordReset, resetPassword, verifyPasswordResetCode } from "./api"
+import { CodeEntryForm } from "./components/CodeEntryForm"
 import { passwordSchema } from "./schemas"
 
-const CODE_LENGTH = 6
+const STEP = { EMAIL: 0, CODE: 1, PASSWORD: 2 } as const
 
-// No backend endpoint exists for password reset yet (no email-sending infrastructure in the
-// Gateway), so this whole flow is a client-only stub: it walks the same 3 steps a real flow
-// would, but never calls the network or changes any real password.
 export function ForgotPasswordPage() {
   const { t } = useTranslation()
   const SUBTITLES = [
@@ -23,33 +23,69 @@ export function ForgotPasswordPage() {
     t("auth.forgotPassword.subtitleChoosePassword"),
   ]
   const navigate = useNavigate()
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState<number>(STEP.EMAIL)
   const [isWorking, setIsWorking] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [error, setError] = useState<string | undefined>()
   const [email, setEmail] = useState("")
-  const [code, setCode] = useState("")
+  // Handed out once the emailed code is verified; the final call carries this instead of the code.
+  const [resetTicket, setResetTicket] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
   async function handleSendCode() {
     setIsWorking(true)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setIsWorking(false)
-    setStep(1)
+    setError(undefined)
+    try {
+      await requestPasswordReset({ email })
+      // The response is identical for unknown addresses on purpose, so the UI moves on either
+      // way rather than revealing whether the account exists.
+      setStep(STEP.CODE)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.forgotPassword.sendFailed"))
+    } finally {
+      setIsWorking(false)
+    }
   }
 
-  async function handleVerifyCode() {
+  async function handleResendCode() {
+    setIsResending(true)
+    setError(undefined)
+    try {
+      await requestPasswordReset({ email })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.code.resendFailed"))
+    } finally {
+      setIsResending(false)
+    }
+  }
+
+  async function handleVerifyCode(code: string) {
     setIsWorking(true)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setIsWorking(false)
-    setStep(2)
+    setError(undefined)
+    try {
+      const { resetTicket: ticket } = await verifyPasswordResetCode({ email, code })
+      setResetTicket(ticket)
+      setStep(STEP.PASSWORD)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.code.verifyFailed"))
+    } finally {
+      setIsWorking(false)
+    }
   }
 
   async function handleSavePassword() {
     setIsWorking(true)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setIsWorking(false)
-    toast.success(t("auth.forgotPassword.passwordUpdated"))
-    navigate(ROUTES.LOGIN)
+    setError(undefined)
+    try {
+      await resetPassword({ email, resetTicket, newPassword: password })
+      toast.success(t("auth.forgotPassword.passwordUpdated"))
+      navigate(ROUTES.LOGIN)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.forgotPassword.resetFailed"))
+    } finally {
+      setIsWorking(false)
+    }
   }
 
   const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword
@@ -62,104 +98,90 @@ export function ForgotPasswordPage() {
       </Link>
       <div className="mx-auto w-full max-w-sm">
         <h1 className="text-2xl font-bold tracking-tight">{t("auth.forgotPassword.resetPassword")}</h1>
-        <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          {step === 1
-            ? t("auth.forgotPassword.enterCodeSentTo", {
-                length: CODE_LENGTH,
-                email: email || t("auth.forgotPassword.yourEmail"),
-              })
-            : SUBTITLES[step]}
-        </p>
+        <p className="mt-1 mb-6 text-sm text-muted-foreground">{SUBTITLES[step]}</p>
 
-        <div className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-          {step === 0 ? (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="email">{t("auth.forgotPassword.email")}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="h-12 rounded-2xl"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isWorking}
-                />
-              </div>
-              <Button type="button" variant="hero" size="xl" disabled={!email || isWorking} onClick={handleSendCode}>
-                {isWorking ? <Loader2 className="size-4 animate-spin" /> : <MailCheck />}
-                {t("auth.forgotPassword.sendCode")}
-              </Button>
-            </>
-          ) : null}
+        {step === STEP.EMAIL ? (
+          <form
+            className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void handleSendCode()
+            }}
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="email">{t("auth.forgotPassword.email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                className="h-12 rounded-2xl"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isWorking}
+              />
+            </div>
+            <ErrorAlert message={error} />
+            <Button type="submit" variant="hero" size="xl" disabled={!email || isWorking}>
+              {isWorking ? <Loader2 className="size-4 animate-spin" /> : <MailCheck />}
+              {t("auth.forgotPassword.sendCode")}
+            </Button>
+          </form>
+        ) : null}
 
-          {step === 1 ? (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="code">{t("auth.forgotPassword.verificationCode")}</Label>
-                <Input
-                  id="code"
-                  inputMode="numeric"
-                  placeholder="000000"
-                  className="h-12 rounded-2xl tracking-[0.4em]"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  disabled={isWorking}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="hero"
-                size="xl"
-                disabled={code.length < CODE_LENGTH || isWorking}
-                onClick={handleVerifyCode}
-              >
-                {isWorking ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck />}
-                {t("auth.forgotPassword.verify")}
-              </Button>
-            </>
-          ) : null}
+        {step === STEP.CODE ? (
+          <CodeEntryForm
+            email={email}
+            isWorking={isWorking}
+            isResending={isResending}
+            error={error}
+            onSubmit={handleVerifyCode}
+            onResend={handleResendCode}
+          />
+        ) : null}
 
-          {step === 2 ? (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="pw">{t("auth.forgotPassword.newPassword")}</Label>
-                <Input
-                  id="pw"
-                  type="password"
-                  className="h-12 rounded-2xl"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isWorking}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="pw2">{t("auth.forgotPassword.confirmNewPassword")}</Label>
-                <Input
-                  id="pw2"
-                  type="password"
-                  className="h-12 rounded-2xl"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isWorking}
-                />
-              </div>
-              {passwordsMismatch ? (
-                <p className="text-xs font-medium text-destructive">{t("auth.forgotPassword.passwordsMismatch")}</p>
-              ) : null}
-              <Button
-                type="button"
-                variant="hero"
-                size="xl"
-                disabled={!canSavePassword || isWorking}
-                onClick={handleSavePassword}
-              >
-                {isWorking ? <Loader2 className="size-4 animate-spin" /> : null}
-                {t("auth.forgotPassword.savePassword")}
-              </Button>
-            </>
-          ) : null}
-        </div>
+        {step === STEP.PASSWORD ? (
+          <form
+            className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void handleSavePassword()
+            }}
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="pw">{t("auth.forgotPassword.newPassword")}</Label>
+              <Input
+                id="pw"
+                type="password"
+                autoComplete="new-password"
+                className="h-12 rounded-2xl"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isWorking}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pw2">{t("auth.forgotPassword.confirmNewPassword")}</Label>
+              <Input
+                id="pw2"
+                type="password"
+                autoComplete="new-password"
+                className="h-12 rounded-2xl"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isWorking}
+              />
+            </div>
+            {passwordsMismatch ? (
+              <p className="text-xs font-medium text-destructive">{t("auth.forgotPassword.passwordsMismatch")}</p>
+            ) : null}
+            <ErrorAlert message={error} />
+            <Button type="submit" variant="hero" size="xl" disabled={!canSavePassword || isWorking}>
+              {isWorking ? <Loader2 className="size-4 animate-spin" /> : null}
+              {t("auth.forgotPassword.savePassword")}
+            </Button>
+          </form>
+        ) : null}
       </div>
     </div>
   )

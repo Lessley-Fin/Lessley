@@ -1,8 +1,10 @@
 import type { UseFormReturn } from "react-hook-form"
+import { Loader2 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
 import { AboutLessleyDialog } from "@/components/shared/AboutLessleyDialog"
+import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import {
   FormControl,
@@ -17,10 +19,14 @@ import type { RegisterValues } from "../../schemas"
 
 interface AccountStepProps {
   form: UseFormReturn<RegisterValues>
+  // Continuing now hits the server (it reserves the name and sends the code), so this step
+  // has to show progress and server-side rejections like "that email is already registered".
+  isLoading?: boolean
+  serverError?: string
   onContinue: () => void
 }
 
-export function AccountStep({ form, onContinue }: AccountStepProps) {
+export function AccountStep({ form, isLoading = false, serverError, onContinue }: AccountStepProps) {
   const { t } = useTranslation()
   return (
     <form
@@ -86,8 +92,10 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
           </FormItem>
         )}
       />
-      <Button type="submit" variant="hero" size="xl">
-        {t("common.continue")}
+      <ErrorAlert message={serverError} />
+      <Button type="submit" variant="hero" size="xl" disabled={isLoading}>
+        {isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
+        {isLoading ? t("auth.register.verifyEmail.sendingCode") : t("common.continue")}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
         {t("auth.register.account.alreadyHaveAccount")}{" "}

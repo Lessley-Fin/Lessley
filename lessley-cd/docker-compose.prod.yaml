@@ -180,6 +180,18 @@ services:
       # Reject anything that did not arrive through Caddy.
       - Edge__ApiKey=${EDGE_API_KEY}
 
+      # Transactional email — registration verification, password reset, sign-in codes.
+      # The Gateway refuses to start in Production with this disabled, because the auth
+      # flows would silently become dead ends.
+      - EmailConfig__Enabled=true
+      - EmailConfig__Host=${SMTP_HOST}
+      - EmailConfig__Port=${SMTP_PORT}
+      - EmailConfig__UserName=${SMTP_USER}
+      - EmailConfig__Password=${SMTP_PASSWORD}
+      - EmailConfig__FromAddress=${SMTP_FROM_ADDRESS}
+      - EmailConfig__FromName=${SMTP_FROM_NAME}
+      - EmailConfig__AppUrl=https://${DOMAIN}
+
       # SPA is served same-origin by Caddy, so no CORS is needed. Restrict Host.
       - AllowedHosts=${DOMAIN}
 

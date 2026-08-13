@@ -30,6 +30,9 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
 
     public readonly FakePersonalizationService PersonalizationService = new();
 
+    /// <summary>Lets tests read the verification codes the auth flows "emailed".</summary>
+    public readonly CapturingEmailSender Emails = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -53,6 +56,9 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<IPersonalizationService>();
             services.AddSingleton<IPersonalizationService>(PersonalizationService);
+
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
 
             // Provide a no-op IPublishEndpoint so SendNotificationService can resolve it.
             services.RemoveAll<MassTransit.IPublishEndpoint>();
