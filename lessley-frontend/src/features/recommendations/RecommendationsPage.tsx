@@ -4,32 +4,25 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
-import { useClubs } from "@/features/clubs/hooks"
 import { ConnectionCheck } from "@/features/insights/components/ConnectionCheck"
 import {
   useHasConnection,
   useMissedSavingsByStore,
   useRecommendations,
   useTriggerMatchingClubs,
-  useTriggerMissedSavings,
 } from "@/features/insights/hooks"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
 import { getDirection } from "@/lib/i18n/config"
 import { queryKeys } from "@/lib/query-keys"
-import type { ClubRecommendation, ClubRecommendationResponse, TransactionInsight } from "@/lib/types"
+import type { ClubRecommendation, ClubRecommendationResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { MissedSavingsSlide } from "./components/MissedSavingsSlide"
 import { MissedShopsSlide } from "./components/MissedShopsSlide"
 import { TopClubMatchesSlide } from "./components/TopClubMatchesSlide"
 
 export function RecommendationsPage() {
   const { t, i18n } = useTranslation()
   const direction = getDirection(i18n.language)
-  const TABS = [
-    t("recommendations.page.tabTopMatches"),
-    t("recommendations.page.tabMissedSavings"),
-    t("recommendations.page.tabMissedShops"),
-  ]
+  const TABS = [t("recommendations.page.tabTopMatches"), t("recommendations.page.tabMissedShops")]
   const queryClient = useQueryClient()
   const [api, setApi] = useState<CarouselApi>()
   const [selected, setSelected] = useState(0)
@@ -37,15 +30,14 @@ export function RecommendationsPage() {
   const { data: isConnected, isLoading: checkingConnection } = useHasConnection()
   const connected = isConnected === true
 
-  const { data: clubs = [] } = useClubs()
   const { data: recommendationsData } = useRecommendations(connected)
+  const [missedShopDays, setMissedShopDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
   const { data: missedShops = [], isLoading: missedShopsLoading } = useMissedSavingsByStore(
-    INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS,
+    missedShopDays,
     connected,
   )
 
   const triggerMatchingClubs = useTriggerMatchingClubs()
-  const triggerMissedSavings = useTriggerMissedSavings()
 
   useEffect(() => {
     if (!api) return
@@ -60,19 +52,8 @@ export function RecommendationsPage() {
   const clubData = recommendationsData?.matchingClubs?.data as ClubRecommendationResponse | null | undefined
   const clubRecommendations: ClubRecommendation[] = clubData?.recommendations ?? []
 
-  const missedSavingsData = recommendationsData?.missedSavings?.data as TransactionInsight[] | null | undefined
-  const missedSavings: TransactionInsight[] = Array.isArray(missedSavingsData) ? missedSavingsData : []
-
   function handleTriggerMatchingClubs() {
     triggerMatchingClubs.mutate(undefined, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.recommendations.list() })
-      },
-    })
-  }
-
-  function handleTriggerMissedSavings() {
-    triggerMissedSavings.mutate(undefined, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.recommendations.list() })
       },
@@ -128,15 +109,12 @@ export function RecommendationsPage() {
             />
           </CarouselItem>
           <CarouselItem>
-            <MissedSavingsSlide
-              insights={missedSavings}
-              clubs={clubs}
-              onRecalculate={handleTriggerMissedSavings}
-              isPending={triggerMissedSavings.isPending}
+            <MissedShopsSlide
+              shops={missedShops}
+              isLoading={missedShopsLoading}
+              days={missedShopDays}
+              onDaysChange={setMissedShopDays}
             />
-          </CarouselItem>
-          <CarouselItem>
-            <MissedShopsSlide shops={missedShops} isLoading={missedShopsLoading} />
           </CarouselItem>
         </CarouselContent>
       </Carousel>
