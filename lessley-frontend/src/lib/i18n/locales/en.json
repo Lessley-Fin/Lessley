@@ -318,6 +318,7 @@
     },
     "tab": {
       "storePlaceholder": "Store (optional)",
+      "noStoreMatches": "No stores matched “{{query}}”.",
       "dealPlaceholder": "Find a deal (optional)",
       "categoriesLabel": "Categories",
       "filterCategoriesPlaceholder": "Filter {{count}} categories",

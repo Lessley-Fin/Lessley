@@ -318,6 +318,7 @@
     },
     "tab": {
       "storePlaceholder": "חנות (לא חובה)",
+      "noStoreMatches": "לא נמצאו חנויות התואמות ל\"{{query}}\".",
       "dealPlaceholder": "חיפוש דיל (לא חובה)",
       "categoriesLabel": "קטגוריות",
       "filterCategoriesPlaceholder": "סינון {{count}} קטגוריות",

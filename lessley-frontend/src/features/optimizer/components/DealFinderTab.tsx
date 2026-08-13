@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, Search } from "lucide-react"
+import { Check, Loader2, Search, Store } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { DealDetailDialog } from "@/components/shared/DealDetailDialog"
@@ -10,14 +10,16 @@ import { useClubs } from "@/features/clubs/hooks"
 import type { DealSearchParams } from "@/features/deal-finder/api"
 import { useDealSearch, useMccCategories } from "@/features/deal-finder/hooks"
 import { formatCategoryLabel } from "@/lib/constants"
-import type { DealSearchResultItem } from "@/lib/types"
+import type { DealSearchResultItem, StoreDocument } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { useStoreSearch } from "../hooks"
 
 const PAGE_SIZE = 10
 
 export function DealFinderTab() {
   const { t } = useTranslation()
   const [storeText, setStoreText] = useState("")
+  const [storeConfirmed, setStoreConfirmed] = useState(false)
   const [dealText, setDealText] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
@@ -27,6 +29,10 @@ export function DealFinderTab() {
 
   const { data: mccCategories = [] } = useMccCategories()
   const { data: clubs = [] } = useClubs()
+  // Confirmed picks skip the query so accepting a suggestion doesn't immediately reopen the list.
+  const { data: storeSuggestions = [], isFetching: isSearchingStores } = useStoreSearch(
+    storeConfirmed ? "" : storeText
+  )
 
   const enabled = submittedParams !== null
   const queryParams: DealSearchParams = submittedParams
@@ -48,15 +54,54 @@ export function DealFinderTab() {
     setSelectedCategories((prev) => (prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]))
   }
 
+  function handleSelectStore(store: StoreDocument) {
+    setStoreText(store.name)
+    setStoreConfirmed(true)
+  }
+
   return (
     <>
       <div className="space-y-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
-        <Input
-          value={storeText}
-          onChange={(e) => setStoreText(e.target.value)}
-          placeholder={t("dealFinder.tab.storePlaceholder")}
-          className="h-12 rounded-2xl bg-secondary"
-        />
+        <div className="relative">
+          {isSearchingStores ? (
+            <Loader2 className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          ) : (
+            <Search className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          )}
+          <Input
+            type="search"
+            value={storeText}
+            onChange={(e) => {
+              setStoreText(e.target.value)
+              if (storeConfirmed) setStoreConfirmed(false)
+            }}
+            placeholder={t("dealFinder.tab.storePlaceholder")}
+            autoComplete="off"
+            className="h-12 rounded-2xl bg-secondary ps-11"
+          />
+        </div>
+
+        {!storeConfirmed && storeSuggestions.length > 0 ? (
+          <ul className="no-scrollbar max-h-52 space-y-1 overflow-y-auto rounded-2xl border border-border p-1">
+            {storeSuggestions.map((store) => (
+              <li key={store.storeId}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectStore(store)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-start text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Store className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  {store.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : !storeConfirmed && storeText.trim().length >= 2 && !isSearchingStores ? (
+          <p className="text-xs text-muted-foreground">
+            {t("dealFinder.tab.noStoreMatches", { query: storeText.trim() })}
+          </p>
+        ) : null}
+
         <Input
           value={dealText}
           onChange={(e) => setDealText(e.target.value)}
