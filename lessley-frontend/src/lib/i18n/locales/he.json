@@ -309,6 +309,34 @@
     },
     "common": {
       "transactionsCount": "{{count}} עסקאות"
+    },
+    "missedSavings": {
+      "eyebrow": "קופונים שפספסת",
+      "title": "מבצעים בחנויות שלך",
+      "subtitle": "חנויות עם מבצע שההוצאות שלך יכלו להתאים להן.",
+      "empty": "לא נמצאו חנויות עם מבצע שמתאימות להוצאות בתקופה הזו.",
+      "shopCount": "חנות אחת",
+      "shopCount_other": "{{count}} חנויות",
+      "dealCount": "מבצע אחד",
+      "dealCount_other": "{{count}} מבצעים",
+      "coversHere": "יכול היה לכסות קנייה אחת כאן",
+      "coversHere_other": "יכול היה לכסות {{count}} קניות כאן",
+      "coversSimilar": "ביצעת קנייה אחת דומה",
+      "coversSimilar_other": "ביצעת {{count}} קניות דומות",
+      "band": {
+        "EXACT": {
+          "label": "התאמה מדויקת",
+          "hint": "אותה חנות, לפי השם"
+        },
+        "SIMILAR": {
+          "label": "דומה",
+          "hint": "מוכרת דברים מאותו סוג"
+        },
+        "STRONG": {
+          "label": "התאמה חזקה",
+          "hint": "כמעט בוודאות החנות שלך"
+        }
+      }
     }
   },
   "recommendations": {

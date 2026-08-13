@@ -4,6 +4,7 @@ import { queryKeys } from "@/lib/query-keys"
 import {
   checkHasConnection,
   fetchCategoryInsights,
+  fetchMissedSavingsByStore,
   fetchRecommendations,
   fetchSpendingByDayInsights,
   fetchSpendingPeriodComparison,
@@ -112,5 +113,13 @@ export function useTriggerMatchingClubs() {
 export function useTriggerMissedSavings() {
   return useMutation({
     mutationFn: triggerMissedSavings,
+  })
+}
+
+export function useMissedSavingsByStore(days: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.insights.missedSavingsByStore(days),
+    queryFn: () => fetchMissedSavingsByStore(days),
+    enabled,
   })
 }

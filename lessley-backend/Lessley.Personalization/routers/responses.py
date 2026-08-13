@@ -60,6 +60,42 @@ class MissedStoreDiscountSchema(BaseModel):
     store_count: int = Field(..., description="Total count of stores with discounts in this club")
 
 
+class MissedShopPurchaseSchema(BaseModel):
+    """One purchase a shop's deal could have applied to."""
+
+    transaction_id: str = Field(..., description="Unique transaction identifier")
+    merchant_name: str = Field(..., description="The merchant name exactly as the bank reported it")
+    amount: float = Field(..., description="What the purchase cost")
+    date: str | None = Field(default=None, description="When the purchase happened")
+
+
+class MissedShopSchema(BaseModel):
+    """
+    One shop that runs a deal, with the purchases it could have covered.
+
+    `match_band` is what the wording has to follow. EXACT and STRONG mean this is the shop the
+    user bought from — "you missed a coupon here". SIMILAR means the names only share a word
+    naming a line of business ('קפה'), so it is a shop *like* theirs and must be worded that
+    way. Anything weaker is not returned.
+    """
+
+    store_id: str = Field(..., description="The store ID")
+    store_name: str = Field(..., description="The store name")
+    match_band: str = Field(..., description="EXACT | STRONG | SIMILAR — how sure the name match is")
+    is_same_store: bool = Field(..., description="True when this is the shop the user actually used")
+    deal_count: int = Field(..., description="How many deals this shop is running")
+    deal_titles: list[str] = Field(default_factory=list, description="A few of the deals on offer")
+    club_ids: list[str] = Field(default_factory=list, description="Clubs through which the deals apply")
+    also_known_as: list[str] = Field(
+        default_factory=list, description="Other names this shop is filed under in the catalogue"
+    )
+    covered_transaction_count: int = Field(..., description="How many purchases this shop could have covered")
+    covered_amount: float = Field(..., description="Total spend across those purchases")
+    purchases: list[MissedShopPurchaseSchema] = Field(
+        default_factory=list, description="The purchases themselves"
+    )
+
+
 class TransactionInsightSchema(BaseModel):
     """Schema for a single transaction's missed savings insight."""
 

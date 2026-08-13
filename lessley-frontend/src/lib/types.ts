@@ -114,6 +114,37 @@ export interface RecommendationsResponse {
   matchingClubs: CalcResult<ClubRecommendationResponse> | null
 }
 
+/**
+ * How sure we are that a shop is the one the user actually visited.
+ *
+ * The wording on screen has to follow this. EXACT and STRONG mean the name identifies the
+ * shop, so "you missed a coupon here" is true. SIMILAR means the names only share a word
+ * naming a line of business — "קפה ברלין" against "קפה קפה" — so it is somewhere *like*
+ * theirs, and claiming they shopped there would be a lie.
+ */
+export type StoreMatchBand = "EXACT" | "STRONG" | "SIMILAR"
+
+export interface MissedShopPurchase {
+  transaction_id: string
+  merchant_name: string
+  amount: number
+  date: string | null
+}
+
+export interface MissedShop {
+  store_id: string
+  store_name: string
+  match_band: StoreMatchBand
+  is_same_store: boolean
+  deal_count: number
+  deal_titles: string[]
+  club_ids: string[]
+  also_known_as: string[]
+  covered_transaction_count: number
+  covered_amount: number
+  purchases: MissedShopPurchase[]
+}
+
 export interface MccCategoryDto {
   category: string
 }

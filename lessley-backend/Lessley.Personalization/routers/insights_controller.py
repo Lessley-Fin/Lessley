@@ -481,3 +481,73 @@ async def calculate_spending_saved_by_account(
             },
         )
         raise
+
+
+@router.get("/missed-savings-by-store")
+async def missed_savings_by_store(
+    request: Request,
+    req: InsightsCalcRequests = Depends(),
+    email: str = Depends(authenticated_email),
+):
+    """
+    Shops running a deal the user could have used, one row per shop.
+
+    Lives here rather than under /recommendations because it answers a question about the
+    user's own spending and returns its answer directly. The /recommendations endpoints are
+    fire-and-forget triggers whose results come back through RabbitMQ, and the edge only
+    routes /insights/* and /open-finance/* to this service.
+
+    Read `match_band` before wording anything on screen: EXACT and STRONG mean the user
+    shopped at that shop; SIMILAR means only a line-of-business word matched ('קפה'), so it is
+    somewhere *like* theirs and must be worded that way.
+    """
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {
+                "email": email,
+                "time_filter": req.time_filter,
+                "days": req.days,
+                "method": request.method,
+                "endpoint": request.url.path,
+            },
+        },
+    )
+
+    try:
+        service = DIContainer.get_insights_service()
+        shops = await service.calculate_missed_savings_by_store_async(
+            email, req.time_filter, req.days, req.use_mock
+        )
+
+        response_time_ms = (time.time() - start_time) * 1000
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "email": email,
+                    "days": req.days,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "record_count": len(shops),
+                },
+            },
+        )
+
+        return PaginatedResponse(status="success", data=shops, count=len(shops))
+
+    except Exception as e:
+        logger.error(
+            f"Error calculating missed savings by store: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {"email": email, "method": request.method, "endpoint": request.url.path},
+            },
+        )
+        raise
