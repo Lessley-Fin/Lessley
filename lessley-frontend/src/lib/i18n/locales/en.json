@@ -351,19 +351,18 @@
     },
     "missedShopsSlide": {
       "title": "Deals at shops you use",
-      "subtitle": "{{count}} shop running a deal your spending could have covered",
-      "subtitle_other": "{{count}} shops running deals your spending could have covered",
+      "subtitle": "{{count}} store you shopped at had a matching deal",
+      "subtitle_other": "{{count}} stores you shopped at had matching deals",
       "loading": "Looking for deals at your shops…",
       "empty": "No shops with deals matched your spending in this period.",
-      "dealCount": "{{count}} deal",
-      "dealCount_other": "{{count}} deals",
-      "coversHere": "Could have covered {{count}} purchase here",
-      "coversHere_other": "Could have covered {{count}} purchases here",
-      "coversSimilar": "You made {{count}} similar purchase",
-      "coversSimilar_other": "You made {{count}} similar purchases",
+      "spentLabel": "Total spent",
+      "purchaseCount": "{{count}} purchase",
+      "purchaseCount_other": "{{count}} purchases",
+      "matchingShopsHeading": "{{count}} matching shop",
+      "matchingShopsHeading_other": "{{count}} matching shops",
       "band": {
         "EXACT": {
-          "label": "Exact match",
+          "label": "Exact",
           "hint": "The same shop, by name"
         },
         "SIMILAR": {
@@ -371,7 +370,7 @@
           "hint": "Sells the same sort of thing"
         },
         "STRONG": {
-          "label": "Strong match",
+          "label": "Strong",
           "hint": "Almost certainly your shop"
         }
       },

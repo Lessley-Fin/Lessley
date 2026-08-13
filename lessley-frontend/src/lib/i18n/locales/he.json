@@ -351,19 +351,21 @@
     },
     "missedShopsSlide": {
       "title": "מבצעים בחנויות שלך",
-      "subtitle": "חנות אחת עם מבצע שההוצאות שלך יכלו להתאים לה",
-      "subtitle_other": "{{count}} חנויות עם מבצעים שההוצאות שלך יכלו להתאים להן",
+      "subtitle": "חנות אחת שקנית בה עם מבצע מתאים",
+      "subtitle_two": "{{count}} חנויות שקנית בהן עם מבצעים מתאימים",
+      "subtitle_other": "{{count}} חנויות שקנית בהן עם מבצעים מתאימים",
       "loading": "מחפשים מבצעים בחנויות שלך…",
       "empty": "לא נמצאו חנויות עם מבצע שמתאימות להוצאות בתקופה הזו.",
-      "dealCount": "מבצע אחד",
-      "dealCount_other": "{{count}} מבצעים",
-      "coversHere": "יכול היה לכסות קנייה אחת כאן",
-      "coversHere_other": "יכול היה לכסות {{count}} קניות כאן",
-      "coversSimilar": "ביצעת קנייה אחת דומה",
-      "coversSimilar_other": "ביצעת {{count}} קניות דומות",
+      "spentLabel": "סך ההוצאה",
+      "purchaseCount": "קנייה אחת",
+      "purchaseCount_two": "{{count}} קניות",
+      "purchaseCount_other": "{{count}} קניות",
+      "matchingShopsHeading": "חנות תואמת אחת",
+      "matchingShopsHeading_two": "{{count}} חנויות תואמות",
+      "matchingShopsHeading_other": "{{count}} חנויות תואמות",
       "band": {
         "EXACT": {
-          "label": "התאמה מדויקת",
+          "label": "מדויקת",
           "hint": "אותה חנות, לפי השם"
         },
         "SIMILAR": {
@@ -371,7 +373,7 @@
           "hint": "מוכרת דברים מאותו סוג"
         },
         "STRONG": {
-          "label": "התאמה חזקה",
+          "label": "חזקה",
           "hint": "כמעט בוודאות החנות שלך"
         }
       },
