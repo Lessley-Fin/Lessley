@@ -318,7 +318,8 @@
       "notConnectedTitle": "Connect to get recommendations",
       "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
       "tabTopMatches": "Top matches",
-      "tabMissedSavings": "Missed savings"
+      "tabMissedSavings": "Missed savings",
+      "tabMissedShops": "Your shops"
     },
     "missedSavingsSlide": {
       "title": "Missed savings",
@@ -346,6 +347,37 @@
         "highlight1Desc": "How closely a club's discounted stores overlap with where you actually shop.",
         "highlight2Title": "Stores match",
         "highlight2Desc": "The number of stores you shop at that this club also covers, out of the club's total stores."
+      }
+    },
+    "missedShopsSlide": {
+      "title": "Deals at shops you use",
+      "subtitle": "{{count}} store you shopped at had a matching deal",
+      "subtitle_other": "{{count}} stores you shopped at had matching deals",
+      "loading": "Looking for deals at your shops…",
+      "empty": "No shops with deals matched your spending in this period.",
+      "spentLabel": "Total spent",
+      "purchaseCount": "{{count}} purchase",
+      "purchaseCount_other": "{{count}} purchases",
+      "matchingShopsHeading": "{{count}} matching shop",
+      "matchingShopsHeading_other": "{{count}} matching shops",
+      "band": {
+        "EXACT": {
+          "label": "Exact",
+          "hint": "The same shop, by name"
+        },
+        "SIMILAR": {
+          "label": "Similar",
+          "hint": "Sells the same sort of thing"
+        },
+        "STRONG": {
+          "label": "Strong",
+          "hint": "Almost certainly your shop"
+        }
+      },
+      "infoDialog": {
+        "ariaLabel": "About shop matching",
+        "title": "How these shops were found",
+        "body": "We match the shop names on your card statement against shops running deals. An exact or strong match is the shop you actually used. A similar match only shares a word describing the trade — a coffee place matching another coffee place — so it is somewhere like yours, not the same shop."
       }
     }
   },

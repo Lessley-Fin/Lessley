@@ -10,11 +10,13 @@ from services.publisher_service import PublisherService
 from services.user_repository import UserRepository
 from services.reference_data_repository import ReferenceDataRepository
 from services.mcc_service import MccService
-from config.constants import LIMITS
-from models.db.entities import Store
+from config.constants import LIMITS, SHOP_MATCH
 from models.transaction import Transaction
+from services.utils.store_similarity import EXACT, SIMILAR, STRONG, SURFACEABLE, WEAK
 from routers.responses import (
     TransactionInsightSchema,
+    MissedShopPurchaseSchema,
+    MissedShopSchema,
     MissedStoreDiscountSchema,
     MissedStoreSchema,
 )
@@ -27,6 +29,9 @@ DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "
 
 # We never show a user more than this many alternative shops for a single club.
 MAX_ALTERNATIVE_STORES_PER_CLUB = 10
+
+# Most confident first, for picking one reading of a shop over another.
+_BAND_ORDER = {EXACT: 0, STRONG: 1, SIMILAR: 2, WEAK: 3}
 
 
 def trim_categories_by_match_level(categories: list, matching_score) -> list:
@@ -370,64 +375,58 @@ class InsightsService:
         )
         return insights
 
+    def _shops_for(self, transaction: Transaction, user_club_ids: List[str] | None) -> list:
+        """
+        The deal-running shops this purchase could have earned a coupon at.
+
+        Matched on the shop's *name* rather than its category. Category matching answered a
+        different question — "name me any shop that sells this kind of thing" — and with 3,641
+        deal-running shops filed under SHOPPING_OTHER alone, the answer was an arbitrary ten
+        with nothing to do with where the user actually shopped.
+
+        Shops outside the user's clubs are dropped: the deal exists, but they cannot use it.
+        """
+        matches = self.reference_data_repository.find_deal_shops(
+            transaction.merchantName,
+            (transaction.merchantAddress.townName if transaction.merchantAddress else None),
+            self._category_of(transaction),
+        )
+
+        member_of = set(user_club_ids) if user_club_ids is not None else None
+        kept = []
+        for match in matches:
+            if match.band not in SURFACEABLE:
+                continue
+            clubs = self.reference_data_repository.clubs_for_identity(match.identity)
+            if member_of is not None:
+                clubs = [club_id for club_id in clubs if club_id in member_of]
+            if not clubs:
+                continue
+            kept.append((match, clubs))
+        return kept
+
     def _missed_savings_for(
         self, transaction: Transaction, user_club_ids: List[str] | None
     ) -> TransactionInsightSchema:
         """Work out what the user missed on this one purchase."""
-        category_name = self.mcc_service.get_mcc_by_id(transaction.categoryCode)
-        stores_by_club = self._alternative_stores_by_club(category_name, user_club_ids)
+        shops = self._shops_for(transaction, user_club_ids)
+
+        by_club: Dict[str, List] = {}
+        for match, clubs in shops:
+            for club_id in clubs:
+                by_club.setdefault(club_id, []).append(match.identity)
 
         return TransactionInsightSchema(
             transaction_id=transaction.id,
-            had_discount=len(stores_by_club) > 0,
-            missed_store_discont=self._describe_missed_stores(stores_by_club),
+            had_discount=len(shops) > 0,
+            missed_store_discont=self._describe_missed_stores(by_club),
             store_name=transaction.merchantName or "N/A",
-            mcc_code=category_name,
+            mcc_code=self.mcc_service.get_mcc_by_id(transaction.categoryCode),
             mcc_description=self._category_of(transaction),
             amount=self._amount_charged(transaction),
         )
 
-    def _alternative_stores_by_club(
-        self, category_name: str, user_club_ids: List[str] | None = None, exclude_store_id: str = None
-    ) -> Dict[str, List[Store]]:
-        """Shops selling the same kind of thing that are running a deal, gathered per club."""
-        if not category_name:
-            return {}
-
-        better_options = (
-            seq(self.reference_data_repository.stores_by_category(category_name))   # shops in this category
-            .where(lambda store: store.store_id != exclude_store_id)                # not the one just used
-            .where(lambda store: self.reference_data_repository.has_active_deal(store.store_id))  # running a deal
-            .to_list()
-        )
-        if not better_options:
-            return {}
-
-        # Only clubs the user actually belongs to, when we know which those are.
-        clubs = self.reference_data_repository.all_clubs()
-        if user_club_ids is not None:
-            member_of = set(user_club_ids)
-            clubs = {club_id: club for club_id, club in clubs.items() if club_id in member_of}
-
-        return (
-            seq(clubs.items())                                                     # each club to consider
-            .select(lambda entry: (entry[0], self._club_stores(entry[1], better_options)))
-            .where(lambda entry: entry[1])                                         # keep clubs that offer something
-            .to_dict()                                                             # club id -> its shops
-        )
-
-    @staticmethod
-    def _club_stores(club, better_options: List[Store]) -> List[Store]:
-        """Which of these shops belong to this club — capped, so we never flood the user."""
-        club_store_ids = set(club.stores or [])
-        return (
-            seq(better_options)                                            # the shops running deals
-            .where(lambda store: store.store_id in club_store_ids)         # those inside this club
-            .take(MAX_ALTERNATIVE_STORES_PER_CLUB)                         # at most ten per club
-            .to_list()
-        )
-
-    def _describe_missed_stores(self, stores_by_club: Dict[str, List[Store]]) -> List[MissedStoreDiscountSchema]:
+    def _describe_missed_stores(self, stores_by_club: Dict[str, List]) -> List[MissedStoreDiscountSchema]:
         """Turn the shops-per-club map into the shape the client expects."""
         return (
             seq(stores_by_club.items())                                             # each club and its shops
@@ -435,11 +434,91 @@ class InsightsService:
             .select(lambda entry: MissedStoreDiscountSchema(
                 club_id=entry[0],
                 missed_store=[
-                    MissedStoreSchema(store_id=store.store_id, store_name=store.name) for store in entry[1]
+                    MissedStoreSchema(store_id=shop.store_id, store_name=shop.name)
+                    for shop in entry[1][:MAX_ALTERNATIVE_STORES_PER_CLUB]
                 ],
-                store_count=len(entry[1]),
+                store_count=min(len(entry[1]), MAX_ALTERNATIVE_STORES_PER_CLUB),
             ))
             .to_list()
+        )
+
+    # ── The same answer, gathered by shop instead of by purchase ──────────────
+
+    def missed_savings_by_store(
+        self, transactions: list[Transaction], user_club_ids: List[str] | None = None
+    ) -> List[MissedShopSchema]:
+        """
+        The shops that were running a deal, each with the purchases it could have covered.
+
+        The same matching as `missed_savings`, gathered the other way round. A user does not
+        want to hear about one coffee three separate times — they want to hear that קפה קפה
+        has a coupon and they have bought coffee three times this month.
+        """
+        if not transactions:
+            return []
+
+        gathered: Dict[str, dict] = {}
+        for transaction in transactions:
+            if not transaction.id:
+                continue
+            for match, clubs in self._shops_for(transaction, user_club_ids):
+                entry = gathered.setdefault(
+                    match.identity.store_id,
+                    {"match": match, "clubs": set(), "purchases": [], "amount": 0.0},
+                )
+                # Keep the most confident reading of this shop across all the purchases.
+                if _BAND_ORDER[match.band] < _BAND_ORDER[entry["match"].band]:
+                    entry["match"] = match
+                entry["clubs"].update(clubs)
+                entry["purchases"].append(transaction)
+                entry["amount"] += self._amount_spent(transaction)
+
+        shops = [self._describe_shop(entry) for entry in gathered.values()]
+
+        # Band first, then money. Sorting on money alone lets a single coffee produce a dozen
+        # lookalike cafés that crowd a shop the user demonstrably visited out of the answer —
+        # and being told about the shop you actually used is worth more than any number of
+        # shops merely like it.
+        shops.sort(key=lambda shop: (_BAND_ORDER[shop.match_band], -shop.covered_amount, shop.store_name))
+        shops = shops[: SHOP_MATCH.MAX_SHOPS]
+
+        logger.info(
+            "Missed savings by store completed",
+            extra={
+                "reason": "Batch processing complete",
+                "extra_data": {
+                    "transaction_count": len(transactions),
+                    "shops_found": len(shops),
+                    "same_store_shops": sum(1 for shop in shops if shop.is_same_store),
+                },
+            },
+        )
+        return shops
+
+    def _describe_shop(self, entry: dict) -> MissedShopSchema:
+        """Turn one shop's gathered purchases into the shape the client expects."""
+        match = entry["match"]
+        identity = match.identity
+        return MissedShopSchema(
+            store_id=identity.store_id,
+            store_name=identity.name,
+            match_band=match.band,
+            is_same_store=match.is_confident,
+            deal_count=len(identity.deals),
+            deal_titles=[deal.title for deal in identity.deals[:3] if getattr(deal, "title", None)],
+            club_ids=sorted(entry["clubs"]),
+            also_known_as=identity.names[1:],
+            covered_transaction_count=len(entry["purchases"]),
+            covered_amount=entry["amount"],
+            purchases=[
+                MissedShopPurchaseSchema(
+                    transaction_id=transaction.id,
+                    merchant_name=self._merchant_of(transaction),
+                    amount=self._amount_spent(transaction),
+                    date=str(self._date_of(transaction)) if self._date_of(transaction) else None,
+                )
+                for transaction in entry["purchases"]
+            ],
         )
 
     # ── Orchestration ─────────────────────────────────────────────────────────
@@ -776,6 +855,45 @@ class InsightsService:
                 },
             )
             return insights
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
+    async def calculate_missed_savings_by_store_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> List[MissedShopSchema]:
+        """
+        The same analysis as `calculate_missed_savings_async`, gathered by shop.
+
+        One row per shop that runs a deal, carrying the purchases it could have covered, so
+        the user reads "קפה קפה has a coupon and you bought coffee four times" rather than the
+        same suggestion repeated against four separate transactions.
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock, sort=True)
+            user_club_ids = await self.user_repository.get_user_clubs(user_id)
+            shops = self.missed_savings_by_store(transactions, user_club_ids=user_club_ids)
+
+            logger.info(
+                "Missed savings by store calculated successfully",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, "shop_count": len(shops)},
+                },
+            )
+            return shops
         except Exception as e:
             logger.error(
                 f"Error: {str(e)}",

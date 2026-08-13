@@ -3,7 +3,7 @@ import motor.motor_asyncio
 from beanie import init_beanie
 
 from config.settings import settings
-from models.db.entities import Club, Store, Deal, MccCode
+from models.db.entities import Club, Store, StoreAlias, Deal, MccCode
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,9 @@ async def init_db():
         await client.admin.command("ping")
         logger.info("Successfully connected to MongoDB.")
 
-        await init_beanie(database=client.lessley, document_models=[Club, Store, Deal, MccCode])
+        await init_beanie(
+            database=client.lessley, document_models=[Club, Store, StoreAlias, Deal, MccCode]
+        )
         logger.info("Beanie ODM initialized successfully.")
     except Exception as e:
         logger.error(f"Failed to connect to MongoDB or initialize Beanie: {e}", exc_info=True)

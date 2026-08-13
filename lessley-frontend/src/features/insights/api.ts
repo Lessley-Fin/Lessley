@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api-client"
 import type {
   BasicApiResponse,
+  MissedShop,
   PaginatedApiResponse,
   PersonalizationTransaction,
   RecommendationsResponse,
@@ -127,4 +128,12 @@ export async function triggerMissedSavings(): Promise<void> {
   await apiFetch("/api/v1/User/recommendations/missed-savings", {
     method: "POST",
   })
+}
+
+export async function fetchMissedSavingsByStore(days: number = 90): Promise<MissedShop[]> {
+  const params = new URLSearchParams({ days: String(days) })
+  const payload = await apiFetch<PaginatedApiResponse<MissedShop>>(
+    `/api/v1/insights/missed-savings-by-store?${params.toString()}`,
+  )
+  return Array.isArray(payload.data) ? payload.data : []
 }

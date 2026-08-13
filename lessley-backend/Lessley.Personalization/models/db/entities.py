@@ -98,6 +98,9 @@ class StoreMetadata(BaseModel):
     image_urls: List[str] = Field(default_factory=list)
     mcc_codes: List[str] = Field(default_factory=list)
     store_url: str | None = None
+    # The shop's English name where the display name is Hebrew ('עיל"מ' / 'Herbology').
+    # Matched against as an alternative spelling, so a feed reporting either one lands.
+    official_name: str | None = None
 
     @field_validator("mcc_codes", mode="before")
     @classmethod
@@ -130,3 +133,33 @@ class Store(Document):
 
     class Settings:
         name = "stores"
+
+
+class StoreAlias(Document):
+    """Another way one of our shops is written down.
+
+    ``lessley-deals`` accumulates these as its review queue is worked through, so the
+    collection is where a human has already answered "these two names are the same shop".
+    Most simply restate the shop's own name, but ~700 carry a genuinely different spelling —
+    almost all of them the Hebrew/Latin pair ('מקדונלדס'/'mcdonalds', 'פיצה האט'/'pizza hut').
+
+    That pairing is the only route from a Hebrew card feed to a shop filed under its English
+    name, and several large chains are filed exactly that way. Without it they are invisible.
+    """
+
+    id: Any = Field(default=None, alias="_id")
+    business_id: str | None = Field(default=None, alias="id")
+    store_id: str
+    alias: str
+    # Optional for the same reason as everything else here: Beanie validates on load and one
+    # bad row would abort the read. The forms are recomputed from `alias` when absent.
+    alias_forms: NameForms | None = None
+    source: str | None = None
+    created_at: datetime | None = None
+
+    @property
+    def alias_id(self) -> str:
+        return _business_key(self.business_id, self.id)
+
+    class Settings:
+        name = "store_aliases"
