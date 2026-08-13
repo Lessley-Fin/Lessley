@@ -22,6 +22,11 @@ export function formatDate(value: string | undefined) {
   return parsed.toLocaleDateString()
 }
 
+export function formatShortDate(date: Date) {
+  const locale = i18n.language === "he" ? "he-IL" : "en-GB"
+  return date.toLocaleDateString(locale, { day: "numeric", month: "short" })
+}
+
 export function formatRelativeTime(isoDate: string) {
   try {
     const date = new Date(isoDate)

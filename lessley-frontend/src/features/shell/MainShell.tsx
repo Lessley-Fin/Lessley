@@ -3,6 +3,7 @@ import { Bell } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
+import logoUrl from "../../../assets/logo-without-name.svg"
 import { useAuthStore } from "@/features/auth/store"
 import { useUnreadCount } from "@/features/notifications/hooks"
 import { MAIN_TABS, OVERLAY_ROUTES, deriveActiveTab } from "@/lib/navigation"
@@ -23,9 +24,7 @@ export function MainShell({ children }: { children: ReactNode }) {
     <div className="phone-viewport">
       <div className="phone-shell">
         <header className="flex items-center gap-3 border-b border-border/70 bg-card/80 px-4 py-3 backdrop-blur">
-          <div className="surface-teal flex size-10 items-center justify-center rounded-full text-base font-bold">
-            L
-          </div>
+          <img src={logoUrl} alt={t("common.appName")} className="size-12" />
           <div className="flex-1">
             <p className="text-[15px] font-bold leading-tight">{t("common.appName")}</p>
             <p className="text-xs text-muted-foreground">{t("common.tagline")}</p>

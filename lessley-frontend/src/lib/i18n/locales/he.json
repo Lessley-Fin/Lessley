@@ -234,11 +234,7 @@
       "empty": "אין עדיין מספיק היסטוריה להשוואת תקופות.",
       "thisPeriod": "התקופה הזו",
       "current": "נוכחי",
-      "previous": "קודם",
-      "currentDays": "{{count}} הימים האחרונים",
-      "previousDays": "{{count}} הימים שלפני כן",
-      "currentYear": "השנה האחרונה",
-      "previousYear": "השנה שלפני כן"
+      "previous": "קודם"
     },
     "statsGrid": {
       "transactions": "עסקאות",
