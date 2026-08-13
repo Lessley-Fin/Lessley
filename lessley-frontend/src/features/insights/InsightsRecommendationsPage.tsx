@@ -2,7 +2,14 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { CarouselDots } from "@/components/shared/CarouselDots"
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel"
 import { useMyProfile } from "@/features/user/hooks"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
 import { getDirection } from "@/lib/i18n/config"
@@ -161,8 +168,12 @@ export function InsightsRecommendationsPage() {
                   <AccountsSlide accounts={deepDiveAccounts} />
                 </CarouselItem>
               </CarouselContent>
+              <div className="mt-4 flex items-center justify-center gap-3">
+                <CarouselPrevious aria-label={t("common.previousSlide")} />
+                <CarouselDots api={carouselApi} labels={CAROUSEL_LABELS} />
+                <CarouselNext aria-label={t("common.nextSlide")} />
+              </div>
             </Carousel>
-            <CarouselDots api={carouselApi} labels={CAROUSEL_LABELS} />
           </>
         )}
       </div>

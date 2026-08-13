@@ -10,6 +10,8 @@
     "close": "Close",
     "back": "Back",
     "next": "Next",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
     "continue": "Continue",
     "submit": "Submit",
     "confirm": "Confirm",
@@ -70,8 +72,10 @@
       "back": "Back",
       "stepAccount": "Account",
       "stepClubs": "Clubs",
+      "stepMatchLevel": "Match level",
       "stepBanking": "Banking",
       "registrationFailed": "Registration failed. Please try again.",
+      "creatingAccount": "Creating account...",
       "account": {
         "title": "Create account",
         "username": "Username",
@@ -83,9 +87,26 @@
       },
       "clubs": {
         "title": "Which clubs do you own? 🎟️",
-        "subtitle": "Optional — pick what you already have and we'll start matching deals right away.",
+        "subtitle": "Pick what you already have and we'll start matching deals right away.",
         "selected": "Selected",
-        "creatingAccount": "Creating account..."
+        "selectAtLeastOne": "Please select at least one club to continue."
+      },
+      "matchLevel": {
+        "title": "How closely should we match you? 🎯",
+        "subtitle": "Choose how tightly we filter deals to your spending habits.",
+        "options": {
+          "Low": "See more deals, including some that are a looser fit.",
+          "Medium": "A balanced mix of relevance and variety.",
+          "High": "Only the deals that fit your spending best."
+        },
+        "explain": {
+          "ariaLabel": "What does match level mean?",
+          "title": "What is match level?",
+          "subtitle": "It controls how strictly we filter deals before showing them to you.",
+          "lowDesc": "Shows the top 75% of matches — more deals, including some less relevant ones.",
+          "mediumDesc": "Shows the top 50% of matches — a balanced mix of relevance and variety.",
+          "highDesc": "Shows only the top 25% of matches — fewer deals, but tightly tailored to you."
+        }
       },
       "banking": {
         "title": "Connect open banking to unlock the real savings",
@@ -200,7 +221,12 @@
     "savingsHero": {
       "label": "Saved with Lessley",
       "club": "club",
-      "clubs": "clubs"
+      "clubs": "clubs",
+      "infoDialog": {
+        "ariaLabel": "What does 'saved' mean?",
+        "title": "How this is calculated",
+        "body": "This reflects club and card discounts matched to purchases you made in this period — not a projection, but savings tied to transactions that already happened."
+      }
     },
     "spendingOverviewSlide": {
       "title": "Spending overview",
@@ -253,14 +279,28 @@
       "subtitle": "Purchases that had a better home",
       "recalculateAria": "Recalculate missed savings",
       "empty": "No missed savings found yet. Once your spending is analyzed, we'll show you where you could have saved.",
-      "storesCount": "{{count}} stores"
+      "storesCount": "{{count}} stores",
+      "infoDialog": {
+        "ariaLabel": "What counts as a missed saving?",
+        "title": "What's a missed saving?",
+        "body": "These are past purchases at stores where a club or card discount existed but wasn't applied — so you can see where switching stores or cards next time could save you money."
+      }
     },
     "topClubMatchesSlide": {
       "title": "Top club matches",
       "subtitle": "Ranked by store overlap with your spend",
       "recalculateAria": "Recalculate matches",
       "empty": "We need more transaction history to analyze club fit. Try recalculating or connect more accounts.",
-      "storesMatch": "{{hit}}/{{total}} stores match"
+      "storesMatch": "{{hit}}/{{total}} stores match",
+      "infoDialog": {
+        "ariaLabel": "What is a fit score?",
+        "title": "What's a fit score?",
+        "subtitle": "How we rank clubs for you",
+        "highlight1Title": "Fit percentage",
+        "highlight1Desc": "How closely a club's discounted stores overlap with where you actually shop.",
+        "highlight2Title": "Stores match",
+        "highlight2Desc": "The number of stores you shop at that this club also covers, out of the club's total stores."
+      }
     }
   },
   "dealFinder": {
@@ -269,10 +309,16 @@
       "subtitle": "Real deals across your loyalty clubs, refreshed regularly",
       "loading": "Loading deals…",
       "loadFailed": "Failed to load deals.",
-      "empty": "No featured deals right now — check back soon."
+      "empty": "No featured deals right now — check back soon.",
+      "infoDialog": {
+        "ariaLabel": "What is this list?",
+        "title": "What makes a deal \"featured\"?",
+        "body": "This isn't a popularity ranking — we don't track what's trending. It's a curated selection of real deals across popular categories like groceries, dining, and electronics."
+      }
     },
     "tab": {
       "storePlaceholder": "Store (optional)",
+      "noStoreMatches": "No stores matched “{{query}}”.",
       "dealPlaceholder": "Find a deal (optional)",
       "categoriesLabel": "Categories",
       "filterCategoriesPlaceholder": "Filter {{count}} categories",

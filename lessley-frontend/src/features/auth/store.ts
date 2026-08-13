@@ -17,11 +17,16 @@ interface Profile {
 interface AuthState extends Profile {
   status: AuthStatus
   isAuthenticated: boolean
+  // RegisterWizard logs the user in before its Banking step so BankingStep can call the
+  // authenticated connect-bank endpoint — this keeps GuestRoute from bouncing them out of
+  // /register to the app in that gap. Cleared once the wizard finishes or the user logs out.
+  registrationInProgress: boolean
 
   initialize: () => Promise<void>
   login: (profile: Profile) => void
   logout: () => void
   setProfile: (profile: Profile) => void
+  setRegistrationInProgress: (value: boolean) => void
 }
 
 const ANON = {
@@ -30,6 +35,7 @@ const ANON = {
   username: "User",
   userId: "",
   email: "",
+  registrationInProgress: false,
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -38,6 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   username: "User",
   userId: "",
   email: "",
+  registrationInProgress: false,
 
   // Probe the server: if the auth cookie is valid (or refreshable) we get the profile.
   initialize: async () => {
@@ -66,4 +73,5 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   setProfile: ({ username, userId, email }) => set({ username, userId, email }),
+  setRegistrationInProgress: (registrationInProgress) => set({ registrationInProgress }),
 }))

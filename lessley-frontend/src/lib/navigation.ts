@@ -2,9 +2,9 @@ import { ChartColumn, Flame, Lightbulb, Sparkles } from "lucide-react"
 import { ROUTES } from "./routes"
 
 export const MAIN_TABS = [
+  { id: "optimizer", labelKey: "nav.optimizer", icon: Sparkles, path: ROUTES.OPTIMIZER },
   { id: "insights", labelKey: "nav.insights", icon: ChartColumn, path: ROUTES.INSIGHTS },
   { id: "hot-deals", labelKey: "nav.hot", icon: Flame, path: ROUTES.HOT_DEALS },
-  { id: "optimizer", labelKey: "nav.optimizer", icon: Sparkles, path: ROUTES.OPTIMIZER },
   { id: "recommendations", labelKey: "nav.recommend", icon: Lightbulb, path: ROUTES.RECOMMENDATIONS },
 ] as const
 
