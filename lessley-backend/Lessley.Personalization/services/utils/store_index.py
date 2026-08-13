@@ -61,10 +61,16 @@ class StoreIndex:
         # A shop can be written more than one way. `official_name` carries the English
         # form for shops whose display name is Hebrew ('עיל"מ' / 'Herbology'), so a card
         # feed that reports either spelling can still find it.
-        written_forms = [store.name]
-        official_name = getattr(store.metadata, "official_name", None)
-        if official_name and official_name.strip():
-            written_forms.append(official_name)
+        #
+        # A `written_forms` list, when the caller has one, replaces that pair outright: an
+        # identity folded together from several catalogue rows carries every spelling its
+        # members had, plus the aliases a human approved, and all of them must be findable.
+        written_forms = list(getattr(store, "written_forms", None) or ())
+        if not written_forms:
+            written_forms = [store.name]
+            official_name = getattr(store.metadata, "official_name", None)
+            if official_name and official_name.strip():
+                written_forms.append(official_name)
 
         groups: List[List[str]] = []
         every_token: Set[str] = set()

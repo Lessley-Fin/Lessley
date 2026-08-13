@@ -263,6 +263,34 @@
     },
     "common": {
       "transactionsCount": "{{count}} transactions"
+    },
+    "missedSavings": {
+      "eyebrow": "Missed coupons",
+      "title": "Deals at shops you use",
+      "subtitle": "Shops running a deal that your spending could have covered.",
+      "empty": "No shops with deals matched your spending in this period.",
+      "shopCount": "{{count}} shop",
+      "shopCount_other": "{{count}} shops",
+      "dealCount": "{{count}} deal",
+      "dealCount_other": "{{count}} deals",
+      "coversHere": "Could have covered {{count}} purchase here",
+      "coversHere_other": "Could have covered {{count}} purchases here",
+      "coversSimilar": "You made {{count}} similar purchase",
+      "coversSimilar_other": "You made {{count}} similar purchases",
+      "band": {
+        "EXACT": {
+          "label": "Exact match",
+          "hint": "The same shop, by name"
+        },
+        "SIMILAR": {
+          "label": "Similar",
+          "hint": "Sells the same sort of thing"
+        },
+        "STRONG": {
+          "label": "Strong match",
+          "hint": "Almost certainly your shop"
+        }
+      }
     }
   },
   "recommendations": {

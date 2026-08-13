@@ -3,10 +3,12 @@ from typing import Dict, List
 
 from functional import seq
 
-from models.db.entities import Club, Deal, Store
+from models.db.entities import Club, Deal, Store, StoreAlias
 from services.utils.place_vocabulary import PlaceVocabulary
+from services.utils.store_identity import StoreIdentity, build_identities
 from services.utils.store_index import StoreIndex
 from services.utils.store_name_matcher import NO_MATCH, StoreMatch, match_store
+from services.utils.store_similarity import DealShopFinder, ShopMatch
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,9 @@ class ReferenceDataRepository:
         self._stores_by_category: Dict[str, List[Store]] = {}  # "GROCERIES" -> stores selling it
         self._store_index: StoreIndex | None = None  # shop names, arranged for lookup by name
         self._place_words = PlaceVocabulary()  # mall/street words, learned from merchant names
+        self._identities: Dict[str, StoreIdentity] = {}  # one entry per real brand
+        self._identity_of_store: Dict[str, str] = {}  # store id -> the identity it folded into
+        self._deal_shops: DealShopFinder | None = None  # shops running deals, by name
         self._loaded = False
 
     # ── Loading ───────────────────────────────────────────────────────────────
@@ -118,6 +123,8 @@ class ReferenceDataRepository:
                 },
             )
 
+            await self._build_deal_shops(stores)
+
             self._loaded = True
         except Exception as e:
             logger.error(
@@ -129,6 +136,47 @@ class ReferenceDataRepository:
                 },
             )
             raise
+
+    async def _build_deal_shops(self, stores: List[Store]) -> None:
+        """Fold the store list into real brands and index the ones running a deal.
+
+        Aliases are the spellings a human already approved during deal review, and they are
+        what lets a Hebrew card feed reach a shop filed under its English name — 'פיצה האט'
+        onto 'pizza hut', 'נייקי' onto 'nike'. Several large chains are filed exactly that way
+        and are otherwise unreachable.
+
+        A missing or unreadable ``store_aliases`` collection is survivable: matching still
+        works off the shops' own names, just without the cross-script bridge. It must not take
+        the service down at startup.
+        """
+        try:
+            aliases = await StoreAlias.find_all().to_list()
+        except Exception as error:
+            logger.warning(
+                f"Could not read store aliases, continuing without them: {error}",
+                extra={"reason": "Optional reference data unavailable", "extra_data": {}},
+            )
+            aliases = []
+
+        self._identities = build_identities(stores, aliases, self._deals_by_store)
+        self._identity_of_store = {
+            store_id: identity.store_id
+            for identity in self._identities.values()
+            for store_id in identity.store_ids
+        }
+        self._deal_shops = DealShopFinder(list(self._identities.values()))
+
+        logger.info(
+            "Deal shops indexed",
+            extra={
+                "reason": "Data preparation for missed savings analysis",
+                "extra_data": {
+                    "alias_count": len(aliases),
+                    "identity_count": len(self._identities),
+                    "shops_with_deals": len(self._deal_shops),
+                },
+            },
+        )
 
     def _attach_club_stores(self) -> None:
         """Give every club the shops it actually has deals at.
@@ -199,6 +247,36 @@ class ReferenceDataRepository:
         if self._store_index is None:
             return StoreMatch(status=NO_MATCH, rejected_by="NOT_LOADED")
         return match_store(merchant_name, town_name, self._store_index, self._place_words)
+
+    def find_deal_shops(
+        self,
+        merchant_name: str | None,
+        town_name: str | None = None,
+        transaction_category: str | None = None,
+    ) -> List[ShopMatch]:
+        """
+        Shops running a deal that this merchant name could refer to, best first.
+
+        Deliberately more forgiving than `match_merchant_name`: it is answering "was there a
+        coupon here", where a near miss still lands on a shop selling the same thing. Read
+        `ShopMatch.band` before wording anything — only EXACT and STRONG mean "this shop".
+        """
+        if self._deal_shops is None:
+            return []
+        return self._deal_shops.find(merchant_name, town_name, transaction_category)
+
+    def identity_for_store(self, store_id: str) -> StoreIdentity | None:
+        """The brand a given store row folded into."""
+        key = self._identity_of_store.get(store_id)
+        return self._identities.get(key) if key else None
+
+    def clubs_for_identity(self, identity: StoreIdentity) -> List[str]:
+        """Which clubs carry this brand, under any of the store rows it was folded from."""
+        return [
+            club_id
+            for club_id, club in self._clubs.items()
+            if identity.store_ids & set(club.stores or [])
+        ]
 
     def teach_place_words(self, merchant_names: List[str]) -> None:
         """

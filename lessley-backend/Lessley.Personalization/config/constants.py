@@ -7,6 +7,46 @@ class LIMITS:
     HIT_THRESHOLD = 0.20
 
 
+class SHOP_MATCH:
+    """
+    Thresholds for finding a shop that runs a deal, given a card-feed merchant name.
+
+    Deliberately more forgiving than ``STORE_MATCH``. That one answers "is this definitely the
+    same shop", and refuses when unsure. This one answers "is there a coupon the user could
+    have used", where landing on a different coffee shop still tells them something true —
+    both sell coffee — and saying nothing tells them nothing.
+
+    The one rule not carried over is ``STORE_MATCH.QUERY_COVERAGE_MIN``, which demands the
+    merchant's own leftover words be accounted for. It is what rejects 'קפה ברלין' against
+    'קפה קפה', and it alone caused 42 of 122 rejections on a year of real transactions.
+    """
+
+    # How much of the *shop's* name the merchant string has to account for. Kept from
+    # STORE_MATCH: without it a single stray shared word matches almost anything.
+    STORE_COVERAGE_MIN = 0.65
+
+    # A two-letter overlap is feed truncation, never a name.
+    MIN_SHARED_TOKEN_LENGTH = 3
+    MIN_QUERY_LENGTH = 3
+
+    # A lone shared word this rare identifies a shop on its own.
+    SOLO_RARITY_MIN = 0.671
+
+    # A shared word this common names a line of business ('קפה', 'פיצה', 'בר') rather than a
+    # shop. Still worth showing — but as "somewhere similar", not "here".
+    LINE_OF_BUSINESS_RARITY_MAX = 0.55
+
+    # A merchant name that boils down to one word this many shops share is a category label,
+    # not a shop. Bare 'מסעדה' otherwise matches every restaurant at once.
+    LOW_INFORMATION_DF = 10
+
+    # Words this common are useless for narrowing candidates down.
+    CANDIDATE_DF_CAP = 400
+
+    # Most alternatives we will ever hand back for one purchase.
+    MAX_SUGGESTIONS = 5
+
+
 class STORE_MATCH:
     """
     Thresholds for matching a card-feed merchant name to a shop in our store list.
