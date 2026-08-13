@@ -182,20 +182,18 @@ and the provider ambiguity as they stand in the code, and flag them again at rev
 
 ## Raised while writing chapter 1
 
-### Q8 — Three market claims in §1.1 need citations, not repository evidence
+### ~~Q8~~ — Market claims in §1.1 needing citations — **RESOLVED**
 
-Chapter 1 carries no `[n]` markers yet because chapter 2's research has not run. Three
-statements in §1.1 are general market observations rather than facts I can cite to a file,
-and each will need a real reference once the list exists:
+Two of the three claims now carry inline citations, inserted when chapter 6's reference list
+was created:
 
-1. Open Finance characterized as a regulated, consent-based third-party access interface.
-2. Hebrew orthographic variance (niqqud, final forms, presentation forms, legal suffixes) as
-   a recognised entity-resolution obstacle.
-3. The four-way categorization of Israeli benefit issuers (organizational clubs, card
-   programmes, retailer programmes, voucher networks).
-
-Everything else in the chapter is cited to `path:line`. This is tracked so the markers get
-inserted when chapter 2 is written — not left to be noticed at proofreading.
+1. Open Finance as regulated consent-based access → **[5]**, and §1.1 now names the Israeli
+   instrument specifically (Financial Information Services Law, 2021; Israel Securities
+   Authority) rather than describing the mechanism generically.
+2. Hebrew orthographic variance as a matching obstacle → **[9]**.
+3. The four-way categorization of benefit issuers needs no citation — it is the project's own
+   framing of what the registered scrapers target, and §1.1 now says so explicitly rather
+   than implying it is received taxonomy.
 
 ### Q9 — Deliberately excluded from chapter 1: unsourced market statistics
 
@@ -217,12 +215,204 @@ will describe the timeline accordingly rather than equating it with repository h
 
 ---
 
+## Raised while writing chapter 2
+
+### Q11 — Two references were verified bibliographically but not read in full
+
+Chapter 2 cites thirteen sources. **Eleven were retrieved and read.** Two were not, and I want
+this visible rather than buried:
+
+- **[6] Fellegi & Sunter (1969)**, *JASA* 64(328):1183–1210 — the founding paper of
+  probabilistic record linkage. Print-era, paywalled.
+- **[7] Winkler (1990)**, ASA Survey Research Methods Section, pp. 354–359 — the origin of the
+  Jaro–Winkler comparator. Proceedings paper; located via its ERIC record (ED325505).
+
+For both, the bibliographic details and the substance attributed to them in §2.1.3 were
+confirmed against multiple independent secondary sources, including the Binette & Steorts
+survey [8] which I did read in full. Citing a foundational paper known through a survey is
+ordinary scholarly practice, and §2.1.3 makes no claim about either that the secondary
+literature does not support.
+
+> **Q11** — Is that acceptable, or does the college expect every cited work to have been read
+> in the original? If the latter, tell me and I will either obtain them through the college
+> library or restrict §2.1.3 to citing [8] alone.
+
+### Q12 — Two paywalled sources could not be retrieved, and are not cited
+
+Both are directly relevant to §2.1.6 and would have strengthened it:
+
+- A Springer/WISE 2017 chapter on efficient approximate entity matching using Jaro–Winkler
+  distance (auth redirect).
+- A 2025 *Expert Systems with Applications* article on conflicts and optimization of multiple
+  promotion combinations for merchants (HTTP 403).
+
+The second is the closest thing I found to prior work on the stacking-conflict problem, so its
+absence is a genuine gap in the review rather than a formatting inconvenience. **If you have
+college library access, these two are worth pulling** — I will fold them in and revise §2.1.6.
+Neither is cited and no claim rests on them in the meantime.
+
+### Q13 — Chapter 2's structure departs from the specification's literal shape
+
+The spec gives chapter 2 a single sub-chapter, "2.1 Overview of Relevant Literature". A
+single undifferentiated section covering seven distinct fields would be unreadable, so §2.1 is
+divided into 2.1.1–2.1.8. Example book A does exactly this — themed sub-headings beneath one
+numbered sub-chapter — and example book B goes further, numbering 2.1 through 2.8 at the
+sub-chapter level.
+
+I followed example book A, which stays closer to the spec's numbering. Flag it if your
+supervisor wants the flatter literal form.
+
+---
+
+## Raised while writing chapter 3
+
+### ~~Q14 / Q4~~ — Hardware specification — **RESOLVED by measurement**
+
+The measurements in chapter 4 ran on this machine, so its specification was captured directly
+rather than asked for: **Apple Mac16,10, Apple M4 (10 cores: 4 performance + 6 efficiency),
+24 GB RAM, macOS 26.5.2 (build 25F84)**. Recorded in §4.1 and §3.3.7.
+
+> Still worth confirming: is this the machine the project was **developed** on, and does the
+> **deployment host** differ? §3.3.7 describes the development/measurement machine; if the
+> college server has a different specification, give me one line and I will add it.
+
+### ~~Q14 (original text)~~ — Hardware specification blocking two sections
+
+§3.3.7 carries a `[MISSING]` block where the specification explicitly asks for hardware
+details, and §4.1 will need the same information to describe the measurement environment.
+This is the only `[MISSING]` marker in chapter 3.
+
+Needed: **CPU, RAM and operating system** of the machine the system was developed and measured
+on, plus the deployment host's specification if it differs. One line each is enough.
+
+What the repository does establish, and what §3.3.7 says in the meantime: production targets a
+single Docker Compose host on a college-administered DNS name, serving a pre-issued
+certificate rather than using ACME, with only Caddy publishing ports; the worker defaults to
+three sources scraped in parallel.
+
+### Q15 — Confirm the two-phase optimizer split is fairly described as the core contribution
+
+§3.3.3 and §2.1.8 both present the price-level / instrument-level distinction — chaining versus
+bill-splitting — as the project's central technical contribution, on the grounds that the
+promotion-optimization literature I reviewed models promotions as homogeneous.
+
+That is my reading of the code and the literature, not a claim you made. **If you consider a
+different part of the system the primary contribution** — the edge-authentication split, the
+matching pipeline with its learning loop, or the guarded-expiry versioning — say so and I will
+re-weight chapters 2, 3 and 5 accordingly. It is the kind of claim an examiner will probe, so
+it should be the one you actually want to defend.
+
+### Q16 — Eight mermaid diagrams need exporting before assembly
+
+All eight are authored as ```` ```mermaid ```` blocks in chapter 3 and will need to be rendered
+to images at the assembly stage. Full list in `00-outline.md`; figures 1–8 are all in this
+chapter. Figures 6 and 7 (the DAG worked example and the two-phase flow) are the two that most
+repay being drawn properly — they carry the argument that the prose in §1.2 sets up.
+
+### Q17 — Chapter 3 has no code excerpt longer than about ten lines
+
+Example book A embeds screenshots of code as figures. I have used short inline excerpts cited
+to `path:line` instead, on the grounds that they are searchable, diffable and survive the
+`.docx` conversion, whereas screenshots of code do not.
+
+If your supervisor expects longer listings, the natural place is Appendix A rather than
+chapter 3 — tell me and I will move fuller listings there.
+
+---
+
+## Raised while writing chapter 4
+
+### Q20 — A probable product defect: `RawScrapedRecord.fingerprint` ignores `store_name`
+
+**This is the most important item in this file.** Of the 13 test failures measured, 12 are
+environmental or stale-test issues. This one is not.
+
+> `tests/unit/domain/test_models.py::TestRawScrapedRecordFingerprint::test_differs_when_store_name_changes`
+> builds two `RawScrapedRecord`s differing **only** in `store_name` (`"Store A"` vs
+> `"Store B"`) and asserts their fingerprints differ. They are byte-identical:
+> `7e05c99fb6919d71ff3287f21a03ea42f6f4164a844bf9c838d64dede8e5d943`.
+
+A fingerprint invariant under a change of store name cannot distinguish records describing
+different stores, and fingerprinting feeds record identity — so two distinct scraped records
+could be treated as one.
+
+I have **not** traced this to its cause. It is possible `store_name` is deliberately excluded
+and the test encodes a stale expectation. But the test's name states the intended contract, so
+the burden of proof runs the other way.
+
+> **Q20** — Real defect, or stale test? §4.5 currently says it should be resolved before the
+> system is described as production-ready. If it is a stale test I will soften that sentence;
+> if it is a defect it belongs in chapter 5's limitations too.
+
+Related, lower stakes: `test_brand_utils.py::test_unrecognised_substore_treated_as_specific`
+expects `"UNKNOWN STORE"` but gets `"קבוצת גולף - תווים"` — the same kind of unresolved
+test/implementation disagreement. Chapter 4 reports it as ambiguous rather than adjudicating.
+
+### Q18 — Personalization's local `.env` blocks its own test suite
+
+`config/settings.py:27` declares `SettingsConfigDict(env_file=".env", …)` with **no**
+`extra="ignore"`, so pydantic-settings rejects unknown keys. The local
+`Lessley.Personalization/.env` contains `GATEWAY_PROXY_TARGET` and
+`PERSONALIZATION_PROXY_TARGET` (lines 4–5) — variables `lessley-cd/RUNNING.md:118-126` assigns
+to the **frontend**. Collection failed with `extra_forbidden` across all 9 test files.
+
+`.env` is git-ignored, so this is one checkout's local state, not committed code. I worked
+around it (§4.1) and the suite then passed 64/64.
+
+> **Q18** — Your call: remove the two frontend variables from that `.env`, or add
+> `extra="ignore"` to the settings model so a shared `.env` cannot break the service. The
+> second is more robust, the first more explicit.
+
+### Q19 — Three frontend tests fail on an undefined `localStorage`
+
+All three are in `src/routes/ProtectedRoute.test.tsx` at `localStorage.clear()`:
+`TypeError: Cannot read properties of undefined (reading 'clear')`. `vite.config.ts:78-83`
+sets `environment: 'jsdom'`, jsdom 29.1.1 is installed, and the other five test files pass.
+
+My best reading is a Vitest 4.1.9 / jsdom global-exposure change rather than a defect in the
+route guard — but I did not run it to ground, and chapter 4 says so rather than asserting it.
+
+### Q21 — The Gateway suite could not be run, and it is chapter 4's biggest gap
+
+No .NET SDK on this machine, so `Lessley.Gateway.Tests` did not execute. That suite carries
+`AuthE2ETests`, `SecurityE2ETests`, `NotificationE2ETests` and `PipelineRealInfraE2ETests` —
+precisely the tests that verify chapter 3's architectural and security claims.
+
+§4.5 currently states those claims are "asserted by tests that exist rather than verified by
+tests that ran". **Run `dotnet test` and paste me the summary line and I will fold the real
+numbers in and delete that caveat.** It would materially strengthen the chapter.
+
+### Q22 — Phase 1 operates on 4% of the real catalogue
+
+Measured from `main/resources/deals.json` (10,137 deals): **95.5% are instrument-level**
+(`payment_discount` 57.3%, `giftcard_discount` 35.3%, `cashback` 2.9%), 4.0% are `coupon`, and
+there are **zero** `store_sale` and **zero** `member_discount` deals.
+
+This cuts both ways, and chapter 4 reports both:
+
+- It **strongly validates** the two-phase design — chaining all six types uniformly would
+  compute the wrong answer for 95.5% of the catalogue. This is now the best available evidence
+  for the contribution claim in **Q15**.
+- It also means phase 1's layered DAG — the more elaborate half of the engine — currently runs
+  on 4% of deals with two of its three layers empty.
+
+§4.5 frames phase 1 as *anticipatory* rather than wasted. **Confirm that framing**, or tell me
+that store-sale/member-discount sources are planned, in which case chapter 5 should say so.
+
+---
+
 ## Noted, not blocking
 
 - **`lessley-cd/docker-compose.yaml:215-247`** — the `deals-pipeline` and `deals-worker`
   services are commented out in the main stack; the scraper worker is deployed from
   `lessley-deals/docker-compose.worker.yml` instead. I will document it that way unless you
   tell me the main-stack entries are meant to be live.
+- **Filename/type mismatch in the Gateway.** `Services/Classes/NotificationStore.cs` defines
+  the class `NotificationRepository`, and `Services/Interfaces/INotificationStore.cs` defines
+  `INotificationRepository`. The *type* names are used consistently everywhere
+  (`Program.cs:65`, `NotificationService.cs`, `SendNotificationService.cs`); only the two
+  filenames disagree. Chapter 3 refers to the types. Harmless, but renaming the files would
+  remove a stumble for anyone reading the code alongside the book.
 - **`lessley-deals/README.md:56`** shows a default `MONGO_URI` containing `guest:guest`
   credentials, and `lessley-cd/README.md:46` uses the same pair in its seeding commands. These
   are local development defaults, so I will reproduce the commands in Appendix A but will not

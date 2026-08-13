@@ -46,8 +46,10 @@ Three properties of this data make it resistant to naive aggregation.
 **Store identity is not stable across sources.** The same physical chain appears under
 different names in different catalogues. Israeli retail names carry Hebrew diacritics
 (niqqud), final-form letters that vary with position, Unicode presentation forms, legal
-suffixes such as *Ltd.*, and free-text branch descriptions appended to the chain name. Two
-sources describing the same store frequently share no exact substring. Joining a user's
+suffixes such as *Ltd.*, and free-text branch descriptions appended to the chain name. Niqqud
+in particular is rarely present in ordinary modern Hebrew text [9], so the same name may
+appear with and without it in two sources and compare as unequal. Two sources describing the
+same store frequently share no exact substring. Joining a user's
 transaction at a store to a deal published for that store therefore requires entity
 resolution, not string equality.
 
@@ -66,7 +68,11 @@ may disagree.
 Against this fragmented supply side, the demand side has recently become legible. Open
 Finance — the regulated interface through which a licensed third party may, with the
 consumer's consent, read their account and transaction data — makes an individual's actual
-spending machine-readable for the first time. Lessley consumes it through a dedicated client
+spending machine-readable for the first time. In Israel this access is governed by the
+Financial Information Services Law of 2021, which obliges financial institutions to expose
+account, card and savings data through a dedicated API to providers licensed by the Israel
+Securities Authority, acting only with the customer's explicit permission and only for stated
+purposes such as cash-flow analysis [5]. Lessley consumes it through a dedicated client
 (`lessley-backend/Lessley.Personalization/services/clients/open_finance_client.py:11`), which
 manages per-user access tokens, refreshes them ahead of expiry to avoid mid-request
 rejection, and collapses concurrent refreshes behind a single lock. It is this data that
@@ -308,12 +314,17 @@ This book is organized into the following chapters:
 
 ---
 
-### Citations pending
+### Note on sourcing
 
-Chapter 2's literature research has not yet been carried out, so no reference markers appear
-above. Three statements in §1.1 are general market observations rather than repository facts
-and will carry an inline `[n]` citation once the reference list exists: the characterization
-of Open Finance as a regulated consented-access interface; the description of Hebrew
-orthographic variance as an entity-resolution obstacle; and the framing of the four issuer
-categories. Every other factual claim in this chapter is cited to a file and line in the
-repository and can be verified there directly.
+Two statements in §1.1 rest on external sources rather than on the repository, and both now
+carry inline citations resolved against chapter 6: the description of Israel's Open Finance
+regime [5] and the observation that niqqud is rarely present in modern Hebrew text [9].
+
+The four-way categorization of benefit issuers in §1.1 is the project's own framing of what
+the scraping pipeline actually targets, derived from the registered source adapters rather
+than from any published taxonomy, and is presented as such rather than as a cited claim. No
+market-size, market-share or savings statistics appear in this chapter, because none could be
+sourced from the repository and none were invented.
+
+Every other factual claim in this chapter is cited to a file and line in the repository and
+can be verified there directly.
