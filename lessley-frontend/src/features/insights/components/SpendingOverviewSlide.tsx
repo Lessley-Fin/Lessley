@@ -1,7 +1,8 @@
-import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
+import { Bar, BarChart, LabelList, ResponsiveContainer, XAxis } from "recharts"
 import { useTranslation } from "react-i18next"
 
 import { CarouselSlideCard } from "@/components/shared/CarouselSlideCard"
+import { formatAmount, formatShortDate } from "@/lib/formatters"
 import type { SpendingPeriodComparison } from "@/lib/types"
 
 interface SpendingOverviewSlideProps {
@@ -28,34 +29,59 @@ export function SpendingOverviewSlide({ comparison, days }: SpendingOverviewSlid
     )
   }
 
-  const isYear = days === 365
-  const currentPeriodLabel = isYear
-    ? t("insights.spendingOverviewSlide.currentYear")
-    : t("insights.spendingOverviewSlide.currentDays", { count: days })
-  const previousPeriodLabel = isYear
-    ? t("insights.spendingOverviewSlide.previousYear")
-    : t("insights.spendingOverviewSlide.previousDays", { count: days })
+  const today = new Date()
+  const cutoff = new Date(today)
+  cutoff.setDate(cutoff.getDate() - days)
+  const previousEnd = new Date(cutoff)
+  previousEnd.setDate(previousEnd.getDate() - 1)
+  const previousStart = new Date(today)
+  previousStart.setDate(previousStart.getDate() - days * 2)
+
+  const currentPeriodLabel = `${formatShortDate(cutoff)} – ${formatShortDate(today)}`
+  const previousPeriodLabel = `${formatShortDate(previousStart)} – ${formatShortDate(previousEnd)}`
 
   const data = [
     {
-      label: t("insights.spendingOverviewSlide.thisPeriod"),
+      label: t(""),
       current: comparison.current_period_total,
       previous: comparison.previous_period_total,
     },
   ]
+
+  const currentSpentMore = data[0].current > data[0].previous
+  const currentColor = currentSpentMore ? "hsl(var(--destructive))" : "hsl(var(--success))"
+  const previousColor = currentSpentMore ? "hsl(var(--success))" : "hsl(var(--destructive))"
+  const currentLabelColor = currentSpentMore ? "hsl(var(--destructive-foreground))" : "hsl(var(--success-foreground))"
+  const previousLabelColor = currentSpentMore ? "hsl(var(--success-foreground))" : "hsl(var(--destructive-foreground))"
 
   return (
     <CarouselSlideCard title={t("insights.spendingOverviewSlide.title")} subtitle={t("insights.spendingOverviewSlide.subtitle")}>
       <ResponsiveContainer width="100%" height={170}>
         <BarChart data={data} barGap={4}>
           <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} />
-          <Bar dataKey="previous" fill="hsl(var(--chart-3))" radius={6} />
-          <Bar dataKey="current" fill="hsl(var(--chart-1))" radius={6} />
+          <Bar dataKey="previous" fill={previousColor} radius={6}>
+            <LabelList
+              dataKey="previous"
+              position="center"
+              fontSize={11}
+              fill={previousLabelColor}
+              formatter={(value) => formatAmount(Number(value))}
+            />
+          </Bar>
+          <Bar dataKey="current" fill={currentColor} radius={6}>
+            <LabelList
+              dataKey="current"
+              position="center"
+              fontSize={11}
+              fill={currentLabelColor}
+              formatter={(value) => formatAmount(Number(value))}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
       <div className="flex gap-4 text-xs text-muted-foreground">
-        <LegendDot color="hsl(var(--chart-1))" text={currentPeriodLabel} />
-        <LegendDot color="hsl(var(--chart-3))" text={previousPeriodLabel} />
+        <LegendDot color={previousColor} text={previousPeriodLabel} />
+        <LegendDot color={currentColor} text={currentPeriodLabel} />
       </div>
     </CarouselSlideCard>
   )
