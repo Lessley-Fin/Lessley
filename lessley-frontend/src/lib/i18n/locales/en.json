@@ -10,6 +10,8 @@
     "close": "Close",
     "back": "Back",
     "next": "Next",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
     "continue": "Continue",
     "submit": "Submit",
     "confirm": "Confirm",
