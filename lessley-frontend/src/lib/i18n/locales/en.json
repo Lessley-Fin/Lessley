@@ -309,34 +309,6 @@
     },
     "common": {
       "transactionsCount": "{{count}} transactions"
-    },
-    "missedSavings": {
-      "eyebrow": "Missed coupons",
-      "title": "Deals at shops you use",
-      "subtitle": "Shops running a deal that your spending could have covered.",
-      "empty": "No shops with deals matched your spending in this period.",
-      "shopCount": "{{count}} shop",
-      "shopCount_other": "{{count}} shops",
-      "dealCount": "{{count}} deal",
-      "dealCount_other": "{{count}} deals",
-      "coversHere": "Could have covered {{count}} purchase here",
-      "coversHere_other": "Could have covered {{count}} purchases here",
-      "coversSimilar": "You made {{count}} similar purchase",
-      "coversSimilar_other": "You made {{count}} similar purchases",
-      "band": {
-        "EXACT": {
-          "label": "Exact match",
-          "hint": "The same shop, by name"
-        },
-        "SIMILAR": {
-          "label": "Similar",
-          "hint": "Sells the same sort of thing"
-        },
-        "STRONG": {
-          "label": "Strong match",
-          "hint": "Almost certainly your shop"
-        }
-      }
     }
   },
   "recommendations": {
@@ -346,7 +318,8 @@
       "notConnectedTitle": "Connect to get recommendations",
       "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
       "tabTopMatches": "Top matches",
-      "tabMissedSavings": "Missed savings"
+      "tabMissedSavings": "Missed savings",
+      "tabMissedShops": "Your shops"
     },
     "missedSavingsSlide": {
       "title": "Missed savings",
@@ -374,6 +347,38 @@
         "highlight1Desc": "How closely a club's discounted stores overlap with where you actually shop.",
         "highlight2Title": "Stores match",
         "highlight2Desc": "The number of stores you shop at that this club also covers, out of the club's total stores."
+      }
+    },
+    "missedShopsSlide": {
+      "title": "Deals at shops you use",
+      "subtitle": "{{count}} shop running a deal your spending could have covered",
+      "subtitle_other": "{{count}} shops running deals your spending could have covered",
+      "loading": "Looking for deals at your shops…",
+      "empty": "No shops with deals matched your spending in this period.",
+      "dealCount": "{{count}} deal",
+      "dealCount_other": "{{count}} deals",
+      "coversHere": "Could have covered {{count}} purchase here",
+      "coversHere_other": "Could have covered {{count}} purchases here",
+      "coversSimilar": "You made {{count}} similar purchase",
+      "coversSimilar_other": "You made {{count}} similar purchases",
+      "band": {
+        "EXACT": {
+          "label": "Exact match",
+          "hint": "The same shop, by name"
+        },
+        "SIMILAR": {
+          "label": "Similar",
+          "hint": "Sells the same sort of thing"
+        },
+        "STRONG": {
+          "label": "Strong match",
+          "hint": "Almost certainly your shop"
+        }
+      },
+      "infoDialog": {
+        "ariaLabel": "About shop matching",
+        "title": "How these shops were found",
+        "body": "We match the shop names on your card statement against shops running deals. An exact or strong match is the shop you actually used. A similar match only shares a word describing the trade — a coffee place matching another coffee place — so it is somewhere like yours, not the same shop."
       }
     }
   },

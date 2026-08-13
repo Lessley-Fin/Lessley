@@ -10,7 +10,7 @@ from services.publisher_service import PublisherService
 from services.user_repository import UserRepository
 from services.reference_data_repository import ReferenceDataRepository
 from services.mcc_service import MccService
-from config.constants import LIMITS
+from config.constants import LIMITS, SHOP_MATCH
 from models.transaction import Transaction
 from services.utils.store_similarity import EXACT, SIMILAR, STRONG, SURFACEABLE, WEAK
 from routers.responses import (
@@ -474,7 +474,13 @@ class InsightsService:
                 entry["amount"] += self._amount_spent(transaction)
 
         shops = [self._describe_shop(entry) for entry in gathered.values()]
-        shops.sort(key=lambda shop: (-shop.covered_amount, shop.store_name))
+
+        # Band first, then money. Sorting on money alone lets a single coffee produce a dozen
+        # lookalike cafés that crowd a shop the user demonstrably visited out of the answer —
+        # and being told about the shop you actually used is worth more than any number of
+        # shops merely like it.
+        shops.sort(key=lambda shop: (_BAND_ORDER[shop.match_band], -shop.covered_amount, shop.store_name))
+        shops = shops[: SHOP_MATCH.MAX_SHOPS]
 
         logger.info(
             "Missed savings by store completed",

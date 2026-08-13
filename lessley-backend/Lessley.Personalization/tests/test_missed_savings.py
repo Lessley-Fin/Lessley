@@ -7,6 +7,7 @@ user actually shopped. The bar is deliberately lower than the strict matcher's: 
 another café is useful, landing on a car park is not.
 """
 
+from itertools import combinations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -272,16 +273,61 @@ def test_a_shop_outside_the_users_clubs_is_dropped():
     assert not service.missed_savings([_tx(merchant="סטימצקי")], user_club_ids=["c2"])[0].had_discount
 
 
-def test_one_purchase_never_returns_more_than_a_handful_of_shops():
-    """A long merchant string can name many shops at once; the user gets the best few."""
-    words = ["זוזה", "פיקנסין", "ללין", "לנדוור", "גירף", "הבורקס", "פתאל", "יעקבי"]
-    many = [_store(f"shop{i}", word) for i, word in enumerate(words)]
-    repo = _world(many)
+def _distinct_names(count):
+    """Names too unalike to fuzzy-match each other, so each shop matches on its own word."""
+    letters = "אבגדהוזחטיכלמנסעפצקרשת"
+    return ["".join(combo) for combo in list(combinations(letters, 4))[:count]]
+
+
+def test_every_shop_a_purchase_could_have_been_made_at_is_returned():
+    """No trimming to a handful — a shop with a coupon is worth showing."""
+    words = _distinct_names(8)
+    repo = _world([_store(f"shop{i}", word) for i, word in enumerate(words)])
 
     shops = repo.find_deal_shops(" ".join(words))
 
-    assert len(shops) == SHOP_MATCH.MAX_SUGGESTIONS
+    assert len(shops) == len(words)
     assert all(shop.band == STRONG for shop in shops)
+
+
+def test_the_whole_answer_is_capped_so_one_feed_cannot_return_thousands():
+    words = _distinct_names(60)
+    repo = _world([_store(f"shop{i}", word) for i, word in enumerate(words)])
+    service = _service(repo)
+
+    # Three purchases, each naming twenty shops — more than the ceiling between them.
+    shops = service.missed_savings_by_store(
+        [_tx(f"t{i}", merchant=" ".join(words[i * 20 : (i + 1) * 20])) for i in range(3)],
+        user_club_ids=["c1"],
+    )
+
+    assert len(shops) == SHOP_MATCH.MAX_SHOPS
+
+
+def test_a_shop_the_user_visited_outranks_a_pile_of_lookalikes():
+    """
+    Sorting on money alone lets a dozen lookalike cafés crowd out the shop actually used.
+
+    Being told about your own shop is worth more than any number of shops merely like it, so
+    the confident bands come first and the cap eats into the lookalikes instead.
+    """
+    repo = _world(
+        [_store("s1", "סטימצקי", ["BOOKS_&_GAMES"]), _store("s2", "קפה קפה", ["COFFEE_&_SNACKS"])]
+    )
+    service = _service(repo)
+
+    shops = service.missed_savings_by_store(
+        [
+            # Small spend at the shop they actually used, against a big spend whose only
+            # matches are lookalikes.
+            _tx("t1", merchant="סטימצקי כפר סבא", charged=10.0, sub="BOOKS_&_GAMES"),
+            _tx("t2", merchant="קפה ברלין", charged=900.0, sub="RESTAURANT"),
+        ],
+        user_club_ids=["c1"],
+    )
+
+    assert shops[0].store_name == "סטימצקי"
+    assert shops[0].is_same_store
 
 
 def test_purchases_without_an_id_are_skipped():

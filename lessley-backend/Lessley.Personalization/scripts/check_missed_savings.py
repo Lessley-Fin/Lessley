@@ -23,7 +23,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.stdout.reconfigure(encoding="utf-8")
 
 from services.utils.store_identity import build_identities          # noqa: E402
+from config.constants import SHOP_MATCH                               # noqa: E402
 from services.utils.store_similarity import DealShopFinder, SURFACEABLE  # noqa: E402
+
+BAND_RANK = {"EXACT": 0, "STRONG": 1, "SIMILAR": 2}
 
 # What a healthy run looks like, measured when the name matcher replaced MCC categories.
 # A drop means something regressed; a rise wants eyeballing before it is written in.
@@ -123,7 +126,9 @@ def main() -> int:
             matched += 1
             reached += spend_of(group)
             bands[found[0].band] += 1
-            rows.append((merchant, town, len(group), spend_of(group), found[0]))
+            # `found[0]` is the best reading of this merchant; `found` is every shop it could
+            # have earned a coupon at, which is what the by-store answer actually carries.
+            rows.append((merchant, town, len(group), spend_of(group), found[0], found))
 
         total = spend_of(transactions) or 1.0
         share = reached / total
@@ -142,7 +147,7 @@ def main() -> int:
 
         if args.details or args.band:
             print()
-            for merchant, town, count, amount, match in sorted(rows, key=lambda r: -r[3]):
+            for merchant, town, count, amount, match, _ in sorted(rows, key=lambda r: -r[3]):
                 if args.band and match.band != args.band:
                     continue
                 print(f"   [{match.band:7}] {merchant} ({town or '-'}) x{count} {amount:,.0f}"
@@ -150,17 +155,29 @@ def main() -> int:
                       f"  shared={' '.join(match.shared_tokens)}")
 
         if args.by_store:
-            print("\n   ── gathered by shop, the way the endpoint returns it ──")
             shops = {}
-            for merchant, town, count, amount, match in rows:
-                shop = shops.setdefault(
-                    match.identity.store_id,
-                    {"match": match, "spend": 0.0, "purchases": [], "count": 0},
-                )
-                shop["spend"] += amount
-                shop["count"] += count
-                shop["purchases"].append(merchant)
-            for shop in sorted(shops.values(), key=lambda s: -s["spend"]):
+            for merchant, town, count, amount, _, every in rows:
+                for match in every:
+                    shop = shops.setdefault(
+                        match.identity.store_id,
+                        {"match": match, "spend": 0.0, "purchases": [], "count": 0},
+                    )
+                    if BAND_RANK[match.band] < BAND_RANK[shop["match"].band]:
+                        shop["match"] = match
+                    shop["spend"] += amount
+                    shop["count"] += count
+                    shop["purchases"].append(merchant)
+
+            # Same order the service uses: band first, then money, so a shop the user
+            # demonstrably visited is never cut in favour of a pile of lookalikes.
+            ranked = sorted(
+                shops.values(), key=lambda s: (BAND_RANK[s["match"].band], -s["spend"])
+            )[: SHOP_MATCH.MAX_SHOPS]
+            by_band = Counter(shop["match"].band for shop in ranked)
+            print(f"\n   ── by shop: {len(shops)} shops, showing {len(ranked)} "
+                  f"(cap {SHOP_MATCH.MAX_SHOPS}) — "
+                  + ", ".join(f"{b} {n}" for b, n in by_band.most_common()) + " ──")
+            for shop in ranked:
                 match = shop["match"]
                 verdict = "you shopped here" if match.is_confident else "somewhere similar"
                 print(f"\n   {match.identity.name}  ·  {len(match.deals)} deals  ·  {verdict}")

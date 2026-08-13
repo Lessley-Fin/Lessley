@@ -17,7 +17,6 @@ import { AccountsSlide } from "./components/AccountsSlide"
 import { AnalysisPeriodCard } from "./components/AnalysisPeriodCard"
 import { ConnectBankCard } from "./components/ConnectBankCard"
 import { ConnectionCheck } from "./components/ConnectionCheck"
-import { MissedSavingsCard } from "./components/MissedSavingsCard"
 import { RecentTransactionsSlide } from "./components/RecentTransactionsSlide"
 import { SavingsHeroCard } from "./components/SavingsHeroCard"
 import { SpendingOverviewSlide } from "./components/SpendingOverviewSlide"
@@ -28,7 +27,6 @@ import {
   useCategoryInsights,
   useHasConnection,
   useInitOpenFinance,
-  useMissedSavingsByStore,
   useSpendingPeriodComparison,
   useSpendingSaved,
   useTopAccounts,
@@ -73,7 +71,6 @@ export function InsightsRecommendationsPage() {
   const { data: deepDiveAccounts = [] } = useTopAccounts(deepDiveDays, connected)
   const { data: topStoresRaw = [] } = useTopStores(deepDiveDays, connected)
   const { data: spendingComparison = null } = useSpendingPeriodComparison(deepDiveDays, connected)
-  const { data: missedShops = [] } = useMissedSavingsByStore(deepDiveDays, connected)
 
   const initOpenFinance = useInitOpenFinance()
 
@@ -153,8 +150,6 @@ export function InsightsRecommendationsPage() {
           <p className="text-sm text-destructive">{deepDiveErrorMessage}</p>
         ) : (
           <>
-            <MissedSavingsCard shops={missedShops} />
-
             <Carousel setApi={setCarouselApi} opts={{ align: "start", direction }}>
               <CarouselContent>
                 <CarouselItem>

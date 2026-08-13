@@ -43,8 +43,14 @@ class SHOP_MATCH:
     # Words this common are useless for narrowing candidates down.
     CANDIDATE_DF_CAP = 400
 
-    # Most alternatives we will ever hand back for one purchase.
-    MAX_SUGGESTIONS = 5
+    # Most shops we will ever hand back for one merchant name. Generous on purpose: a shop
+    # the user could have saved at is worth showing, and the bands already say how much each
+    # one is worth. The ranking puts the best first, so a low cap only ever hides good ones.
+    MAX_SUGGESTIONS = 25
+
+    # Most shops in the whole by-store answer, across every purchase. A ceiling rather than a
+    # trim — it exists so one pathological feed cannot return thousands, not to be reached.
+    MAX_SHOPS = 50
 
 
 class STORE_MATCH:
