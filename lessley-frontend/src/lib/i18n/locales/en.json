@@ -28,7 +28,57 @@
     "justNow": "Just now",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
-    "daysAgo": "{{count}}d ago"
+    "daysAgo": "{{count}}d ago",
+    "aboutLessley": {
+      "trigger": "What is Lessley?",
+      "dialogTitle": "Lessley",
+      "carousel": {
+        "what": "What is Lessley",
+        "gain": "Why use it",
+        "how": "How it works",
+        "safety": "Is it safe"
+      },
+      "slides": {
+        "what": {
+          "title": "Your financial autopilot",
+          "subtitle": "What is Lessley?",
+          "point1Title": "Track every purchase",
+          "point1Desc": "Lessley follows your spending and finds the clubs and deals that match it.",
+          "point2Title": "Personalized notifications",
+          "point2Desc": "Get notified about savings on the purchases you actually make."
+        },
+        "gain": {
+          "title": "What you gain",
+          "subtitle": "Why use Lessley?",
+          "point1Title": "Deals that fit your spending",
+          "point1Desc": "Find the clubs and cards that fit your real spending.",
+          "point2Title": "Savings you missed",
+          "point2Desc": "Catch savings you missed on purchases you already made.",
+          "point3Title": "Stacked perks",
+          "point3Desc": "Stack coupons with card perks automatically."
+        },
+        "how": {
+          "title": "How it works",
+          "subtitle": "Behind the scenes",
+          "point1Title": "Stacked savings",
+          "point1Desc": "Combine a store coupon with the right card benefit in one step.",
+          "point2Title": "Exact product match",
+          "point2Desc": "We price the item you actually want, not a lookalike.",
+          "point3Title": "Ephemeral coupons",
+          "point3Desc": "Scraped from retailers and forums minutes after they appear."
+        },
+        "safety": {
+          "title": "Built to be safe",
+          "subtitle": "Your data, protected",
+          "point1Title": "Bank-grade security",
+          "point1Desc": "Your credentials are encrypted in transit. We never store your banking passwords.",
+          "point2Title": "Read-only access",
+          "point2Desc": "Lessley reads your past transactions — read-only — it can't move your money.",
+          "point3Title": "Never sold",
+          "point3Desc": "Your data is used anonymously to power insights. It's never leaked or sold to any third party."
+        }
+      }
+    }
   },
   "nav": {
     "insights": "Insights",

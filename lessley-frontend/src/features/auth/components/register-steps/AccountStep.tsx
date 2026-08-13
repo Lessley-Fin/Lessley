@@ -2,6 +2,7 @@ import type { UseFormReturn } from "react-hook-form"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
+import { AboutLessleyDialog } from "@/components/shared/AboutLessleyDialog"
 import { Button } from "@/components/ui/button"
 import {
   FormControl,
@@ -29,7 +30,10 @@ export function AccountStep({ form, onContinue }: AccountStepProps) {
         onContinue()
       }}
     >
-      <h1 className="text-xl font-bold">{t("auth.register.account.title")}</h1>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <h1 className="text-xl font-bold">{t("auth.register.account.title")}</h1>
+        <AboutLessleyDialog />
+      </div>
       <FormField
         control={form.control}
         name="userName"
