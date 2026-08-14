@@ -19,9 +19,14 @@ public class PasswordResetService : IPasswordResetService
     private readonly ILogger<PasswordResetService> _logger;
 
     // One response for every "forgot password" request, whatever the address. Anything more
-    // specific turns this endpoint into an account-enumeration oracle.
-    private static readonly object AcknowledgedPayload =
-        new { message = "If that email has an account, a reset code is on its way." };
+    // specific turns this endpoint into an account-enumeration oracle. The policy is static
+    // configuration — the same for every caller — so including it keeps the two branches
+    // byte-identical while letting the UI state the real expiry instead of guessing.
+    private object AcknowledgedPayload => new
+    {
+        message = "If that email has an account, a reset code is on its way.",
+        policy  = _codes.Policy,
+    };
 
     public PasswordResetService(
         UserManager<ApplicationUser> userManager,

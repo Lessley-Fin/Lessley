@@ -29,6 +29,9 @@ public class VerificationCodeService : IVerificationCodeService
         _hashKey = Encoding.UTF8.GetBytes(jwtConfig.Value.Key);
     }
 
+    public VerificationPolicy Policy =>
+        new(_config.CodeLength, _config.CodeTtlMinutes, _config.ResendCooldownSeconds);
+
     public string GenerateCode()
     {
         var digits = new char[_config.CodeLength];

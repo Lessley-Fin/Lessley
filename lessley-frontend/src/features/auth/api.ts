@@ -23,6 +23,17 @@ export async function loginWithGateway(
   })
 }
 
+/**
+ * Code rules, reported by every endpoint that sends a code so the client never keeps its own
+ * copy of the server's timings. Note that the two durations are unrelated: `codeTtlMinutes` is
+ * how long the code works, `resendCooldownSeconds` only gates asking for a replacement.
+ */
+export interface VerificationPolicy {
+  codeLength: number
+  codeTtlMinutes: number
+  resendCooldownSeconds: number
+}
+
 // ── Registration ────────────────────────────────────────────────────────────
 // Three calls, and only the last one creates an account. The registrationToken returned by
 // `start` identifies the in-flight signup; it is worthless on its own until the emailed code
@@ -39,6 +50,7 @@ export interface StartRegistrationResponse {
   email: string
   codeExpiresAt: string
   expiresAt: string
+  policy: VerificationPolicy
 }
 
 export async function startRegistration(
@@ -64,7 +76,7 @@ export async function verifyRegistrationEmail(body: {
 
 export async function resendRegistrationCode(body: {
   registrationToken: string
-}): Promise<{ codeExpiresAt: string }> {
+}): Promise<{ codeExpiresAt: string; policy: VerificationPolicy }> {
   return apiFetch("/api/v1/auth/register/resend-code", {
     ...jsonBody(body),
     skipAuth: true,
@@ -94,7 +106,7 @@ export async function completeRegistration(
 
 export async function requestPasswordReset(body: {
   email: string
-}): Promise<{ message: string }> {
+}): Promise<{ message: string; policy: VerificationPolicy }> {
   return apiFetch("/api/v1/auth/password/forgot", {
     ...jsonBody(body),
     skipAuth: true,
@@ -129,7 +141,7 @@ export async function resetPassword(body: {
 
 export async function requestLoginCode(body: {
   email: string
-}): Promise<{ message: string }> {
+}): Promise<{ message: string; policy: VerificationPolicy }> {
   return apiFetch("/api/v1/auth/login/otp/request", {
     ...jsonBody(body),
     skipAuth: true,

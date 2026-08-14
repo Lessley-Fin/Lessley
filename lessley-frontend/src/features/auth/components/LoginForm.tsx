@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ROUTES } from "@/lib/routes"
+import type { VerificationPolicy } from "../api"
 import { loginWithGateway, requestLoginCode, verifyLoginCode } from "../api"
 import { loginSchema, type LoginValues } from "../schemas"
 import { usePostAuth } from "../usePostAuth"
@@ -142,13 +143,15 @@ function EmailCodeLoginForm({
   const [isWorking, setIsWorking] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [error, setError] = useState<string | undefined>()
+  const [policy, setPolicy] = useState<VerificationPolicy | undefined>()
 
   async function sendCode(resending: boolean) {
     const setBusy = resending ? setIsResending : setIsWorking
     setBusy(true)
     setError(undefined)
     try {
-      await requestLoginCode({ email })
+      const { policy: codePolicy } = await requestLoginCode({ email })
+      setPolicy(codePolicy)
       // The answer is the same for unknown addresses, so the UI always advances — it never
       // becomes a way to check who has an account.
       if (!resending) onCodeSent()
@@ -180,6 +183,7 @@ function EmailCodeLoginForm({
           isWorking={isWorking}
           isResending={isResending}
           error={error}
+          policy={policy}
           onSubmit={handleVerify}
           onResend={() => void sendCode(true)}
         />

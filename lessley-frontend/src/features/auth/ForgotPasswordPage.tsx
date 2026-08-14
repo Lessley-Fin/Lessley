@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ROUTES } from "@/lib/routes"
+import type { VerificationPolicy } from "./api"
 import { requestPasswordReset, resetPassword, verifyPasswordResetCode } from "./api"
 import { CodeEntryForm } from "./components/CodeEntryForm"
 import { passwordSchema } from "./schemas"
@@ -30,6 +31,7 @@ export function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   // Handed out once the emailed code is verified; the final call carries this instead of the code.
   const [resetTicket, setResetTicket] = useState("")
+  const [policy, setPolicy] = useState<VerificationPolicy | undefined>()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
@@ -37,7 +39,8 @@ export function ForgotPasswordPage() {
     setIsWorking(true)
     setError(undefined)
     try {
-      await requestPasswordReset({ email })
+      const { policy: codePolicy } = await requestPasswordReset({ email })
+      setPolicy(codePolicy)
       // The response is identical for unknown addresses on purpose, so the UI moves on either
       // way rather than revealing whether the account exists.
       setStep(STEP.CODE)
@@ -52,7 +55,8 @@ export function ForgotPasswordPage() {
     setIsResending(true)
     setError(undefined)
     try {
-      await requestPasswordReset({ email })
+      const { policy: codePolicy } = await requestPasswordReset({ email })
+      setPolicy(codePolicy)
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth.code.resendFailed"))
     } finally {
@@ -135,6 +139,7 @@ export function ForgotPasswordPage() {
             isWorking={isWorking}
             isResending={isResending}
             error={error}
+            policy={policy}
             onSubmit={handleVerifyCode}
             onResend={handleResendCode}
           />

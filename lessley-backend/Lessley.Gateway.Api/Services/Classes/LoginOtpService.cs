@@ -19,8 +19,12 @@ public class LoginOtpService : ILoginOtpService
     private readonly ILogger<LoginOtpService> _logger;
 
     // Identical for every address, so requesting a code cannot be used to test who has an account.
-    private static readonly object AcknowledgedPayload =
-        new { message = "If that email has an account, a sign-in code is on its way." };
+    // The policy is static configuration, identical for every caller, so it does not break that.
+    private object AcknowledgedPayload => new
+    {
+        message = "If that email has an account, a sign-in code is on its way.",
+        policy  = _codes.Policy,
+    };
 
     public LoginOtpService(
         UserManager<ApplicationUser> userManager,

@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next"
 
+import type { VerificationPolicy } from "../../api"
+
 import { CodeEntryForm } from "../CodeEntryForm"
 
 interface VerifyEmailStepProps {
@@ -7,6 +9,7 @@ interface VerifyEmailStepProps {
   isVerifying: boolean
   isResending: boolean
   error?: string
+  policy?: VerificationPolicy
   onVerify: (code: string) => void
   onResend: () => void
 }
@@ -20,6 +23,7 @@ export function VerifyEmailStep({
   isVerifying,
   isResending,
   error,
+  policy,
   onVerify,
   onResend,
 }: VerifyEmailStepProps) {
@@ -36,6 +40,7 @@ export function VerifyEmailStep({
         isWorking={isVerifying}
         isResending={isResending}
         error={error}
+        policy={policy}
         onSubmit={onVerify}
         onResend={onResend}
       />

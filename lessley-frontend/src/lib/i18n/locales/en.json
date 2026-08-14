@@ -196,7 +196,8 @@
       "resend": "Send a new code",
       "resendIn": "Send a new code in {{seconds}}s",
       "verifyFailed": "That code could not be verified.",
-      "resendFailed": "Could not send another code."
+      "resendFailed": "Could not send another code.",
+      "validFor": "This code stays valid for {{minutes}} minutes."
     }
   },
   "matchLevels": {

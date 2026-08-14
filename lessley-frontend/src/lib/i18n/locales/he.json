@@ -196,7 +196,8 @@
       "resend": "שליחת קוד חדש",
       "resendIn": "שליחת קוד חדש בעוד {{seconds}} שניות",
       "verifyFailed": "לא ניתן לאמת את הקוד.",
-      "resendFailed": "לא ניתן היה לשלוח קוד נוסף."
+      "resendFailed": "לא ניתן היה לשלוח קוד נוסף.",
+      "validFor": "הקוד תקף למשך {{minutes}} דקות."
     }
   },
   "matchLevels": {

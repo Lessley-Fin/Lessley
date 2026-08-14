@@ -10,6 +10,13 @@ namespace Lessley.Gateway.Api.Services.Interfaces;
 public sealed record CodeIssueOutcome(bool Issued, string? Code, string? ThrottleMessage);
 
 /// <summary>
+/// The non-secret rules the UI needs to describe a code honestly: how long it stays valid and
+/// how soon another can be requested. Identical for every caller and every address, so it is
+/// safe to return even from the endpoints that must not reveal whether an account exists.
+/// </summary>
+public sealed record VerificationPolicy(int CodeLength, int CodeTtlMinutes, int ResendCooldownSeconds);
+
+/// <summary>
 /// Result of presenting a code. On success <c>Entry</c> is the still-live document, so the caller
 /// can hang a reset ticket off it or delete it.
 /// </summary>
@@ -21,6 +28,12 @@ public sealed record CodeRedemption(bool Success, VerificationCode? Entry, strin
 /// </summary>
 public interface IVerificationCodeService
 {
+    /// <summary>
+    /// The code rules, for echoing to the client so it never hardcodes a copy of the server's
+    /// timings and drifts out of sync with them.
+    /// </summary>
+    VerificationPolicy Policy { get; }
+
     /// <summary>A fresh numeric code of the configured length, drawn from a CSPRNG.</summary>
     string GenerateCode();
 

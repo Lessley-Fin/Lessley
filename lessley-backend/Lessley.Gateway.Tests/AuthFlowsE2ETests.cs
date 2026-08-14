@@ -165,6 +165,49 @@ public class AuthFlowsE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
+    public async Task CodeEndpoints_ReportThePolicy_SoTheClientNeverHardcodesTimings()
+    {
+        using var http = _factory.CreateClient();
+        var (userName, email) = Identity("policy");
+
+        // The code's lifetime and the resend cooldown are different durations, and the UI has to
+        // state the first while disabling the resend button for the second. Both come from the
+        // server so tuning VerificationConfig cannot silently desync the client.
+        var start = await http.PostAsJsonAsync("api/auth/register/start",
+            new { UserName = userName, Email = email, Password = "Test1234!" });
+        var policy = JsonDocument.Parse(await start.Content.ReadAsStringAsync())
+            .RootElement.GetProperty("policy");
+
+        Assert.Equal(6,  policy.GetProperty("codeLength").GetInt32());
+        Assert.Equal(10, policy.GetProperty("codeTtlMinutes").GetInt32());
+        Assert.Equal(60, policy.GetProperty("resendCooldownSeconds").GetInt32());
+        Assert.NotEqual(
+            policy.GetProperty("codeTtlMinutes").GetInt32() * 60,
+            policy.GetProperty("resendCooldownSeconds").GetInt32());
+    }
+
+    [Fact]
+    public async Task PolicyInResponses_DoesNotLeakWhetherAnAccountExists()
+    {
+        using var http = _factory.CreateClient();
+        var (userName, email) = Identity("policy-leak");
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, userName, email);
+
+        // The policy is static configuration, so adding it to these bodies must leave the
+        // known/unknown responses byte-identical.
+        foreach (var path in new[] { "api/auth/password/forgot", "api/auth/login/otp/request" })
+        {
+            var known   = await http.PostAsJsonAsync(path, new { Email = email });
+            var unknown = await http.PostAsJsonAsync(path,
+                new { Email = $"nobody-{Guid.NewGuid():N}@test.com" });
+
+            Assert.Equal(
+                await known.Content.ReadAsStringAsync(),
+                await unknown.Content.ReadAsStringAsync());
+        }
+    }
+
+    [Fact]
     public async Task PasswordReset_FullFlow_ChangesThePasswordAndRevokesSessions()
     {
         using var http = _factory.CreateClient();

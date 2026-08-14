@@ -101,6 +101,7 @@ public class RegistrationService : IRegistrationService
             email,
             codeExpiresAt     = registration.CodeExpiresAt,
             expiresAt         = registration.ExpiresAt,
+            policy            = _codes.Policy,
         });
     }
 
@@ -177,7 +178,11 @@ public class RegistrationService : IRegistrationService
         await _email.SendAsync(
             AuthEmailTemplates.RegistrationCode(registration.Email, code, _config.CodeTtlMinutes), ct);
 
-        return AuthOperationResult.Ok(new { codeExpiresAt = registration.CodeExpiresAt });
+        return AuthOperationResult.Ok(new
+        {
+            codeExpiresAt = registration.CodeExpiresAt,
+            policy        = _codes.Policy,
+        });
     }
 
     public async Task<AuthOperationResult> CompleteAsync(CompleteRegistrationDto dto, CancellationToken ct = default)

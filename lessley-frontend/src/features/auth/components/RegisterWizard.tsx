@@ -9,6 +9,7 @@ import { StepIndicator } from "@/components/shared/StepIndicator"
 import { Form } from "@/components/ui/form"
 import { useAuthStore } from "@/features/auth/store"
 import { ROUTES } from "@/lib/routes"
+import type { VerificationPolicy } from "../api"
 import {
   completeRegistration,
   resendRegistrationCode,
@@ -48,6 +49,7 @@ export function RegisterWizard() {
   // until the final `completeRegistration` call, so losing this (refresh, back to login) simply
   // means starting over — which is exactly the intended behaviour.
   const [registrationToken, setRegistrationToken] = useState("")
+  const [policy, setPolicy] = useState<VerificationPolicy | undefined>()
   const navigate = useNavigate()
   const applyAuthProfile = useApplyAuthProfile()
 
@@ -86,6 +88,7 @@ export function RegisterWizard() {
         password: values.password,
       })
       setRegistrationToken(started.registrationToken)
+      setPolicy(started.policy)
       setCodeError(undefined)
       setStep(STEP.VERIFY_EMAIL)
     } catch (error) {
@@ -112,7 +115,8 @@ export function RegisterWizard() {
     setIsResending(true)
     setCodeError(undefined)
     try {
-      await resendRegistrationCode({ registrationToken })
+      const { policy: codePolicy } = await resendRegistrationCode({ registrationToken })
+      setPolicy(codePolicy)
     } catch (error) {
       setCodeError(error instanceof Error ? error.message : t("auth.code.resendFailed"))
     } finally {
@@ -192,6 +196,7 @@ export function RegisterWizard() {
               isVerifying={isSubmitting}
               isResending={isResending}
               error={codeError}
+              policy={policy}
               onVerify={handleVerifyEmail}
               onResend={handleResendCode}
             />
