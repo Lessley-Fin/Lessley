@@ -18,6 +18,28 @@ service owns the prefix over a private network. Container ports are identical (g
 | mongo-express | included | removed |
 | HSTS | `max-age=0` | strong default |
 | Host-published ports | services exposed for tooling | Caddy only |
+| Auth emails | written to the gateway log | sent over SMTP (required) |
+
+## Auth emails (verification / reset / sign-in codes)
+
+Registration verifies the email address before the account is created, password reset is
+code-based, and there is a passwordless "sign in with a code" path. All three need to deliver
+a six-digit code.
+
+**In dev nothing is configured by default** — the code is written to the gateway's log instead
+of being sent:
+
+```
+docker compose logs -f gateway     # look for "EMAIL NOT SENT"
+```
+
+To exercise real delivery locally, set `SMTP_ENABLED=true` plus the `SMTP_*` vars in `.env`
+(a Mailtrap inbox, or a MailHog container on port 1025 with no credentials).
+
+**In prod SMTP is mandatory**: `docker-compose.prod.yaml` hardcodes `EmailConfig__Enabled=true`,
+and the Gateway throws at startup if it is false in Production — the alternative is an app where
+nobody can register or recover an account and nothing looks broken until users complain. See the
+SMTP block in `.env.template` (Gmail needs an App Password, not the account password).
 
 ## `manage.bat`
 

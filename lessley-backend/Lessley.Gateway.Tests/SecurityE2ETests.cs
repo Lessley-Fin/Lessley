@@ -31,7 +31,7 @@ public class SecurityE2ETests : IClassFixture<GatewayWebApplicationFactory>
     {
         using var http = _factory.CreateClient();
 
-        var resp = await http.PostAsJsonAsync("api/auth/register",
+        var resp = await http.PostAsJsonAsync("api/auth/register/start",
             new { UserName = "abc", Email = "not-an-email", Password = "Test1234!" });
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
@@ -42,7 +42,7 @@ public class SecurityE2ETests : IClassFixture<GatewayWebApplicationFactory>
     {
         using var http = _factory.CreateClient();
 
-        var resp = await http.PostAsJsonAsync("api/auth/register",
+        var resp = await http.PostAsJsonAsync("api/auth/register/start",
             new { UserName = "abc", Email = "abc@test.com", Password = "short" });
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);

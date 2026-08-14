@@ -1,6 +1,7 @@
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, Sparkles } from "lucide-react"
+import { KeyRound, Loader2, Mail, Sparkles } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
@@ -15,12 +16,36 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ROUTES } from "@/lib/routes"
-import { loginWithGateway } from "../api"
+import type { VerificationPolicy } from "../api"
+import { loginWithGateway, requestLoginCode, verifyLoginCode } from "../api"
 import { loginSchema, type LoginValues } from "../schemas"
 import { usePostAuth } from "../usePostAuth"
+import { CodeEntryForm } from "./CodeEntryForm"
+
+// Password is the default; the emailed-code path is offered alongside it rather than replacing it.
+type Mode = "password" | "email-request" | "email-code"
 
 export function LoginForm() {
+  const postAuth = usePostAuth()
+  const [mode, setMode] = useState<Mode>("password")
+
+  if (mode === "password") {
+    return <PasswordLoginForm onUseEmailCode={() => setMode("email-request")} />
+  }
+
+  return (
+    <EmailCodeLoginForm
+      awaitingCode={mode === "email-code"}
+      onCodeSent={() => setMode("email-code")}
+      onUsePassword={() => setMode("password")}
+      onAuthenticated={postAuth}
+    />
+  )
+}
+
+function PasswordLoginForm({ onUseEmailCode }: { onUseEmailCode: () => void }) {
   const { t } = useTranslation()
   const postAuth = usePostAuth()
 
@@ -88,10 +113,119 @@ export function LoginForm() {
           {isLoading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles />}
           {isLoading ? t("auth.login.signingIn") : t("auth.login.signIn")}
         </Button>
+        <Button type="button" variant="pill" size="xl" disabled={isLoading} onClick={onUseEmailCode}>
+          <Mail />
+          {t("auth.login.useEmailCode")}
+        </Button>
         <Button asChild variant="pill" size="xl">
           <Link to={ROUTES.REGISTER}>{t("auth.login.createAccount")}</Link>
         </Button>
       </form>
     </Form>
+  )
+}
+
+interface EmailCodeLoginFormProps {
+  awaitingCode: boolean
+  onCodeSent: () => void
+  onUsePassword: () => void
+  onAuthenticated: (profile: { userName: string; email: string }) => Promise<void>
+}
+
+function EmailCodeLoginForm({
+  awaitingCode,
+  onCodeSent,
+  onUsePassword,
+  onAuthenticated,
+}: EmailCodeLoginFormProps) {
+  const { t } = useTranslation()
+  const [email, setEmail] = useState("")
+  const [isWorking, setIsWorking] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [error, setError] = useState<string | undefined>()
+  const [policy, setPolicy] = useState<VerificationPolicy | undefined>()
+
+  async function sendCode(resending: boolean) {
+    const setBusy = resending ? setIsResending : setIsWorking
+    setBusy(true)
+    setError(undefined)
+    try {
+      const { policy: codePolicy } = await requestLoginCode({ email })
+      setPolicy(codePolicy)
+      // The answer is the same for unknown addresses, so the UI always advances — it never
+      // becomes a way to check who has an account.
+      if (!resending) onCodeSent()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.login.codeSendFailed"))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleVerify(code: string) {
+    setIsWorking(true)
+    setError(undefined)
+    try {
+      const profile = await verifyLoginCode({ email, code })
+      await onAuthenticated({ userName: profile.userName, email: profile.email ?? email })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth.code.verifyFailed"))
+    } finally {
+      setIsWorking(false)
+    }
+  }
+
+  if (awaitingCode) {
+    return (
+      <div className="space-y-3">
+        <CodeEntryForm
+          email={email}
+          isWorking={isWorking}
+          isResending={isResending}
+          error={error}
+          policy={policy}
+          onSubmit={handleVerify}
+          onResend={() => void sendCode(true)}
+        />
+        <Button type="button" variant="pill" size="xl" onClick={onUsePassword}>
+          <KeyRound />
+          {t("auth.login.usePassword")}
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <form
+      className="space-y-4 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
+      onSubmit={(e) => {
+        e.preventDefault()
+        void sendCode(false)
+      }}
+    >
+      <p className="text-sm text-muted-foreground">{t("auth.login.emailCodeIntro")}</p>
+      <div className="space-y-1.5">
+        <Label htmlFor="otp-email">{t("auth.forgotPassword.email")}</Label>
+        <Input
+          id="otp-email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          className="h-12 rounded-2xl"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isWorking}
+        />
+      </div>
+      <ErrorAlert message={error} />
+      <Button type="submit" variant="hero" size="xl" disabled={!email || isWorking}>
+        {isWorking ? <Loader2 className="size-4 animate-spin" /> : <Mail />}
+        {t("auth.login.sendSignInCode")}
+      </Button>
+      <Button type="button" variant="pill" size="xl" disabled={isWorking} onClick={onUsePassword}>
+        <KeyRound />
+        {t("auth.login.usePassword")}
+      </Button>
+    </form>
   )
 }

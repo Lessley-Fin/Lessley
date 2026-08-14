@@ -92,13 +92,18 @@
     "login": {
       "welcomeBack": "ברוכים השבים",
       "tagline": "טייס אוטומטי פיננסי לכל רכישה",
-      "username": "שם משתמש",
+      "username": "שם משתמש או אימייל",
       "password": "סיסמה",
       "forgotPassword": "שכחתם סיסמה?",
       "signingIn": "מתבצעת כניסה...",
       "signIn": "התחברות",
       "createAccount": "יצירת חשבון",
-      "signInFailed": "ההתחברות נכשלה. נסו שוב."
+      "signInFailed": "ההתחברות נכשלה. נסו שוב.",
+      "useEmailCode": "התחברות עם קוד באימייל",
+      "usePassword": "התחברות עם סיסמה",
+      "emailCodeIntro": "נשלח לכם קוד חד-פעמי במייל — בלי סיסמה.",
+      "sendSignInCode": "שלחו לי קוד",
+      "codeSendFailed": "לא ניתן היה לשלוח קוד התחברות."
     },
     "forgotPassword": {
       "backToSignIn": "חזרה להתחברות",
@@ -116,7 +121,9 @@
       "confirmNewPassword": "אימות סיסמה חדשה",
       "passwordsMismatch": "הסיסמאות אינן תואמות.",
       "savePassword": "שמירת סיסמה",
-      "passwordUpdated": "הסיסמה עודכנה"
+      "passwordUpdated": "הסיסמה עודכנה",
+      "sendFailed": "לא ניתן היה לשלוח קוד איפוס.",
+      "resetFailed": "לא ניתן היה לשנות את הסיסמה."
     },
     "register": {
       "back": "חזרה",
@@ -169,12 +176,28 @@
         "skipForNow": "דילוג לעת עתה",
         "skipNotice": "אפשר לדלג על זה — אך התובנות וההמלצות יישארו מוגבלות עד לחיבור בנק או כרטיס. אפשר לחבר מאוחר יותר דרך ההגדרות.",
         "dataUsageNotice": "המידע שלכם משמש לעיבוד פנימי באופן אנונימי — להפעלת תובנות, פרסומות ושיווק. הוא לעולם לא דלף או נמכר לצד שלישי."
+      },
+      "stepVerify": "אימות",
+      "verifyEmail": {
+        "title": "בדקו את תיבת הדואר",
+        "subtitle": "החשבון נוצר רק לאחר שלב זה.",
+        "sendingCode": "שולח קוד..."
       }
     },
     "shell": {
       "tagline": "ניהול פיננסי אישי, מותאם עבורך",
       "bankGradeSecurity": "אבטחה ברמה בנקאית",
       "encryptionNotice": "הפרטים שלכם מוצפנים בהעברה. אנחנו לעולם לא שומרים את הסיסמאות הבנקאיות שלכם."
+    },
+    "code": {
+      "sentTo": "הזינו את הקוד בן {{length}} הספרות שנשלח אל {{email}}.",
+      "label": "קוד אימות",
+      "verify": "אימות",
+      "resend": "שליחת קוד חדש",
+      "resendIn": "שליחת קוד חדש בעוד {{seconds}} שניות",
+      "verifyFailed": "לא ניתן לאמת את הקוד.",
+      "resendFailed": "לא ניתן היה לשלוח קוד נוסף.",
+      "validFor": "הקוד תקף למשך {{minutes}} דקות."
     }
   },
   "matchLevels": {

@@ -18,9 +18,27 @@ namespace Lessley.Gateway.Api.Middleware
         private static readonly HashSet<string> SafeMethods =
             new(StringComparer.OrdinalIgnoreCase) { "GET", "HEAD", "OPTIONS", "TRACE" };
 
+        /// <summary>
+        /// Anonymous credential entry points. These establish a brand-new identity from something
+        /// the caller must already know (a password, or a code sent to their mailbox) and never act
+        /// on the identity in the cookie — so gating them on a CSRF token protects nothing, while
+        /// leaving a user with a stale session cookie unable to sign in or reset their password at
+        /// all. Refresh, logout and verify are deliberately absent: those DO act on the cookie.
+        /// </summary>
+        private static readonly string[] AnonymousAuthPaths =
+        {
+            "/api/auth/login",     // also covers /api/auth/login/otp/* — but not /api/auth/logout
+            "/api/auth/register",
+            "/api/auth/password",
+        };
+
         /// <summary>True for methods CSRF cannot abuse. Shared with AuthController.Verify,
         /// which applies the same rule to the forwarded method during edge authentication.</summary>
         public static bool IsSafeMethod(string method) => SafeMethods.Contains(method);
+
+        /// <summary>True for the anonymous sign-in / registration / reset endpoints.</summary>
+        public static bool IsAnonymousAuthPath(PathString path) =>
+            AnonymousAuthPaths.Any(prefix => path.StartsWithSegments(prefix));
 
         public CsrfProtectionMiddleware(RequestDelegate next) => _next = next;
 
@@ -31,6 +49,7 @@ namespace Lessley.Gateway.Api.Middleware
             // so the /hubs path is exempt.
             if (!SafeMethods.Contains(context.Request.Method) &&
                 !context.Request.Path.StartsWithSegments("/hubs") &&
+                !IsAnonymousAuthPath(context.Request.Path) &&
                 !string.IsNullOrEmpty(context.Request.Cookies[AuthCookieNames.Access]))
             {
                 var headerToken = context.Request.Headers[AuthCookieNames.CsrfHeader].ToString();

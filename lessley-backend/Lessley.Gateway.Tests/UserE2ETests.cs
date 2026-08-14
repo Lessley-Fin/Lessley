@@ -187,8 +187,9 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     public async Task Register_ValidCredentials_Returns200()
     {
         using var http = _factory.CreateClient();
-        var dto        = new { UserName = $"reg-{Guid.NewGuid():N}", Email = $"reg-{Guid.NewGuid():N}@test.com", Password = "Test1234!" };
-        var response   = await http.PostAsJsonAsync("api/auth/register", dto);
+        var username   = $"reg-{Guid.NewGuid():N}";
+        var response   = await RegistrationFlow.RegisterAsync(
+            http, _factory.Emails, username, $"{username}@test.com");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -200,17 +201,15 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
         var username = $"reg-pref-{Guid.NewGuid():N}";
         var email    = $"{username}@test.com";
-        var dto = new
-        {
-            UserName        = username,
-            Email           = email,
-            Password        = "Test1234!",
-            Clubs           = new[] { "clubX", "clubY" },
-            MatchLevel      = "High",
-            MutedCategories = new[] { "5411", "5812" },
-        };
 
-        var response = await http.PostAsJsonAsync("api/auth/register", dto);
+        var response = await RegistrationFlow.RegisterAsync(
+            http, _factory.Emails, username, email,
+            preferences: new
+            {
+                Clubs           = new[] { "clubX", "clubY" },
+                MatchLevel      = "High",
+                MutedCategories = new[] { "5411", "5812" },
+            });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         using var scope = _factory.Services.CreateScope();
@@ -231,8 +230,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         var username = $"login-{Guid.NewGuid():N}";
         using var http = _factory.CreateClient();
 
-        await http.PostAsJsonAsync("api/auth/register",
-            new { UserName = username, Email = $"{username}@test.com", Password = "Test1234!" });
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, username, $"{username}@test.com");
 
         var response = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });
@@ -266,8 +264,7 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         var username = $"me-{Guid.NewGuid():N}";
         using var http = _factory.CreateClient();
 
-        await http.PostAsJsonAsync("api/auth/register",
-            new { UserName = username, Email = $"{username}@test.com", Password = "Test1234!" });
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, username, $"{username}@test.com");
 
         var loginResp = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });

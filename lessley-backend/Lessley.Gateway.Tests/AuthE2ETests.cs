@@ -47,8 +47,7 @@ public class AuthE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
 
         var username = $"reuse-{Guid.NewGuid():N}";
-        await http.PostAsJsonAsync("api/auth/register",
-            new { UserName = username, Email = $"{username}@test.com", Password = "Test1234!" });
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, username, $"{username}@test.com");
         var loginResp = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });
         var refresh1 = CookieValue(loginResp, "refresh_token")!;
@@ -100,8 +99,7 @@ public class AuthE2ETests : IClassFixture<GatewayWebApplicationFactory>
     private async Task<(string username, string csrf)> RegisterAndLoginAsync(HttpClient http)
     {
         var username = $"auth-{Guid.NewGuid():N}";
-        await http.PostAsJsonAsync("api/auth/register",
-            new { UserName = username, Email = $"{username}@test.com", Password = "Test1234!" });
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, username, $"{username}@test.com");
         var loginResp = await http.PostAsJsonAsync("api/auth/login",
             new { UserName = username, Password = "Test1234!" });
         Assert.Equal(HttpStatusCode.OK, loginResp.StatusCode);

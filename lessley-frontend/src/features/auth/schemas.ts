@@ -1,7 +1,9 @@
 import { z } from "zod"
 
 export const loginSchema = z.object({
-  userName: z.string().min(1, "Username is required"),
+  // The Gateway resolves this as a username first and then as an email address, so the field
+  // accepts either — a user who just reset their password by email will try that email here.
+  userName: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
 })
 

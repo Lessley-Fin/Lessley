@@ -16,6 +16,59 @@ public static class MongoIndexInitializer
         await CreateUserTagIndexAsync(db);
         await CreateDealFinderIndexesAsync(db);
         await CreateRefreshTokenIndexesAsync(db);
+        await CreatePendingRegistrationIndexesAsync(db);
+        await CreateVerificationCodeIndexesAsync(db);
+    }
+
+    private static async Task CreatePendingRegistrationIndexesAsync(IMongoDatabase db)
+    {
+        var col = db.GetCollection<BsonDocument>("pending_registrations");
+
+        // TTL — an abandoned signup disappears on its own once ExpiresAt passes, which is what
+        // makes "if the user stops registering, they start from the beginning" true without a
+        // cleanup job. Services still check ExpiresAt themselves, since Mongo's TTL monitor only
+        // sweeps about once a minute.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("ExpiresAt"),
+            new CreateIndexOptions { ExpireAfter = TimeSpan.Zero, Name = "ttl_pending_registration_expiresAt" }
+        ));
+
+        // One in-flight registration per address: the second "start" for an email replaces the
+        // first rather than racing it.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("NormalizedEmail"),
+            new CreateIndexOptions { Name = "uq_pending_registration_email", Unique = true }
+        ));
+
+        // Username collision check at "start".
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("NormalizedUserName"),
+            new CreateIndexOptions { Name = "idx_pending_registration_userName" }
+        ));
+
+        // Every step after "start" finds its registration by the hashed handle the client quotes.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("TokenHash"),
+            new CreateIndexOptions { Name = "idx_pending_registration_tokenHash" }
+        ));
+    }
+
+    private static async Task CreateVerificationCodeIndexesAsync(IMongoDatabase db)
+    {
+        var col = db.GetCollection<BsonDocument>("verification_codes");
+
+        // TTL — expired reset/login codes evaporate rather than accumulating.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("ExpiresAt"),
+            new CreateIndexOptions { ExpireAfter = TimeSpan.Zero, Name = "ttl_verification_code_expiresAt" }
+        ));
+
+        // At most one live code per flow per address — requesting a new code overwrites the old
+        // one, so only the newest code an address received can ever be redeemed.
+        await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("Purpose").Ascending("NormalizedEmail"),
+            new CreateIndexOptions { Name = "uq_verification_code_purpose_email", Unique = true }
+        ));
     }
 
     private static async Task CreateRefreshTokenIndexesAsync(IMongoDatabase db)
