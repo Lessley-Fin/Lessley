@@ -189,6 +189,46 @@ public class AuthFlowsE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Login_AcceptsEitherUsernameOrEmail()
+    {
+        using var http = _factory.CreateClient();
+        var (userName, email) = Identity("login-id");
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, userName, email);
+
+        // Reset, verification and OTP login are all keyed by email, so signing in with the
+        // email must work too — otherwise a user who just reset their password by email gets
+        // "Invalid credentials" and reasonably concludes the reset did not take.
+        using var byEmail = _factory.CreateClient();
+        var emailLogin = await byEmail.PostAsJsonAsync("api/auth/login",
+            new { UserName = email, Password = "Test1234!" });
+        Assert.Equal(HttpStatusCode.OK, emailLogin.StatusCode);
+
+        using var byName = _factory.CreateClient();
+        var nameLogin = await byName.PostAsJsonAsync("api/auth/login",
+            new { UserName = userName, Password = "Test1234!" });
+        Assert.Equal(HttpStatusCode.OK, nameLogin.StatusCode);
+    }
+
+    [Fact]
+    public async Task PasswordReset_ThenLoginWithEmail_UsesTheNewPassword()
+    {
+        using var http = _factory.CreateClient();
+        var (userName, email) = Identity("reset-email-login");
+        await RegistrationFlow.RegisterAsync(http, _factory.Emails, userName, email);
+
+        var ticket = await ResetToTicketAsync(http, email);
+        var reset = await http.PostAsJsonAsync("api/auth/password/reset",
+            new { Email = email, ResetTicket = ticket, NewPassword = "BrandNew5678!" });
+        Assert.Equal(HttpStatusCode.OK, reset.StatusCode);
+
+        // The exact journey a user takes: reset by email, then sign in with that same email.
+        using var fresh = _factory.CreateClient();
+        var login = await fresh.PostAsJsonAsync("api/auth/login",
+            new { UserName = email, Password = "BrandNew5678!" });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+    }
+
+    [Fact]
     public async Task PasswordReset_TicketIsSingleUse()
     {
         using var http = _factory.CreateClient();

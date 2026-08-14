@@ -92,7 +92,7 @@
     "login": {
       "welcomeBack": "ברוכים השבים",
       "tagline": "טייס אוטומטי פיננסי לכל רכישה",
-      "username": "שם משתמש",
+      "username": "שם משתמש או אימייל",
       "password": "סיסמה",
       "forgotPassword": "שכחתם סיסמה?",
       "signingIn": "מתבצעת כניסה...",

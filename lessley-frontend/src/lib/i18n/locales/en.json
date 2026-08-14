@@ -92,7 +92,7 @@
     "login": {
       "welcomeBack": "Welcome back",
       "tagline": "Financial autopilot for every purchase",
-      "username": "Username",
+      "username": "Username or email",
       "password": "Password",
       "forgotPassword": "Forgot password?",
       "signingIn": "Signing in...",

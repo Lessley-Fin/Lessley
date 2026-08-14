@@ -51,7 +51,7 @@ namespace Lessley.Gateway.Api.Controllers
         // creating the account in one call is what allowed abandoned signups to leave real,
         // unverified users behind.
 
-        /// <summary>Authenticates a user and issues httpOnly session cookies.</summary>
+        /// <summary>Authenticates a user by username or email and issues httpOnly session cookies.</summary>
         /// <remarks>Tokens are never returned in the body — they are set as Secure/HttpOnly
         /// cookies. The response body carries only non-sensitive profile info for the UI.</remarks>
         [HttpPost("login")]
@@ -59,7 +59,7 @@ namespace Lessley.Gateway.Api.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var user = await _userManager.FindByNameAsync(model.UserName);
+            var user = await FindByUserNameOrEmailAsync(model.UserName);
             if (user == null)
                 return Unauthorized("Invalid credentials");
 
@@ -215,6 +215,28 @@ namespace Lessley.Gateway.Api.Controllers
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Resolves the login identifier as a username first, then as an email address. Every
+        /// other flow in the app is keyed by email — registration verification, password reset,
+        /// and the emailed sign-in code — so a user who has just reset their password by email
+        /// will naturally try to sign in with it. Accepting only the username made that return
+        /// "Invalid credentials", which is indistinguishable from a wrong password.
+        /// Username is tried first deliberately: usernames may legally contain "@", so a stranger
+        /// could otherwise register a username equal to someone's email and shadow the lookup.
+        /// They would still need that account's password, and this ordering keeps the real
+        /// owner's username login working regardless.
+        /// </summary>
+        private async Task<ApplicationUser?> FindByUserNameOrEmailAsync(string identifier)
+        {
+            var user = await _userManager.FindByNameAsync(identifier);
+            if (user is not null) return user;
+
+            return identifier.Contains('@')
+                ? await _userManager.FindByEmailAsync(identifier)
+                : null;
+        }
+
         // Cookie shaping lives in AuthCookieWriter, shared with the registration and
         // OTP-login controllers so every sign-in path emits identical cookies.
 
