@@ -195,8 +195,10 @@ class SourceRegistry:
         from lessley_deals.scraping.sources.mastercard import MastercardAdapter
         from lessley_deals.scraping.sources.paisplus import PaisPlusAdapter
         from lessley_deals.scraping.sources.paisplus_cashcards import (
-            PaisPlusFoodChainsAdapter,
-            PaisPlusNetworksAdapter,
+            PaisPlusFoodChainsRegularAdapter,
+            PaisPlusFoodChainsVipAdapter,
+            PaisPlusNetworksRegularAdapter,
+            PaisPlusNetworksVipAdapter,
         )
         from lessley_deals.scraping.sources.swish import SwishAdapter
 
@@ -209,8 +211,11 @@ class SourceRegistry:
             (HeverGiftCardAdapter, "https://www.hvr.co.il"),
             (HeverTeamimAdapter, "https://www.hvr.co.il"),
             (PaisPlusAdapter, "https://paisplus.co.il"),
-            (PaisPlusFoodChainsAdapter, "https://paisplus.co.il"),
-            (PaisPlusNetworksAdapter, "https://paisplus.co.il"),
+            # One per (program, membership tier) — see paisplus_cashcards.py.
+            (PaisPlusFoodChainsRegularAdapter, "https://paisplus.co.il"),
+            (PaisPlusFoodChainsVipAdapter, "https://paisplus.co.il"),
+            (PaisPlusNetworksRegularAdapter, "https://paisplus.co.il"),
+            (PaisPlusNetworksVipAdapter, "https://paisplus.co.il"),
         ]
         for cls, url in defaults:
             try:

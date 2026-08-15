@@ -60,7 +60,12 @@ export function WinningStack({ result, deals, storeName, store }: WinningStackPr
             <span className="font-semibold">{formatAmount(result.starting_price)}</span>
           </div>
 
-          <StackSteps steps={result.per_step} deals={deals} store={store} />
+          <StackSteps
+            steps={result.per_step}
+            deals={deals}
+            cartTotal={result.starting_price}
+            store={store}
+          />
 
           <div className="mt-1 flex items-center justify-between rounded-2xl bg-secondary px-3 py-2 text-sm">
             <span className="font-semibold">{t("optimizer.winningStack.youPay")}</span>

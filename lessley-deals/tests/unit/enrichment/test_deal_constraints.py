@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from lessley_deals.enrichment.constaints_parser import (
     Combinability,
     DealConstraints,
@@ -206,8 +208,12 @@ _BLOCKED_SOURCES = (
     "hever_gift_card_company",
     "hever_teamim_card_store",
     "paisplus",
-    "paisplus_networks",
-    "paisplus_food_chains",
+    # The cash-card programs are one source per membership tier; both tiers of
+    # a program share its block, since only the bracket numbers differ.
+    "paisplus_networks_regular",
+    "paisplus_networks_vip",
+    "paisplus_food_chains_regular",
+    "paisplus_food_chains_vip",
     "mastercard",
     "topcash",
 )
@@ -266,8 +272,9 @@ def test_paisplus_block_separates_voucher_counts_from_shekel_ceilings() -> None:
     assert "כולל כפלמבצעים" in prompt
 
 
-def test_paisplus_networks_block_inverts_the_default_store_coverage() -> None:
-    prompt = build_system_prompt("paisplus_networks")
+@pytest.mark.parametrize("source_id", ["paisplus_networks_regular", "paisplus_networks_vip"])
+def test_paisplus_networks_block_inverts_the_default_store_coverage(source_id: str) -> None:
+    prompt = build_system_prompt(source_id)
     # This source excludes branches — the opposite of the branch-based sources.
     assert "ניתן למימוש באתר בלבד" in prompt
     assert "is_include_physical_stores: no" in prompt
@@ -275,8 +282,9 @@ def test_paisplus_networks_block_inverts_the_default_store_coverage() -> None:
     assert "NOT minimum_purchase" in prompt
 
 
-def test_paisplus_food_block_keeps_self_checkout_out_of_store_coverage() -> None:
-    prompt = build_system_prompt("paisplus_food_chains")
+@pytest.mark.parametrize("source_id", ["paisplus_food_chains_regular", "paisplus_food_chains_vip"])
+def test_paisplus_food_block_keeps_self_checkout_out_of_store_coverage(source_id: str) -> None:
+    prompt = build_system_prompt(source_id)
     assert "לא ניתן לשלם בקופות עצמיות" in prompt
     assert "self-checkout is a register type" in prompt
     assert "Do NOT set is_include_physical_stores to \"no\" for it" in prompt

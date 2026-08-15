@@ -985,8 +985,15 @@ _SOURCE_PROMPTS: dict[str, str] = {
     "hever_gift_card_company": _HEVER_GIFT_CARD_PROMPT,
     "hever_teamim_card_store": _HEVER_TEAMIM_PROMPT,
     "paisplus": _PAISPLUS_PROMPT,
-    "paisplus_networks": _PAISPLUS_NETWORKS_PROMPT,
-    "paisplus_food_chains": _PAISPLUS_FOOD_PROMPT,
+    # The cash-card programs are split by membership tier into one source_id
+    # each (see scraping/sources/paisplus_cashcards.py). The terms text is
+    # identical across tiers -- only the bracket numbers differ -- so both tiers
+    # of a program share its block. Without these entries the new source_ids
+    # would silently fall back to the generic prompt.
+    "paisplus_networks_regular": _PAISPLUS_NETWORKS_PROMPT,
+    "paisplus_networks_vip": _PAISPLUS_NETWORKS_PROMPT,
+    "paisplus_food_chains_regular": _PAISPLUS_FOOD_PROMPT,
+    "paisplus_food_chains_vip": _PAISPLUS_FOOD_PROMPT,
     "mastercard": _MASTERCARD_PROMPT,
     "topcash": _TOPCASH_PROMPT,
 }

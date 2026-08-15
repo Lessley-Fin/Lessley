@@ -62,7 +62,12 @@ export function RankedOptions({ results, deals, store }: RankedOptionsProps) {
 
             {isOpen ? (
               <div className="border-t border-border px-3 py-3">
-                <StackSteps steps={result.per_step} deals={deals} store={store} />
+                <StackSteps
+                  steps={result.per_step}
+                  deals={deals}
+                  cartTotal={result.starting_price}
+                  store={store}
+                />
               </div>
             ) : null}
           </div>

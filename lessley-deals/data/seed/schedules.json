@@ -41,13 +41,23 @@
     "timeout_seconds": 1200
   },
   {
-    "source_id": "paisplus_food_chains",
+    "source_id": "paisplus_food_chains_regular",
+    "cron": "45 3 1,15 * *",
+    "timeout_seconds": 1200
+  },
+  {
+    "source_id": "paisplus_food_chains_vip",
     "cron": "50 3 1,15 * *",
     "timeout_seconds": 1200
   },
   {
-    "source_id": "paisplus_networks",
+    "source_id": "paisplus_networks_regular",
     "cron": "55 3 1,15 * *",
+    "timeout_seconds": 1200
+  },
+  {
+    "source_id": "paisplus_networks_vip",
+    "cron": "0 4 1,15 * *",
     "timeout_seconds": 1200
   },
   {
