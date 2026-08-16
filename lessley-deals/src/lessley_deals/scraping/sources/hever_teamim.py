@@ -7,17 +7,30 @@ chain with several locations appears once per branch), not one row per
 company. No login required — same as the gift-card dataset.
 
 The underlying deal (fixed loading bonus) is identical for every branch of a
-restaurant, so branches are grouped by ``name`` into a single deal per
-restaurant — same convention as ``hot.py``'s ``_locations`` handling for
-multi-branch brands. Per-branch address/hours/etc. go into
-``raw_payload["_locations"]``; fields that can legitimately differ between
-branches of the same restaurant (``delivery`` mode, ``desc``) are merged
-rather than arbitrarily taking the first branch's value.
+restaurant, so branches are grouped into a single deal per restaurant — same
+convention as ``hot.py``'s ``_locations`` handling for multi-branch brands.
+Per-branch address/hours/etc. go into ``raw_payload["_locations"]``; fields
+that can legitimately differ between branches of the same restaurant
+(``delivery`` mode, ``desc``) are merged rather than arbitrarily taking the
+first branch's value.
+
+Branches are grouped by ``img`` (the chain's logo filename) *and* by ``name``,
+taking the transitive closure of both — not by ``name`` alone. The site bakes
+the branch into the name for some chains, so name alone splits one restaurant
+into several: "פיצה עגבניה גן העיר" / "פיצה עגבניה שינקין" / … became six
+separate deals carrying one benefit, and the optimizer stacked them as if they
+were six independent ones. ``img`` is also the *better* separator — it keeps
+"מאמא גרג" apart from "קפה גרג", which name-token matching merges. Logo alone
+isn't enough either: a handful of chains were uploaded with two logo files
+("בני הדייג"), and those are only caught by the shared name. See
+``_group_branches``.
 
 Source schema (one object per branch in ``data["branch"]``), confirmed from
 the live JSON response:
 
-- ``name``            restaurant name
+- ``img``             chain logo filename, e.g. "logo_agvania.jpg" — the
+                        grouping key, identical across a chain's branches
+- ``name``            restaurant name, sometimes with the branch appended
 - ``desc``             short description (e.g. "מסעדה איטלקית")
 - ``category``/``type`` cuisine classification
 - ``area``/``city``/``address``/``phone``/``latitude``/``longitude`` branch location
@@ -63,6 +76,15 @@ _LOADING_BONUS_TEXT = (
     '25% הנחה על 1,000 ₪ הבאים ו-20% הנחה על 1,000 ₪ נוספים (עד 3,000 ₪ בסה"כ)'
 )
 _LOADING_BONUS_PRICE_TEXT = "30% הנחה בטעינה (עד 3,000 ₪)"
+
+# Placeholder logos — shared by unrelated businesses, so they identify nothing.
+# A branch carrying one of these is grouped by ``name`` instead. Compared
+# case-insensitively; keep the entries lowercase.
+_PLACEHOLDER_IMAGES = frozenset({"teamim_default.jpg"})
+
+# Trailing punctuation left behind when a chain's branch suffix is stripped off
+# the shared name prefix ("הוט סינמה - גרנד קניון" -> "הוט סינמה -" -> "הוט סינמה").
+_NAME_EDGE_CHARS = " -–—|,:;"
 
 
 def _loading_bonus_discount_logic() -> dict[str, Any]:
@@ -112,14 +134,10 @@ class HeverTeamimAdapter(BaseSourceAdapter):
             return [], []
 
         now = datetime.now(timezone.utc)
-        groups: dict[str, list[dict[str, Any]]] = {}
-        for record in records:
-            if not isinstance(record, dict) or not record.get("name"):
-                continue
-            groups.setdefault(str(record["name"]).strip(), []).append(record)
+        groups = self._group_branches(records)
 
-        stores = [self._to_raw_store(branches, now) for branches in groups.values()]
-        deals = [self._to_raw_deal(branches, now) for branches in groups.values()]
+        stores = [self._to_raw_store(branches, now) for branches in groups]
+        deals = [self._to_raw_deal(branches, now) for branches in groups]
 
         logger.info(
             "[%s] Parsed %d restaurants (%d branches) from %s",
@@ -147,6 +165,90 @@ class HeverTeamimAdapter(BaseSourceAdapter):
     # ------------------------------------------------------------------
     # Branch-group merge helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _group_branches(records: list[Any]) -> list[list[dict[str, Any]]]:
+        """The feed's branches split into one group per restaurant.
+
+        Two branches are the same restaurant when they share a logo *or* share
+        a name, and grouping takes the transitive closure of both links —
+        neither signal is sufficient alone:
+
+        - **shared ``img``** catches chains whose ``name`` embeds the branch
+          ("פיצה עגבניה גן העיר" / "פיצה עגבניה שינקין" / …). Name alone
+          splits those into a deal per branch, which is what let the optimizer
+          stack one chain's benefit against itself.
+        - **shared ``name``** catches chains the site uploaded a logo twice
+          for ("בני הדייג" under both ``logo_benny_dayag.png`` and
+          ``logo_benihadayag.jpg``). Logo alone splits those.
+
+        Placeholder logos link nothing — they are shared by unrelated
+        businesses — so a branch carrying one groups by name only.
+
+        Verified against the live feed: 1583 branches, 514 distinct names,
+        480 logo groups, 476 groups once both links are applied.
+        """
+        parent: dict[str, str] = {}
+
+        def find(node: str) -> str:
+            parent.setdefault(node, node)
+            while parent[node] != node:
+                parent[node] = parent[parent[node]]
+                node = parent[node]
+            return node
+
+        def union(left: str, right: str) -> None:
+            left_root, right_root = find(left), find(right)
+            if left_root != right_root:
+                parent[left_root] = right_root
+
+        branches: list[tuple[str, dict[str, Any]]] = []
+        for index, record in enumerate(records):
+            if not isinstance(record, dict) or not record.get("name"):
+                continue
+            node = f"branch:{index}"
+            union(node, f"name:{str(record['name']).strip()}")
+            image = str(record.get("img") or "").strip()
+            if image and image.lower() not in _PLACEHOLDER_IMAGES:
+                union(node, f"img:{image.lower()}")
+            branches.append((node, record))
+
+        # Resolved only now that every union is in — a root read mid-loop can
+        # still be merged into another by a later branch.
+        groups: dict[str, list[dict[str, Any]]] = {}
+        for node, record in branches:
+            groups.setdefault(find(node), []).append(record)
+        return list(groups.values())
+
+    @staticmethod
+    def _canonical_name(branches: list[dict[str, Any]]) -> str:
+        """The chain's name, with any per-branch suffix removed.
+
+        Grouping by ``img`` collects names that differ by branch ("פיצה עגבניה
+        גן העיר", "פיצה עגבניה שינקין", …), so the group needs one name that
+        isn't an arbitrary branch's. That is the longest *whole-word* prefix
+        every name shares — word-wise rather than character-wise so a shared
+        prefix can never cut mid-word ("אנגוס"/"אנגוסרי" share five characters
+        but no word, and must not collapse to a truncation).
+
+        Falls back to the shortest name when the group shares no leading word,
+        which is what a logo grouping two spellings of one restaurant looks
+        like ("Moon"/"moon", "kampai street wok"/"קאמפיי סטריט ווק").
+        """
+        names = list(dict.fromkeys(str(b["name"]).strip() for b in branches if str(b.get("name") or "").strip()))
+        if len(names) == 1:
+            return names[0]
+
+        shared: list[str] = []
+        # strict=False on purpose: names have different word counts ("פיצה
+        # עגבניה" vs "פיצה עגבניה גן העיר") and the shared prefix ends at the
+        # shortest of them, which is exactly what truncating zip gives.
+        for position in zip(*(name.split() for name in names), strict=False):
+            if len(set(position)) != 1:
+                break
+            shared.append(position[0])
+
+        return " ".join(shared).strip(_NAME_EDGE_CHARS) or min(names, key=len)
 
     @staticmethod
     def _first_nonempty(branches: list[dict[str, Any]], key: str) -> str:
@@ -219,7 +321,7 @@ class HeverTeamimAdapter(BaseSourceAdapter):
         return f"{_LOADING_BONUS_TEXT}, למימוש ב{store_name}."
 
     def _to_raw_store(self, branches: list[dict[str, Any]], now: datetime) -> RawStore:
-        store_name = str(branches[0]["name"]).strip()
+        store_name = self._canonical_name(branches)
         return RawStore(
             id=generate_id(),
             source_id=self.source_id,
@@ -229,12 +331,15 @@ class HeverTeamimAdapter(BaseSourceAdapter):
             raw_payload={
                 "source": "hever_teamim",
                 "internal_link": self._first_nonempty(branches, "internal_link") or None,
+                # The grouping key — kept so a merged chain can be traced back
+                # to the logo that merged it.
+                "img": self._first_nonempty(branches, "img") or None,
                 "branch_qty": len(branches),
             },
         )
 
     def _to_raw_deal(self, branches: list[dict[str, Any]], now: datetime) -> RawScrapedRecord:
-        store_name = str(branches[0]["name"]).strip()
+        store_name = self._canonical_name(branches)
         deal_description = self._first_nonempty(branches, "desc")
         delivery = self._merge_delivery_modes(branches)
         limitations = self._merge_limitations(branches)
