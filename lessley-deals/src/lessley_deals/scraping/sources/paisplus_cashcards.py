@@ -26,8 +26,14 @@ Each chit carries ``topup_rules``: two membership tiers (``"regular"`` for
 silver/gold, ``"vip"`` for gold+/platinum), each with its own amount-bracket
 discounts. Confirmed live: every store within a chit_group shares identical
 bracket numbers -- it's one program-wide bonus per group, same spirit as
-hever's own loading bonus, just split by membership tier. Each store
-therefore yields **two deals**, one per tier.
+hever's own loading bonus, just split by membership tier.
+
+A cardholder has exactly one tier, so the tiers are **separate sources**, not
+two deals on one card: there is one adapter per (program, tier), each with its
+own ``source_id`` and its own club. That is what lets a user say which tier
+they hold and have the optimizer prune the other -- eligibility keys on
+``source_id``, so a tier that isn't its own source can't be selected against.
+Each store therefore yields **one deal per adapter**.
 
 Unlike hever's single flat rate, each tier's amount brackets are a real
 two-stage ladder with a hard ceiling (networks/regular: 25% on the first
@@ -109,6 +115,13 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
     _chit_group_id: ClassVar[int]
     _category_path: ClassVar[str]
     _source_id: ClassVar[str]
+    # Which ``topup_rules[].rule_member`` this adapter emits. The membership
+    # tier is an entitlement, not a variant of one deal: a cardholder is either
+    # regular (silver/gold) or vip (gold+/platinum), never both. Eligibility is
+    # keyed on ``source_id`` (see deal_optimizer's ``deal_eligibility``), so
+    # each tier needs its own source_id and its own club to be selectable —
+    # hence one adapter per (program, tier) rather than one emitting both.
+    _member_tier: ClassVar[str]
 
     def __init__(
         self,
@@ -293,7 +306,7 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
 
             for rule in chit.get("topup_rules") or []:
                 tier = rule.get("rule_member")
-                if tier not in _TIER_LABELS:
+                if tier != self._member_tier:
                     continue
                 discounts = rule.get("topup_rule_discounts") or []
                 if not discounts:
@@ -329,7 +342,14 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
                     # has one tier, never both. Without this the optimizer would
                     # happily allocate both tiers' ladders to one cart and claim
                     # savings the card can't pay out.
-                    "exclusive_group": f"{self.source_id}:chit-{chit_id}",
+                    #
+                    # Deliberately keyed on the chit rather than ``source_id``:
+                    # the two tiers now come from different adapters with
+                    # different source_ids, so a source-scoped key would never
+                    # match across them and the guard would silently do nothing.
+                    # Clubs should already keep a wallet to one tier; this is
+                    # the backstop for a user who ticks both.
+                    "exclusive_group": f"paisplus:chit-{chit_id}",
                 }
                 tier_label = _TIER_LABELS[tier]
                 price_text = (
@@ -389,17 +409,49 @@ class _PaisPlusCashcardAdapterBase(BaseSourceAdapter):
         return results
 
 
-class PaisPlusFoodChainsAdapter(_PaisPlusCashcardAdapterBase):
+class _FoodChainsBase(_PaisPlusCashcardAdapterBase):
     """PaisPlus loadable food-chain cash card (chit_group_id=200)."""
 
     _chit_group_id = 200
     _category_path = "/cashcards/food-chains"
-    _source_id = "paisplus_food_chains"
 
 
-class PaisPlusNetworksAdapter(_PaisPlusCashcardAdapterBase):
+class _NetworksBase(_PaisPlusCashcardAdapterBase):
     """PaisPlus loadable networks/shops cash card (chit_group_id=201)."""
 
     _chit_group_id = 201
     _category_path = "/cashcards/networks"
-    _source_id = "paisplus_networks"
+
+
+# One adapter per (program, membership tier). Each fetches its program's chit
+# list independently -- two extra HTTP calls in exchange for every tier being a
+# first-class source_id, which is what makes it selectable as its own club and
+# prunable by the optimizer's wallet check.
+
+
+class PaisPlusFoodChainsRegularAdapter(_FoodChainsBase):
+    """Food-chain card, regular tier (silver/gold)."""
+
+    _source_id = "paisplus_food_chains_regular"
+    _member_tier = "regular"
+
+
+class PaisPlusFoodChainsVipAdapter(_FoodChainsBase):
+    """Food-chain card, VIP tier (gold+/platinum)."""
+
+    _source_id = "paisplus_food_chains_vip"
+    _member_tier = "vip"
+
+
+class PaisPlusNetworksRegularAdapter(_NetworksBase):
+    """Networks card, regular tier (silver/gold)."""
+
+    _source_id = "paisplus_networks_regular"
+    _member_tier = "regular"
+
+
+class PaisPlusNetworksVipAdapter(_NetworksBase):
+    """Networks card, VIP tier (gold+/platinum)."""
+
+    _source_id = "paisplus_networks_vip"
+    _member_tier = "vip"

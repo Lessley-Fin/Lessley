@@ -9,6 +9,8 @@ import { DealInfoDialog } from "./DealInfoDialog"
 interface StackStepsProps {
   steps: OptimizerStep[]
   deals: Record<string, OptimizerDealSummary>
+  /** The original cart total — every step's headline rate is a share of this. */
+  cartTotal: number
   store?: OptimizerStore | null
 }
 
@@ -29,7 +31,7 @@ function useDealTypeLabel() {
  * is taken off, what's actually paid on that sum, and where the running bill
  * lands — so the path from cart total to final price can be read line by line.
  */
-export function StackSteps({ steps, deals, store }: StackStepsProps) {
+export function StackSteps({ steps, deals, cartTotal, store }: StackStepsProps) {
   const { t } = useTranslation()
   const dealTypeLabel = useDealTypeLabel()
   const [openStep, setOpenStep] = useState<number | null>(null)
@@ -65,10 +67,18 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
                     </div>
                   </div>
 
-                  {/* The discount this deal contributes, boxed so it reads at a glance. */}
+                  {/* The discount this deal contributes, boxed so it reads at a glance.
+                      Deliberately a share of the ORIGINAL cart total, not of the slice
+                      this deal covered (`discount_rate`): a card capped at 2,200 on a
+                      5,000 cart saves 120, which is 5.5% of what it covered but 2.4% of
+                      what you came to spend. The badges are read side by side, so they
+                      have to share one denominator or they can't be compared — and the
+                      per-deal figures now sum to the stack's headline saving. */}
                   <div className="shrink-0 text-end">
                     <span className="block rounded-xl bg-primary/10 px-2.5 py-1 text-sm font-bold text-primary">
-                      {t("optimizer.stackSteps.percentOff", { percent: formatPercent(step.discount_rate) })}
+                      {t("optimizer.stackSteps.percentOff", {
+                        percent: formatPercent(cartTotal > 0 ? step.savings / cartTotal : 0),
+                      })}
                     </span>
                     <span className="mt-1 block text-xs font-semibold text-primary">
                       −{formatAmount(step.savings)}
@@ -96,8 +106,8 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
                 </dl>
 
                 {/* A tiered loadable card discounts at a rate that steps down as the
-                    load grows, so the rate above is a blend. Break it out per rung,
-                    otherwise "21.7% off" matches none of the card's actual rates. */}
+                    load grows. Neither rung matches the headline badge — that's a share
+                    of the whole cart — so the real rates are spelled out here. */}
                 {step.segments ? (
                   <ul className="mt-2 space-y-1 border-s-2 border-border ps-3 text-xs text-muted-foreground">
                     {step.segments.map((segment) => (

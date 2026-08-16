@@ -67,4 +67,21 @@ def test_other_adapters_still_register(monkeypatch):
     registry = SourceRegistry()
     registry.register_defaults(include_llm_sites=False)
 
-    assert len(registry.list_all()) == 10
+    # Named rather than counted: a bare count says nothing about which adapter
+    # went missing, and this list is the definitive answer to "what does a
+    # `scrape --all` actually run".
+    assert set(registry.list_all()) == {
+        "behatsdaa",
+        "hever_gift_card_company",
+        "hever_teamim_card_store",
+        "hot",
+        "mastercard",
+        "paisplus",
+        # The cash-card programs are one source per membership tier.
+        "paisplus_food_chains_regular",
+        "paisplus_food_chains_vip",
+        "paisplus_networks_regular",
+        "paisplus_networks_vip",
+        "swish",
+        "topcash",
+    }
