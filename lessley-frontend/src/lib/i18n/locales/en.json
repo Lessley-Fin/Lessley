@@ -381,6 +381,8 @@
       "spentLabel": "Total spent",
       "purchaseCount": "{{count}} purchase",
       "purchaseCount_other": "{{count}} purchases",
+      "paidWith": "Paid with {{sources}}",
+      "missedClub": "Through {{clubs}}",
       "matchingShopsHeading": "{{count}} matching shop",
       "matchingShopsHeading_other": "{{count}} matching shops",
       "band": {

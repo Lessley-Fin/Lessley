@@ -67,6 +67,14 @@ class MissedShopPurchaseSchema(BaseModel):
     merchant_name: str = Field(..., description="The merchant name exactly as the bank reported it")
     amount: float = Field(..., description="What the purchase cost")
     date: str | None = Field(default=None, description="When the purchase happened")
+    account_id: str | None = Field(
+        default=None,
+        description=(
+            "The account the purchase was charged to. Only the id travels — the client already "
+            "holds the accounts themselves from /open-finance/accounts and reads the product and "
+            "provider off its own copy, so this DTO never restates them."
+        ),
+    )
 
 
 class MissedShopSchema(BaseModel):

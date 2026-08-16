@@ -516,6 +516,7 @@ class InsightsService:
                     merchant_name=self._merchant_of(transaction),
                     amount=self._amount_spent(transaction),
                     date=str(self._date_of(transaction)) if self._date_of(transaction) else None,
+                    account_id=transaction.accountId,
                 )
                 for transaction in entry["purchases"]
             ],

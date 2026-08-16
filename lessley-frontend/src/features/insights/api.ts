@@ -2,6 +2,7 @@ import { apiFetch } from "@/lib/api-client"
 import type {
   BasicApiResponse,
   MissedShop,
+  OpenFinanceAccount,
   PaginatedApiResponse,
   PersonalizationTransaction,
   RecommendationsResponse,
@@ -28,6 +29,13 @@ export async function checkHasConnection(): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+export async function fetchAccounts(): Promise<OpenFinanceAccount[]> {
+  const payload = await apiFetch<PaginatedApiResponse<OpenFinanceAccount>>(
+    "/api/v1/open-finance/accounts",
+  )
+  return Array.isArray(payload.data) ? payload.data : []
 }
 
 export async function initOpenFinanceConnection(): Promise<ConnectionInitResponse> {
