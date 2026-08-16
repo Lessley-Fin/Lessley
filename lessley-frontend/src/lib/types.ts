@@ -53,6 +53,21 @@ export interface PersonalizationTransaction {
   createdAt?: string
 }
 
+/**
+ * A bank / card account as Open Finance reports it.
+ *
+ * Insight payloads carry only the account *id*; the readable part of an account — which card
+ * it is and who issued it — is read off this list, fetched once and shared by every screen
+ * that has to name where a purchase came from.
+ */
+export interface OpenFinanceAccount {
+  id: string
+  providerId?: string
+  product?: string
+  accountNumber?: string
+  type?: string
+}
+
 export interface SpendingCategoryInsight {
   category: string
   total_count: number
@@ -129,6 +144,8 @@ export interface MissedShopPurchase {
   merchant_name: string
   amount: number
   date: string | null
+  /** Which account paid for it — resolve against {@link OpenFinanceAccount} to name it. */
+  account_id?: string | null
 }
 
 export interface MissedShop {

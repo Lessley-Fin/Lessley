@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import {
   checkHasConnection,
+  fetchAccounts,
   fetchCategoryInsights,
   fetchMissedSavingsByStore,
   fetchRecommendations,
@@ -23,6 +24,20 @@ export function useHasConnection() {
     queryKey: queryKeys.connection.status(),
     queryFn: checkHasConnection,
     refetchOnWindowFocus: true,
+  })
+}
+
+/**
+ * The user's accounts, fetched once and shared.
+ *
+ * Insight payloads name an account only by id, so any screen that has to say *where* a
+ * purchase came from reads the product and provider off this list.
+ */
+export function useAccounts(enabled: boolean = true) {
+  return useQuery({
+    queryKey: queryKeys.user.accounts(),
+    queryFn: fetchAccounts,
+    enabled,
   })
 }
 

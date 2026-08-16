@@ -383,6 +383,8 @@
       "purchaseCount": "קנייה אחת",
       "purchaseCount_two": "{{count}} קניות",
       "purchaseCount_other": "{{count}} קניות",
+      "paidWith": "שולם באמצעות {{sources}}",
+      "missedClub": "דרך {{clubs}}",
       "matchingShopsHeading": "חנות תואמת אחת",
       "matchingShopsHeading_two": "{{count}} חנויות תואמות",
       "matchingShopsHeading_other": "{{count}} חנויות תואמות",
