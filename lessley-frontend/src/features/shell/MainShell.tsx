@@ -21,18 +21,21 @@ export function MainShell({ children }: { children: ReactNode }) {
   const avatarInitial = (username.trim().charAt(0) || "L").toUpperCase()
 
   return (
-    <div className="phone-viewport">
-      <div className="phone-shell">
-        <header className="flex items-center gap-3 border-b border-border/70 bg-card/80 px-4 py-3 backdrop-blur">
-          <img src={logoUrl} alt={t("common.appName")} className="size-12" />
-          <div className="flex-1">
-            <p className="text-[15px] font-bold leading-tight">{t("common.appName")}</p>
-            <p className="text-xs text-muted-foreground">{t("common.tagline")}</p>
+    <div className="app-shell">
+      <header
+        className="flex items-center border-b border-border/70 bg-card/80 px-4 py-3 backdrop-blur sm:px-6"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+      >
+        <div className="app-content-width flex items-center gap-3">
+          <img src={logoUrl} alt={t("common.appName")} className="size-12 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[15px] font-bold leading-tight">{t("common.appName")}</p>
+            <p className="truncate text-xs text-muted-foreground">{t("common.tagline")}</p>
           </div>
           <Link
             to={ROUTES.NOTIFICATIONS}
             aria-label={t("nav.notifications")}
-            className="relative flex size-10 items-center justify-center rounded-full border border-border bg-card shadow-[var(--shadow-card)]"
+            className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-[var(--shadow-card)]"
           >
             <Bell className="size-[18px]" aria-hidden />
             {unreadCount > 0 ? (
@@ -42,42 +45,44 @@ export function MainShell({ children }: { children: ReactNode }) {
           <Link
             to={ROUTES.SETTINGS}
             aria-label={t("nav.profileAndSettings")}
-            className="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-bold uppercase text-accent-foreground"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold uppercase text-accent-foreground"
           >
             {avatarInitial}
           </Link>
-        </header>
+        </div>
+      </header>
 
-        <main className="no-scrollbar flex-1 overflow-y-auto px-4 pb-2 pt-4">
-          <div className="mx-auto w-full max-w-md">{children}</div>
-        </main>
+      <main className="no-scrollbar flex-1 overflow-y-auto px-4 pb-2 pt-4 sm:px-6">
+        <div className="app-content-width">{children}</div>
+      </main>
 
-        {showBottomNav ? (
-          <div className="mx-auto w-full max-w-md">
-            <nav className="px-4 pb-4" aria-label="Main navigation">
-              <div className="surface-navy flex items-center justify-between rounded-full px-2 py-2 shadow-[var(--shadow-float)]">
-                {MAIN_TABS.map((tab) => {
-                  const isActive = activeTab === tab.id
-                  return (
-                    <Link
-                      key={tab.id}
-                      to={tab.path}
-                      aria-current={isActive ? "page" : undefined}
-                      className={cn(
-                        "flex flex-1 flex-col items-center gap-1 rounded-full px-1 py-2 text-[11px] font-medium transition-all",
-                        isActive ? "surface-teal shadow-[var(--shadow-card)]" : "text-navy-muted hover:text-navy-foreground"
-                      )}
-                    >
-                      <tab.icon className="size-[18px]" aria-hidden />
-                      {t(tab.labelKey)}
-                    </Link>
-                  )
-                })}
-              </div>
-            </nav>
+      {showBottomNav ? (
+        <nav
+          className="px-4 pb-4 sm:px-6"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          aria-label="Main navigation"
+        >
+          <div className="app-content-width surface-navy flex items-center justify-between rounded-full px-2 py-2 shadow-[var(--shadow-float)]">
+            {MAIN_TABS.map((tab) => {
+              const isActive = activeTab === tab.id
+              return (
+                <Link
+                  key={tab.id}
+                  to={tab.path}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex flex-1 flex-col items-center gap-1 rounded-full px-1 py-2 text-[11px] font-medium transition-all",
+                    isActive ? "surface-teal shadow-[var(--shadow-card)]" : "text-navy-muted hover:text-navy-foreground"
+                  )}
+                >
+                  <tab.icon className="size-[18px]" aria-hidden />
+                  {t(tab.labelKey)}
+                </Link>
+              )
+            })}
           </div>
-        ) : null}
-      </div>
+        </nav>
+      ) : null}
     </div>
   )
 }

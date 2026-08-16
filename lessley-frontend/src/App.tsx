@@ -18,7 +18,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-        <Toaster position="top-center" richColors expand visibleToasts={3} />
+        <Toaster position="top-center" richColors visibleToasts={1} />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ErrorBoundary>

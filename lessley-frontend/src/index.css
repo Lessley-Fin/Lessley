@@ -97,17 +97,17 @@
 }
 
 @layer components {
-  .phone-viewport {
-    @apply flex min-h-svh w-full items-center justify-center sm:p-6;
-  }
-
-  .phone-shell {
-    @apply relative flex h-svh w-full flex-col overflow-hidden bg-background sm:h-[min(880px,calc(100svh-3rem))] sm:max-w-[430px] sm:rounded-[2.75rem] sm:border-8 sm:border-navy sm:shadow-[0_24px_64px_hsl(208_34%_5%/0.55)];
+  .app-shell {
+    @apply relative flex min-h-svh w-full flex-col overflow-hidden bg-background;
     background-color: hsl(203 34% 97%);
     background-image:
       radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
       radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.1), transparent 50%),
       radial-gradient(ellipse 50% 40% at 0% 80%, hsl(182 38% 36% / 0.06), transparent 45%);
+  }
+
+  .app-content-width {
+    @apply mx-auto w-full max-w-md md:max-w-xl lg:max-w-2xl;
   }
 
   .fintech-shell {
