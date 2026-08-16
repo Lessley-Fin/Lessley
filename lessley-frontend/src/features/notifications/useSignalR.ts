@@ -31,6 +31,41 @@ export function useSignalR() {
       .configureLogging(LogLevel.Warning)
       .build()
 
+    // Toasts are shown one at a time, in arrival order: the next one appears
+    // as soon as the current one closes. Advancing the queue is deferred by a
+    // tick (not called straight from onDismiss) because sonner re-subscribes
+    // its internal toast list on every change, and creating the next toast
+    // synchronously during that window can silently drop it.
+    const toastQueue: SignalRNotificationPayload[] = []
+    let toastActive = false
+    let advanceTimeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const showNextToast = () => {
+      const payload = toastQueue.shift()
+      if (!payload) return
+      toastActive = true
+
+      toast.custom((id) =>
+        createElement(NotificationToast, {
+          type: payload.type,
+          message: payload.message,
+          dealId: payload.dealId ?? null,
+          onView: () => {
+            toast.dismiss(id)
+            navigate(ROUTES.NOTIFICATIONS)
+          },
+          onDismiss: () => toast.dismiss(id),
+        }),
+        {
+          duration: Infinity,
+          onDismiss: () => {
+            toastActive = false
+            advanceTimeoutId = setTimeout(showNextToast, 0)
+          },
+        },
+      )
+    }
+
     const handleIncoming = (payload: SignalRNotificationPayload) => {
       const newNotification: NotificationDto = {
         id: crypto.randomUUID(),
@@ -52,19 +87,8 @@ export function useSignalR() {
         queryKey: queryKeys.notifications.all,
       })
 
-      toast.custom((id) =>
-        createElement(NotificationToast, {
-          type: payload.type,
-          message: payload.message,
-          dealId: payload.dealId ?? null,
-          onView: () => {
-            toast.dismiss(id)
-            navigate(ROUTES.NOTIFICATIONS)
-          },
-          onDismiss: () => toast.dismiss(id),
-        }),
-        { duration: Infinity },
-      )
+      toastQueue.push(payload)
+      if (!toastActive) showNextToast()
     }
 
     connection.on("DealUserNotification", handleIncoming)
@@ -85,6 +109,8 @@ export function useSignalR() {
       connection.off("DealUserNotification")
       connection.off("DealGroupNotification")
       connection.off("CalcNotification")
+      clearTimeout(advanceTimeoutId)
+      toastQueue.length = 0
       if (connection.state !== HubConnectionState.Disconnected) {
         void connection.stop()
       }
