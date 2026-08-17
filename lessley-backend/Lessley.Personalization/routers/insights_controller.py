@@ -30,7 +30,6 @@ async def calculate_user_categories(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -39,7 +38,7 @@ async def calculate_user_categories(
 
     try:
         service = DIContainer.get_insights_service()
-        categories = await service.calculate_user_categories_async(email, req.time_filter, req.days, req.use_mock)
+        categories = await service.calculate_user_categories_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -51,8 +50,7 @@ async def calculate_user_categories(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     "record_count": len(categories),
@@ -97,7 +95,6 @@ async def calculate_top_accounts(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -106,7 +103,7 @@ async def calculate_top_accounts(
 
     try:
         service = DIContainer.get_insights_service()
-        accounts = await service.calculate_top_accounts_async(email, req.time_filter, req.days, req.use_mock)
+        accounts = await service.calculate_top_accounts_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -118,8 +115,7 @@ async def calculate_top_accounts(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     "record_count": len(accounts),
@@ -164,7 +160,6 @@ async def calculate_top_stores(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -173,7 +168,7 @@ async def calculate_top_stores(
 
     try:
         service = DIContainer.get_insights_service()
-        stores = await service.calculate_top_stores_async(email, req.time_filter, req.days, req.use_mock)
+        stores = await service.calculate_top_stores_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -185,8 +180,7 @@ async def calculate_top_stores(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     "record_count": len(stores),
@@ -231,7 +225,6 @@ async def calculate_spending_by_day_in_week(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -240,7 +233,7 @@ async def calculate_spending_by_day_in_week(
 
     try:
         service = DIContainer.get_insights_service()
-        spending_by_day = await service.calculate_spending_by_day_async(email, req.time_filter, req.days, req.use_mock)
+        spending_by_day = await service.calculate_spending_by_day_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -252,8 +245,7 @@ async def calculate_spending_by_day_in_week(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     "record_count": len(spending_by_day),
@@ -298,7 +290,6 @@ async def calculate_spending_difference_between_two_periods(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -307,7 +298,7 @@ async def calculate_spending_difference_between_two_periods(
 
     try:
         service = DIContainer.get_insights_service()
-        difference = await service.calculate_spending_difference_async(email, req.time_filter, req.days, req.use_mock)
+        difference = await service.calculate_spending_difference_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -319,8 +310,7 @@ async def calculate_spending_difference_between_two_periods(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     **difference,
@@ -366,7 +356,6 @@ async def calculate_spending_saved(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -375,7 +364,7 @@ async def calculate_spending_saved(
 
     try:
         service = DIContainer.get_insights_service()
-        total_saved = await service.calculate_spending_saved_async(email, req.time_filter, req.days, req.use_mock)
+        total_saved = await service.calculate_spending_saved_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -387,8 +376,7 @@ async def calculate_spending_saved(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     "total_saved": total_saved,
@@ -433,7 +421,6 @@ async def calculate_spending_saved_by_account(
                 "email": email,
                 "time_filter": req.time_filter,
                 "days": req.days,
-                "use_mock": req.use_mock,
                 "method": request.method,
                 "endpoint": request.url.path,
             },
@@ -443,7 +430,7 @@ async def calculate_spending_saved_by_account(
     try:
         service = DIContainer.get_insights_service()
         saved_by_account = await service.calculate_spending_saved_by_account_async(
-            email, req.time_filter, req.days, req.use_mock
+            email, req.time_filter, req.days
         )
 
         response_time_ms = (time.time() - start_time) * 1000
@@ -456,8 +443,7 @@ async def calculate_spending_saved_by_account(
                     "email": email,
                     "time_filter": req.time_filter,
                     "days": req.days,
-                    "use_mock": req.use_mock,
-                    "method": request.method,
+                        "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
                     "record_count": len(saved_by_account),
@@ -520,7 +506,7 @@ async def missed_savings_by_store(
     try:
         service = DIContainer.get_insights_service()
         shops = await service.calculate_missed_savings_by_store_async(
-            email, req.time_filter, req.days, req.use_mock
+            email, req.time_filter, req.days
         )
 
         response_time_ms = (time.time() - start_time) * 1000

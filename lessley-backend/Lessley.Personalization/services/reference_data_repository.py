@@ -18,8 +18,17 @@ class ReferenceDataRepository:
     Holds the shop-side reference data — clubs, stores and deals — in memory.
 
     This is the only place that talks to MongoDB for these three collections. Everything is
-    read once at startup and kept in dictionaries, because the insight calculations look the
-    same records up thousands of times per request and must never wait on the database.
+    kept in dictionaries, because the insight calculations look the same records up thousands
+    of times per request and must never wait on the database.
+
+    The cache is rebuilt on a timer (see ``refresh_reference_data`` in main.py) rather than
+    only at startup: deals are scraped continuously, and a cache loaded once means every deal
+    added after boot stays invisible to missed-savings and club matching until the process
+    restarts — a failure with no symptom except quietly thinner results.
+
+    A rebuild publishes its snapshot in a single block at the end of ``load_async``. Readers
+    take no lock, so a half-rebuilt cache must never be observable, and a rebuild that throws
+    must leave the previous snapshot serving.
     """
 
     def __init__(self):
@@ -37,9 +46,14 @@ class ReferenceDataRepository:
 
     # ── Loading ───────────────────────────────────────────────────────────────
 
-    async def load_async(self) -> None:
-        """Read clubs, stores and deals from MongoDB once, and index them for fast lookups."""
-        if self._loaded:
+    async def load_async(self, force: bool = False) -> None:
+        """Read clubs, stores and deals from MongoDB, and index them for fast lookups.
+
+        Returns immediately if the cache is already populated; the periodic refresh passes
+        ``force=True`` to rebuild it. Everything below is built into locals and only published
+        onto ``self`` once every piece has succeeded.
+        """
+        if self._loaded and not force:
             logger.debug("Reference data already loaded, skipping reload")
             return
 
@@ -47,13 +61,13 @@ class ReferenceDataRepository:
         try:
             stores = await Store.find_all().to_list()
 
-            self._stores = (
+            stores_by_id = (
                 seq(stores)                                  # every store we know about
                 .map(lambda store: (store.store_id, store))  # label each one with its id
                 .to_dict()                                   # so we can find a store by id
             )
 
-            self._stores_by_category = (
+            stores_by_category = (
                 seq(stores)                                                  # every store again
                 .flat_map(lambda store: [                                    # a store can sell several categories,
                     (category, store)                                        # so list it once per category
@@ -64,28 +78,28 @@ class ReferenceDataRepository:
                 .to_dict()                                                   # "GROCERIES" -> [store, store, ...]
             )
 
-            self._store_index = StoreIndex(stores)
+            store_index = StoreIndex(stores)
 
             logger.info(
                 "Stores loaded and indexed",
                 extra={
                     "reason": "Data preparation for missed savings analysis",
                     "extra_data": {
-                        "store_count": len(self._stores),
-                        "mcc_unique_codes": len(self._stores_by_category),
+                        "store_count": len(stores_by_id),
+                        "mcc_unique_codes": len(stores_by_category),
                     },
                 },
             )
 
             deals = await Deal.find_all().to_list()
 
-            self._deals_by_id = (
+            deals_by_id = (
                 seq(deals)                                 # every deal
                 .map(lambda deal: (deal.deal_id, deal))    # labelled with its own id
                 .to_dict()                                 # so we can find a deal by id
             )
 
-            self._deals_by_store = (
+            deals_by_store = (
                 seq(deals)                                          # every deal again
                 .group_by(lambda deal: deal.store_id)               # gathered under the store offering it
                 .to_dict()                                          # store id -> [deal, deal, ...]
@@ -97,34 +111,45 @@ class ReferenceDataRepository:
                     "reason": "Data preparation for missed savings analysis",
                     "extra_data": {
                         "deal_count": len(deals),
-                        "stores_with_deals": len(self._deals_by_store),
+                        "stores_with_deals": len(deals_by_store),
                     },
                 },
             )
 
             clubs = await Club.find_all().to_list()
 
-            self._clubs = (
+            clubs_by_id = (
                 seq(clubs)                                 # every club
                 .map(lambda club: (club.club_id, club))    # labelled with its id
                 .to_dict()                                 # so we can find a club by id
             )
 
-            self._attach_club_stores()
+            self._attach_club_stores(clubs_by_id, deals_by_id)
 
             logger.info(
                 "Clubs loaded",
                 extra={
                     "reason": "Data preparation for missed savings analysis",
                     "extra_data": {
-                        "club_count": len(self._clubs),
-                        "club_store_links": sum(len(c.stores or []) for c in self._clubs.values()),
+                        "club_count": len(clubs_by_id),
+                        "club_store_links": sum(len(c.stores or []) for c in clubs_by_id.values()),
                     },
                 },
             )
 
-            await self._build_deal_shops(stores)
+            identities, identity_of_store, deal_shops = await self._build_deal_shops(stores, deals_by_store)
 
+            # Publish the finished snapshot. Nothing above this line touched self, so a reader
+            # mid-refresh saw the previous cache in full and a failure leaves it serving.
+            self._stores = stores_by_id
+            self._stores_by_category = stores_by_category
+            self._store_index = store_index
+            self._deals_by_id = deals_by_id
+            self._deals_by_store = deals_by_store
+            self._clubs = clubs_by_id
+            self._identities = identities
+            self._identity_of_store = identity_of_store
+            self._deal_shops = deal_shops
             self._loaded = True
         except Exception as e:
             logger.error(
@@ -137,7 +162,7 @@ class ReferenceDataRepository:
             )
             raise
 
-    async def _build_deal_shops(self, stores: List[Store]) -> None:
+    async def _build_deal_shops(self, stores: List[Store], deals_by_store: Dict[str, List[Deal]]):
         """Fold the store list into real brands and index the ones running a deal.
 
         Aliases are the spellings a human already approved during deal review, and they are
@@ -158,13 +183,13 @@ class ReferenceDataRepository:
             )
             aliases = []
 
-        self._identities = build_identities(stores, aliases, self._deals_by_store)
-        self._identity_of_store = {
+        identities = build_identities(stores, aliases, deals_by_store)
+        identity_of_store = {
             store_id: identity.store_id
-            for identity in self._identities.values()
+            for identity in identities.values()
             for store_id in identity.store_ids
         }
-        self._deal_shops = DealShopFinder(list(self._identities.values()))
+        deal_shops = DealShopFinder(list(identities.values()))
 
         logger.info(
             "Deal shops indexed",
@@ -172,13 +197,19 @@ class ReferenceDataRepository:
                 "reason": "Data preparation for missed savings analysis",
                 "extra_data": {
                     "alias_count": len(aliases),
-                    "identity_count": len(self._identities),
-                    "shops_with_deals": len(self._deal_shops),
+                    "identity_count": len(identities),
+                    "shops_with_deals": len(deal_shops),
                 },
             },
         )
 
-    def _attach_club_stores(self) -> None:
+        return identities, identity_of_store, deal_shops
+
+    def _attach_club_stores(
+        self,
+        clubs: Dict[str, Club] | None = None,
+        deals_by_id: Dict[str, Deal] | None = None,
+    ) -> None:
         """Give every club the shops it actually has deals at.
 
         Both club-aware features — club recommendations and missed-savings alternatives —
@@ -193,13 +224,19 @@ class ReferenceDataRepository:
         club and its store — so it is derived here instead of depended upon. Whatever the
         stored field holds is kept and unioned in, so an explicitly curated membership is
         never lost; deriving only ever adds the shops a club currently has live deals at.
+
+        Both arguments default to the published cache; ``load_async`` passes the locals it is
+        still assembling, so a rebuild derives against its own snapshot rather than the live one.
         """
+        clubs = self._clubs if clubs is None else clubs
+        deals_by_id = self._deals_by_id if deals_by_id is None else deals_by_id
+
         derived: Dict[str, set] = {}
-        for deal in self._deals_by_id.values():
+        for deal in deals_by_id.values():
             if deal.club_id and deal.store_id:
                 derived.setdefault(deal.club_id, set()).add(deal.store_id)
 
-        for club_id, club in self._clubs.items():
+        for club_id, club in clubs.items():
             from_deals = derived.get(club_id, set())
             if not from_deals:
                 continue

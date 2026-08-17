@@ -72,7 +72,19 @@ public class UserService : IUserService
         if (user is null)
             return UserOperationResult.NotFound();
 
-        await _userTagService.AssignTagsAsync(email, tags, ct);
+        // AssignTagsAsync throws when the write is rejected so the bus consumer can retry it.
+        // On this path there is no retry to earn — an admin is waiting — so the failure is
+        // turned back into a result. Reporting success on a write that did not happen is the
+        // one outcome worth ruling out.
+        try
+        {
+            await _userTagService.AssignTagsAsync(email, tags, ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return UserOperationResult.BadRequest(new { error = ex.Message });
+        }
+
         return UserOperationResult.Ok(new { email = user.Email, tags });
     }
 

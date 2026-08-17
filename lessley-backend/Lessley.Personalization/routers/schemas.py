@@ -6,9 +6,13 @@ from config.constants import LIMITS  # still used by InsightsCalcRequests / GetT
 # verified email as X-Auth-Email; routes read it via dependencies.auth.authenticated_email.
 # Accepting an `email` parameter here would let any caller read any user's data.
 
+# Neither is `use_mock`. The services still accept it so tests can inject a fixed transaction
+# set, but it is not a request field: bound from the query string it let any caller swap their
+# own transactions for the contents of a file on disk — a 500 today, and a cross-user data leak
+# the moment such a file ships.
+
 
 class InsightsCalcRequests(BaseModel):
-    use_mock: bool = Field(False, description="Use mock data")
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
 

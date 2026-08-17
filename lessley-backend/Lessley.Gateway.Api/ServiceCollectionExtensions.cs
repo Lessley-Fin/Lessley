@@ -276,6 +276,11 @@ namespace Lessley.Gateway.Api.Extensions
                             b.RoutingKey   = "Personalize.user_tag_assigned";
                         });
                         e.UseRawJsonDeserializer();
+                        // The consumer throws when the write is rejected, which is almost always
+                        // Identity's concurrency stamp losing to a settings save. Re-reading the
+                        // user resolves it, so short spaced retries are worth more here than a
+                        // trip to the error queue.
+                        e.UseMessageRetry(r => r.Intervals(200, 1000, 5000));
                         e.ConfigureConsumer<UserTagAssignedEventConsumer>(ctx);
                     });
 

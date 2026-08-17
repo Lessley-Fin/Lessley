@@ -176,6 +176,9 @@ services:
 
       - OpenFinanceConfig__ClientId=${OpenFinanceConfig_ClientId}
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
+      # Where the bank-linking journey returns the user. Without it Open Finance has nowhere
+      # to send them and they never come back to the SPA. Same origin as the edge.
+      - OpenFinanceConfig__RedirectUrl=https://${DOMAIN}/insights
 
       # Reject anything that did not arrive through Caddy.
       - Edge__ApiKey=${EDGE_API_KEY}

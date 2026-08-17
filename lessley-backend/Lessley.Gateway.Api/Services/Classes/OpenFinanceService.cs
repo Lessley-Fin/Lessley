@@ -46,7 +46,7 @@ namespace Lessley.Gateway.Api.Services.Classes
                 includeFakeProviders = true,
                 expiryDate = DateTime.UtcNow.AddYears(3).ToString("yyyy-MM-dd"),
                 allowBusiness = true,
-                redirectUrl
+                redirectUrl = ResolveRedirectUrl(redirectUrl)
             };
 
             var serializerOptions = new JsonSerializerOptions
@@ -68,6 +68,41 @@ namespace Lessley.Gateway.Api.Services.Classes
             var res = await response.Content.ReadFromJsonAsync<ConnectionResponse>(options);
 
             return res ?? throw new InvalidOperationException("Failed to generate connect URL.");
+        }
+
+        /// <summary>
+        /// Where Open Finance sends the user's browser once they finish linking a bank.
+        /// </summary>
+        /// <remarks>
+        /// Omitting this strands the user on the provider's site — the journey has no way back,
+        /// which is what happened to everyone arriving through the registration wizard.
+        ///
+        /// The destination comes from configuration rather than the caller: this URL is followed
+        /// automatically after a successful bank link, so honouring a caller-supplied absolute URL
+        /// would be an open redirect. A relative path is accepted so different entry points can
+        /// land on different screens; anything else falls back to the configured page.
+        /// </remarks>
+        private string? ResolveRedirectUrl(string? requested)
+        {
+            var configured = _configuration["OpenFinanceConfig:RedirectUrl"];
+            if (string.IsNullOrWhiteSpace(configured))
+                return null;
+
+            if (string.IsNullOrWhiteSpace(requested))
+                return configured;
+
+            // "//evil.com" is protocol-relative and leaves the site, so one leading slash only.
+            var isSafeRelativePath =
+                requested.StartsWith('/') &&
+                !requested.StartsWith("//") &&
+                Uri.IsWellFormedUriString(requested, UriKind.Relative);
+
+            if (!isSafeRelativePath)
+                return configured;
+
+            return Uri.TryCreate(configured, UriKind.Absolute, out var baseUri)
+                ? new Uri(baseUri, requested).ToString()
+                : configured;
         }
 
         public async Task<OBTransactionsResponse> GetTransactions(string username)

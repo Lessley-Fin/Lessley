@@ -149,6 +149,28 @@ async def process_gateway_command(message: aio_pika.abc.AbstractIncomingMessage)
             raise
 
 
+async def refresh_reference_data() -> None:
+    """Background task: rebuild the clubs/stores/deals cache so newly scraped deals appear.
+
+    The cache is read thousands of times per calculation and must never wait on Mongo, so it
+    is rebuilt on a timer rather than revalidated per request. A failed rebuild is logged and
+    the loop continues — ``load_async`` only publishes a complete snapshot, so the previous
+    one keeps serving rather than the service falling back to empty reference data.
+    """
+    repository = DIContainer.get_reference_data_repository()
+
+    while True:
+        await asyncio.sleep(settings.ReferenceData_RefreshSeconds)
+        try:
+            await repository.load_async(force=True)
+        except Exception as e:
+            logger.error(
+                f"Reference data refresh failed, keeping the previous snapshot: {e}",
+                exc_info=e,
+                extra={"reason": "Scheduled refresh failure", "extra_data": {}},
+            )
+
+
 async def consume_gateway_commands() -> None:
     """Background task: consume Gateway recommendation commands from RabbitMQ."""
     try:
@@ -186,11 +208,17 @@ async def lifespan(app: FastAPI):
     if settings.RabbitMQ_Enabled:
         consumer_task = asyncio.create_task(consume_gateway_commands())
 
+    refresh_task: asyncio.Task | None = None
+    if settings.ReferenceData_RefreshSeconds > 0:
+        refresh_task = asyncio.create_task(refresh_reference_data())
+
     yield
 
     # Shutdown
     if consumer_task is not None:
         consumer_task.cancel()
+    if refresh_task is not None:
+        refresh_task.cancel()
     if publisher_service is not None:
         await publisher_service.close()
 

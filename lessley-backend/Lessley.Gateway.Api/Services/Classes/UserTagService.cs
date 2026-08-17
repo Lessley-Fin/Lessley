@@ -40,10 +40,14 @@ public class UserTagService : IUserTagService
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
         {
-            _logger.LogError(
-                "AssignTags: DB update failed for user {Email}: {Errors}",
-                email, string.Join("; ", result.Errors.Select(e => e.Description)));
-            return;
+            // Throwing rather than returning: this runs inside a RabbitMQ consumer, so an
+            // exception earns a redelivery while a log line loses the write silently. The
+            // realistic cause is Identity's concurrency stamp rejecting the save because a
+            // settings update landed between the read above and this line — precisely the
+            // case a retry fixes, since the retry re-reads the user.
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            _logger.LogError("AssignTags: DB update failed for user {Email}: {Errors}", email, errors);
+            throw new InvalidOperationException($"Failed to assign tags to {email}: {errors}");
         }
 
         await SyncGroupsAsync(email, previousTags, ct);

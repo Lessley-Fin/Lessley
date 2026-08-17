@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     # directly (see dependencies/auth.py:email_from_access_token) rather than a fixed value.
     Edge_AllowUnverified: bool = False
 
+    # How often the in-memory clubs/stores/deals cache is rebuilt from MongoDB. Deals are
+    # scraped continuously, and a cache that only loads at startup makes every deal added
+    # afterwards invisible to missed-savings and club matching until the process restarts.
+    # Zero disables the refresh and restores the load-once behaviour.
+    ReferenceData_RefreshSeconds: int = 900
+
     # Tell Pydantic to read from the .env file
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
