@@ -6,7 +6,7 @@ import {
   fetchAccounts,
   fetchCategoryInsights,
   fetchMissedSavingsByStore,
-  fetchRecommendations,
+  fetchMatchingClubs,
   fetchSpendingByDayInsights,
   fetchSpendingPeriodComparison,
   fetchSpendingSaved,
@@ -15,8 +15,6 @@ import {
   fetchTopStoreInsights,
   fetchTransactions,
   initOpenFinanceConnection,
-  triggerMatchingClubs,
-  triggerMissedSavings,
 } from "./api"
 
 export function useHasConnection() {
@@ -105,10 +103,10 @@ export function useSpendingSavedByAccount(days: number, enabled: boolean) {
   })
 }
 
-export function useRecommendations(enabled: boolean) {
+export function useMatchingClubs(enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.recommendations.list(),
-    queryFn: fetchRecommendations,
+    queryFn: fetchMatchingClubs,
     enabled,
   })
 }
@@ -116,18 +114,6 @@ export function useRecommendations(enabled: boolean) {
 export function useInitOpenFinance() {
   return useMutation({
     mutationFn: initOpenFinanceConnection,
-  })
-}
-
-export function useTriggerMatchingClubs() {
-  return useMutation({
-    mutationFn: triggerMatchingClubs,
-  })
-}
-
-export function useTriggerMissedSavings() {
-  return useMutation({
-    mutationFn: triggerMissedSavings,
   })
 }
 

@@ -14,7 +14,7 @@ def _now() -> str:
 
 
 class RabbitMQUserPublisher(RabbitMQBase):
-    """Publishes user-scoped events: tag assignments and direct notifications."""
+    """Publishes user-scoped events: the tags derived from a category calculation."""
 
     def __init__(self, connection: aio_pika.abc.AbstractRobustConnection) -> None:
         super().__init__(connection)
@@ -32,15 +32,3 @@ class RabbitMQUserPublisher(RabbitMQBase):
             "Published UserTagAssignedEvent",
             extra={"extra_data": {"user_id": user_id, "tags": tags}},
         )
-
-    async def publish_user_notification(self, user_id: str, message: str, deal_id: str) -> None:
-        """Ask the Gateway to push message directly to user_id's SignalR connection(s)."""
-        await self._publish_with_retry(
-            routing_key="Personalize.deal_user_notification",
-            payload={"userId": user_id, "message": message, "dealId": deal_id},
-        )
-        logger.info(
-            "Published DealUserNotification",
-            extra={"extra_data": {"user_id": user_id, "deal_id": deal_id}},
-        )
-

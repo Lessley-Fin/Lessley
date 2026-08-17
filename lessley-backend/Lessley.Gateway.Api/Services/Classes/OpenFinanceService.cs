@@ -10,11 +10,16 @@ namespace Lessley.Gateway.Api.Services.Classes
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly IPersonalizationService _personalizationService;
 
-        public OpenFinanceService(HttpClient httpClient, IConfiguration configuration)
+        public OpenFinanceService(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            IPersonalizationService personalizationService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
+            _personalizationService = personalizationService;
         }
 
         public async Task<string> CreateAccessToken(string username)
@@ -67,7 +72,18 @@ namespace Lessley.Gateway.Api.Services.Classes
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var res = await response.Content.ReadFromJsonAsync<ConnectionResponse>(options);
 
-            return res ?? throw new InvalidOperationException("Failed to generate connect URL.");
+            if (res is null)
+                throw new InvalidOperationException("Failed to generate connect URL.");
+
+            // Triggered here rather than in the controllers so both entry points are covered and
+            // a third cannot forget. Note the timing: this fires as the journey *starts*, not
+            // when consent lands. For a user who already holds Open Finance consent — most of
+            // ours — their history is available right now and this is exact. For a genuinely new
+            // link the data arrives later and the next trigger picks it up; the alternative is a
+            // provider callback the Gateway does not have.
+            await _personalizationService.TriggerCalculateUserCategoriesAsync(username);
+
+            return res;
         }
 
         /// <summary>

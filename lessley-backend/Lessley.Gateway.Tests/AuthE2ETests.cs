@@ -72,12 +72,13 @@ public class AuthE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         var (_, csrf) = await RegisterAndLoginAsync(http);
 
+        // Any authenticated unsafe request will do; PATCH /me is one the client actually makes.
         // Cookie present but no X-CSRF-TOKEN header -> rejected.
-        var without = await http.PostAsync("api/user/recommendations/missed-savings", null);
+        var without = await http.PatchAsync("api/user/me", null);
         Assert.Equal(HttpStatusCode.Forbidden, without.StatusCode);
 
         // With the matching header the CSRF gate passes (controller then handles it).
-        var with = await SendWithCsrf(http, HttpMethod.Post, "api/user/recommendations/missed-savings", csrf);
+        var with = await SendWithCsrf(http, HttpMethod.Patch, "api/user/me", csrf);
         Assert.NotEqual(HttpStatusCode.Forbidden, with.StatusCode);
     }
 

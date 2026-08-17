@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react"
 import { Lightbulb } from "lucide-react"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { ConnectionCheck } from "@/features/insights/components/ConnectionCheck"
 import {
   useHasConnection,
+  useMatchingClubs,
   useMissedSavingsByStore,
-  useRecommendations,
-  useTriggerMatchingClubs,
 } from "@/features/insights/hooks"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
 import { getDirection } from "@/lib/i18n/config"
-import { queryKeys } from "@/lib/query-keys"
-import type { ClubRecommendation, ClubRecommendationResponse } from "@/lib/types"
+import type { ClubRecommendation } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { MissedShopsSlide } from "./components/MissedShopsSlide"
 import { TopClubMatchesSlide } from "./components/TopClubMatchesSlide"
@@ -23,21 +20,18 @@ export function RecommendationsPage() {
   const { t, i18n } = useTranslation()
   const direction = getDirection(i18n.language)
   const TABS = [t("recommendations.page.tabTopMatches"), t("recommendations.page.tabMissedShops")]
-  const queryClient = useQueryClient()
   const [api, setApi] = useState<CarouselApi>()
   const [selected, setSelected] = useState(0)
 
   const { data: isConnected, isLoading: checkingConnection } = useHasConnection()
   const connected = isConnected === true
 
-  const { data: recommendationsData } = useRecommendations(connected)
+  const { data: clubData, isFetching: clubsFetching, refetch: refetchClubs } = useMatchingClubs(connected)
   const [missedShopDays, setMissedShopDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
   const { data: missedShops = [], isLoading: missedShopsLoading } = useMissedSavingsByStore(
     missedShopDays,
     connected,
   )
-
-  const triggerMatchingClubs = useTriggerMatchingClubs()
 
   useEffect(() => {
     if (!api) return
@@ -49,16 +43,7 @@ export function RecommendationsPage() {
     }
   }, [api])
 
-  const clubData = recommendationsData?.matchingClubs?.data as ClubRecommendationResponse | null | undefined
   const clubRecommendations: ClubRecommendation[] = clubData?.recommendations ?? []
-
-  function handleTriggerMatchingClubs() {
-    triggerMatchingClubs.mutate(undefined, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.recommendations.list() })
-      },
-    })
-  }
 
   if (checkingConnection) {
     return <ConnectionCheck />
@@ -104,8 +89,8 @@ export function RecommendationsPage() {
           <CarouselItem>
             <TopClubMatchesSlide
               clubs={clubRecommendations}
-              onRecalculate={handleTriggerMatchingClubs}
-              isPending={triggerMatchingClubs.isPending}
+              onRecalculate={() => void refetchClubs()}
+              isPending={clubsFetching}
             />
           </CarouselItem>
           <CarouselItem>

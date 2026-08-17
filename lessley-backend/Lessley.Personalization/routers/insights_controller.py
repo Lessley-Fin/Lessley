@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from dependencies.auth import authenticated_email
 from services.di_container import DIContainer
 from .schemas import InsightsCalcRequests
-from .responses import PaginatedResponse, BasicResponse
+from .responses import BasicResponse, ClubRecommendationResponseSchema, PaginatedResponse
 import logging
 import time
 
@@ -464,6 +464,62 @@ async def calculate_spending_saved_by_account(
                     "method": request.method,
                     "endpoint": request.url.path,
                 },
+            },
+        )
+        raise
+
+
+@router.get("/matching-clubs")
+async def matching_clubs(
+    request: Request,
+    email: str = Depends(authenticated_email),
+):
+    """
+    Loyalty clubs worth joining, scored against the user's stored categories.
+
+    Lives under /insights rather than /recommendations because the edge only routes
+    /insights/* and /open-finance/* to this service. It answers from stored tags and
+    in-memory reference data, so it returns its result directly instead of going through a
+    command and a notification to deliver the same thing later.
+    """
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {"email": email, "method": request.method, "endpoint": request.url.path},
+        },
+    )
+
+    try:
+        service = DIContainer.get_recommendation_service()
+        result = await service.calculate_matching_clubs(email)
+
+        response_time_ms = (time.time() - start_time) * 1000
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "email": email,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    "recommendation_count": len(result.get("recommendations", [])),
+                },
+            },
+        )
+
+        return BasicResponse(status="success", data=ClubRecommendationResponseSchema(**result))
+
+    except Exception as e:
+        logger.error(
+            f"Error calculating club matches: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {"email": email, "method": request.method, "endpoint": request.url.path},
             },
         )
         raise

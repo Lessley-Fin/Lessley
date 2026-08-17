@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from config.constants import LIMITS  # still used by InsightsCalcRequests / GetTransactionsRequest
 
 
@@ -26,39 +26,3 @@ class GetTransactionsByAccountRequest(BaseModel):
 class GetTransactionsRequest(BaseModel):
     time_filter: bool = Field(True, description="Filter by time")
     days: int = Field(LIMITS.DAYS, ge=1, le=365, description="Days to analyze (1-365)")
-
-
-class RecommendationByCategoryRequestSchema(BaseModel):
-    """Matching-clubs request — uses pre-computed tags from UserRepository."""
-
-    email: str = Field(..., min_length=1, max_length=255, description="User email")
-
-    @validator("email")
-    def validate_email(cls, v):
-        if not v.strip():
-            raise ValueError("email cannot be empty")
-        return v
-
-
-class MissedSavingsRequestSchema(BaseModel):
-    """Missed-savings request — accepts a caller-supplied analysis period (default: a week)."""
-
-    email: str = Field(..., min_length=1, max_length=255, description="User email")
-    time_filter: bool = Field(True, description="Filter by time")
-    days: int = Field(7, ge=1, le=365, description="Days to analyze (1-365, default: a week)")
-
-    @validator("email")
-    def validate_email(cls, v):
-        if not v.strip():
-            raise ValueError("email cannot be empty")
-        return v
-
-
-class BroadcastDealRequest(BaseModel):
-    """
-    Request to broadcast a deal. The deal's category is resolved from its store, so only the
-    deal_id and message are required.
-    """
-
-    deal_id: str = Field(..., min_length=1, max_length=255, description="Deal ID")
-    message: str = Field(..., min_length=1, max_length=1000, description="Notification message")

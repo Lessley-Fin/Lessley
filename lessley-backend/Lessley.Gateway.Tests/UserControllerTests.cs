@@ -13,17 +13,13 @@ public class UserControllerTests
 {
     private readonly Mock<IUserService> _userService = new();
     private readonly Mock<IOpenFinanceService> _openFinanceService = new();
-    private readonly Mock<IPersonalizationService> _personalizationService = new();
-    private readonly Mock<INotificationService> _notificationService = new();
     private readonly UserController _controller;
 
     public UserControllerTests()
     {
         _controller = new UserController(
             _userService.Object,
-            _openFinanceService.Object,
-            _personalizationService.Object,
-            _notificationService.Object);
+            _openFinanceService.Object);
 
         SetCallerContext("user@test.com", "Admin");
     }
@@ -80,63 +76,4 @@ public class UserControllerTests
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
-
-    // ── TriggerMissedSavings (POST /api/user/recommendations/missed-savings) ──
-
-    [Fact]
-    public async Task TriggerMissedSavings_UserWithCategories_Returns202()
-    {
-        _userService
-            .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<string> { "5411" });
-
-        var result = await _controller.TriggerMissedSavings(ct: CancellationToken.None);
-
-        Assert.IsType<AcceptedResult>(result);
-        _personalizationService.Verify(
-            s => s.TriggerCalculateMissedSavingsAsync("user@test.com", true, 7, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task TriggerMissedSavings_UserNotFound_Returns404()
-    {
-        _userService
-            .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((List<string>?)null);
-
-        var result = await _controller.TriggerMissedSavings(ct: CancellationToken.None);
-
-        Assert.IsType<NotFoundObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task TriggerMissedSavings_NoCategories_Returns422()
-    {
-        _userService
-            .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<string>());
-
-        var result = await _controller.TriggerMissedSavings(ct: CancellationToken.None);
-
-        Assert.IsType<UnprocessableEntityObjectResult>(result);
-    }
-
-    // ── TriggerMatchingClubs (POST /api/user/recommendations/matching-clubs) ──
-
-    [Fact]
-    public async Task TriggerMatchingClubs_UserWithCategories_Returns202()
-    {
-        _userService
-            .Setup(s => s.GetUserTagsAsync("user@test.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<string> { "5411" });
-
-        var result = await _controller.TriggerMatchingClubs(CancellationToken.None);
-
-        Assert.IsType<AcceptedResult>(result);
-        _personalizationService.Verify(
-            s => s.TriggerCalculateMatchingClubsAsync("user@test.com", It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
 }

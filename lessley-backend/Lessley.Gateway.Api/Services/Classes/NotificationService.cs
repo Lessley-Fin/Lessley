@@ -24,16 +24,4 @@ public class NotificationService : INotificationService
 
     public Task<bool> MarkAsReadAsync(ObjectId notificationId, string userId, CancellationToken ct = default)
         => _notificationRepository.MarkAsReadAsync(notificationId, userId, ct);
-
-    public Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default)
-        => _notificationRepository.GetLatestCalcAsync(userId, calcType, ct);
-
-    public async Task<Dictionary<string, Notification>> GetLatestCalcGroupedAsync(string userId, CancellationToken ct = default)
-    {
-        var all = await _notificationRepository.GetAllCalcAsync(userId, ct);
-        return all
-            .GroupBy(n => n.CalcType ?? "")
-            .Where(g => g.Key != "")
-            .ToDictionary(g => g.Key, g => g.First());
-    }
 }

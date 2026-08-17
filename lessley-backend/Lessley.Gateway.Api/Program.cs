@@ -4,6 +4,7 @@ using Lessley.Gateway.Api.Extensions;
 using Lessley.Gateway.Api.Hubs;
 using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Models;
+using Lessley.Gateway.Api.Scheduling;
 using Lessley.Gateway.Api.Seeders;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
@@ -21,6 +22,7 @@ builder.Services.AddPersistenceWithIdentity(builder.Configuration);
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomRateLimiting();
 builder.Services.AddMassTransitWithRabbitMq(builder.Configuration, builder.Environment);
+builder.Services.AddScheduledJobs(builder.Configuration, builder.Environment);
 
 // ── Forwarded headers (behind the Caddy TLS-terminating proxy) ──────────────────
 // Honor X-Forwarded-Proto/-For so the app sees the original HTTPS scheme and client

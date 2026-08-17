@@ -9,6 +9,11 @@ namespace Lessley.Gateway.Api.Services.Classes;
 /// client traffic reaches Personalization through Caddy, and server-to-server work goes
 /// over RabbitMQ so neither service depends on the other being reachable.
 /// </summary>
+/// <remarks>
+/// One command remains. Missed-savings and club matching used to be published here too, and
+/// their answers came back as stored notifications the client polled for; both are now
+/// ordinary GETs the client makes through the edge.
+/// </remarks>
 public class PersonalizationService : IPersonalizationService
 {
     private readonly IPublishEndpoint _bus;
@@ -22,15 +27,22 @@ public class PersonalizationService : IPersonalizationService
         _logger = logger;
     }
 
-    public async Task TriggerCalculateMissedSavingsAsync(string userId, bool timeFilter = true, int days = 7, CancellationToken ct = default)
+    /// <remarks>
+    /// Best-effort on purpose. Every caller is completing something the user is waiting on — a
+    /// signup, a bank journey, a settings save — and none of them should fail because the bus
+    /// is unreachable. A dropped recalculation is recoverable: the stored categories stay valid
+    /// meanwhile, and the next trigger recomputes them.
+    /// </remarks>
+    public async Task TriggerCalculateUserCategoriesAsync(string userId, int days = 90, CancellationToken ct = default)
     {
-        _logger.LogInformation("Publishing CalculateMissedSavingsCommand for {UserId}", userId);
-        await _bus.Publish(new CalculateMissedSavingsCommand(userId, timeFilter, days), ct);
-    }
-
-    public async Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default)
-    {
-        _logger.LogInformation("Publishing CalculateMatchingClubsCommand for {UserId}", userId);
-        await _bus.Publish(new CalculateMatchingClubsCommand(userId), ct);
+        try
+        {
+            _logger.LogInformation("Publishing CalculateUserCategoriesCommand for {UserId}", userId);
+            await _bus.Publish(new CalculateUserCategoriesCommand(userId, days), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to publish CalculateUserCategoriesCommand for {UserId}", userId);
+        }
     }
 }

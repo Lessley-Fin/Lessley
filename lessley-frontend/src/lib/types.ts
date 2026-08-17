@@ -98,36 +98,7 @@ export interface ClubRecommendationResponse {
   recommendations: ClubRecommendation[]
 }
 
-export interface CalcResult<T = unknown> {
-  data: T | null
-  calculatedAt: string
-}
 
-export interface MissedStore {
-  store_id: string
-  store_name: string
-}
-
-export interface MissedStoreDiscount {
-  club_id: string
-  missed_store: MissedStore[]
-  store_count: number
-}
-
-export interface TransactionInsight {
-  transaction_id: string
-  had_discount: boolean
-  store_name: string
-  mcc_code: string
-  mcc_description: string
-  amount: number
-  missed_store_discont: MissedStoreDiscount[]
-}
-
-export interface RecommendationsResponse {
-  missedSavings: CalcResult<TransactionInsight[]> | null
-  matchingClubs: CalcResult<ClubRecommendationResponse> | null
-}
 
 /**
  * How sure we are that a shop is the one the user actually visited.
