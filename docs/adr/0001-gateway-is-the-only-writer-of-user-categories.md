@@ -39,6 +39,19 @@ The instinct behind the original proposal — one and only one writer — is rig
 already *is* that writer, and it cannot hand the role over while `MutedTags`, `Clubs`,
 `MatchingScore` and the Identity fields live in the same document.
 
+## `users` is a published read contract
+
+Three other services read this collection directly: Personalization (`UserRepository`),
+`deal-optimizer` (`user_source.py`, which calls it "the established pattern"), and the tests.
+Only the Gateway writes it.
+
+That is a deliberate arrangement, not an accident, and it has a consequence worth stating: the
+shape of `ApplicationUser` is a cross-service contract. Renaming or removing a field is a
+breaking change for three codebases that will not fail at compile time — they will simply read
+`None` and behave as though the user has no data.
+
+Adding fields is safe. Changing or removing them requires checking all three readers.
+
 ## Consequences
 
 - `UserRepository` in Personalization is read-only by construction, and says so.

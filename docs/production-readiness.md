@@ -105,6 +105,98 @@ reference data loaded) on both services, wired into both compose files.
 
 ---
 
+## Second audit — race conditions and silent failures
+
+Found after the first pass, looking specifically for things that can happen at once.
+
+### P0-6 — SignalR dies permanently and silently
+
+`useSignalR` configures `withAutomaticReconnect([0, 2000, 5000, 10000, 30000])` — five attempts
+over roughly 47 seconds — and then `connection.onclose(() => {})`, which does nothing.
+
+Access tokens live **30 minutes**. Once the access cookie has expired, negotiate returns 401, the
+five reconnects all fail, and the connection is closed for good. The app keeps working — the next
+HTTP call silently refreshes the cookie — but real-time notifications never come back until a full
+page reload, with nothing on screen to say so.
+
+Any tab left open longer than 30 minutes is one network blip away from this: a backgrounded mobile
+tab, a laptop sleeping, a wifi handover.
+
+**Fix:** on close, attempt a cookie refresh and rebuild the connection with backoff, rather than
+leaving a dead object. Surface connection state in the UI so silent loss becomes visible.
+
+### P0-7 — Out-of-order tag writes
+
+Two recalculation commands for the same user can be in flight simultaneously — the weekly sweep
+overlapping a match-level change, or two rapid triggers. `prefetch_count=10` runs handlers
+concurrently, so completion order is not arrival order, and `UserTagAssignedEvent(UserId, Tags)`
+carries no timestamp or version.
+
+An older calculation can therefore overwrite a newer one, and the user keeps stale categories until
+something recalculates again.
+
+**Decision taken: add a version guard.** Stamp the calculation time on the event, store it on
+`ApplicationUser`, and have `AssignTagsAsync` reject a write whose stamp is older than the one it
+holds. Note this adds a field to `users`, which three services read — see
+[ADR-0001](adr/0001-gateway-is-the-only-writer-of-user-categories.md).
+
+### P1-7 — The `CategoriesUpdated` refetch amplifies the sweep
+
+Every tag write pushes `CategoriesUpdated`, and the client responds by invalidating
+`queryKeys.insights.all`. On the insights page that refetches ~8 queries — roughly **32 more Open
+Finance requests per open tab**, against the quota the sweep is already straining. Multiple tabs
+multiply it.
+
+React Query only refetches *active* queries, so the blast radius is users currently viewing
+insights. At 00:00 Monday that is few; after a settings change during the day it is the user who
+just acted, which is correct behaviour.
+
+**Fix:** have the push carry the tags (it already does) and let the client update the cached
+profile directly instead of invalidating the whole insights tree. Reserve full invalidation for
+reconnect.
+
+### P1-8 — Notification listing is unbounded
+
+`GetByUserAsync` is `.Where(UserId).OrderByDescending(SentAt).ToListAsync()` — no `.Take()`, no
+paging. `MarkAllAsReadAsync` similarly loads every unread row into memory and updates them one by
+one.
+
+At the expected volume — **hundreds to thousands per user** — every notification page load pulls
+the lot into memory and serialises it.
+
+**Fix:** paginate the endpoint, batch the mark-all update, and batch the fanout write in
+`SendToGroupAsync` (which currently writes one document per matching user in a single
+`SaveManyAsync`).
+
+### P1-9 — Scraper and reference cache have no handshake
+
+`lessley-deals` writes the catalogue in **one nightly batch**; Personalization polls every 15
+minutes. That is ~95 pointless rebuilds a day, and the one that matters may run mid-import and
+snapshot a half-written catalogue.
+
+**Fix:** a completion signal from the scraper, or an interval aligned past the batch window. See
+[ADR-0007](adr/0007-reference-data-refreshes-on-a-timer.md).
+
+### P1-10 — Deploys collide with the sweep
+
+Single instance means every deploy is downtime, and a deploy during the Monday sweep loses the run
+with no record of progress; misfire handling will not re-run it until the following week.
+
+**Decision taken: scheduled maintenance windows, kept away from Monday 00:00 UTC.** Document the
+collision in the deploy checklist. This lowers the urgency of sweep resumability (P1-2) without
+removing the need for it.
+
+### P1-11 — Account deletion has no single path
+
+Not yet a legal obligation but expected. A user's data currently lives in: `users` (tags, muted
+tags, clubs, matching score), `notifications`, `refresh_tokens`, `pending_registrations`,
+`verification_codes`, and the Open Finance connection held by the provider.
+
+Nothing removes them as a unit, and nothing revokes the bank connection. Scope the inventory now,
+while it is six collections rather than twelve.
+
+---
+
 ## P1 — before scale
 
 ### P1-1 — Transaction caching within the regulatory boundary
@@ -144,8 +236,13 @@ watching it.
 The Gateway has `UseMessageRetry` on `gateway.user_tag_assigned` only. Personalization's consumer
 has none: `message.process()` with `requeue=False` means any exception drops the message.
 
-Needed: DLQs on both sides, a retry ladder on the Python consumer, and alerting on DLQ depth. A
-message that cannot be processed should be inspectable, not gone.
+This is how a throttled sweep loses data. Open Finance returns 429, `_transactions_for` raises,
+the message is nacked and gone — potentially for thousands of users in one run, with no record
+beyond a log line.
+
+**Decision taken: retry with backoff, then dead-letter.** Respect `Retry-After`, bound the
+retries, and route exhausted messages to a DLQ that is monitored. Pair with the rate budget
+(P0-2), which is what should prevent the situation arising at all.
 
 ### P1-5 — Notification volume
 
@@ -251,11 +348,24 @@ flagged where the assumption is load-bearing.
 3. **What does Open Finance return when the quota is exhausted — 429, 503, or an empty `[]`?** If
    it can return `[]`, [ADR-0004](adr/0004-an-empty-calculation-never-clears-tags.md)'s guard is
    doing even more work than assumed, and the warning log needs an alert on it.
-4. **How often does the scraper add deals?** Sets `ReferenceData_RefreshSeconds` (P2-2).
-5. **What is the expected notification broadcast frequency?** Sizes P1-5.
-6. **Is there an account-deletion or data-erasure requirement?** Nothing currently removes a user's
-   tags, notifications, refresh tokens or pending registrations as a unit.
-7. **Do you need an audit trail for financial-data access?** Every insights call reads a user's
+4. **What is the expected notification broadcast frequency?** Sizes P1-5 and P1-8 together.
+5. **Do you need an audit trail for financial-data access?** Every insights call reads a user's
    bank transactions; nothing records that it happened in a queryable form.
-8. **Does the average user have 1 account or 10?** The whole quota model scales on `N`. The
-   arithmetic above assumes 3.
+6. **Does the average user have 1 account or 10?** The whole quota model scales on `N`. The
+   arithmetic above assumes 3 — at 10 the page-view ceiling drops from ~31/min to ~9/min.
+7. **How long may a stale category last before it matters?** Decides whether the weekly sweep is
+   the right cadence or whether it should be daily — which the quota may not permit.
+8. **Is `Auth:IsRotateRefresh` enabled in production?** Rotation with reuse detection is
+   implemented and is the safer setting; it is configurable, so it can be off without anyone
+   noticing.
+
+### Answered
+
+- **Scraper cadence:** one nightly batch. Drives P1-9.
+- **`users` as a cross-service read contract:** intentional. Documented in
+  [ADR-0001](adr/0001-gateway-is-the-only-writer-of-user-categories.md).
+- **Account deletion:** not yet required, expected. P1-11.
+- **Deploys:** scheduled maintenance windows, kept clear of Monday 00:00 UTC. P1-10.
+- **Write ordering:** version guard, not last-write-wins. P0-7.
+- **Sweep failures:** retry with backoff, then dead-letter. P1-4.
+- **Notification volume:** hundreds to thousands per user. P1-8.

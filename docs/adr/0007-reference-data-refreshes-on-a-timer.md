@@ -31,9 +31,23 @@ must leave the previous snapshot serving.
 `test_reference_data_refresh.py` pins exactly that: the store read succeeds, the deal read fails,
 and the assertion is that `_stores` still holds the **old** row.
 
+## The interval is wrong for the actual write pattern
+
+`lessley-deals` upserts `stores`, `clubs`, `deals` and `store_aliases` in **one nightly batch**.
+Polling every 15 minutes therefore performs roughly 95 pointless full rebuilds a day, and the one
+rebuild that matters may land *during* the import and capture a half-written catalogue.
+
+The timer was the right mechanism for the wrong cadence. The better arrangement is a completion
+signal from the scraper — an event, or simply a much longer interval aligned to the batch window —
+so Personalization refreshes once, after the import finishes.
+
+Tracked in [`../production-readiness.md`](../production-readiness.md). Until then, raising
+`ReferenceData_RefreshSeconds` and aligning it past the nightly batch is a one-line improvement.
+
 ## Consequences
 
 - Deals are visible within one refresh interval rather than one deployment.
 - A failed refresh is logged and the loop continues on the previous snapshot.
-- 15 minutes is a guess. If the scraper's cadence is known, match it — see
-  [`../production-readiness.md`](../production-readiness.md).
+- A rebuild concurrent with the scraper's batch can snapshot a partially imported catalogue. The
+  atomic swap guarantees *internal* consistency of the snapshot, not that the source was complete
+  when it was read.
