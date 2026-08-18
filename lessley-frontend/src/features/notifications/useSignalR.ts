@@ -91,14 +91,30 @@ export function useSignalR() {
       if (!toastActive) showNextToast()
     }
 
+    // Categories were recalculated server-side. Not a notification — nothing is stored and
+    // nothing is shown; the user did not ask for this and does not need telling. It exists so
+    // the screen stops showing figures the database has already moved past.
+    const refreshCategories = () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.insights.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.user.profile() })
+      // Club matching is scored purely from the stored tags, so it goes stale the moment they
+      // change — and it lives outside the insights tree, so it needs naming separately.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recommendations.all })
+    }
+
     connection.on("DealUserNotification", handleIncoming)
     connection.on("DealGroupNotification", handleIncoming)
     connection.on("CalcNotification", handleIncoming)
+    connection.on("CategoriesUpdated", refreshCategories)
 
     connection.onreconnected(() => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.notifications.all,
       })
+      // Anything that happened while this tab was disconnected arrived nowhere. The two cases
+      // that matter both disconnect by design: the bank journey navigates the browser away,
+      // and the weekly sweep runs at midnight when nobody is looking.
+      refreshCategories()
     })
     connection.onreconnecting(() => {})
     connection.onclose(() => {})
@@ -109,6 +125,7 @@ export function useSignalR() {
       connection.off("DealUserNotification")
       connection.off("DealGroupNotification")
       connection.off("CalcNotification")
+      connection.off("CategoriesUpdated")
       clearTimeout(advanceTimeoutId)
       toastQueue.length = 0
       if (connection.state !== HubConnectionState.Disconnected) {

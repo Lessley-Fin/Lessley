@@ -341,26 +341,12 @@
       "notConnectedTitle": "Connect to get recommendations",
       "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
       "tabTopMatches": "Top matches",
-      "tabMissedSavings": "Missed savings",
       "tabMissedShops": "Your shops"
-    },
-    "missedSavingsSlide": {
-      "title": "Missed savings",
-      "subtitle": "Purchases that had a better home",
-      "recalculateAria": "Recalculate missed savings",
-      "empty": "No missed savings found yet. Once your spending is analyzed, we'll show you where you could have saved.",
-      "storesCount": "{{count}} stores",
-      "infoDialog": {
-        "ariaLabel": "What counts as a missed saving?",
-        "title": "What's a missed saving?",
-        "body": "These are past purchases at stores where a club or card discount existed but wasn't applied — so you can see where switching stores or cards next time could save you money."
-      }
     },
     "topClubMatchesSlide": {
       "title": "Top club matches",
       "subtitle": "Ranked by store overlap with your spend",
-      "recalculateAria": "Recalculate matches",
-      "empty": "We need more transaction history to analyze club fit. Try recalculating or connect more accounts.",
+      "empty": "We need more transaction history to analyze club fit. Connect more accounts to improve it.",
       "storesMatch": "{{hit}}/{{total}} stores match",
       "infoDialog": {
         "ariaLabel": "What is a fit score?",

@@ -16,6 +16,8 @@ public class UserTagServiceTests
     private readonly Mock<IConnectionManager> _connectionManager = new();
     private readonly Mock<IHubContext<NotificationHub>> _hubContext = new();
     private readonly Mock<IGroupManager> _groupManager = new();
+    private readonly Mock<IHubClients> _clients = new();
+    private readonly Mock<ISingleClientProxy> _clientProxy = new();
     private readonly UserTagService _service;
 
     public UserTagServiceTests()
@@ -25,6 +27,14 @@ public class UserTagServiceTests
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         _hubContext.Setup(h => h.Groups).Returns(_groupManager.Object);
+
+        // Assigning tags also pushes CategoriesUpdated to the user's open tabs.
+        _hubContext.Setup(h => h.Clients).Returns(_clients.Object);
+        _clients.Setup(c => c.Client(It.IsAny<string>())).Returns(_clientProxy.Object);
+        _clientProxy
+            .Setup(p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object?[]>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
         _groupManager
             .Setup(g => g.AddToGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -149,5 +159,58 @@ public class UserTagServiceTests
         _groupManager.Verify(g => g.RemoveFromGroupAsync("conn-1", "tech",   It.IsAny<CancellationToken>()), Times.Once);
         _groupManager.Verify(g => g.RemoveFromGroupAsync("conn-1", "sports", It.IsAny<CancellationToken>()), Times.Once);
         _groupManager.Verify(g => g.AddToGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ── telling the client its cached categories are stale ────────────────────
+
+    [Fact]
+    public async Task AssignTags_UserOnline_PushesCategoriesUpdatedToEveryConnection()
+    {
+        var user = new ApplicationUser { Id = "user-1", Tags = new List<string>(), MutedTags = new List<string>() };
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(IdentityResult.Success);
+        _connectionManager.Setup(m => m.GetConnections("user-1")).Returns(new[] { "conn-1", "conn-2" });
+
+        await _service.AssignTagsAsync("user-1", new[] { "tag-a" });
+
+        // The event name is a contract with the client's useSignalR handler.
+        _clients.Verify(c => c.Client("conn-1"), Times.AtLeastOnce);
+        _clients.Verify(c => c.Client("conn-2"), Times.AtLeastOnce);
+        _clientProxy.Verify(p => p.SendCoreAsync(
+            "CategoriesUpdated", It.IsAny<object?[]>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task AssignTags_UserOffline_SendsNothing()
+    {
+        // Normal, not exceptional: the sweep runs at midnight and the bank journey navigates
+        // the browser away. Those clients refresh on reconnect instead.
+        var user = new ApplicationUser { Id = "user-1", Tags = new List<string>(), MutedTags = new List<string>() };
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(IdentityResult.Success);
+        _connectionManager.Setup(m => m.GetConnections("user-1")).Returns(Array.Empty<string>());
+
+        await _service.AssignTagsAsync("user-1", new[] { "tag-a" });
+
+        _clientProxy.Verify(p => p.SendCoreAsync(
+            It.IsAny<string>(), It.IsAny<object?[]>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AssignTags_FailedWrite_SendsNoUpdate()
+    {
+        // Nothing changed, so there is nothing for the client to re-fetch — and the throw
+        // gets the message redelivered.
+        var user = new ApplicationUser { Id = "user-1", Tags = new List<string>(), MutedTags = new List<string>() };
+        _userManager.Setup(m => m.FindByEmailAsync("user-1")).ReturnsAsync(user);
+        _userManager.Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "concurrency" }));
+        _connectionManager.Setup(m => m.GetConnections("user-1")).Returns(new[] { "conn-1" });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.AssignTagsAsync("user-1", new[] { "tag-a" }));
+
+        _clientProxy.Verify(p => p.SendCoreAsync(
+            It.IsAny<string>(), It.IsAny<object?[]>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

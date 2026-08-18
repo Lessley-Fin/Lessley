@@ -14,11 +14,8 @@ from config.constants import LIMITS, SHOP_MATCH
 from models.transaction import Transaction
 from services.utils.store_similarity import EXACT, SIMILAR, STRONG, SURFACEABLE, WEAK
 from routers.responses import (
-    TransactionInsightSchema,
     MissedShopPurchaseSchema,
     MissedShopSchema,
-    MissedStoreDiscountSchema,
-    MissedStoreSchema,
 )
 
 
@@ -341,40 +338,6 @@ class InsightsService:
 
     # ── What could the user have saved elsewhere? ─────────────────────────────
 
-    def missed_savings(
-        self, transactions: list[Transaction], user_club_ids: List[str] | None = None
-    ) -> list[TransactionInsightSchema]:
-        """
-        For each purchase, the shops in the user's clubs that were running a deal on the
-        same kind of thing — the money that was on the table and left there.
-        """
-        if not transactions:
-            return []
-
-        insights = (
-            seq(transactions)                                                  # every purchase the user made
-            .where(lambda purchase: purchase.id and purchase.categoryCode)     # those we can actually analyse
-            .select(lambda purchase: self._missed_savings_for(purchase, user_club_ids))
-            .to_list()                                                         # hand back a plain list
-        )
-
-        logger.info(
-            "Missed savings analysis completed",
-            extra={
-                "reason": "Batch processing complete",
-                "extra_data": {
-                    "transaction_count": len(transactions),
-                    "processed_count": len(insights),
-                    "transactions_with_deals": seq(insights).count(lambda insight: insight.had_discount),
-                    "total_alternative_stores": seq(insights).sum(
-                        lambda insight: seq(insight.missed_store_discont).sum(lambda missed: missed.store_count)
-                    ),
-                    "insights_returned": len(insights),
-                },
-            },
-        )
-        return insights
-
     def _shops_for(self, transaction: Transaction, user_club_ids: List[str] | None) -> list:
         """
         The deal-running shops this purchase could have earned a coupon at.
@@ -404,43 +367,6 @@ class InsightsService:
                 continue
             kept.append((match, clubs))
         return kept
-
-    def _missed_savings_for(
-        self, transaction: Transaction, user_club_ids: List[str] | None
-    ) -> TransactionInsightSchema:
-        """Work out what the user missed on this one purchase."""
-        shops = self._shops_for(transaction, user_club_ids)
-
-        by_club: Dict[str, List] = {}
-        for match, clubs in shops:
-            for club_id in clubs:
-                by_club.setdefault(club_id, []).append(match.identity)
-
-        return TransactionInsightSchema(
-            transaction_id=transaction.id,
-            had_discount=len(shops) > 0,
-            missed_store_discont=self._describe_missed_stores(by_club),
-            store_name=transaction.merchantName or "N/A",
-            mcc_code=self.mcc_service.get_mcc_by_id(transaction.categoryCode),
-            mcc_description=self._category_of(transaction),
-            amount=self._amount_charged(transaction),
-        )
-
-    def _describe_missed_stores(self, stores_by_club: Dict[str, List]) -> List[MissedStoreDiscountSchema]:
-        """Turn the shops-per-club map into the shape the client expects."""
-        return (
-            seq(stores_by_club.items())                                             # each club and its shops
-            .where(lambda entry: self.reference_data_repository.get_club(entry[0]))  # skip clubs we cannot name
-            .select(lambda entry: MissedStoreDiscountSchema(
-                club_id=entry[0],
-                missed_store=[
-                    MissedStoreSchema(store_id=shop.store_id, store_name=shop.name)
-                    for shop in entry[1][:MAX_ALTERNATIVE_STORES_PER_CLUB]
-                ],
-                store_count=min(len(entry[1]), MAX_ALTERNATIVE_STORES_PER_CLUB),
-            ))
-            .to_list()
-        )
 
     # ── The same answer, gathered by shop instead of by purchase ──────────────
 
@@ -535,10 +461,12 @@ class InsightsService:
         return await self.user_repository.get_user(email)
 
     @staticmethod
-    def _extract_mcc_tags(categories: list) -> list[str]:
+    def extract_mcc_tags(categories: list) -> list[str]:
         """
-        Flatten the user's categories to a de-duplicated list of MCC codes (as strings).
-        Categories are represented system-wide by their MCC code ("MCC string labels").
+        Flatten the user's categories to the de-duplicated tag list stored on their profile.
+
+        Public because the command handler publishes these tags: the calculation itself must
+        stay free of side effects so the client-facing GET can share it without writing.
         """
         tags: list[str] = []
         for category in categories or []:
@@ -564,9 +492,13 @@ class InsightsService:
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
     ) -> list[dict]:
         """
-        Calculates user categories from spending transactions, then publishes the derived
-        tags to the Gateway via publisher_service so they are stored on the user profile
-        and become readable through UserRepository by other services (task 9).
+        Calculate the user's spending categories and return them. Nothing is published here.
+
+        Two callers share this: the client-facing GET, which only displays the answer, and the
+        Gateway command handler, which publishes the derived tags for the Gateway to persist.
+        Publishing from inside the calculation made a read request write to the user's profile
+        — the GET returned immediately while the write travelled the bus behind it, so a client
+        could act on categories the database did not have yet. The handler owns that step now.
         """
         logger.info(
             "Service method called",
@@ -586,13 +518,6 @@ class InsightsService:
             # Process 2: keep only the top (Len - X%) categories based on the user's match level.
             matching_score = user.get("MatchingScore") if user else None
             categories = trim_categories_by_match_level(categories, matching_score)
-
-            # Task 5: send the recalculated categories (MCC codes) to the Gateway over HTTP so it
-            # updates the user's profile (and SignalR groups). Other services read them back via
-            # UserRepository instead of re-running this calculation.
-            mcc_tags = self._extract_mcc_tags(categories)
-            if self.publisher_service and mcc_tags:
-                await self.publisher_service.publish_user_tag_assigned(user_id, mcc_tags)
 
             logger.info(
                 "User categories calculated successfully",
@@ -806,56 +731,6 @@ class InsightsService:
                 },
             )
             return saved_by_account
-        except Exception as e:
-            logger.error(
-                f"Error: {str(e)}",
-                exc_info=e,
-                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
-            )
-            raise
-
-    async def calculate_missed_savings_async(
-        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> list[TransactionInsightSchema]:
-        """
-        Analyzes user transactions to identify missed savings opportunities.
-        For each transaction, identifies alternative stores with active deals for the same MCC category.
-
-        Args:
-            user_id: User ID for transaction retrieval
-            time_filter: Whether to apply time-based filtering
-            days: Number of past days to analyze
-            use_mock: Whether to use mock data
-
-        Returns:
-            List of TransactionInsightSchema objects with missed savings analysis
-        """
-        logger.info(
-            "Service method called",
-            extra={
-                "reason": "Method invocation",
-                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
-            },
-        )
-
-        try:
-            transactions = await self._transactions_for(user_id, time_filter, days, use_mock, sort=True)
-
-            user_club_ids = await self.user_repository.get_user_clubs(user_id)
-            insights = self.missed_savings(transactions, user_club_ids=user_club_ids)
-
-            if self.publisher_service:
-                serialized = [i.dict() if hasattr(i, "dict") else i for i in insights]
-                await self.publisher_service.publish_missed_savings_calculated(user_id, serialized)
-
-            logger.info(
-                "Missed savings calculated successfully",
-                extra={
-                    "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "insight_count": len(insights)},
-                },
-            )
-            return insights
         except Exception as e:
             logger.error(
                 f"Error: {str(e)}",

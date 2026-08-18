@@ -23,11 +23,19 @@ arrives here.
 | Route | Purpose |
 |---|---|
 | `GET /insights/categories\|top-accounts\|top-stores` | Spending analysis |
+| `GET /insights/missed-savings-by-store` | Shops running a deal the user could have used |
+| `GET /insights/matching-clubs` | Loyalty clubs worth joining, from the user's stored tags |
 | `GET /open-finance/accounts\|transactions\|transactions/by-account` | Raw Open Finance data |
-| `POST /recommendations/missed-savings\|matching-clubs` | Not edge-exposed — driven by RabbitMQ |
 
-Query parameters: `days` (1–365, default 90), `time_filter` (default true), `use_mock`
-(default false).
+Every client-facing route lives under `/insights` or `/open-finance` — the only two prefixes
+the edge forwards here. A route placed anywhere else is unreachable.
+
+Query parameters: `days` (1–365, default 90) and `time_filter` (default true). Identity is
+never a parameter: the edge injects the authenticated email as `X-Auth-Email`.
+
+RabbitMQ carries one inbound command, `Gateway.calculate_user_categories`, whose result is
+published back as `Personalize.user_tag_assigned` for the Gateway to persist. Nothing else
+travels over the bus.
 
 ## Run locally
 

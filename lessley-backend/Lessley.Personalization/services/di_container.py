@@ -86,7 +86,6 @@ class DIContainer:
                 DIContainer._instances["recommendation_service"] = RecommendationService(
                     reference_data_repository=DIContainer.get_reference_data_repository(),
                     user_repository=DIContainer.get_user_repository(),
-                    publisher_service=DIContainer.get_publisher_service(),
                     mcc_service=DIContainer.get_mcc_service(),
                 )
             return DIContainer._instances["recommendation_service"]

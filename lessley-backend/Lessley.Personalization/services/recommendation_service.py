@@ -1,12 +1,10 @@
 import logging
 from typing import Dict, List
 
-from fastapi import HTTPException
 from functional import seq
 
 from .reference_data_repository import ReferenceDataRepository
 from .user_repository import UserRepository
-from .publisher_service import PublisherService
 from .mcc_service import MccService
 from config.constants import LIMITS
 from models.db.entities import Store
@@ -16,23 +14,22 @@ logger = logging.getLogger(__name__)
 
 class RecommendationService:
     """
-    Decides which clubs are worth joining, and announces deals to the people who care.
+    Decides which clubs are worth joining.
 
     Tags are read from UserRepository (pre-computed by InsightsService and stored via the
-    Gateway) instead of recalculating them on every call. Clubs, stores and deals are read
-    from ReferenceDataRepository.
+    Gateway) instead of recalculating them on every call. Clubs and stores are read from
+    ReferenceDataRepository, which holds them in memory — so this publishes nothing and waits
+    on nothing, and its answer goes straight back to the caller.
     """
 
     def __init__(
         self,
         reference_data_repository: ReferenceDataRepository,
         user_repository: UserRepository,
-        publisher_service: PublisherService,
         mcc_service: MccService,
     ):
         self.reference_data_repository = reference_data_repository
         self.user_repository = user_repository
-        self.publisher_service = publisher_service
         self.mcc_service = mcc_service
 
     # ── Helpers ───────────────────────────────────────────────────────────────
@@ -168,6 +165,11 @@ class RecommendationService:
 
         Fetches stored tags from UserRepository (raises 404 if user not registered),
         converts them to MCC codes, and scores every club against those codes.
+
+        Answered synchronously over HTTP. It reads stored tags and scores them against
+        reference data already held in memory — no upstream call, no transaction fetch — so
+        the fire-and-forget command and the notification that used to carry the result back
+        were machinery around an answer that could simply be returned.
         """
         logger.info(
             "Club matching started",
@@ -180,9 +182,6 @@ class RecommendationService:
             user_club_ids = await self.user_repository.get_user_clubs(user_id)
 
             result = self.recommend_clubs(user_id, mcc_codes, user_club_ids=user_club_ids)
-
-            if self.publisher_service:
-                await self.publisher_service.publish_matching_clubs_calculated(user_id, result)
 
             logger.info(
                 "Club matching completed",
@@ -205,95 +204,6 @@ class RecommendationService:
                 extra={
                     "reason": "Service execution failure",
                     "extra_data": {"email": user_id, "error_type": type(e).__name__},
-                },
-            )
-            raise
-
-    # ── Broadcast ─────────────────────────────────────────────────────────────
-
-    def get_deal_categories(self, deal_id: str) -> List[str]:
-        """
-        Resolve a deal's categories from the store it belongs to.
-
-        Looks up the deal → its store → the store's MCC codes. Those MCC codes are the deal's
-        categories, used to broadcast the deal to the matching category groups. Returns an empty
-        list if the deal or its store is unknown.
-        """
-        deal = self.reference_data_repository.get_deal(deal_id)
-        if not deal:
-            logger.warning(
-                "Deal not found",
-                extra={"reason": "Deal lookup failed", "extra_data": {"deal_id": deal_id}},
-            )
-            return []
-
-        store = self.reference_data_repository.get_store(deal.store_id)
-        if not store:
-            logger.warning(
-                "Store for deal not found",
-                extra={
-                    "reason": "Store lookup failed",
-                    "extra_data": {"deal_id": deal_id, "store_id": deal.store_id},
-                },
-            )
-            return []
-
-        mcc_codes = self._categories_sold_by(store)
-        logger.debug(
-            "Deal categories resolved",
-            extra={
-                "reason": "Data lookup complete",
-                "extra_data": {"deal_id": deal_id, "store_id": deal.store_id, "mcc_count": len(mcc_codes)},
-            },
-        )
-        return mcc_codes
-
-    async def publish_broadcast_deal(self, deal_id: str, message: str) -> List[str]:
-        """
-        Broadcast a deal notification to the deal's category group(s).
-
-        The deal's category is read from the store the deal belongs to (its MCC codes); the
-        Gateway routes the DealGroupNotification to all active SignalR connections in each
-        category group. Raises 404 if the deal is unknown or has no resolvable category.
-        """
-        logger.info(
-            "Broadcasting deal",
-            extra={"reason": "Service method invoked", "extra_data": {"deal_id": deal_id}},
-        )
-
-        try:
-            categories = self.get_deal_categories(deal_id)
-            if not categories:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Deal '{deal_id}' not found or has no resolvable category",
-                )
-
-            category_tags = [str(mcc) for mcc in categories]
-            await self.publisher_service.publish_deal_notification(
-                deal_id=deal_id,
-                message=message,
-                categories=category_tags,
-            )
-
-            logger.info(
-                "Deal broadcast published",
-                extra={
-                    "reason": "Service execution complete",
-                    "extra_data": {"deal_id": deal_id, "categories": category_tags},
-                },
-            )
-            return category_tags
-
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.error(
-                f"Error: {str(e)}",
-                exc_info=e,
-                extra={
-                    "reason": "Service execution failure",
-                    "extra_data": {"deal_id": deal_id, "error_type": type(e).__name__},
                 },
             )
             raise

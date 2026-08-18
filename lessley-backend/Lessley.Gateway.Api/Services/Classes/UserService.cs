@@ -11,16 +11,19 @@ public class UserService : IUserService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserTagService _userTagService;
+    private readonly IPersonalizationService _personalizationService;
     private readonly ApplicationDbContext _db;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
+        IPersonalizationService personalizationService,
         ApplicationDbContext db)
     {
-        _userManager    = userManager;
-        _userTagService = userTagService;
-        _db             = db;
+        _userManager            = userManager;
+        _userTagService         = userTagService;
+        _personalizationService = personalizationService;
+        _db                     = db;
     }
 
     public async Task<UserOperationResult> UpdateAsync(
@@ -49,9 +52,13 @@ public class UserService : IUserService
         if (mutedChanged)
             await _userTagService.SyncGroupsAsync(email, user.Tags ?? new List<string>(), ct);
 
-        // Categories are no longer recalculated eagerly here — the Gateway does not call
-        // Personalization over HTTP. They are recomputed on the next
-        // GET /api/v1/insights/categories, which the client issues through the edge.
+        // Only the match level feeds the calculation — it decides how many categories survive
+        // the trim. Muted tags are applied at fanout and display time, and clubs only affect
+        // missed-savings, so neither changes a single computed category; recalculating on those
+        // would spend an Open Finance round trip to arrive at the same answer.
+        if (matchChanged)
+            await _personalizationService.TriggerCalculateUserCategoriesAsync(email, ct: ct);
+
         return UserOperationResult.Ok(new
         {
             email      = user.Email,
@@ -72,7 +79,19 @@ public class UserService : IUserService
         if (user is null)
             return UserOperationResult.NotFound();
 
-        await _userTagService.AssignTagsAsync(email, tags, ct);
+        // AssignTagsAsync throws when the write is rejected so the bus consumer can retry it.
+        // On this path there is no retry to earn — an admin is waiting — so the failure is
+        // turned back into a result. Reporting success on a write that did not happen is the
+        // one outcome worth ruling out.
+        try
+        {
+            await _userTagService.AssignTagsAsync(email, tags, ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return UserOperationResult.BadRequest(new { error = ex.Message });
+        }
+
         return UserOperationResult.Ok(new { email = user.Email, tags });
     }
 

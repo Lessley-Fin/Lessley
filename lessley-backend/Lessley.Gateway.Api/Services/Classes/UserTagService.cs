@@ -40,13 +40,45 @@ public class UserTagService : IUserTagService
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
         {
-            _logger.LogError(
-                "AssignTags: DB update failed for user {Email}: {Errors}",
-                email, string.Join("; ", result.Errors.Select(e => e.Description)));
-            return;
+            // Throwing rather than returning: this runs inside a RabbitMQ consumer, so an
+            // exception earns a redelivery while a log line loses the write silently. The
+            // realistic cause is Identity's concurrency stamp rejecting the save because a
+            // settings update landed between the read above and this line — precisely the
+            // case a retry fixes, since the retry re-reads the user.
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            _logger.LogError("AssignTags: DB update failed for user {Email}: {Errors}", email, errors);
+            throw new InvalidOperationException($"Failed to assign tags to {email}: {errors}");
         }
 
         await SyncGroupsAsync(email, previousTags, ct);
+        await NotifyCategoriesUpdatedAsync(email, user.Tags ?? new List<string>(), ct);
+    }
+
+    /// <summary>
+    /// Tells any open tab that its cached categories are out of date.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not a Notification: nothing is stored and nothing is shown. Recalculations
+    /// are triggered by things the user did not ask for — a weekly sweep, a settings save
+    /// rippling through — so surfacing them would be noise. This exists only so the client
+    /// re-fetches instead of waiting out its cache.
+    ///
+    /// Sending to zero connections is the normal case, not a failure: the sweep runs at
+    /// midnight and the bank journey navigates the browser away. Those clients pick the change
+    /// up when they reconnect, which is why the client also invalidates on reconnect.
+    /// </remarks>
+    private async Task NotifyCategoriesUpdatedAsync(string email, IReadOnlyList<string> tags, CancellationToken ct)
+    {
+        var connections = _connectionManager.GetConnections(email).ToList();
+        if (connections.Count == 0)
+            return;
+
+        var payload = new { timestamp = DateTime.UtcNow, tags };
+        foreach (var connectionId in connections)
+            await _hubContext.Clients.Client(connectionId).SendAsync("CategoriesUpdated", payload, ct);
+
+        _logger.LogInformation(
+            "CategoriesUpdated sent to {Email} ({Count} live connection(s))", email, connections.Count);
     }
 
     public async Task SyncGroupsAsync(string email, IReadOnlyList<string> previousTags, CancellationToken ct = default)

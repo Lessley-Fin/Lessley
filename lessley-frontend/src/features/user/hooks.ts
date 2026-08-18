@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuthStore } from "@/features/auth/store"
-import { triggerMatchingClubs, triggerMissedSavings } from "@/features/insights/api"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchMyProfile, initOpenFinanceConnection, patchMyProfile } from "./api"
 
@@ -26,13 +25,11 @@ export function useUpdateMyProfile() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.profile() })
 
-      // Club/match-level/muted-tag changes invalidate cached recommendations, but nothing
-      // recalculates them eagerly anymore — Personalization does it, and only if asked.
-      // Best-effort: the user has no categories yet (never connected a bank), an unrelated
-      // failure here shouldn't block the settings save that already succeeded.
+      // A club, match-level or muted-tag change invalidates what is on screen. Club matching
+      // is a plain query now, so dropping the cache is the whole job — the next render asks
+      // again. A match-level change also queues a category recalculation server-side, which
+      // arrives later as a CategoriesUpdated push.
       if (data.staleInsights) {
-        void triggerMatchingClubs().catch(() => {})
-        void triggerMissedSavings().catch(() => {})
         queryClient.invalidateQueries({ queryKey: queryKeys.recommendations.list() })
       }
     },

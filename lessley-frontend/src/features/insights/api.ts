@@ -5,7 +5,7 @@ import type {
   OpenFinanceAccount,
   PaginatedApiResponse,
   PersonalizationTransaction,
-  RecommendationsResponse,
+  ClubRecommendationResponse,
   SpendingByDayInsight,
   SpendingCategoryInsight,
   SpendingPeriodComparison,
@@ -122,20 +122,13 @@ export async function fetchSpendingSavedByAccount(
   return Array.isArray(payload.data) ? payload.data : []
 }
 
-export async function fetchRecommendations(): Promise<RecommendationsResponse> {
-  return apiFetch<RecommendationsResponse>("/api/v1/User/recommendations")
-}
-
-export async function triggerMatchingClubs(): Promise<void> {
-  await apiFetch("/api/v1/User/recommendations/matching-clubs", {
-    method: "POST",
-  })
-}
-
-export async function triggerMissedSavings(): Promise<void> {
-  await apiFetch("/api/v1/User/recommendations/missed-savings", {
-    method: "POST",
-  })
+// Answered directly by Personalization rather than triggered and collected later: it reads
+// stored tags against in-memory reference data, so there is nothing to wait for.
+export async function fetchMatchingClubs(): Promise<ClubRecommendationResponse | null> {
+  const payload = await apiFetch<BasicApiResponse<ClubRecommendationResponse>>(
+    "/api/v1/insights/matching-clubs",
+  )
+  return payload.data ?? null
 }
 
 export async function fetchMissedSavingsByStore(days: number = 90): Promise<MissedShop[]> {

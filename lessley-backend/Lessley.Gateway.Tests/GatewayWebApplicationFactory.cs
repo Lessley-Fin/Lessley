@@ -11,12 +11,31 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Lessley.Gateway.Tests;
 
 /// <summary>
-/// No-op stand-in for the Personalization MassTransit publisher so tests don't require RabbitMQ.
+/// Stand-in for the Personalization MassTransit publisher so tests don't require RabbitMQ.
+/// Category triggers are recorded, because which events cause a recalculation is behaviour
+/// worth asserting rather than a detail to stub away.
 /// </summary>
 public sealed class FakePersonalizationService : IPersonalizationService
 {
-    public Task TriggerCalculateMissedSavingsAsync(string userId, bool timeFilter = true, int days = 7, CancellationToken ct = default) => Task.CompletedTask;
-    public Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
+    private readonly List<string> _categoryTriggers = new();
+
+    /// <summary>Emails a category recalculation was requested for, in order.</summary>
+    public IReadOnlyList<string> CategoryTriggers
+    {
+        get { lock (_categoryTriggers) return _categoryTriggers.ToList(); }
+    }
+
+    public void ClearCategoryTriggers()
+    {
+        lock (_categoryTriggers) _categoryTriggers.Clear();
+    }
+
+    public Task TriggerCalculateUserCategoriesAsync(string userId, int days = 90, CancellationToken ct = default)
+    {
+        lock (_categoryTriggers) _categoryTriggers.Add(userId);
+        return Task.CompletedTask;
+    }
+
 }
 
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>

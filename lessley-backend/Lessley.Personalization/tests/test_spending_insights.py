@@ -135,21 +135,21 @@ def test_spending_saved_by_account_groups_and_sorts_descending():
     assert result[1] == {"accountId": "acc2", "accountNumber": "****2", "total_saved": 30}
 
 
-# ── Task 5: missed-savings sorts transactions before building insights ─────────
+# ── missed-savings sorts transactions before matching shops ───────────────────
 
 def _missed_savings_service(open_finance) -> InsightsService:
     service = _service(
         open_finance_service=open_finance,
-        publisher_service=MagicMock(publish_missed_savings_calculated=AsyncMock()),
+        publisher_service=MagicMock(),
         user_repository=MagicMock(get_user_clubs=AsyncMock(return_value=["c1"])),
     )
-    # The calculation itself is covered by its own tests; here we only care that the
+    # The matching itself is covered by its own tests; here we only care that the
     # orchestration hands it correctly-sorted transactions.
-    service.missed_savings = MagicMock(return_value=[])
+    service.missed_savings_by_store = MagicMock(return_value=[])
     return service
 
 
-async def test_missed_savings_sorts_real_transactions_before_building_insights():
+async def test_missed_savings_sorts_real_transactions_before_matching():
     fetched = [_tx(charged=1)]
     sorted_transactions = [_tx(charged=2)]
 
@@ -159,10 +159,10 @@ async def test_missed_savings_sorts_real_transactions_before_building_insights()
 
     service = _missed_savings_service(open_finance)
 
-    await service.calculate_missed_savings_async("user@test.com", time_filter=True, days=7, use_mock=False)
+    await service.calculate_missed_savings_by_store_async("user@test.com", time_filter=True, days=7)
 
     open_finance.sort_transactions.assert_called_once_with(fetched)
-    service.missed_savings.assert_called_once_with(sorted_transactions, user_club_ids=["c1"])
+    service.missed_savings_by_store.assert_called_once_with(sorted_transactions, user_club_ids=["c1"])
 
 
 async def test_missed_savings_does_not_sort_mock_data():
@@ -171,6 +171,8 @@ async def test_missed_savings_does_not_sort_mock_data():
     service = _missed_savings_service(open_finance)
     service.files_service.read_json = MagicMock(return_value=[{"fake": "tx"}])
 
-    await service.calculate_missed_savings_async("user@test.com", time_filter=True, days=7, use_mock=True)
+    await service.calculate_missed_savings_by_store_async(
+        "user@test.com", time_filter=True, days=7, use_mock=True
+    )
 
     open_finance.sort_transactions.assert_not_called()
