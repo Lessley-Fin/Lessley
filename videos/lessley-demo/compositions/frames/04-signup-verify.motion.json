@@ -1,0 +1,28 @@
+{
+  "scene": "04-signup-verify",
+  "duration_s": 11,
+  "rules": [
+    "spring-pop-entrance",
+    "svg-path-draw",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "viewport-change",
+    "press-release-spring",
+    "scale-swap-transition",
+    "svg-icon-enrichment",
+    "discrete-text-sequence"
+  ],
+  "exit": {
+    "vector": "camera Z-in (+scale 0.0213/s on .screen-world, 1.32 -> 1.42 linear over 6.3-11.0s); ~2.8 canvas px/s outward flow at the code-row edge, plus ~0.8 px/s downward re-aim. Device itself locked at cx 737, cy 540.",
+    "still_moving": true
+  },
+  "entry": {
+    "vector": "lateral wizard advance: step body slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. In-phone camera starts at rest (scale 1.0, whole device framed); Z push begins at 0.8s.",
+    "from_rest": false
+  },
+  "carrier": {
+    "steps": "5-step .steps row, index 1 (אימות). At t=0 it renders in the INCOMING state from frame 03 (all muted); at 0.15-0.60s חשבון flips to .done (accent) and אימות to current (primary). It then holds unchanged through the final second, so frame 05 can pick it up mid-state at its own t=0.",
+    "device": "the phone is never rebuilt: same .device, same slot, no entrance tween. Only the screen contents advance.",
+    "rail": "bottom progress rail scaleX 0.8095 -> 1.0 linear across the whole 11s (14.92% -> 18.41% of the 315s film)."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "preferences": {
+    "destination": {
+      "value": "presentation",
+      "confirmed_in": [
+        "lessley-demo"
+      ],
+      "updated_at": "2026-08-17T20:42:44.479Z"
+    },
+    "aspect": {
+      "value": "1920x1080",
+      "confirmed_in": [
+        "lessley-demo"
+      ],
+      "updated_at": "2026-08-17T20:42:44.534Z"
+    },
+    "language": {
+      "value": "he",
+      "confirmed_in": [
+        "lessley-demo"
+      ],
+      "updated_at": "2026-08-17T20:42:44.590Z"
+    },
+    "flow": {
+      "value": "companion",
+      "confirmed_in": [
+        "lessley-demo"
+      ],
+      "updated_at": "2026-08-17T20:42:44.650Z"
+    },
+    "storyboard": {
+      "value": "yes",
+      "confirmed_in": [
+        "lessley-demo"
+      ],
+      "updated_at": "2026-08-17T20:42:44.707Z"
+    }
+  },
+  "sightings": {}
+}

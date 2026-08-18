@@ -1,0 +1,29 @@
+{
+  "scene": "17-recs-matches",
+  "duration_s": 15,
+  "rules": [
+    "svg-path-draw",
+    "stat-bars-and-fills",
+    "counting-dynamic-scale",
+    "spring-pop-entrance",
+    "waterfall-entry",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "ambient-glow-bloom",
+    "depth-of-field-blur"
+  ],
+  "notes": {
+    "first_second": "Device + screen on-frame at t=0, carried unchanged from frame 16. The in-phone camera opens at scale 1.05 and settles to 1.00 by 0.55s (power3.out) — enters mid-push, matching frame 16's exit direction (+Z). Stage title fragments whip in at 0.15s / 0.36s; the match card has not arrived yet.",
+    "last_second": "Camera is in a linear (ease:none) creep from scale 1.45 to 1.52 running 12.40s → 15.00s, so it is STILL MOVING on the final frame. The runner-up rows finish their focus-falloff (opacity 1→0.5, blur 0→2.4px) at 14.20s; the last second is a moving hold on the 72% card.",
+    "signature": "The 72% match ring DRAWS (measured getTotalLength stroke-dashoffset, 3.55s→5.45s, power2.out) while the centre number counts 0→72 on the same start/ease/duration; the '7/10 חנויות תואמות' badge spring-pops at 5.40s, landing as the draw completes."
+  },
+  "camera_target": "#rm-card (the מועדון חבר top-match card)",
+  "exit": {
+    "vector": "push-in (+Z) at ~23 px/s of screen-edge expansion (scale 1.45→1.52, linear)",
+    "still_moving": true
+  },
+  "entry": {
+    "vector": "push-in (+Z) at ~230 px/s of screen-edge contraction (scale 1.05→1.00, power3.out over 0.55s)",
+    "from_rest": false
+  }
+}

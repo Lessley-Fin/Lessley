@@ -1,0 +1,495 @@
+<template>
+      <style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
+
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
+
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 72px; padding: 96px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
+
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
+
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 0; font-size: 22px; }
+        .app-header { display: flex; align-items: center; gap: 14px;
+          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+          background: hsl(var(--card) / 0.8); }
+        .app-header .brand { flex: 1; min-width: 0; }
+        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+          flex-direction: column; gap: 16px; }
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+          background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+          padding: 20px 22px; font-size: 22px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 8px 16px; font-size: 18px; font-weight: 700; }
+        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+        .tabs { display: flex; gap: 6px; }
+        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+          font-size: 19px; color: hsl(var(--muted-foreground)); }
+        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .steps { display: flex; gap: 6px; }
+        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+          border-radius: 999px; color: hsl(var(--muted-foreground));
+          background: hsl(var(--muted)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+          color: hsl(203 13% 67%); }
+        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
+      <style>
+        /* ── 06-signup-match — scene layer ──────────────────────────────── */
+        .v6-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+        .v6-ground .bg-glow { opacity: 0.72; }
+
+        .v6-slot { flex: none; width: 406px; height: 880px;
+          display: flex; align-items: center; justify-content: center; }
+        .v6-slot .device { transform: scale(0.9442); }
+
+        .steps .step { font-size: 14px; white-space: nowrap; flex: 1 1 auto; padding: 10px 5px; }
+        .step.done { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .v6-hdr-dot { width: 22px; height: 22px; border-radius: 50%; flex: none;
+          background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); }
+
+        .v6-app .app-main { gap: 16px; padding: 16px 22px; }
+        #v6-body { display: flex; flex-direction: column; gap: 16px; }
+        .v6-title { display: flex; flex-direction: column; gap: 6px; }
+
+        /* the live-sync couple: the control list and the surface it drives, always co-visible */
+        .v6-couple { position: relative; display: flex; flex-direction: column; gap: 16px; }
+
+        .v6-list { display: flex; flex-direction: column; gap: 10px; }
+        .v6-opt { position: relative; border-radius: 20px; padding: 20px 18px;
+          border: 1px solid hsl(201 21% 89%); background: hsl(0 0% 100%);
+          display: flex; flex-direction: column; gap: 4px; }
+        .v6-opt b { font-size: 20px; font-weight: 700; }
+        .v6-ripple { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px;
+          border-radius: 50%; border: 2px solid hsl(182 38% 36% / 0.55); opacity: 0;
+          pointer-events: none; }
+
+        .v6-preview { display: flex; flex-direction: column; gap: 12px; }
+        .v6-head { display: flex; align-items: baseline; gap: 10px; }
+        .v6-figure { font-size: 40px; font-weight: 800; line-height: 1; color: hsl(var(--primary)); }
+        .v6-unit { font-size: 20px; font-weight: 600; color: hsl(var(--muted-foreground)); }
+        .v6-track { width: 100%; height: 14px; border-radius: 8px;
+          background: hsl(198 28% 94%); overflow: hidden; }
+        .v6-fill { width: 100%; height: 100%; border-radius: 8px;
+          background: hsl(var(--primary)); transform-origin: right center; }
+        .v6-desc { font-size: 18px; line-height: 1.34; color: hsl(var(--muted-foreground));
+          min-height: 74px; margin: 0; }
+
+        .cursor.v6-cursor { width: 34px; height: 34px; left: 0; top: 0; }
+      </style>
+
+      <div id="root" data-composition-id="06-signup-match" data-width="1920" data-height="1080">
+        <div class="clip v6-ground" id="v6-ground" data-start="0" data-duration="16" data-track-index="0">
+          <div class="bg-layer">
+            <div class="bg-glow" id="v6-glow"></div>
+            <div class="bg-grid"></div>
+            <div class="bg-ghost">Lessley</div>
+            <div class="bg-grain"></div>
+          </div>
+        </div>
+
+        <span class="chapter">06 / 21</span>
+
+        <div class="stage">
+          <div class="col-text">
+            <h1 class="scene-title" id="v6-h1">הרשמה · רמת התאמה</h1>
+            <p class="scene-body v6-line">הבחירה זזה בין רחב לבינוני למחמיר —</p>
+            <p class="scene-body v6-line">ותצוגת הדילים מסתננת באותו ביט בדיוק.</p>
+          </div>
+
+          <div class="v6-slot" data-layout-allow-overflow>
+            <div class="device">
+              <div class="device-body">
+                <div class="device-screen">
+                  <div class="screen-world" id="v6-world">
+                    <div class="app v6-app">
+                      <div class="app-header">
+                        <div class="app-icon">L</div>
+                        <div class="brand"><b>Lessley</b></div>
+                        <span class="v6-hdr-dot"></span>
+                        <span class="v6-hdr-dot"></span>
+                      </div>
+
+                      <div class="app-main">
+                        <div class="steps">
+                          <span class="step done">חשבון</span>
+                          <span class="step done">אימות</span>
+                          <span class="step" id="v6-s2">מועדונים</span>
+                          <span class="step" id="v6-s3">רמת התאמה</span>
+                          <span class="step">בנקאות</span>
+                        </div>
+
+                        <div id="v6-body">
+                          <div class="v6-title">
+                            <!-- he.json ships this heading with a 🎯. Headless Chrome has no
+                                 emoji font, so the glyph would render as tofu — same mark, as SVG. -->
+                            <h2 class="app-h1">כמה מדויקת שתהיה ההתאמה עבורכם?
+                              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                                   style="width:.92em;height:.92em;vertical-align:-.12em;margin-inline-start:.12em">
+                                <circle cx="12" cy="12" r="8.4" stroke="hsl(var(--primary))" stroke-width="1.7"/>
+                                <circle cx="12" cy="12" r="4.6" stroke="hsl(var(--primary))" stroke-width="1.7"/>
+                                <circle cx="12" cy="12" r="1.5" fill="hsl(var(--primary))"/>
+                              </svg>
+                            </h2>
+                            <p class="app-sub">בחרו עד כמה נסנן דילים בהתאם להרגלי ההוצאה שלכם.</p>
+                          </div>
+
+                          <div class="v6-couple" id="v6-camtarget" data-camera-target>
+                            <div class="v6-list">
+                              <div class="v6-opt" id="v6-o0">
+                                <b>רחב (<span class="num">75%</span> עליונים)</b>
+                                <span class="v6-ripple" id="v6-rp0"></span>
+                              </div>
+                              <div class="v6-opt" id="v6-o1">
+                                <b>בינוני (<span class="num">50%</span> עליונים)</b>
+                                <span class="v6-ripple" id="v6-rp1"></span>
+                              </div>
+                              <div class="v6-opt" id="v6-o2">
+                                <b>מחמיר (<span class="num">25%</span> עליונים)</b>
+                                <span class="v6-ripple" id="v6-rp2"></span>
+                              </div>
+                            </div>
+
+                            <div class="card v6-preview">
+                              <div class="v6-head">
+                                <span class="num v6-figure" id="v6-count">12</span>
+                                <span class="v6-unit">דילים</span>
+                              </div>
+                              <div class="v6-track"><div class="v6-fill" id="v6-fill"></div></div>
+                              <p class="v6-desc" id="v6-desc">מציג את <span class="num">50%</span> הדילים המתאימים ביותר — שילוב מאוזן בין רלוונטיות למגוון.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <svg class="cursor v6-cursor" id="v6-cursor" viewBox="0 0 24 24">
+                      <path d="M 5 2 L 5 20.4 L 9.6 15.9 L 12.5 22 L 15.7 20.5 L 12.8 14.5 L 19.2 14.3 Z"
+                        fill="hsl(0 0% 100%)" stroke="hsl(209 37% 15%)" stroke-width="1.3" stroke-linejoin="round" />
+                    </svg>
+                  </div>
+                  <div class="device-island"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rail"><i id="v6-rail" style="width:28.57%"></i></div>
+      </div>
+
+      <script>
+        (function () {
+          var DUR = 16;
+          var q = function (id) { return document.getElementById(id); };
+
+          var world = q("v6-world");
+          var target = q("v6-camtarget");
+
+          function pos(el) {
+            var x = 0, y = 0, n = el;
+            while (n && n !== world) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+            return { x: x, y: y, w: el.offsetWidth, h: el.offsetHeight };
+          }
+          function aim(el, s) {
+            var cx = world.offsetWidth / 2, cy = world.offsetHeight / 2;
+            var p = pos(el);
+            return { scale: s, x: -s * (p.x + p.w / 2 - cx), y: -s * (p.y + p.h / 2 - cy) };
+          }
+
+
+          // The Dynamic Island is fixed to the device, not the world: clamp the camera's
+          // vertical travel so the 5-step carrier never slides under it.
+          var stepsEl = world.querySelector(".steps");
+          function clamp(c) {
+            var cy = world.offsetHeight / 2, sy = 0, n = stepsEl;
+            while (n && n !== world) { sy += n.offsetTop; n = n.offsetParent; }
+            var minY = 62 - cy - c.scale * (sy - cy);
+            if (c.y < minY) c.y = minY;
+            return c;
+          }
+
+          var C0 = { scale: 1, x: 0, y: 0 };
+          var C1 = clamp(aim(q("v6-body"), 1.04));
+          var C2 = clamp(aim(q("v6-body"), 1.08));
+
+          var BORDER = "hsl(201 21% 89%)", TEAL = "hsl(182 38% 36%)";
+          var WHITE = "hsl(0 0% 100%)", ACCENT = "hsl(179 50% 88%)";
+
+          var cursor = q("v6-cursor");
+          var countEl = q("v6-count");
+          var descEl = q("v6-desc");
+
+          // One state array carries BOTH sides of the couple — control and target
+          // read the same entry, so they cannot desync. Entry 0 is the on-load state.
+          var LOW = 'מציג את <span class="num">75%</span> הדילים המתאימים ביותר — יותר דילים, כולל כאלה שפחות רלוונטיים.';
+          var MED = 'מציג את <span class="num">50%</span> הדילים המתאימים ביותר — שילוב מאוזן בין רלוונטיות למגוון.';
+          var HIGH = 'מציג רק את <span class="num">25%</span> הדילים המתאימים ביותר — פחות דילים, אך מותאמים בדיוק עבורכם.';
+
+          var STATES = [
+            { t: 0.0, opt: 1, n: 12, pct: 0.50, desc: MED },
+            { t: 2.6, opt: 0, n: 18, pct: 0.75, desc: LOW },
+            { t: 6.8, opt: 1, n: 12, pct: 0.50, desc: MED },
+            { t: 10.6, opt: 2, n: 6, pct: 0.25, desc: HIGH },
+            { t: 13.8, opt: 1, n: 12, pct: 0.50, desc: MED }
+          ];
+          var SCRUB = 0.9, SCRUB_EASE = "power2.inOut";
+
+          gsap.set(".v6-ripple", { xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
+          gsap.set("#v6-fill", { scaleX: STATES[0].pct });
+          gsap.set(cursor, { x: -70, y: 1010 });
+
+          var tl = gsap.timeline({ paused: true });
+
+          /* ── the carrier rail ── */
+          tl.fromTo("#v6-rail", { scaleX: 0.8222 }, { scaleX: 1, duration: DUR, ease: "none" }, 0);
+
+          /* ── Scene 1 (0.0–1.4) — the couple establishes; the step carrier advances ── */
+          tl.set(world, C0, 0);
+          tl.fromTo("#v6-body", { x: -46, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0);
+          tl.fromTo("#v6-s2",
+            { backgroundColor: "hsl(198 28% 94%)", color: "hsl(208 11% 46%)" },
+            { backgroundColor: ACCENT, color: "hsl(182 73% 18%)", duration: 0.45, ease: "power2.out" }, 0.15);
+          tl.fromTo("#v6-s3",
+            { backgroundColor: "hsl(198 28% 94%)", color: "hsl(208 11% 46%)" },
+            { backgroundColor: TEAL, color: "hsl(182 37% 98%)", duration: 0.45, ease: "power2.out" }, 0.15);
+          tl.fromTo("#v6-h1", { y: 26, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0.15);
+          tl.fromTo(".v6-line", { y: 18, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", stagger: 0.14 }, 0.35);
+          tl.fromTo(".v6-opt", { y: 20, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.5);
+          tl.fromTo(".v6-preview", { y: 22, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0.78);
+
+          // the on-load selection (בינוני — the demo user's level) is already declared
+          tl.fromTo("#v6-o1", { borderColor: BORDER, backgroundColor: WHITE },
+            { borderColor: TEAL, backgroundColor: ACCENT, duration: 0.45, ease: "power2.out" }, 0.95);
+
+          /* ── camera: one modest push that keeps BOTH halves of the couple in frame ── */
+          tl.fromTo(world, C0, { scale: C1.scale, x: C1.x, y: C1.y, duration: 2.1, ease: "power2.inOut" }, 0.9);
+
+          /* ── the readout copy snaps at each threshold, from the same STATES array.
+                A zero-duration set renders under any seek, forward or backward. ── */
+          STATES.forEach(function (st) { tl.set(descEl, { innerHTML: st.desc }, st.t); });
+
+          /* ── Scenes 2–5 — four edit beats. Control and target move at ONE label,
+                sharing duration AND ease: the pick and the filtered preview are one gesture. ── */
+          var prevCur = { x: -70, y: 1010 };
+          for (var k = 1; k < STATES.length; k++) {
+            (function (k) {
+              var s = STATES[k], p = STATES[k - 1];
+              var T = s.t;
+              var optEl = q("v6-o" + s.opt), oldEl = q("v6-o" + p.opt);
+              var b = pos(optEl);
+              var to = { x: b.x + b.w / 2 - 7, y: b.y + b.h / 2 - 3 };
+
+              tl.addLabel("edit" + k, T);
+
+              // the actor — cursor glide, settled before the press
+              tl.fromTo(cursor, { x: prevCur.x, y: prevCur.y },
+                { x: to.x, y: to.y, duration: 0.7, ease: k === 1 ? "power3.out" : "power2.inOut",
+                  immediateRender: k === 1 }, T - 0.8);
+              tl.fromTo(cursor, { scale: 1 }, { scale: 0.84, duration: 0.09, ease: "power2.in" }, T - 0.09);
+              tl.fromTo(cursor, { scale: 0.84 },
+                { scale: 1, duration: 0.13, ease: "power2.out", immediateRender: false }, T);
+              tl.fromTo("#v6-rp" + s.opt, { scale: 0, opacity: 0.6 },
+                { scale: 4.4, opacity: 0, duration: 0.75, ease: "power2.out", immediateRender: false }, T);
+
+              // the control steps
+              if (oldEl !== optEl) {
+                tl.fromTo(oldEl, { borderColor: TEAL, backgroundColor: ACCENT },
+                  { borderColor: BORDER, backgroundColor: WHITE, duration: SCRUB, ease: SCRUB_EASE,
+                    immediateRender: false }, "edit" + k);
+                tl.fromTo(optEl, { borderColor: BORDER, backgroundColor: WHITE },
+                  { borderColor: TEAL, backgroundColor: ACCENT, duration: SCRUB, ease: SCRUB_EASE,
+                    immediateRender: false }, "edit" + k);
+              }
+
+              // the bound surface answers in the SAME beat — same label, duration, ease
+              tl.to(countEl, { innerText: s.n, duration: SCRUB, ease: SCRUB_EASE,
+                snap: { innerText: 1 } }, "edit" + k);
+              tl.fromTo("#v6-fill", { scaleX: p.pct },
+                { scaleX: s.pct, duration: SCRUB, ease: SCRUB_EASE, immediateRender: false }, "edit" + k);
+
+              prevCur = to;
+            })(k);
+          }
+
+          // the glow answers the landed choice
+          tl.fromTo("#v6-glow", { opacity: 0.72 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, 13.8);
+
+          // stillness through the edit beats, then the camera pushes on the landed choice
+          // and is still travelling in at the cut
+          tl.fromTo(world, { scale: C1.scale, x: C1.x, y: C1.y },
+            { scale: C2.scale, x: C2.x, y: C2.y, duration: DUR - 12.5, ease: "power1.in",
+              immediateRender: false }, 12.5);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines["06-signup-match"] = tl;
+        })();
+      </script>
+</template>

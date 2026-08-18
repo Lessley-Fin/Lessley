@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- No dir="rtl" on <html>: it previews fine but renders a fully black video.
+     Direction is scoped to #root and to each scene's own text instead. -->
+<html lang="he">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>Lessley — סרטון דמו</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      body { margin: 0; background: oklch(19% 0.028 245); }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      /* Opaque stage-ground: guards against a white flash showing through at seams. */
+      #stage-ground {
+        position: absolute;
+        inset: 0;
+        background: oklch(19% 0.028 245);
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-7avr" id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="315">
+      <div data-hf-id="hf-eein" id="stage-ground"></div>
+
+      <div data-hf-id="hf-lxhh" id="host-01-open" class="clip" data-composition-id="01-open" data-composition-src="compositions/frames/01-open.html" data-start="0" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-s5wl" id="host-02-problem" class="clip" data-composition-id="02-problem" data-composition-src="compositions/frames/02-problem.html" data-start="15" data-duration="20" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-13wk" id="host-03-signup-account" class="clip" data-composition-id="03-signup-account" data-composition-src="compositions/frames/03-signup-account.html" data-start="35" data-duration="12" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-5nh9" id="host-04-signup-verify" class="clip" data-composition-id="04-signup-verify" data-composition-src="compositions/frames/04-signup-verify.html" data-start="47" data-duration="11" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-gjgp" id="host-05-signup-clubs" class="clip" data-composition-id="05-signup-clubs" data-composition-src="compositions/frames/05-signup-clubs.html" data-start="58" data-duration="16" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-3634" id="host-06-signup-match" class="clip" data-composition-id="06-signup-match" data-composition-src="compositions/frames/06-signup-match.html" data-start="74" data-duration="16" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-a7hn" id="host-07-signup-banking" class="clip" data-composition-id="07-signup-banking" data-composition-src="compositions/frames/07-signup-banking.html" data-start="90" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-rcpd" id="host-08-login" class="clip" data-composition-id="08-login" data-composition-src="compositions/frames/08-login.html" data-start="105" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-bzp2" id="host-09-nav-map" class="clip" data-composition-id="09-nav-map" data-composition-src="compositions/frames/09-nav-map.html" data-start="120" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-1otm" id="host-10-optimizer-input" class="clip" data-composition-id="10-optimizer-input" data-composition-src="compositions/frames/10-optimizer-input.html" data-start="135" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-jmyf" id="host-11-optimizer-stack" class="clip" data-composition-id="11-optimizer-stack" data-composition-src="compositions/frames/11-optimizer-stack.html" data-start="150" data-duration="12" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-9mun" id="host-12-optimizer-steps" class="clip" data-composition-id="12-optimizer-steps" data-composition-src="compositions/frames/12-optimizer-steps.html" data-start="162" data-duration="13" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-c80a" id="host-13-deal-finder" class="clip" data-composition-id="13-deal-finder" data-composition-src="compositions/frames/13-deal-finder.html" data-start="175" data-duration="17" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-vzbz" id="host-14-insights-hero" class="clip" data-composition-id="14-insights-hero" data-composition-src="compositions/frames/14-insights-hero.html" data-start="192" data-duration="13" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-q0ql" id="host-15-insights-slides" class="clip" data-composition-id="15-insights-slides" data-composition-src="compositions/frames/15-insights-slides.html" data-start="205" data-duration="20" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-8d6q" id="host-16-hot-deals" class="clip" data-composition-id="16-hot-deals" data-composition-src="compositions/frames/16-hot-deals.html" data-start="225" data-duration="12" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-ibdz" id="host-17-recs-matches" class="clip" data-composition-id="17-recs-matches" data-composition-src="compositions/frames/17-recs-matches.html" data-start="237" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-evom" id="host-18-recs-missed" class="clip" data-composition-id="18-recs-missed" data-composition-src="compositions/frames/18-recs-missed.html" data-start="252" data-duration="18" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-ngav" id="host-19-notifications" class="clip" data-composition-id="19-notifications" data-composition-src="compositions/frames/19-notifications.html" data-start="270" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-s8qy" id="host-20-settings" class="clip" data-composition-id="20-settings" data-composition-src="compositions/frames/20-settings.html" data-start="285" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-w2ui" id="host-21-close" class="clip" data-composition-id="21-close" data-composition-src="compositions/frames/21-close.html" data-start="300" data-duration="15" data-track-index="1" data-width="1920" data-height="1080"></div>
+    </div>
+    <script>
+      // Master timeline. Scene motion lives in each sub-composition; the host
+      // timeline stays empty until the build pass stamps the seams.
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

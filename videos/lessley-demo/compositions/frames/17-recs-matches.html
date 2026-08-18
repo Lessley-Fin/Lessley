@@ -1,0 +1,547 @@
+<template>
+  <style id="lessley-shared">
+    /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+      src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+      src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+      src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+      src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+      src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+      src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+    @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+      src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+    @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+      src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+    /* ── tokens ───────────────────────────────────────────────────────── */
+    #root {
+      /* stage — outside the phone */
+      --stage-bg: oklch(19% 0.028 245);
+      --stage-surface: oklch(24% 0.030 240);
+      --stage-ink: hsl(203 36% 96%);
+      --stage-ink-muted: hsl(203 13% 67%);
+      --stage-accent: hsl(180 45% 62%);
+      --stage-accent-deep: hsl(182 38% 36%);
+      --stage-gold: hsl(33 86% 61%);
+      /* in-phone — the app's real tokens, verbatim */
+      --background: 203 34% 96%;   --foreground: 209 37% 15%;
+      --card: 0 0% 100%;           --primary: 182 38% 36%;
+      --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+      --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+      --success: 150 60% 45%;      --warning: 33 86% 61%;
+      --border: 201 21% 89%;       --navy: 208 34% 17%;
+      --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+      --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--stage-bg);
+      color: var(--stage-ink);
+      direction: rtl;
+      font-family: "Heebo", system-ui, sans-serif;
+      font-feature-settings: "tnum" 0;
+    }
+
+    /* Currency and figures never flip in an RTL run. */
+    .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+    /* ── stage layout ─────────────────────────────────────────────────── */
+    .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+    .bg-glow {
+      position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+      background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+      left: 60px; top: -50px;
+    }
+    .bg-grid {
+      position: absolute; inset: 0; opacity: 0.03;
+      background-image:
+        linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+      background-size: 120px 120px;
+    }
+    .bg-ghost {
+      position: absolute; bottom: -90px; right: -40px;
+      font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+      color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+    }
+    .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+      background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+      background-size: 3px 3px; }
+
+    .stage { position: absolute; inset: 0; display: flex; align-items: center;
+      gap: 72px; padding: 96px; }
+    .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+      text-align: right; max-width: 800px; }
+    .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+      line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+    .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+    .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+      color: var(--stage-accent); margin: 0; }
+
+    .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+      letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+    .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+      background: hsl(203 36% 96% / 0.14); }
+    .rail > i { display: block; height: 100%; background: var(--stage-accent);
+      transform-origin: right center; }
+
+    /* ── the device — the film's carrier ─────────────────────────────── */
+    .device { position: relative; width: 430px; height: 932px; flex: none; }
+    .device-body {
+      position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+      background: oklch(28% 0.010 250);
+      box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+    }
+    .device-screen {
+      position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+      background: hsl(var(--background)); color: hsl(var(--foreground));
+      background-image:
+        radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+      display: flex; flex-direction: column;
+    }
+    .device-island {
+      position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+      width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+    }
+    /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+    .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+    /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+    .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+      padding: 0; font-size: 22px; }
+    .app-header { display: flex; align-items: center; gap: 14px;
+      padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+      background: hsl(var(--card) / 0.8); }
+    .app-header .brand { flex: 1; min-width: 0; }
+    .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+    .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+    .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+      display: grid; place-items: center; border: 1px solid hsl(var(--border));
+      background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+    .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+      display: grid; place-items: center; font-weight: 800; font-size: 22px;
+      background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+      flex-direction: column; gap: 16px; }
+    .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+    .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+    .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+      background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+    .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+      background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+    .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+      padding: 20px 22px; font-size: 22px; }
+    .field .lbl { color: hsl(var(--muted-foreground)); }
+    .field .val { font-weight: 700; }
+    .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+    .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+      font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+      color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+    .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+    .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+      padding: 8px 16px; font-size: 18px; font-weight: 700; }
+    .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+    .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+    .tabs { display: flex; gap: 6px; }
+    .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+      font-size: 19px; color: hsl(var(--muted-foreground)); }
+    .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+    .steps { display: flex; gap: 6px; }
+    .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+      border-radius: 999px; color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted)); }
+    .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+    .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+      border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+      box-shadow: var(--shadow-float); }
+    .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+      border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+      color: hsl(203 13% 67%); }
+    .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+    .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+    .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+    .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+      border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+    /* Oversized macOS-style pointer for cursor-led scenes. */
+    .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+      filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+  </style>
+
+  <style>
+    /* ── scene 17 — recommendations · top club matches ────────────────── */
+    .rm-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+    .rm-stage  { position: absolute; inset: 0; }
+
+    .rm-stage .col-text {
+      position: absolute; right: 96px; top: 0; bottom: 0; width: 748px; max-width: none;
+      flex: none; display: flex; flex-direction: column; justify-content: center; gap: 22px;
+    }
+    .rm-stage .device { position: absolute; left: 405px; top: 74px; transform: scale(0.9442); }
+    .rm-stage .scene-title { font-size: 68px; }
+    .rm-stage .scene-title span { display: inline-block; }
+
+    .rm-rule { width: 224px; height: 3px; background: hsl(203 36% 96% / 0.16); margin: 4px 0 6px; }
+    .rm-rule > i { display: block; height: 100%; background: var(--stage-accent); transform-origin: right center; }
+    .rm-stage .rail > i { width: 100%; }
+
+    /* in-phone */
+    .rm-stage .app-main { gap: 13px; padding: 16px 20px; }
+    .rm-stage .app-h1 { font-size: 31px; }
+    .rm-stage .app-sub { font-size: 18px; }
+    .rm-stage .tabs { flex: none; }
+    .rm-stage .tab { font-size: 16px; line-height: 1.2; padding: 11px 6px; }
+    .rm-logo { color: hsl(var(--primary)); }
+
+    .rm-cardwrap { position: relative; flex: none; }
+    .rm-cardglow { position: absolute; inset: -26px; border-radius: 46px; opacity: 0;
+      background: radial-gradient(ellipse at 50% 50%, hsl(182 38% 36% / 0.30), transparent 68%); }
+    .rm-card { position: relative; padding: 20px; }
+
+    .rm-top { display: flex; align-items: center; gap: 16px; }
+    .rm-info { flex: 1; min-width: 0; }
+    .rm-club { display: block; font-size: 25px; font-weight: 800; line-height: 1.15; }
+    .rm-clubsub { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); margin-top: 3px; }
+    .rm-badge { margin-top: 12px; background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
+      font-size: 18px; padding: 9px 15px; }
+
+    .rm-ringwrap { position: relative; width: 118px; height: 118px; flex: none; }
+    .rm-ring { display: block; width: 118px; height: 118px; }
+    .rm-ring circle { fill: none; stroke-width: 11; stroke-linecap: round; }
+    .rm-ring .rm-trk { stroke: hsl(var(--muted)); }
+    .rm-ring .rm-prog { stroke: url(#rm17-grad); transform: rotate(-90deg); transform-origin: 60px 60px; }
+    .rm-pctbox { position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1px; }
+    .rm-pct { font-size: 30px; font-weight: 800; line-height: 1; color: hsl(var(--primary)); }
+    .rm-pct i { display: inline-block; }
+    .rm-pctlbl { font-size: 13px; color: hsl(var(--muted-foreground)); }
+
+    .rm-meter { display: flex; gap: 5px; margin-top: 14px; }
+    .rm-cell { flex: 1; height: 26px; border-radius: 8px; background: hsl(var(--muted));
+      position: relative; overflow: hidden; }
+    .rm-cell > b { position: absolute; inset: 0; display: block; border-radius: 8px;
+      background: hsl(var(--primary)); }
+
+    .rm-runs { display: flex; flex-direction: column; gap: 10px; flex: none; }
+    .rm-run { border-radius: 22px; border: 1px solid hsl(var(--border));
+      background: hsl(var(--card) / 0.72); padding: 14px 18px; }
+    .rm-run-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .rm-run-name { font-size: 20px; font-weight: 700; }
+    .rm-run-pct { font-size: 20px; font-weight: 800; color: hsl(var(--muted-foreground)); }
+    .rm-trk2 { height: 10px; border-radius: 6px; background: hsl(var(--muted));
+      overflow: hidden; margin-top: 10px; }
+    .rm-trk2 > i { display: block; width: 100%; height: 100%; border-radius: 6px;
+      background: hsl(var(--primary) / 0.7); transform-origin: right center; }
+
+    .rm-navico { width: 21px; height: 21px; display: block; }
+  </style>
+
+  <div id="root" data-composition-id="17-recs-matches" data-width="1920" data-height="1080">
+
+    <div class="clip rm-ground" id="rm-ground" data-start="0" data-duration="15" data-track-index="0">
+      <div class="bg-layer">
+        <div class="bg-glow" id="rm-glow"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-ghost">Lessley</div>
+        <div class="bg-grain"></div>
+      </div>
+    </div>
+
+    <div class="clip rm-stage" id="rm-scene" data-start="0" data-duration="15" data-track-index="1">
+      <span class="chapter" id="rm-chapter">17 / 21</span>
+
+      <div class="col-text">
+        <h1 class="scene-title"><span id="rm-t1">המלצות ·</span> <span id="rm-t2">התאמות מובילות</span></h1>
+        <div class="rm-rule"><i id="rm-rule-fill"></i></div>
+        <p class="scene-body" id="rm-p1">טבעת ציון ההתאמה נמשכת, תג „<span class="num">7/10</span> חנויות תואמות” נוחת.</p>
+        <p class="scene-body" id="rm-p2">מועדונים שעוד לא הצטרפתם אליהם.</p>
+      </div>
+
+      <div class="device">
+        <div class="device-body">
+          <div class="device-screen">
+            <div class="screen-world" id="rm-world">
+              <div class="app">
+
+                <div class="app-header" id="rm-header">
+                  <div class="app-icon rm-logo">
+                    <svg viewBox="0 0 24 24" width="25" height="25" aria-hidden="true">
+                      <path d="M12 2.6 L14.7 9.3 L21.4 12 L14.7 14.7 L12 21.4 L9.3 14.7 L2.6 12 L9.3 9.3 Z" fill="currentColor"></path>
+                    </svg>
+                  </div>
+                  <div class="brand"><b>Lessley</b><span>המלצות</span></div>
+                  <div class="app-icon">
+                    <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M18 8.4a6 6 0 1 0-12 0c0 6.6-2.7 7.6-2.7 7.6h17.4S18 15 18 8.4"></path>
+                      <path d="M13.6 20.2a2 2 0 0 1-3.2 0"></path>
+                    </svg>
+                  </div>
+                  <div class="app-avatar">D</div>
+                </div>
+
+                <div class="app-main">
+                  <div>
+                    <h1 class="app-h1" id="rm-apph1">המלצות</h1>
+                    <p class="app-sub" id="rm-appsub">התאמת מועדונים מחושבת מ-<span class="num">90</span> הימים האחרונים שלכם</p>
+                  </div>
+
+                  <div class="tabs">
+                    <span class="tab on rm-tab">התאמות מובילות</span>
+                    <span class="tab rm-tab">חיסכון שפוספס</span>
+                    <span class="tab rm-tab">החנויות שלך</span>
+                  </div>
+
+                  <div class="rm-cardwrap">
+                    <div class="rm-cardglow" id="rm-cardglow"></div>
+                    <div class="card rm-card" id="rm-card" data-camera-target>
+                      <div class="rm-top">
+                        <div class="rm-info">
+                          <span class="rm-club" id="rm-club">מועדון חבר</span>
+                          <span class="rm-clubsub" id="rm-clubsub">מדורגות לפי חפיפת חנויות עם ההוצאות שלכם</span>
+                        </div>
+                        <div class="rm-ringwrap" id="rm-ringwrap">
+                          <svg class="rm-ring" viewBox="0 0 120 120" aria-hidden="true">
+                            <defs>
+                              <linearGradient id="rm17-grad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0" stop-color="hsl(190 47% 44%)"></stop>
+                                <stop offset="1" stop-color="hsl(182 38% 33%)"></stop>
+                              </linearGradient>
+                            </defs>
+                            <circle class="rm-trk" cx="60" cy="60" r="50"></circle>
+                            <circle class="rm-prog" id="rm-prog" cx="60" cy="60" r="50"></circle>
+                          </svg>
+                          <div class="rm-pctbox">
+                            <span class="rm-pct num"><i id="rm-pctval" style="font-style:normal">0</i>%</span>
+                            <span class="rm-pctlbl">אחוז התאמה</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span class="pill rm-badge" id="rm-badge"><span class="num">7/10</span>&nbsp;חנויות תואמות</span>
+                      <div class="rm-meter" id="rm-meter">
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"><b class="rm-hit"></b></span>
+                        <span class="rm-cell"></span>
+                        <span class="rm-cell"></span>
+                        <span class="rm-cell"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rm-runs" id="rm-runs">
+                    <div class="rm-run" id="rm-run1">
+                      <div class="rm-run-top">
+                        <span class="rm-run-name">מועדון פרימיום</span>
+                        <span class="rm-run-pct num">61%</span>
+                      </div>
+                      <div class="rm-trk2"><i id="rm-fill1"></i></div>
+                    </div>
+                    <div class="rm-run" id="rm-run2">
+                      <div class="rm-run-top">
+                        <span class="rm-run-name">מועדון דלק</span>
+                        <span class="rm-run-pct num">48%</span>
+                      </div>
+                      <div class="rm-trk2"><i id="rm-fill2"></i></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="nav">
+                  <span class="nav-tab">
+                    <svg class="rm-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                      <path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle>
+                    </svg>אופטימיזציה</span>
+                  <span class="nav-tab">
+                    <svg class="rm-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                      <path d="M4 19V9M10 19V5M16 19v-6M21 19H3"></path>
+                    </svg>תובנות</span>
+                  <span class="nav-tab">
+                    <svg class="rm-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 3c3 3.4 4.6 6 4.6 8.2a4.6 4.6 0 1 1-9.2 0C7.4 9 9 6.4 12 3Z"></path>
+                    </svg>חם</span>
+                  <span class="nav-tab on">
+                    <svg class="rm-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 4.2 13.9 9l5.1.3-3.9 3.3 1.3 4.9L12 14.8 7.6 17.5l1.3-4.9L5 9.3 10.1 9Z"></path>
+                    </svg>המלצות</span>
+                </div>
+
+              </div>
+            </div>
+            <div class="device-island"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail"><i id="rm-rail"></i></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var ID = "17-recs-matches";
+      var root = document.querySelector('[data-composition-id="' + ID + '"]');
+      var q = function (s) { return root.querySelector(s); };
+      var qa = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      window.__timelines[ID] = tl;
+
+      /* ── in-phone camera ──────────────────────────────────────────────── */
+      var world = q("#rm-world");
+      var W = world.offsetWidth || 410;
+      var H = world.offsetHeight || 912;
+
+      function centerOf(el, fallbackY) {
+        var px = W / 2, py = fallbackY, t = 0, l = 0, n = el, guard = 0;
+        while (n && n !== world && guard < 24) { t += n.offsetTop; l += n.offsetLeft; n = n.offsetParent; guard++; }
+        if (n === world && el.offsetHeight) { py = t + el.offsetHeight / 2; px = l + el.offsetWidth / 2; }
+        return { x: px, y: py };
+      }
+      function cam(p, s) { return { scale: s, x: -(p.x - W / 2) * s, y: -(p.y - H / 2) * s }; }
+
+      var pCard = centerOf(q("#rm-card"), H * 0.47);
+      var camIn = cam(pCard, 1.45);
+      var camEnd = cam(pCard, 1.52);
+
+      var F = 1 / 60;
+
+      function whip(sel, off, dur, at) {
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, at);
+        tl.fromTo(sel, { y: off }, { y: 0, duration: dur, ease: "power4.out" }, at);
+      }
+      function pop(sel, from, dur, at, rise) {
+        tl.fromTo(sel,
+          { scale: from, opacity: 0, y: rise || 0 },
+          { scale: 1, opacity: 1, y: 0, duration: dur, ease: "power3.out" }, at);
+      }
+      function wipe(sel, dur, at) {
+        tl.fromTo(sel,
+          { clipPath: "inset(0px 0px 0px 100%)", opacity: 1 },
+          { clipPath: "inset(0px 0px 0px 0%)", duration: dur, ease: "power2.out" }, at);
+      }
+
+      /* persistent rail: 16/21 -> 17/21 */
+      tl.fromTo("#rm-rail", { scaleX: 0.7619 }, { scaleX: 0.8095, duration: 15, ease: "none" }, 0);
+
+      /* ── Scene 1 (0.0–2.6s): the screen settles, the board sets up ────── */
+      tl.fromTo(world, { scale: 1.05, x: 0, y: 0 },
+        { scale: 1, x: 0, y: 0, duration: 0.55, ease: "power3.out" }, 0);
+
+      tl.fromTo("#rm-header", { opacity: 0, y: -16 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.04);
+      tl.fromTo("#rm-chapter", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 0.1);
+
+      whip("#rm-t1", 80, 0.18, 0.15);
+      whip("#rm-t2", 62, 0.16, 0.15 + 0.18 + 2 * F);
+      tl.fromTo("#rm-rule-fill", { scaleX: 0 },
+        { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.62);
+      whip("#rm-apph1", 48, 0.16, 0.50);
+      tl.fromTo("#rm-appsub", { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.70);
+      whip("#rm-p1", 44, 0.15, 1.05);
+
+      qa(".rm-tab").forEach(function (el, i) {
+        tl.fromTo(el, { opacity: 0, y: 16, scale: 0.9 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.46, ease: "power3.out" }, 1.55 + i * 0.09);
+      });
+
+      /* ── Scene 2 (2.0–5.6s): the card lands and the score is COMPUTED ── */
+      pop("#rm-card", 0.9, 0.62, 2.05, 24);
+      whip("#rm-club", 34, 0.15, 2.38);
+      tl.fromTo("#rm-clubsub", { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 2.56);
+
+      // coordinate-target-zoom: push into the match card and hold
+      tl.fromTo(world, { scale: 1, x: 0, y: 0 },
+        { scale: camIn.scale, x: camIn.x, y: camIn.y, duration: 2.0, ease: "power2.inOut", immediateRender: false }, 2.60);
+
+      pop("#rm-ringwrap", 0.86, 0.5, 2.90);
+
+      // svg-path-draw — measured, never guessed
+      var ring = q("#rm-prog");
+      var LEN = (ring.getTotalLength && ring.getTotalLength()) || 314.159;
+      ring.style.strokeDasharray = String(LEN);
+      ring.style.strokeDashoffset = String(LEN);
+
+      var DRAW_AT = 3.55, DRAW_DUR = 1.9, PCT = 0.72;
+      tl.fromTo(ring, { strokeDashoffset: LEN },
+        { strokeDashoffset: LEN * (1 - PCT), duration: DRAW_DUR, ease: "power2.out" }, DRAW_AT);
+
+      // counting-dynamic-scale — number and ring share start, ease and duration
+      var pctEl = q("#rm-pctval");
+      var counter = { v: 0 };
+      tl.fromTo(counter, { v: 0 }, {
+        v: 72, duration: DRAW_DUR, ease: "power2.out",
+        onUpdate: function () { pctEl.textContent = Math.round(counter.v); }
+      }, DRAW_AT);
+      tl.fromTo("#rm-pctval", { scale: 0.82 },
+        { scale: 1, duration: DRAW_DUR, ease: "power2.out" }, DRAW_AT);
+
+      /* ── Scene 3 (5.5–8.0s): the badge lands as the draw completes ───── */
+      pop("#rm-badge", 0, 0.5, DRAW_AT + DRAW_DUR - 0.05);
+
+      // stat-bars-and-fills: 7 of the 10 stores light up
+      qa(".rm-hit").forEach(function (el, i) {
+        tl.fromTo(el, { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.4, ease: "power3.out" }, 6.30 + i * 0.12);
+      });
+
+      /* ── Scene 4 (7.9–12.4s): the ranking below it ───────────────────── */
+      whip("#rm-p2", 46, 0.16, 7.90);
+
+      whip("#rm-run1", 44, 0.16, 8.90);
+      tl.fromTo("#rm-fill1", { scaleX: 0 },
+        { scaleX: 0.61, duration: 0.9, ease: "power2.out" }, 9.25);
+      whip("#rm-run2", 42, 0.15, 9.85);
+      tl.fromTo("#rm-fill2", { scaleX: 0 },
+        { scaleX: 0.48, duration: 0.9, ease: "power2.out" }, 10.20);
+
+      // ambient-glow-bloom behind the hero card
+      tl.fromTo("#rm-cardglow", { opacity: 0 },
+        { opacity: 0.55, duration: 1.0, ease: "power2.out" }, 11.30);
+      tl.fromTo("#rm-cardglow", { opacity: 0.55 },
+        { opacity: 0.34, duration: 1.1, ease: "power1.inOut", immediateRender: false }, 12.40);
+
+      /* ── Scene 5 (12.4–15s): focus resolves on the leader ────────────── */
+      tl.fromTo("#rm-runs", { opacity: 1, filter: "blur(0px)" },
+        { opacity: 0.5, filter: "blur(2.4px)", duration: 1.1, ease: "power2.inOut", immediateRender: false }, 13.10);
+
+      tl.fromTo(world, { scale: camIn.scale, x: camIn.x, y: camIn.y },
+        { scale: camEnd.scale, x: camEnd.x, y: camEnd.y, duration: 2.6, ease: "none", immediateRender: false }, 12.40);
+    })();
+  </script>
+</template>

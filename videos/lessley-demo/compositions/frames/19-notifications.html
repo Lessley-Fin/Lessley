@@ -1,0 +1,564 @@
+<template>
+      <style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
+
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
+
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 72px; padding: 96px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
+
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
+
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 0; font-size: 22px; }
+        .app-header { display: flex; align-items: center; gap: 14px;
+          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+          background: hsl(var(--card) / 0.8); }
+        .app-header .brand { flex: 1; min-width: 0; }
+        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+          flex-direction: column; gap: 16px; }
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+          background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+          padding: 20px 22px; font-size: 22px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 8px 16px; font-size: 18px; font-weight: 700; }
+        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+        .tabs { display: flex; gap: 6px; }
+        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+          font-size: 19px; color: hsl(var(--muted-foreground)); }
+        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .steps { display: flex; gap: 6px; }
+        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+          border-radius: 999px; color: hsl(var(--muted-foreground));
+          background: hsl(var(--muted)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+          color: hsl(203 13% 67%); }
+        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
+      <style>
+        /* ── 19-notifications — scene styles ───────────────────────────────── */
+        #root { --input: 201 21% 89%; }
+
+        .f19-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+        .f19-scene { position: absolute; inset: 0; }
+
+        .f19-text {
+          position: absolute; right: 96px; top: 0; bottom: 0; width: 800px;
+          display: flex; flex-direction: column; justify-content: center; gap: 26px;
+          text-align: right;
+        }
+        .f19-title { margin: 0; }
+        .f19-body { margin: 0; }
+
+        /* the carrier — iPhone at cx 620 / cy 540, 880px tall (frame.md) */
+        .f19-rig { position: absolute; left: 405px; top: 74px; width: 430px; height: 932px; }
+        .f19-scale { width: 430px; height: 932px; transform: scale(0.9442); transform-origin: 50% 50%; }
+
+        /* app-main hosts two stacked page bodies — the swap happens inside it */
+        .f19-main { position: relative; }
+        .f19-page { position: absolute; top: 20px; right: 22px; left: 22px; bottom: 20px;
+          display: flex; flex-direction: column; gap: 16px; }
+        .f19-feed-page { background: hsl(var(--background)); z-index: 3; }
+
+        /* — previous page (recommendations · missed savings, carried from frame 18) — */
+        .f19-tabs .tab { font-size: 18px; }
+        .f19-rec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .f19-rec-kicker { font-size: 19px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .f19-spin-slot { position: relative; width: 32px; height: 32px; flex: none; }
+        .f19-spin, .f19-check { position: absolute; inset: 0; }
+        .f19-rec-body { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+        .f19-rec-line { font-size: 25px; font-weight: 800; line-height: 1.2; }
+        .f19-rec-sub { font-size: 19px; line-height: 1.35; color: hsl(var(--muted-foreground)); }
+
+        /* — the real-time toast, riding OVER the live screen — */
+        .f19-toast {
+          position: absolute; top: 64px; right: 14px; left: 14px; z-index: 8;
+          display: flex; align-items: center; gap: 14px; height: 102px; box-sizing: border-box;
+        }
+        .f19-toast-ico { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(var(--accent)); }
+        .f19-toast-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+        .f19-toast-head { display: flex; align-items: center; gap: 9px; }
+        .f19-toast-head b { font-size: 19px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .f19-toast-title { font-size: 24px; font-weight: 800; line-height: 1.1; }
+        .f19-toast-time { font-size: 17px; color: hsl(var(--muted-foreground)); flex: none; }
+
+        .f19-badge { border-radius: 999px; padding: 4px 12px; font-size: 16px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .f19-badge.is-sys { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+
+        /* — the feed (anchored-layout-expand) — */
+        .f19-mask { height: 410px; overflow: hidden; }
+        .f19-sheet { height: 410px; display: flex; flex-direction: column; gap: 10px;
+          will-change: transform; }
+        .f19-below { display: flex; align-items: center; gap: 10px; font-size: 20px;
+          color: hsl(var(--muted-foreground)); will-change: transform; }
+        .f19-below i { display: block; width: 8px; height: 8px; border-radius: 50%;
+          background: hsl(var(--success)); }
+
+        .f19-row { height: 95px; box-sizing: border-box; border-radius: 22px; padding: 16px 18px;
+          border: 1px solid hsl(var(--border)); background: hsl(var(--card));
+          box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 6px; }
+        .f19-row.is-read { background: hsl(var(--muted) / 0.5); box-shadow: none; }
+        .f19-row-top { display: flex; align-items: center; gap: 10px; }
+        .f19-dot { width: 10px; height: 10px; border-radius: 50%; flex: none;
+          background: hsl(var(--primary)); }
+        .f19-row-title { flex: 1; min-width: 0; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .f19-row-time { font-size: 16px; color: hsl(var(--muted-foreground)); flex: none; }
+        .f19-row-meta { font-size: 18px; color: hsl(var(--muted-foreground)); line-height: 1.25;
+          padding-right: 20px; }
+      </style>
+
+      <div id="root" data-composition-id="19-notifications" data-width="1920" data-height="1080">
+
+        <div id="f19-ground" class="clip f19-ground" data-start="0" data-duration="15" data-track-index="0">
+          <div class="bg-layer">
+            <div class="bg-glow"></div>
+            <div class="bg-grid"></div>
+            <div class="bg-ghost">Lessley</div>
+            <div class="bg-grain"></div>
+          </div>
+        </div>
+
+        <div id="f19-scene" class="clip f19-scene" data-start="0" data-duration="15" data-track-index="1">
+          <span class="chapter">19 / 21</span>
+
+          <div class="f19-text">
+            <p class="scene-kicker">התראות</p>
+            <h1 class="scene-title f19-title">בזמן אמת</h1>
+            <p class="scene-body f19-body">בלי לרענן.</p>
+          </div>
+
+          <div class="f19-rig">
+            <div class="f19-scale">
+              <div class="device">
+                <div class="device-body">
+                  <div class="device-screen">
+                    <div class="screen-world">
+
+                      <div class="app">
+                        <div class="app-header">
+                          <div class="app-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                                 stroke="hsl(var(--primary))" stroke-width="1.8" stroke-linecap="round">
+                              <path d="M6 9a6 6 0 0 1 12 0c0 4 1.4 5.4 1.4 5.4H4.6S6 13 6 9Z" />
+                              <path d="M10 18.4a2.2 2.2 0 0 0 4 0" />
+                            </svg>
+                          </div>
+                          <div class="brand"><b>Lessley</b><span>dor.h</span></div>
+                          <div class="app-avatar">D</div>
+                        </div>
+
+                        <div class="app-main f19-main">
+
+                          <div class="f19-page f19-prev-page">
+                            <h1 class="app-h1">המלצות</h1>
+                            <p class="app-sub">התאמת מועדונים מחושבת מ-<span class="num">90</span> הימים האחרונים שלכם</p>
+                            <div class="tabs f19-tabs">
+                              <span class="tab">התאמות מובילות</span>
+                              <span class="tab on">חיסכון שפוספס</span>
+                              <span class="tab">החנויות שלך</span>
+                            </div>
+                            <div class="card">
+                              <div class="f19-rec-head">
+                                <span class="f19-rec-kicker">חיסכון שפוספס</span>
+                                <span class="f19-spin-slot">
+                                  <svg class="f19-spin" viewBox="0 0 40 40" width="32" height="32">
+                                    <circle cx="20" cy="20" r="15" fill="none"
+                                            stroke="hsl(var(--border))" stroke-width="4" />
+                                    <path class="f19-arc" d="M20 5 a15 15 0 0 1 15 15" fill="none"
+                                          stroke="hsl(var(--primary))" stroke-width="4" stroke-linecap="round" />
+                                  </svg>
+                                  <svg class="f19-check" viewBox="0 0 40 40" width="32" height="32">
+                                    <circle cx="20" cy="20" r="15" fill="hsl(var(--success) / 0.16)" />
+                                    <path d="M13 20.5 l5 5 l9.5 -11" fill="none" stroke="hsl(150 60% 28%)"
+                                          stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+                                  </svg>
+                                </span>
+                              </div>
+                              <div class="f19-rec-body">
+                                <div class="f19-rec-line">הוצאתם <span class="num">₪340</span> ב-רמי לוי</div>
+                                <div class="f19-rec-sub">חיסכון היה זמין בקטגוריית מכולת</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="f19-page f19-feed-page">
+                            <h1 class="app-h1">התראות</h1>
+                            <p class="app-sub"><span class="num">3</span> שלא נקראו</p>
+
+                            <div class="f19-mask" data-layout-allow-overflow>
+                              <div class="f19-sheet">
+                                <div class="f19-row">
+                                  <div class="f19-row-top">
+                                    <i class="f19-dot"></i>
+                                    <span class="f19-badge">ניתוח</span>
+                                    <span class="f19-row-title">הניתוח מוכן</span>
+                                    <span class="f19-row-time">הרגע</span>
+                                  </div>
+                                  <div class="f19-row-meta">ניתוח חיסכון שפוספס</div>
+                                </div>
+                                <div class="f19-row">
+                                  <div class="f19-row-top">
+                                    <i class="f19-dot"></i>
+                                    <span class="f19-badge">מועדונים</span>
+                                    <span class="f19-row-title">התאמת מועדון חדשה</span>
+                                    <span class="f19-row-time">לפני <span class="num">2</span> שע'</span>
+                                  </div>
+                                  <div class="f19-row-meta">המלצות מועדונים</div>
+                                </div>
+                                <div class="f19-row">
+                                  <div class="f19-row-top">
+                                    <i class="f19-dot"></i>
+                                    <span class="f19-badge">דיל</span>
+                                    <span class="f19-row-title">התאמת דיל חדשה</span>
+                                    <span class="f19-row-time">לפני <span class="num">5</span> שע'</span>
+                                  </div>
+                                  <div class="f19-row-meta">סופר-פארם</div>
+                                </div>
+                                <div class="f19-row is-read">
+                                  <div class="f19-row-top">
+                                    <span class="f19-badge is-sys">מערכת</span>
+                                    <span class="f19-row-title">עדכון מערכת</span>
+                                    <span class="f19-row-time">לפני <span class="num">3</span> ימים</span>
+                                  </div>
+                                  <div class="f19-row-meta">אין פרטים נוספים.</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="f19-below"><i></i>הכול עדכני</div>
+                          </div>
+
+                        </div>
+
+                        <div class="nav">
+                          <span class="nav-tab">אופטימיזציה</span>
+                          <span class="nav-tab">תובנות</span>
+                          <span class="nav-tab">חם</span>
+                          <span class="nav-tab on">המלצות</span>
+                        </div>
+                      </div>
+
+                      <div class="toast f19-toast" data-camera-target>
+                        <span class="f19-toast-ico">
+                          <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                               stroke="hsl(var(--accent-foreground))" stroke-width="1.9" stroke-linecap="round">
+                            <path d="M6 9a6 6 0 0 1 12 0c0 4 1.4 5.4 1.4 5.4H4.6S6 13 6 9Z" />
+                            <path d="M10 18.4a2.2 2.2 0 0 0 4 0" />
+                          </svg>
+                        </span>
+                        <span class="f19-toast-txt">
+                          <span class="f19-toast-head">
+                            <b>התראה חדשה</b>
+                            <span class="f19-badge">ניתוח</span>
+                          </span>
+                          <span class="f19-toast-title">הניתוח מוכן</span>
+                        </span>
+                        <span class="f19-toast-time">הרגע</span>
+                      </div>
+
+                    </div>
+                    <div class="device-island"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rail"><i style="width:100%"></i></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var ID = "19-notifications";
+          var root = document.querySelector('[data-composition-id="' + ID + '"]');
+          var one = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+
+          var world = one(".screen-world");
+          var prevPage = one(".f19-prev-page");
+          var feedPage = one(".f19-feed-page");
+          var toast = one(".f19-toast");
+          var sheet = one(".f19-sheet");
+          var below = one(".f19-below");
+          var rows = all(".f19-row");
+          var badges = all(".f19-sheet .f19-badge");
+          var arc = one(".f19-arc");
+          var spin = one(".f19-spin");
+          var check = one(".f19-check");
+          var recBody = one(".f19-rec-body");
+          var glow = one(".bg-glow");
+          var railFill = one(".rail > i");
+
+          // ── the in-phone camera (coordinate-target-zoom, clamped to the screen) ──
+          var CX = 205, CY = 456;
+          function cam(S, tx, ty) {
+            var mx = CX * (S - 1), my = CY * (S - 1);
+            var x = S * (CX - tx), y = S * (CY - ty);
+            if (x > mx) { x = mx; } if (x < -mx) { x = -mx; }
+            if (y > my) { y = my; } if (y < -my) { y = -my; }
+            return { scale: S, x: x, y: y };
+          }
+          var camIn = cam(1.06, 205, 456);       // arriving — frame 18 handed over a +Z push
+          var camAnticipate = cam(1.12, 205, 300);
+          var camToast = cam(1.42, 205, 115);    // data-camera-target: the toast
+          var camFeed = cam(1.16, 205, 456);     // the opened feed
+          var camHold = cam(1.30, 205, 456);     // the slow closing push
+
+          var PAGE_H = 642;                      // app-main content height (912 - 133 - 97 - 40)
+          var BODY_H = 410;                      // .f19-mask CSS height — authored constant
+
+          var tl = gsap.timeline({ paused: true });
+
+          // ── initial state ────────────────────────────────────────────────
+          tl.set(world, { scale: camIn.scale, x: camIn.x, y: camIn.y }, 0);
+          tl.set(feedPage, { y: -PAGE_H, opacity: 0, rotation: 0.9 }, 0);
+          tl.set(prevPage, { y: 0, opacity: 1 }, 0);
+          tl.set(check, { scale: 0, opacity: 0 }, 0);
+
+          // ── Scene 1 (0.0–2.0) — the engine is still working, then finishes ──
+          var spinState = { deg: 0 };
+          tl.fromTo(spinState, { deg: 0 }, {
+            deg: 690, duration: 1.9, ease: "none",
+            onUpdate: function () { arc.setAttribute("transform", "rotate(" + spinState.deg + " 20 20)"); }
+          }, 0);
+          tl.fromTo(recBody, { opacity: 0.5 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 1.9);
+          tl.fromTo(spin, { scale: 1, opacity: 1 }, { scale: 0.4, opacity: 0, duration: 0.28, ease: "power2.in" }, 1.86);
+          tl.fromTo(check, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.42, ease: "back.out(2)" }, 1.96);
+
+          tl.fromTo(one(".scene-kicker"), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.35);
+          tl.fromTo(one(".f19-title"), { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.75, ease: "power3.out" }, 0.55);
+
+          // ── Scene 2 (2.05–5.3) — the toast lands OVER the live screen ─────
+          tl.fromTo(toast, { y: -230, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.25)" }, 2.05);
+          tl.fromTo(glow, { opacity: 0.85 }, { opacity: 1.3, duration: 0.4, ease: "power2.out" }, 2.05);
+          tl.fromTo(glow, { opacity: 1.3 }, { opacity: 1, duration: 1.1, ease: "power2.inOut", immediateRender: false }, 2.5);
+
+          // the camera is already creeping when the frame opens (cut seam from frame 18),
+          // drifting toward the top of the screen just before the toast lands there
+          tl.fromTo(world, camIn, {
+            scale: camAnticipate.scale, x: camAnticipate.x, y: camAnticipate.y,
+            duration: 2.35, ease: "none"
+          }, 0);
+          tl.fromTo(world, { scale: camAnticipate.scale, x: camAnticipate.x, y: camAnticipate.y }, {
+            scale: camToast.scale, x: camToast.x, y: camToast.y,
+            duration: 1.4, ease: "power2.inOut", immediateRender: false
+          }, 2.35);
+
+          tl.fromTo(one(".f19-body"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 4.0);
+
+          // ── Scene 3 (5.3–6.5) — reactive-displacement: the feed hits the page ──
+          var DRIVER_DUR = 1.2, VICTIM_FRACTION = 0.45, TILT = 0.9, FADE_IN_SHARPNESS = 4;
+          var driver = { p: 0 };
+          tl.fromTo(driver, { p: 0 }, {
+            p: 1, duration: DRIVER_DUR, ease: "back.out(1.4)",
+            onUpdate: function () {
+              var p = driver.p;
+              // intruder — the notifications feed, entering from above, tilt settling to 0
+              gsap.set(feedPage, {
+                y: -PAGE_H * (1 - p),
+                rotation: TILT * (1 - p),
+                opacity: Math.min(1, p * FADE_IN_SHARPNESS)
+              });
+              // victim — the previous page, displaced downward, done at VICTIM_FRACTION
+              var vp = Math.min(1, p / VICTIM_FRACTION);
+              gsap.set(prevPage, { y: PAGE_H * vp, opacity: 1 - vp * 0.9 });
+              // the toast is consumed by the thing it announced
+              var tp = Math.min(1, p / 0.3);
+              gsap.set(toast, { y: -34 * tp, opacity: 1 - tp, scale: 1 - 0.05 * tp });
+            }
+          }, 5.3);
+
+          tl.fromTo(world, { scale: camToast.scale, x: camToast.x, y: camToast.y }, {
+            scale: camFeed.scale, x: camFeed.x, y: camFeed.y,
+            duration: 1.3, ease: "power2.inOut", immediateRender: false
+          }, 5.7);
+
+          // ── Scene 4 (6.6–13.6) — anchored-layout-expand: the feed opens, sorted by tag ──
+          tl.fromTo([sheet, below], { y: -BODY_H }, { y: 0, duration: 0.5, ease: "power3.out" }, 6.6);
+
+          var rowAt = [7.5, 9.1, 10.6, 12.1];
+          for (var i = 0; i < rows.length; i++) {
+            tl.fromTo(rows[i], { opacity: 0, y: 16 },
+              { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, rowAt[i]);
+            tl.fromTo(badges[i], { scale: 0.6, opacity: 0 },
+              { scale: 1, opacity: 1, duration: 0.34, ease: "back.out(2)" }, rowAt[i] + 0.06);
+          }
+          tl.fromTo(below, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 12.9);
+
+          // closing push — the camera never stops travelling into the feed
+          tl.fromTo(world, { scale: camFeed.scale, x: camFeed.x, y: camFeed.y }, {
+            scale: camHold.scale, x: camHold.x, y: camHold.y,
+            duration: 7.9, ease: "none", immediateRender: false
+          }, 7.1);
+
+          // film-long progress rail: 270s → 285s of 315s
+          tl.fromTo(railFill, { scaleX: 0.857 }, { scaleX: 0.905, duration: 15, ease: "none" }, 0);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+</template>

@@ -1,0 +1,26 @@
+{
+  "scene": "19-notifications",
+  "duration_s": 15,
+  "rules": [
+    "reactive-displacement",
+    "anchored-layout-expand",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "svg-icon-enrichment",
+    "scale-swap-transition",
+    "spring-pop-entrance"
+  ],
+  "entry": {
+    "vector": "Z+ inward, already travelling — in-phone camera opens at scale 1.06 and creeps to 1.12 on ease:none over 0-2.35s (0.0255 scale/s), ~11.6 px/s inward at the screen edge, drifting toward the top of the screen where the toast is about to land. Picks up frame 18's outgoing push-in across the cut.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "Z+ inward — .screen-world mid-tween 1.16 -> 1.30 on ease:none over 7.1-15.0s (0.0177 scale/s), ~8.1 px/s inward at the screen edge, framed on the opened feed. Stage geometry and phone position are static; the last reveal lands at 12.9s.",
+    "still_moving": true
+  },
+  "notes": {
+    "first_second": "device + already-populated recommendations screen present at t=0 under a creeping push; stage kicker 0.35s, title 0.55s; the analysis arc spinner is running (diegetic working state) and resolves at 1.9s.",
+    "last_second": "held layout under a constant-velocity slow push; nothing enters or exits after 13.4s — the inward Z vector is handed to frame 20's entry.",
+    "camera_target": "the real-time toast (data-camera-target) — pushed into at 2.35-3.75s and held to 5.3s, then eased back to frame the opened feed."
+  }
+}

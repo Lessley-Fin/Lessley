@@ -1,0 +1,24 @@
+{
+  "scene": "16-hot-deals",
+  "duration_s": 12,
+  "rules": [
+    "waterfall-entry",
+    "spring-pop-entrance",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "ambient-glow-bloom"
+  ],
+  "notes": {
+    "first_second": "Device + screen are on-frame at t=0 and never rebuilt. The in-phone camera (.screen-world) opens at scale 1.05 and settles to 1.00 by 0.55s on power3.out — it enters already travelling inward, so a cut from frame 15 lands mid-push rather than on a dead frame. The stage title cascade ignites at 0.15s; the deals list is still empty at 1.0s.",
+    "last_second": "Camera is in a linear (ease:none) creep from scale 1.16 to 1.22 running 10.90s → 12.00s and is therefore STILL MOVING on the final frame — no settle, no fade. Framing at 12.00s is centred between the deals list and the curation card; the final reveal (info body line B) completes at 10.95s, so the last second is a moving hold."
+  },
+  "camera_target": "#hd-deals (the recommended-deals list)",
+  "exit": {
+    "vector": "push-in (+Z) at ~47 px/s of screen-edge expansion (scale 1.16→1.22, linear), with ~6 px/s downward drift of the framing point",
+    "still_moving": true
+  },
+  "entry": {
+    "vector": "push-in (+Z) at ~230 px/s of screen-edge contraction (scale 1.05→1.00, power3.out over 0.55s)",
+    "from_rest": false
+  }
+}

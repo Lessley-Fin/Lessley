@@ -1,0 +1,472 @@
+<template>
+      <style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
+
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
+
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 72px; padding: 96px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
+
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
+
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 0; font-size: 22px; }
+        .app-header { display: flex; align-items: center; gap: 14px;
+          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+          background: hsl(var(--card) / 0.8); }
+        .app-header .brand { flex: 1; min-width: 0; }
+        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+          flex-direction: column; gap: 16px; }
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+          background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+          padding: 20px 22px; font-size: 22px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 8px 16px; font-size: 18px; font-weight: 700; }
+        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+        .tabs { display: flex; gap: 6px; }
+        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+          font-size: 19px; color: hsl(var(--muted-foreground)); }
+        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .steps { display: flex; gap: 6px; }
+        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+          border-radius: 999px; color: hsl(var(--muted-foreground));
+          background: hsl(var(--muted)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+          color: hsl(203 13% 67%); }
+        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
+      <style>
+        /* ── 08-login — scene-specific dress ─────────────────────────────── */
+        .f08-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+        .f08-content { position: absolute; inset: 0; }
+        .f08-content * { box-sizing: border-box; }
+
+        .f08-phone { position: relative; width: 406px; height: 880px; flex: none; }
+        .f08-fit { position: absolute; top: 0; right: 0; width: 430px; height: 932px;
+          transform: scale(0.94419); transform-origin: 100% 0; }
+
+        .f08-title-w { display: inline-block; opacity: 0; }
+        .f08-p { opacity: 0; }
+
+        .f08-app .app-header { padding: 60px 20px 16px; }
+        .f08-hicon { width: 30px; height: 30px; }
+
+        /* the login surface: one shell geometry, four pre-styled skins */
+        .f08-stage { position: absolute; top: 131px; left: 0; right: 0; bottom: 0; }
+
+        /* the ANCHOR — rendered once, above every skin. It never moves. */
+        .f08-anchor { position: absolute; top: 150px; left: 22px; right: 22px;
+          z-index: 6; text-align: right; opacity: 0; }
+        .f08-anchor h2 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .f08-anchor p { font-size: 20px; line-height: 1.35; margin: 6px 0 0;
+          color: hsl(var(--muted-foreground)); }
+
+        .f08-skins { position: absolute; inset: 0; }
+        .f08-skin { position: absolute; inset: 0; opacity: 0; }
+        .f08-skin-0 { opacity: 1; }
+
+        /* shared geometry — identical slots in every skin */
+        .f08-row { position: absolute; left: 22px; right: 22px; }
+        .f08-r-f1 { top: 250px; height: 62px; }
+        .f08-r-f2 { top: 324px; height: 62px; }
+        .f08-r-help { top: 398px; height: 32px; }
+        .f08-r-btn { top: 442px; height: 66px; }
+        .f08-r-alt { top: 520px; height: 32px; }
+        .f08-r-note { top: 562px; height: 52px; }
+
+        .f08-stage .field { height: 62px; padding: 0 20px; font-size: 21px;
+          border: 1px solid hsl(var(--border)); }
+        .f08-stage .field .val { font-size: 21px; }
+        .f08-stage .btn { height: 66px; padding: 0; line-height: 66px; font-size: 23px; }
+
+        .f08-help { display: block; text-align: right; font-size: 18px; line-height: 32px;
+          color: hsl(var(--primary)); font-weight: 600; }
+        .f08-help.muted { color: hsl(var(--muted-foreground)); font-weight: 400; font-size: 16px; }
+        .f08-alt { display: block; text-align: center; font-size: 19px; line-height: 32px;
+          color: hsl(var(--primary)); font-weight: 700; }
+        .f08-note { font-size: 15px; line-height: 1.35; color: hsl(var(--muted-foreground));
+          text-align: center; }
+
+        .f08-intro { height: 62px; display: flex; align-items: center; justify-content: center;
+          text-align: center; font-size: 18px; line-height: 1.25; border-radius: 20px;
+          border: 1px solid hsl(182 40% 62% / 0.5); background: hsl(var(--accent) / 0.55);
+          color: hsl(var(--accent-foreground)); padding: 0 14px; }
+
+        .f08-code { display: flex; gap: 8px; justify-content: center; height: 62px; }
+        .f08-cbox { width: 48px; height: 62px; border-radius: 14px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .f08-cbox.on { border-color: hsl(var(--primary));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        /* click FX + cursor */
+        .f08-fx { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+        .f08-ripple { position: absolute; width: 120px; height: 120px;
+          margin-left: -60px; margin-top: -60px; border-radius: 50%;
+          border: 2px solid hsl(var(--primary) / 0.6); opacity: 0; }
+        #f08-rip1 { left: 205px; top: 536px; }
+        #f08-rip2 { left: 336px; top: 414px; }
+        #f08-rip3 { left: 205px; top: 475px; }
+        .f08-cursor { left: 0; top: 0; opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="08-login" data-width="1920" data-height="1080">
+
+        <div class="bg-layer f08-ground clip" id="f08-ground" data-start="0" data-duration="15" data-track-index="0">
+          <div class="bg-glow" id="f08-glow"></div>
+          <div class="bg-grid"></div>
+          <div class="bg-ghost">Lessley</div>
+          <div class="bg-grain"></div>
+        </div>
+
+        <div class="f08-content clip" id="f08-content" data-start="0" data-duration="15" data-track-index="1">
+          <span class="chapter">08 / 21</span>
+
+          <div class="stage">
+            <div class="col-text">
+              <h1 class="scene-title"><span class="f08-title-w" id="f08-t1">התחברות</span></h1>
+              <p class="scene-body f08-p" id="f08-p1">הטופס מתחלף תחת עוגן קבוע — „ברוכים השבים” לא זז.</p>
+              <p class="scene-body f08-p" id="f08-p2">סיסמה, או קוד חד-פעמי במייל.</p>
+            </div>
+
+            <div class="f08-phone" id="f08-phone">
+              <div class="f08-fit">
+                <div class="device">
+                  <div class="device-body">
+                    <div class="device-screen">
+                      <div class="screen-world" id="f08-world">
+                        <div class="app f08-app">
+
+                          <div class="app-header">
+                            <span class="app-icon"><svg class="f08-hicon" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M7 15l4-5 3 3 5-7"/></svg></span>
+                            <span class="brand"><b>Lessley</b><span>ניהול פיננסי אישי, מותאם עבורך</span></span>
+                            <span class="app-icon"><svg class="f08-hicon" viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-2.9 8.2-7 10-4.1-1.8-7-5.6-7-10V6z"/><path d="M9 12.2l2.2 2.2 4.2-4.6"/></svg></span>
+                          </div>
+
+                          <div class="f08-stage">
+
+                            <div class="f08-skins">
+
+                              <!-- skin 0 — סיסמה -->
+                              <div class="f08-skin f08-skin-0">
+                                <div class="f08-row f08-r-f1"><div class="field"><span class="lbl">שם משתמש או אימייל</span><span class="val">dor@example.com</span></div></div>
+                                <div class="f08-row f08-r-f2"><div class="field"><span class="lbl">סיסמה</span><span class="val">••••••••</span></div></div>
+                                <div class="f08-row f08-r-help"><span class="f08-help">שכחתם סיסמה?</span></div>
+                                <div class="f08-row f08-r-btn"><div class="btn" id="f08-btn0" data-camera-target>התחברות</div></div>
+                                <div class="f08-row f08-r-alt"><span class="f08-alt">התחברות עם קוד באימייל</span></div>
+                                <div class="f08-row f08-r-note"><span class="f08-note">הפרטים שלכם מוצפנים בהעברה. אנחנו לעולם לא שומרים את הסיסמאות הבנקאיות שלכם.</span></div>
+                              </div>
+
+                              <!-- skin 1 — קוד באימייל -->
+                              <div class="f08-skin" id="f08-skin1">
+                                <div class="f08-row f08-r-f1"><div class="field"><span class="lbl">שם משתמש או אימייל</span><span class="val">dor@example.com</span></div></div>
+                                <div class="f08-row f08-r-f2"><div class="f08-intro">נשלח לכם קוד חד-פעמי במייל — בלי סיסמה.</div></div>
+                                <div class="f08-row f08-r-help"><span class="f08-help">שכחתם סיסמה?</span></div>
+                                <div class="f08-row f08-r-btn"><div class="btn">שלחו לי קוד</div></div>
+                                <div class="f08-row f08-r-alt"><span class="f08-alt">התחברות עם סיסמה</span></div>
+                                <div class="f08-row f08-r-note"><span class="f08-note">הפרטים שלכם מוצפנים בהעברה. אנחנו לעולם לא שומרים את הסיסמאות הבנקאיות שלכם.</span></div>
+                              </div>
+
+                              <!-- skin 2 — איפוס סיסמה · קוד אימות -->
+                              <div class="f08-skin" id="f08-skin2">
+                                <div class="f08-row f08-r-f1"><div class="field"><span class="lbl">אימייל</span><span class="val">dor@example.com</span></div></div>
+                                <div class="f08-row f08-r-f2"><div class="f08-code"><span class="f08-cbox on"></span><span class="f08-cbox"></span><span class="f08-cbox"></span><span class="f08-cbox"></span><span class="f08-cbox"></span><span class="f08-cbox"></span></div></div>
+                                <div class="f08-row f08-r-help"><span class="f08-help muted">הזינו את הקוד בן <span class="num">6</span> הספרות שנשלח לאימייל שלכם.</span></div>
+                                <div class="f08-row f08-r-btn"><div class="btn">אימות</div></div>
+                                <div class="f08-row f08-r-alt"><span class="f08-alt">חזרה להתחברות</span></div>
+                                <div class="f08-row f08-r-note"><span class="f08-note">הפרטים שלכם מוצפנים בהעברה. אנחנו לעולם לא שומרים את הסיסמאות הבנקאיות שלכם.</span></div>
+                              </div>
+
+                              <!-- skin 3 — סיסמה חדשה -->
+                              <div class="f08-skin" id="f08-skin3">
+                                <div class="f08-row f08-r-f1"><div class="field"><span class="lbl">סיסמה חדשה</span><span class="val">••••••••</span></div></div>
+                                <div class="f08-row f08-r-f2"><div class="field"><span class="lbl">אימות סיסמה חדשה</span><span class="val">••••••••</span></div></div>
+                                <div class="f08-row f08-r-help"><span class="f08-help muted">בחרו סיסמה חדשה.</span></div>
+                                <div class="f08-row f08-r-btn"><div class="btn" id="f08-btn3">שמירת סיסמה</div></div>
+                                <div class="f08-row f08-r-alt"><span class="f08-alt">חזרה להתחברות</span></div>
+                                <div class="f08-row f08-r-note"><span class="f08-note">הפרטים שלכם מוצפנים בהעברה. אנחנו לעולם לא שומרים את הסיסמאות הבנקאיות שלכם.</span></div>
+                              </div>
+
+                            </div>
+
+                            <!-- the anchor: one element, above every skin, never animated after settle -->
+                            <div class="f08-anchor" id="f08-anchor">
+                              <h2>ברוכים השבים</h2>
+                              <p>טייס אוטומטי פיננסי לכל רכישה</p>
+                            </div>
+
+                            <div class="f08-fx">
+                              <span class="f08-ripple" id="f08-rip1"></span>
+                              <span class="f08-ripple" id="f08-rip2"></span>
+                              <span class="f08-ripple" id="f08-rip3"></span>
+                            </div>
+
+                            <span class="cursor f08-cursor" id="f08-cursor">
+                              <svg viewBox="0 0 24 24" width="46" height="46"><path d="M5 2l14 9.6-6.4.8 3.6 6.9-2.9 1.5-3.6-6.9L5 18.8z" fill="#ffffff" stroke="oklch(20% 0.02 245)" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                            </span>
+
+                          </div>
+
+                        </div>
+                      </div>
+                      <div class="device-island"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rail"><i style="width:38.1%"></i></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var F = 1 / 60;
+          var tl = gsap.timeline({ paused: true });
+
+          /* ── in-phone camera — pushes once, then LOCKS for the whole cycle */
+          var world = document.getElementById("f08-world");
+          var btn = document.getElementById("f08-btn0");
+
+          function camPose(target, S) {
+            var W = world.offsetWidth, H = world.offsetHeight;
+            var ox = 0, oy = 0, n = target;
+            while (n && n !== world) { ox += n.offsetLeft; oy += n.offsetTop; n = n.offsetParent; }
+            var cx = ox + target.offsetWidth / 2, cy = oy + target.offsetHeight / 2;
+            var tx = -(cx - W / 2) * S, ty = -(cy - H / 2) * S;
+            var mx = (S - 1) * W / 2, my = (S - 1) * H / 2;
+            if (tx > mx) tx = mx; if (tx < -mx) tx = -mx;
+            if (ty > my) ty = my; if (ty < -my) ty = -my;
+            return { x: tx, y: ty, scale: S };
+          }
+          var FORM_POSE = camPose(btn, 1.22);
+
+          /* ── entry: 07 left rising, so 08 arrives still travelling upward ─ */
+          tl.fromTo("#f08-content", { y: 64 },
+            { y: 0, duration: 0.62, ease: "power3.out" }, 0);
+
+          /* ── Scene 1 (0.0–1.6s) — stage title, then the surface establishes */
+          tl.set("#f08-t1", { opacity: 1, y: 82 }, 0.10);
+          tl.to("#f08-t1", { y: 0, duration: 0.20, ease: "power4.out" }, 0.10);
+          tl.fromTo("#f08-p1", { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 0.46);
+          tl.fromTo("#f08-p2", { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 0.74);
+
+          /* the anchor settles ONCE — after this it is never tweened again */
+          tl.fromTo("#f08-anchor", { opacity: 0, y: 24 },
+            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.62);
+
+          /* ── Scene 2 (1.7–3.1s) — camera pushes into the form, then locks ─ */
+          tl.to("#f08-phone", { scale: 1.20, duration: 1.4, ease: "power2.inOut" }, 1.70);
+          tl.fromTo("#f08-world",
+            { x: 0, y: 0, scale: 1 },
+            { x: FORM_POSE.x, y: FORM_POSE.y, scale: FORM_POSE.scale,
+              duration: 1.4, ease: "power2.inOut" }, 1.70);
+
+          /* ── the cursor is the actor: click → morph, three times ─────────── */
+          function press(at, ripple) {
+            tl.to("#f08-cursor", { scale: 0.84, duration: 0.08, ease: "power2.in" }, at);
+            tl.to("#f08-cursor", { scale: 1, duration: 0.10, ease: "power2.out" }, at + 0.08);
+            tl.fromTo(ripple, { scale: 0.14, opacity: 0.85 },
+              { scale: 2.6, opacity: 0, duration: 0.72, ease: "power2.out",
+                immediateRender: false }, at + 0.04);
+          }
+
+          tl.set("#f08-cursor", { opacity: 1, x: 296, y: 906, scale: 1 }, 3.30);
+          tl.to("#f08-cursor", { x: 196, y: 528, duration: 0.72, ease: "power3.out" }, 3.38);
+          press(4.14, "#f08-rip1");
+
+          tl.to("#f08-cursor", { x: 327, y: 406, duration: 0.66, ease: "power2.inOut" }, 7.02);
+          press(7.74, "#f08-rip2");
+
+          tl.to("#f08-cursor", { x: 196, y: 467, duration: 0.60, ease: "power2.inOut" }, 9.78);
+          press(10.44, "#f08-rip3");
+
+          /* ── theme-crossfade-morph: four pre-styled skins, one anchor ────── */
+          var MORPH = 0.32;
+          var skins = ["#f08-skin1", "#f08-skin2", "#f08-skin3"];
+          var prev = [".f08-skin-0", "#f08-skin1", "#f08-skin2"];
+          var at = [4.30, 7.90, 10.60];
+          for (var k = 0; k < skins.length; k++) {
+            tl.fromTo(skins[k], { opacity: 0 },
+              { opacity: 1, duration: MORPH, ease: "power2.inOut", immediateRender: false }, at[k]);
+            tl.to(prev[k], { opacity: 0, duration: MORPH, ease: "power2.inOut" }, at[k]);
+          }
+
+          /* ── Scene 3 (11.3–13.4s) — payoff state, the cursor rests, HOLD ── */
+          tl.fromTo("#f08-btn3", { scale: 0.962 },
+            { scale: 1, duration: 0.55, ease: "back.out(1.7)" }, 11.34);
+          tl.fromTo("#f08-glow", { opacity: 0.82 },
+            { opacity: 1, duration: 1.0, ease: "power2.out" }, 11.30);
+
+          /* ── the seam: the frame recedes so 09 can arrive as a pull-back ── */
+          tl.to("#f08-content", { scale: 0.90, duration: 1.6, ease: "power2.in" }, 13.40);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines["08-login"] = tl;
+        })();
+      </script>
+    </template>

@@ -1,0 +1,24 @@
+{
+  "scene": "01-open",
+  "duration_s": 15.0,
+  "rules": [
+    "waterfall-entry",
+    "spring-pop-entrance",
+    "counting-dynamic-scale",
+    "coordinate-target-zoom",
+    "multi-phase-camera"
+  ],
+  "blueprint": "logo-assemble-lockup",
+  "camera_target": ".f01-brandcard (in-app brand lockup card; screen-space centre 50% / 32.18%)",
+  "entry": {
+    "vector": "Z+ from rest — cold open, no predecessor. Stage is dark at t=0; the brand mark spring-pops scale 0→1 (power3.out, 0.05–0.51s), so the frame starts at 0 px/s.",
+    "from_rest": true
+  },
+  "exit": {
+    "vector": "Z-forward push INTO the screen, accelerating on power3.in through the final frame. Two stacked scales share the 12.20–15.00s window: .screen-world 1.55→2.90 about the brand card (≈1.45 scale/s at t=15, ≈560 px/s at the phone-screen edge) and .f01-world 1.00→1.30 about the phone centre (32.29% / 50%) (≈0.32 scale/s, ≈620 px/s at the canvas edge). Combined edge velocity ≈900–1150 px/s outward, still increasing.",
+    "still_moving": true
+  },
+  "first_second": "0.00–1.00s — cold open on the navy stage. Brand mark spring-pops (0.05–0.51s), then the 'Lessley' wordmark cascades letter by letter as a waterfall-entry (0.62–1.66s). No phone yet; the background glow lifts 0.32→0.55. Nothing is moving at t=0.",
+  "last_second": "14.00–15.00s — pure Z-forward flight. No element reveals, no exits: only the two nested camera scales accelerating on power3.in, plus a 0→7px blur ramp on the stage text column as it passes the lens. Velocity is at its maximum on the last frame — frame 02 must catch it mid-push.",
+  "seam_note": "Hand-off to 02-problem (transition_in: zoom-through). 02 should enter at ≈1.16 world scale about the same 32.29% / 50% origin and decelerate to 1.0 on a mirrored power4.out — which is what 02-problem.html does."
+}

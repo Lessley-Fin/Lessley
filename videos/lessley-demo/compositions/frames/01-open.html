@@ -1,0 +1,467 @@
+<template>
+      <style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
+
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
+
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 72px; padding: 96px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
+
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
+
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 0; font-size: 22px; }
+        .app-header { display: flex; align-items: center; gap: 14px;
+          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+          background: hsl(var(--card) / 0.8); }
+        .app-header .brand { flex: 1; min-width: 0; }
+        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+          flex-direction: column; gap: 16px; }
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+          background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+          padding: 20px 22px; font-size: 22px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 8px 16px; font-size: 18px; font-weight: 700; }
+        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+        .tabs { display: flex; gap: 6px; }
+        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+          font-size: 19px; color: hsl(var(--muted-foreground)); }
+        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .steps { display: flex; gap: 6px; }
+        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+          border-radius: 999px; color: hsl(var(--muted-foreground));
+          background: hsl(var(--muted)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+          color: hsl(203 13% 67%); }
+        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
+      <style>
+        /* ── 01-open — scene-specific ──────────────────────────────────────── */
+        #root { --input: 201 21% 89%; }
+
+        .f01-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+
+        .f01-world { position: absolute; inset: 0; transform-origin: 32.29% 50%; }
+
+        /* stage text column — right edge at 1760 per the layout diagram */
+        .f01-text {
+          position: absolute; right: 160px; top: 366px; width: 720px; max-width: 720px;
+          flex: none; gap: 26px;
+        }
+        .f01-lockup { display: flex; align-items: center; gap: 20px; }
+        .f01-mark {
+          width: 66px; height: 66px; flex: none; border-radius: 20px;
+          display: grid; place-items: center;
+          background: var(--stage-accent-deep); color: var(--stage-ink);
+          font-size: 34px; font-weight: 800; line-height: 1;
+          box-shadow: 0 10px 30px oklch(14% 0.02 245 / 0.55);
+          will-change: transform;
+        }
+        .f01-wordmark { direction: ltr; display: inline-flex; font-size: 48px; font-weight: 800;
+          letter-spacing: -0.015em; line-height: 1; }
+        .f01-wordmark i { font-style: normal; display: inline-block; opacity: 0; will-change: transform; }
+        .f01-title, .f01-b1, .f01-b2 { opacity: 0; will-change: transform; }
+        .f01-underline { display: block; height: 3px; width: 190px; margin: -6px 0 0 auto;
+          background: var(--stage-accent); transform-origin: right center; }
+
+        /* device anchor — phone centred at (620, 540), rendered 880px tall */
+        .f01-anchor { position: absolute; left: 620px; top: 540px; width: 0; height: 0;
+          will-change: transform; }
+        .f01-anchor .device-scale { position: absolute; left: -215px; top: -466px;
+          width: 430px; height: 932px; transform: scale(0.944); transform-origin: 50% 50%; }
+
+        /* in-phone layout — fixed heights so the camera path is deterministic */
+        .f01-main { justify-content: center; gap: 22px; }
+        .f01-main .card, .f01-main .card-inset { box-sizing: border-box; }
+        .f01-hdr { opacity: 0; will-change: transform; }
+        .f01-brandcard { height: 190px; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 12px; opacity: 0;
+          will-change: transform; }
+        .f01-bm { font-size: 46px; font-weight: 800; letter-spacing: -0.015em; line-height: 1;
+          direction: ltr; }
+        .f01-bs { font-size: 21px; color: hsl(var(--muted-foreground)); }
+        .f01-herocard { height: 220px; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 10px; opacity: 0;
+          will-change: transform; }
+        .f01-fig { will-change: transform; }
+        .f01-inforow { height: 64px; display: flex; align-items: center; justify-content: center;
+          gap: 10px; font-size: 20px; color: hsl(var(--muted-foreground)); opacity: 0;
+          will-change: transform; }
+        .f01-nav { height: 96px; box-sizing: border-box; opacity: 0; will-change: transform; }
+        .f01-nav .nav-tab svg { width: 24px; height: 24px; }
+        .f01-mark-in { font-size: 24px; font-weight: 800; }
+      </style>
+
+      <div id="root" data-composition-id="01-open" data-width="1920" data-height="1080">
+        <div id="f01-bg" class="clip bg-layer" data-start="0" data-duration="15" data-track-index="0">
+          <div class="f01-ground"></div>
+          <div class="bg-glow" id="f01-glow"></div>
+          <div class="bg-grid" id="f01-grid"></div>
+          <div class="bg-ghost">Lessley</div>
+          <div class="bg-grain"></div>
+        </div>
+
+        <div id="f01-scene" class="clip" data-start="0" data-duration="15" data-track-index="1"
+             style="position:absolute; inset:0;">
+          <div class="f01-world" id="f01-world">
+            <div class="col-text f01-text" id="f01-textcol">
+              <div class="f01-lockup">
+                <span class="f01-mark" id="f01-mark">₪</span>
+                <span class="f01-wordmark" id="f01-wordmark"><i>L</i><i>e</i><i>s</i><i>s</i><i>l</i><i>e</i><i>y</i></span>
+              </div>
+              <h1 class="scene-title f01-title" id="f01-title">ההבטחה</h1>
+              <i class="f01-underline" id="f01-underline"></i>
+              <p class="scene-body f01-b1" id="f01-b1">ההנחות כבר מגיעות לכם.</p>
+              <p class="scene-body f01-b2" id="f01-b2">Lessley פשוט תופסת אותן.</p>
+            </div>
+
+            <div class="f01-anchor" id="f01-anchor">
+              <div class="device-scale">
+                <div class="device">
+                  <div class="device-body">
+                    <div class="device-screen">
+                      <div class="screen-world" id="f01-screenworld">
+                        <div class="app">
+                          <div class="app-header f01-hdr" id="f01-hdr">
+                            <div class="app-icon"><span class="f01-mark-in">₪</span></div>
+                            <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
+                            <div class="app-avatar">D</div>
+                          </div>
+
+                          <div class="app-main f01-main">
+                            <div class="card f01-brandcard" id="f01-brandcard" data-camera-target>
+                              <span class="f01-bm">Lessley</span>
+                              <span class="f01-bs">טייס אוטומטי פיננסי</span>
+                            </div>
+
+                            <div class="card f01-herocard" id="f01-herocard">
+                              <div class="hero-figure num f01-fig" id="f01-fig">₪<span id="f01-count">0</span></div>
+                              <div class="hero-label">נחסך עם Lessley</div>
+                            </div>
+
+                            <div class="card-inset f01-inforow" id="f01-inforow">
+                              <span><span class="num">4</span> מועדונים</span>
+                              <span>·</span>
+                              <span><span class="num">3</span> חשבונות מקושרים</span>
+                            </div>
+                          </div>
+
+                          <div class="nav f01-nav" id="f01-nav">
+                            <div class="nav-tab on">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.2v2.4M12 18.4v2.4M3.2 12h2.4M18.4 12h2.4M6 6l1.7 1.7M16.3 16.3L18 18M18 6l-1.7 1.7M7.7 16.3L6 18"/></svg>
+                              <span>אופטימיזציה</span>
+                            </div>
+                            <div class="nav-tab">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19v-7M12 19V5M19 19v-5"/></svg>
+                              <span>תובנות</span>
+                            </div>
+                            <div class="nav-tab">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4c0 3-2.6 3.9-2.6 6.6 0 1.3.9 2.3 1.9 2.3-.3-2.4 1.4-3.9 1.4-3.9s.4 1.4 1.4 2.6c1 1.2 1.6 2.2 1.6 3.6a5.7 5.7 0 1 1-11.4 0"/><path d="M4.3 14.6C4.3 9.4 12 8.2 12 3.4"/></svg>
+                              <span>חם</span>
+                            </div>
+                            <div class="nav-tab">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+                              <span>המלצות</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="device-island"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <span class="chapter">01 / 21</span>
+          <div class="rail"><i id="f01-rail" style="width:100%"></i></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var ID = "01-open";
+          var ROOT = document.querySelector('[data-composition-id="' + ID + '"]') || document;
+          function el(id) { return ROOT.querySelector('[id="' + id + '"]'); }
+          function all(sel) { return Array.prototype.slice.call(ROOT.querySelectorAll(sel)); }
+
+          window.__timelines = window.__timelines || {};
+          var tl = gsap.timeline({ paused: true });
+          window.__timelines[ID] = tl;
+
+          /* ---- helpers ------------------------------------------------------ */
+          // waterfall-entry: BINARY opacity + a whip from below. Two fromTo tweens at the
+          // same position keep it seek-safe while preserving the binary arrival.
+          function whip(target, at, offset, dur) {
+            tl.fromTo(target, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, at);
+            tl.fromTo(target, { y: offset }, { y: 0, duration: dur, ease: "power4.out" }, at);
+          }
+          // spring-pop-entrance, smooth-settle register (power3.out, no overshoot)
+          function pop(target, at, dur, fromScale) {
+            tl.fromTo(
+              target,
+              { scale: fromScale, opacity: 0 },
+              { scale: 1, opacity: 1, duration: dur, ease: "power3.out" },
+              at
+            );
+          }
+          function rise(target, at, dur, dy) {
+            tl.fromTo(
+              target,
+              { y: dy, opacity: 0 },
+              { y: 0, opacity: 1, duration: dur, ease: "power3.out" },
+              at
+            );
+          }
+          function group(v) {
+            return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          }
+
+          /* ---- persistent edge anchor: the progress rail --------------------- */
+          gsap.set(el("f01-rail"), { scaleX: 0 });
+          tl.fromTo(el("f01-rail"), { scaleX: 0 }, { scaleX: 0.048, duration: 15, ease: "none" }, 0);
+
+          /* ---- Scene 1 (0.0–2.3s) — the mark ignites, the lockup assembles --- */
+          tl.fromTo(el("f01-glow"), { opacity: 0.32 }, { opacity: 0.55, duration: 1.2, ease: "power2.out" }, 0);
+
+          // spring-pop-entrance — the hero mark lands by t = 0.6s
+          pop(el("f01-mark"), 0.05, 0.46, 0);
+
+          // waterfall-entry — the wordmark cascades letter by letter, gaps shrinking,
+          // the final letter split off as the heaviest, longest-travelling beat.
+          var F = 1 / 60;
+          var letters = all(".f01-wordmark i");
+          var lt = 0.62;
+          var lOff = [70, 48, 44, 44, 42, 40, 74];
+          var lDur = [0.18, 0.15, 0.14, 0.14, 0.13, 0.13, 0.17];
+          var lGap = [2 * F, -F, -F, -F, -2 * F, -2 * F, 0];
+          for (var i = 0; i < letters.length; i++) {
+            whip(letters[i], lt, lOff[i], lDur[i]);
+            lt = lt + lDur[i] + lGap[i];
+          }
+
+          // title — the cascade's anchor beat, then the accent underline sweeps beneath it
+          whip(el("f01-title"), 1.30, 80, 0.20);
+          tl.fromTo(el("f01-underline"), { scaleX: 0 }, { scaleX: 1, duration: 0.52, ease: "power3.out" }, 1.48);
+          whip(el("f01-b1"), 1.74, 46, 0.16);
+          whip(el("f01-b2"), 1.96, 42, 0.15);
+
+          /* ---- Scene 2 (2.3–3.6s) — the carrier is born --------------------- */
+          // the phone rises from below and lands; the background reacts to the landing
+          tl.fromTo(
+            el("f01-anchor"),
+            { y: 1180, scale: 1.05 },
+            { y: 0, scale: 1, duration: 1.05, ease: "power3.out" },
+            2.30
+          );
+          tl.fromTo(el("f01-glow"), { opacity: 0.55 }, { opacity: 0.9, duration: 0.9, ease: "power2.out", immediateRender: false }, 2.55);
+          tl.fromTo(el("f01-grid"), { y: -18 }, { y: 0, duration: 0.75, ease: "power2.out" }, 3.05);
+
+          /* ---- Scene 3 (3.4–8.0s) — the screen fills, on the voiceover cues -- */
+          rise(el("f01-hdr"), 3.40, 0.52, 22);
+          pop(el("f01-brandcard"), 3.94, 0.60, 0.88);
+          rise(el("f01-herocard"), 4.62, 0.60, 30);
+
+          // counting-dynamic-scale — value + transform scale share position, duration and ease
+          var countEl = el("f01-count");
+          var cState = { v: 0 };
+          tl.fromTo(
+            cState,
+            { v: 0 },
+            {
+              v: 1284, duration: 2.2, ease: "power3.out",
+              onUpdate: function () { countEl.textContent = group(cState.v); }
+            },
+            5.10
+          );
+          tl.fromTo(el("f01-fig"), { scale: 0.62 }, { scale: 1, duration: 2.2, ease: "power3.out" }, 5.10);
+
+          rise(el("f01-inforow"), 6.85, 0.50, 20);
+          rise(el("f01-nav"), 7.35, 0.60, 46);
+
+          // the glow answers the payoff landing — reaction, never idle breathing
+          tl.fromTo(el("f01-glow"), { scale: 1, opacity: 0.9 }, { scale: 1.14, opacity: 1, duration: 0.40, ease: "power2.out", immediateRender: false }, 8.10);
+          tl.fromTo(el("f01-glow"), { scale: 1.14, opacity: 1 }, { scale: 1.02, opacity: 0.86, duration: 0.95, ease: "power2.out", immediateRender: false }, 8.52);
+
+          /* ---- Scene 4 (8.6–12.2s) — the camera travels into the lockup ------ */
+          // The in-phone camera: transform-origin pinned on the brand card's centre
+          // (50% / 32.18% of the 410x912 screen), so the scale pins the target and the
+          // unscaled y offset walks it to the middle of the screen.
+          var world = el("f01-screenworld");
+          gsap.set(world, { transformOrigin: "50% 32.18%" });
+          tl.fromTo(world, { scale: 1, y: 0 }, { scale: 1.55, y: 162, duration: 3.60, ease: "power2.inOut" }, 8.60);
+
+          /* ---- Scene 5 (12.2–15.0s) — the Z-forward push into the screen ----- */
+          // Exit vector for the seam: accelerating (power3.in), still moving at the last frame.
+          tl.to(world, { scale: 2.90, duration: 2.80, ease: "power3.in" }, 12.20);
+          tl.fromTo(el("f01-world"), { scale: 1 }, { scale: 1.30, duration: 2.80, ease: "power3.in" }, 12.20);
+          tl.fromTo(
+            el("f01-textcol"),
+            { filter: "blur(0px)" },
+            { filter: "blur(7px)", duration: 2.80, ease: "power3.in" },
+            12.20
+          );
+        })();
+      </script>
+    </template>

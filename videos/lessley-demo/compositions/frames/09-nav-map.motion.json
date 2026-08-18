@@ -1,0 +1,20 @@
+{
+  "scene": "09-nav-map",
+  "duration_s": 15.0,
+  "rules": [
+    "viewport-change",
+    "waterfall-entry",
+    "multi-phase-camera",
+    "coordinate-target-zoom",
+    "spring-pop-entrance"
+  ],
+  "entry": {
+    "vector": "inverse-zoom, back-to-rest (-Z) — #f09-world scale 1.18 → 1.00 over 0.95s on power3.out from t=0; 0.568 scale/s ≈ 546 px/s inward at the frame edge on frame 0 (arrival: something bigger lands)",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "forward push-in (+Z) — #f09-world scale 1.45 → 1.95 over 1.40s on power2.in ending at t=15.0; 0.714 scale/s ≈ 686 px/s outward at the frame edge, plus 470 px/s of leftward pan. The optimizer station's phone-shaped thumbnail lands at cx 737 / cy 540 — frame 10's phone mark",
+    "still_moving": true
+  },
+  "notes": "The film's one pull-back: no device, the camera lives on the stage (.f09-world, single-wrapper T = -offset x S). Four stations waterfall in 0.50–1.28s, then the camera traverses them 2.20–6.35s at scale 1.70, naming each on arrival; pulls back to 1.00 at 6.95–8.05s for the composed layout; pushes to the notification bell and the avatar 9.00–11.95s at scale 1.65; repositions on the optimizer thumbnail at 12.55s and accelerates into the hand-off from 13.60s. data-camera-target is the stations row."
+}

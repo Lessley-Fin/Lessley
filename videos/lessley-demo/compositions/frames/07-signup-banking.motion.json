@@ -1,0 +1,14 @@
+{
+  "scene": "07-signup-banking",
+  "duration_s": 15.0,
+  "rules": ["waterfall-entry", "svg-icon-enrichment", "viewport-change"],
+  "entry": {
+    "vector": "static — 0 px/s at frame 0 (hard cut onto a held device; the first tween fires at t=0.10s)",
+    "from_rest": true
+  },
+  "exit": {
+    "vector": "up (-Y) — #f07-content y 0 → -102px over 2.70s on power2.in, ending at t=15.0; |v| ≈ 76 px/s upward and still accelerating",
+    "still_moving": true
+  },
+  "notes": "Allocated-stillness beat (titlecard-reveal). One restrained move: the in-phone camera (.screen-world) pushes to the read-only card (scale 1 → 1.28, clamped translate) while the device grows to 1.22, 7.05–9.10s. The lock shackle snaps shut at 9.34s. Camera holds 9.4–12.3s, then the whole frame rises into the seam."
+}

@@ -1,0 +1,25 @@
+{
+  "scene": "20-settings",
+  "duration_s": 15,
+  "rules": [
+    "cursor-click-ripple",
+    "anchored-layout-expand",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "spring-pop-entrance",
+    "dynamic-content-sequencing"
+  ],
+  "entry": {
+    "vector": "Z+ inward, already travelling — in-phone camera opens at scale 1.02 and drifts to 1.06 on ease:none over 0-2.4s (0.0167 scale/s), ~7.6 px/s inward at the screen edge. Picks up frame 19's residual push across the cut. Cursor is off-screen (330, 980) until 0.8s.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "Z+ inward, in-phone camera mid-tween 1.42 -> 1.47 on ease:none over 13.4-15.0s (0.031 scale/s), ~14.3 px/s inward at the screen edge, framed on the banking card. Cursor comes to rest on התנתקות at 14.75s and holds.",
+    "still_moving": true
+  },
+  "notes": {
+    "first_second": "settings screen fully present at t=0 under a creeping push; stage kicker 0.35s, title 0.55s, cursor enters from the bottom edge at 0.8s.",
+    "last_second": "no entrances after 14.7s; only the constant-velocity push continues — deliberately handing an inward Z vector to frame 21's inverse-zoom arrival.",
+    "camera_target": "two marked targets, visited in order — the settings menu list (2.4-3.6s) then the banking card (9.7-11.05s), held to the end."
+  }
+}

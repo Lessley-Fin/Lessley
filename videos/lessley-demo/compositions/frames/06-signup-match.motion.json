@@ -1,0 +1,29 @@
+{
+  "scene": "06-signup-match",
+  "duration_s": 16,
+  "rules": [
+    "control-target-sync",
+    "stat-bars-and-fills",
+    "discrete-text-sequence",
+    "counting-dynamic-scale",
+    "cursor-click-ripple",
+    "spring-pop-entrance",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "viewport-change"
+  ],
+  "exit": {
+    "vector": "camera Z-in, accelerating: scale 1.13 -> 1.19 on power1.in over 12.5-16.0s, terminal rate ~0.0343/s => ~5.9 canvas px/s outward flow at the couple's edge. Device locked at cx 737, cy 540; the landed בינוני selection holds.",
+    "still_moving": true
+  },
+  "entry": {
+    "vector": "lateral wizard advance: step body slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. In-phone camera starts at rest (scale 1.0); Z push onto the couple begins at 0.9s.",
+    "from_rest": false
+  },
+  "carrier": {
+    "steps": "5-step .steps row, index 3 (רמת התאמה). At t=0 it renders in frame 05's landed state (חשבון + אימות done, מועדונים current); at 0.15-0.60s מועדונים flips to .done and רמת התאמה to current. Holds through the final second for frame 07 to inherit.",
+    "device": "the phone is never rebuilt: same .device, same slot, no entrance tween.",
+    "rail": "scaleX 0.8222 -> 1.0 linear across the whole 16s (23.49% -> 28.57%).",
+    "sync": "four edit beats at labels edit1..edit4 (2.6 / 6.8 / 10.6 / 13.8s). Option highlight, deal count (12/18/12/6/12), fill scaleX (0.50/0.75/0.50/0.25/0.50) and the explain copy all move at the SAME label with duration 0.9s and ease power2.inOut. Lands on בינוני (50%) — the demo user's level."
+  }
+}

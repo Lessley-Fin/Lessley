@@ -1,0 +1,535 @@
+<template>
+      <style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
+
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
+
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 72px; padding: 96px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
+
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
+
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 0; font-size: 22px; }
+        .app-header { display: flex; align-items: center; gap: 14px;
+          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+          background: hsl(var(--card) / 0.8); }
+        .app-header .brand { flex: 1; min-width: 0; }
+        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+          flex-direction: column; gap: 16px; }
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+          background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+          padding: 20px 22px; font-size: 22px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 8px 16px; font-size: 18px; font-weight: 700; }
+        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+        .tabs { display: flex; gap: 6px; }
+        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+          font-size: 19px; color: hsl(var(--muted-foreground)); }
+        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .steps { display: flex; gap: 6px; }
+        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+          border-radius: 999px; color: hsl(var(--muted-foreground));
+          background: hsl(var(--muted)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+          color: hsl(203 13% 67%); }
+        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
+      <style>
+        /* ── 20-settings — scene styles ────────────────────────────────────── */
+        #root { --input: 201 21% 89%; }
+
+        .f20-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+        .f20-scene { position: absolute; inset: 0; }
+
+        .f20-text {
+          position: absolute; right: 96px; top: 0; bottom: 0; width: 800px;
+          display: flex; flex-direction: column; justify-content: center; gap: 26px;
+          text-align: right;
+        }
+        .f20-chips { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; }
+        .f20-chips span { color: var(--stage-ink-muted); }
+        .f20-chips i { font-style: normal; color: var(--stage-accent); opacity: 0.5; }
+
+        .f20-rig { position: absolute; left: 405px; top: 74px; width: 430px; height: 932px; }
+        .f20-scale { width: 430px; height: 932px; transform: scale(0.9442); transform-origin: 50% 50%; }
+
+        /* — the settings menu — */
+        .f20-menu { display: flex; flex-direction: column; gap: 10px; }
+        .f20-exp { display: flex; flex-direction: column; }
+        .f20-head { position: relative; z-index: 2; }
+
+        .f20-row {
+          height: 72px; box-sizing: border-box; position: relative; overflow: hidden;
+          border-radius: 22px; border: 1px solid hsl(var(--border)); background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 0 18px;
+          display: flex; flex-direction: column; justify-content: center; gap: 3px;
+        }
+        .f20-row.is-slim { height: 56px; }
+        .f20-row b { position: relative; z-index: 1; font-size: 22px; font-weight: 800; line-height: 1.1; }
+        .f20-row span { position: relative; z-index: 1; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .f20-hl { position: absolute; inset: 0; z-index: 0; background: hsl(var(--accent) / 0.6); opacity: 0; }
+
+        .f20-mask { height: 148px; overflow: hidden; }
+        .f20-sheet { height: 148px; display: flex; flex-direction: column; gap: 8px;
+          padding-top: 0; will-change: transform; }
+        .f20-below { display: flex; flex-direction: column; gap: 10px; will-change: transform; }
+
+        .f20-sub {
+          height: 44px; box-sizing: border-box; display: flex; align-items: center;
+          justify-content: space-between; gap: 10px; padding: 0 16px; border-radius: 16px;
+          background: hsl(var(--muted) / 0.7); border: 1px solid hsl(var(--border) / 0.7);
+          font-size: 19px; color: hsl(var(--muted-foreground));
+        }
+        .f20-sub em { display: inline-block; font-style: normal; font-weight: 800; font-size: 19px;
+          color: hsl(var(--foreground)); }
+
+        .f20-bank { margin-top: 4px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+        .f20-bank-title { font-size: 21px; font-weight: 800; line-height: 1.25; }
+        .f20-bank .field { position: relative; padding: 12px 16px; font-size: 20px; border-radius: 16px;
+          border: 1px solid hsl(var(--border)); }
+        .f20-ring { position: absolute; inset: -3px; border-radius: 19px; opacity: 0;
+          border: 3px solid hsl(var(--primary) / 0.34); pointer-events: none; }
+        .f20-bank-note { font-size: 17px; line-height: 1.3; color: hsl(var(--muted-foreground)); }
+
+        /* — the actor — */
+        .f20-cursor { left: 0; top: 0; }
+        .f20-rip { position: absolute; width: 0; height: 0; z-index: 15; pointer-events: none; }
+        .f20-rip i { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px;
+          border-radius: 50%; border: 2px solid hsl(var(--primary)); }
+      </style>
+
+      <div id="root" data-composition-id="20-settings" data-width="1920" data-height="1080">
+
+        <div id="f20-ground" class="clip f20-ground" data-start="0" data-duration="15" data-track-index="0">
+          <div class="bg-layer">
+            <div class="bg-glow"></div>
+            <div class="bg-grid"></div>
+            <div class="bg-ghost">Lessley</div>
+            <div class="bg-grain"></div>
+          </div>
+        </div>
+
+        <div id="f20-scene" class="clip f20-scene" data-start="0" data-duration="15" data-track-index="1">
+          <span class="chapter">20 / 21</span>
+
+          <div class="f20-text">
+            <p class="scene-kicker">הגדרות</p>
+            <h1 class="scene-title f20-title">השליטה אצלכם</h1>
+            <p class="scene-body f20-chips">
+              <span>פרופיל</span><i>·</i><span>העדפות</span><i>·</i><span>בנקאות פתוחה</span><i>·</i><span>שפה</span><i>·</i><span>התנתקות</span>
+            </p>
+          </div>
+
+          <div class="f20-rig">
+            <div class="f20-scale">
+              <div class="device">
+                <div class="device-body">
+                  <div class="device-screen">
+                    <div class="screen-world">
+
+                      <div class="app">
+                        <div class="app-header">
+                          <div class="app-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                                 stroke="hsl(var(--primary))" stroke-width="1.8" stroke-linecap="round">
+                              <circle cx="12" cy="12" r="3.2" />
+                              <path d="M12 3.2v2.2M12 18.6v2.2M3.2 12h2.2M18.6 12h2.2M5.8 5.8l1.6 1.6M16.6 16.6l1.6 1.6M18.2 5.8l-1.6 1.6M7.4 16.6l-1.6 1.6" />
+                            </svg>
+                          </div>
+                          <div class="brand"><b>Lessley</b><span>dor.h</span></div>
+                          <div class="app-avatar">D</div>
+                        </div>
+
+                        <div class="app-main">
+                          <h1 class="app-h1">הגדרות</h1>
+
+                          <div class="f20-menu" data-camera-target>
+
+                            <div class="f20-row f20-profile">
+                              <i class="f20-hl"></i>
+                              <b>צפייה בפרופיל</b>
+                              <span>שם משתמש ואימייל</span>
+                            </div>
+
+                            <div class="f20-exp">
+                              <div class="f20-row f20-head f20-prefs">
+                                <i class="f20-hl"></i>
+                                <b>העדפות</b>
+                                <span>מועדונים, רמת התאמה ורעש מושתק</span>
+                              </div>
+                              <div class="f20-mask" data-layout-allow-overflow>
+                                <div class="f20-sheet">
+                                  <div class="f20-sub">מועדוני נאמנות<em class="num">4</em></div>
+                                  <div class="f20-sub">רמת התאמה<em>בינוני (<span class="num">50%</span> עליונים)</em></div>
+                                  <div class="f20-sub">קטגוריות מושתקות<em class="num">0</em></div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="f20-below" data-layout-allow-overflow>
+                              <div class="f20-row f20-banking">
+                                <i class="f20-hl"></i>
+                                <b>בנקאות פתוחה</b>
+                                <span>כרטיסים מחוברים</span>
+                              </div>
+                              <div class="f20-row is-slim f20-lang">
+                                <i class="f20-hl"></i>
+                                <b>שפה</b>
+                              </div>
+                              <div class="f20-row is-slim f20-logout">
+                                <i class="f20-hl"></i>
+                                <b>התנתקות</b>
+                              </div>
+
+                              <div class="card f20-bank" data-camera-target>
+                                <div class="f20-bank-title">חברו עוד כרטיסים לתובנות מדויקות יותר</div>
+                                <div class="field f20-bank-field">
+                                  <i class="f20-ring"></i>
+                                  <span class="lbl">כרטיסים מחוברים</span>
+                                  <span class="val num">3</span>
+                                </div>
+                                <div class="f20-bank-note">גישה לקריאה בלבד, ניתנת לביטול בכל עת.</div>
+                              </div>
+                            </div>
+
+                          </div>
+                        </div>
+
+                        <div class="nav">
+                          <span class="nav-tab">אופטימיזציה</span>
+                          <span class="nav-tab">תובנות</span>
+                          <span class="nav-tab">חם</span>
+                          <span class="nav-tab on">המלצות</span>
+                        </div>
+                      </div>
+
+                      <span class="f20-rip f20-rip-1" style="left: 300px; top: 244px"><i></i><i></i></span>
+                      <span class="f20-rip f20-rip-2" style="left: 300px; top: 326px"><i></i><i></i></span>
+                      <span class="f20-rip f20-rip-3" style="left: 300px; top: 556px"><i></i><i></i></span>
+
+                      <span class="cursor f20-cursor">
+                        <svg viewBox="0 0 24 40" width="100%" height="100%">
+                          <path d="M0 0 L0 33 L8.2 25.6 L13.4 39 L19.4 36.5 L14.2 23.4 L24 22.4 Z"
+                                fill="hsl(0 0% 100%)" stroke="oklch(24% 0.03 240)" stroke-width="1.6"
+                                stroke-linejoin="round" />
+                        </svg>
+                      </span>
+
+                    </div>
+                    <div class="device-island"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rail"><i style="width:100%"></i></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var ID = "20-settings";
+          var root = document.querySelector('[data-composition-id="' + ID + '"]');
+          var one = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+
+          var world = one(".screen-world");
+          var cursor = one(".f20-cursor");
+          var sheet = one(".f20-sheet");
+          var below = one(".f20-below");
+          var subs = all(".f20-sub");
+          var subVals = all(".f20-sub em");
+          var bank = one(".f20-bank");
+          var bankRing = one(".f20-ring");
+          var bankNote = one(".f20-bank-note");
+          var chips = all(".f20-chips span");
+          var railFill = one(".rail > i");
+
+          var hlProfile = one(".f20-profile .f20-hl");
+          var hlPrefs = one(".f20-prefs .f20-hl");
+          var hlBanking = one(".f20-banking .f20-hl");
+          var hlLang = one(".f20-lang .f20-hl");
+          var hlLogout = one(".f20-logout .f20-hl");
+
+          var rings = all(".f20-rip i");
+          var rip1 = all(".f20-rip-1 i");
+          var rip2 = all(".f20-rip-2 i");
+          var rip3 = all(".f20-rip-3 i");
+
+          // ── the in-phone camera (coordinate-target-zoom, clamped to the screen) ──
+          var CX = 205, CY = 456;
+          function cam(S, tx, ty) {
+            var mx = CX * (S - 1), my = CY * (S - 1);
+            var x = S * (CX - tx), y = S * (CY - ty);
+            if (x > mx) { x = mx; } if (x < -mx) { x = -mx; }
+            if (y > my) { y = my; } if (y < -my) { y = -my; }
+            return { scale: S, x: x, y: y };
+          }
+          var camIn = cam(1.02, 205, 330);     // arriving — already creeping (cut from 19)
+          var camDrift = cam(1.06, 205, 330);
+          var camMenu = cam(1.24, 205, 330);   // data-camera-target: the menu list
+          var camBank = cam(1.42, 205, 692);   // data-camera-target: the banking card
+          var camOut = cam(1.47, 205, 692);    // still pushing at the last frame
+
+          var BODY_H = 148;                    // .f20-mask CSS height — authored constant
+
+          var tl = gsap.timeline({ paused: true });
+
+          // rings live in the DOM from t=0 at their click points, scale 0 / opacity 0
+          tl.set(rings, { scale: 0, opacity: 0 }, 0);
+          tl.set(cursor, { x: 330, y: 980, scale: 1 }, 0);
+
+          // a click: cursor press + target press + ripple burst (cursor-click-ripple)
+          function click(at, hl, ripple) {
+            tl.fromTo(cursor, { scale: 1 }, { scale: 0.84, duration: 0.08, ease: "power2.in" }, at);
+            tl.fromTo(cursor, { scale: 0.84 }, { scale: 1, duration: 0.1, ease: "power2.out", immediateRender: false }, at + 0.08);
+            tl.fromTo(hl, { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "power2.out" }, at);
+            tl.fromTo(hl, { opacity: 1 }, { opacity: 0.4, duration: 0.5, ease: "power2.out", immediateRender: false }, at + 0.3);
+            tl.fromTo(ripple, { scale: 0, opacity: 0.5 },
+              { scale: 3.2, opacity: 0, duration: 0.75, ease: "power2.out", stagger: 0.09, immediateRender: false },
+              at + 0.04);
+          }
+          // every cursor leg is an explicit fromTo — seek-safe at any playhead
+          function moveTo(at, dur, fx, fy, tx, ty) {
+            tl.fromTo(cursor, { x: fx, y: fy },
+              { x: tx, y: ty, duration: dur, ease: "power2.inOut", immediateRender: false }, at);
+          }
+          function lightChip(at, el) {
+            tl.fromTo(el, { opacity: 0.4, color: "hsl(203 13% 67%)" },
+              { opacity: 1, color: "hsl(203 36% 96%)", duration: 0.45, ease: "power2.out" }, at);
+          }
+
+          // ── entry: the camera is already creeping in (cut seam from frame 19) ──
+          tl.fromTo(world, camIn, {
+            scale: camDrift.scale, x: camDrift.x, y: camDrift.y, duration: 2.4, ease: "none"
+          }, 0);
+
+          tl.fromTo(one(".scene-kicker"), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.35);
+          tl.fromTo(one(".f20-title"), { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.75, ease: "power3.out" }, 0.55);
+          tl.fromTo(one(".f20-chips"), { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 1.2);
+          tl.set(chips, { opacity: 0.4 }, 0);
+
+          // ── Scene 1 (0.8–3.6) — the cursor arrives and opens the profile ──
+          moveTo(0.8, 1.0, 330, 980, 300, 244);
+          click(2.0, hlProfile, rip1);
+          lightChip(2.1, chips[0]);
+          tl.fromTo(world, { scale: camDrift.scale, x: camDrift.x, y: camDrift.y }, {
+            scale: camMenu.scale, x: camMenu.x, y: camMenu.y,
+            duration: 1.2, ease: "power2.inOut", immediateRender: false
+          }, 2.4);
+
+          // ── Scene 2 (3.9–8.5) — preferences springs open (anchored-layout-expand) ──
+          moveTo(3.9, 0.6, 300, 244, 300, 326);
+          click(4.55, hlPrefs, rip2);
+          lightChip(4.7, chips[1]);
+          tl.fromTo([sheet, below], { y: -BODY_H }, { y: 0, duration: 0.5, ease: "power3.out" }, 4.7);
+          tl.fromTo(subs, { opacity: 0 },
+            { opacity: 1, duration: 0.26, stagger: 0.07, ease: "power2.out" }, 4.83);
+          // each preference reads out on its own cue
+          tl.fromTo(subVals[0], { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 5.5);
+          tl.fromTo(subVals[1], { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 6.7);
+          tl.fromTo(subVals[2], { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 7.9);
+
+          // ── Scene 3 (8.6–11.0) — banking: the menu closes, the card takes the frame ──
+          moveTo(8.6, 0.45, 300, 326, 300, 556);
+          click(9.05, hlBanking, rip3);
+          lightChip(9.2, chips[2]);
+          tl.fromTo([sheet, below], { y: 0 }, { y: -BODY_H, duration: 0.3, ease: "power3.in", immediateRender: false }, 9.2);
+          // the cursor stays on the row it clicked while the row travels up with the collapse
+          moveTo(9.2, 0.3, 300, 556, 300, 408);
+          tl.fromTo(bank, { opacity: 0, scale: 0.92, y: 18 },
+            { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: "back.out(1.4)" }, 9.55);
+          tl.fromTo(world, { scale: camMenu.scale, x: camMenu.x, y: camMenu.y }, {
+            scale: camBank.scale, x: camBank.x, y: camBank.y,
+            duration: 1.35, ease: "power2.inOut", immediateRender: false
+          }, 9.7);
+
+          // ── Scene 4 (10.4–15.0) — each linked card sharpens the match; then שפה / התנתקות ──
+          moveTo(10.4, 0.7, 300, 408, 300, 700);
+          tl.fromTo(bankRing, { opacity: 0, scale: 1.08 },
+            { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, 11.5);
+          tl.fromTo(bankNote, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, 12.4);
+
+          moveTo(13.4, 0.55, 300, 700, 300, 482);
+          tl.fromTo(hlLang, { opacity: 0 }, { opacity: 0.55, duration: 0.3, ease: "power2.out" }, 13.9);
+          lightChip(13.6, chips[3]);
+          moveTo(14.25, 0.5, 300, 482, 300, 548);
+          tl.fromTo(hlLogout, { opacity: 0 }, { opacity: 0.55, duration: 0.3, ease: "power2.out" }, 14.7);
+          lightChip(14.4, chips[4]);
+
+          // the push never fully stops — frame 21 arrives on the inverse of it
+          tl.fromTo(world, { scale: camBank.scale, x: camBank.x, y: camBank.y }, {
+            scale: camOut.scale, x: camOut.x, y: camOut.y,
+            duration: 1.6, ease: "none", immediateRender: false
+          }, 13.4);
+
+          // film-long progress rail: 285s → 300s of 315s
+          tl.fromTo(railFill, { scaleX: 0.905 }, { scaleX: 0.952, duration: 15, ease: "none" }, 0);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+</template>

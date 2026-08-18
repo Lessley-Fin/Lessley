@@ -1,0 +1,24 @@
+{
+  "scene": "02-problem",
+  "duration_s": 20.0,
+  "rules": [
+    "depth-scatter-assemble",
+    "counting-dynamic-scale",
+    "spring-pop-entrance",
+    "waterfall-entry",
+    "center-outward-expansion"
+  ],
+  "blueprint": "overwhelm-surround",
+  "camera_target": ".f02-counter (the frozen ₪0 ledger card; canvas centre 510, 681 = 26.5625% / 63.0556%)",
+  "entry": {
+    "vector": "Z− deceleration, caught MID-PUSH from 01. .f02-cam-entry starts at scale 1.16 about 32.29% / 50% (the seam's phone centre) and settles to 1.00 over 1.30s on power4.out — the mirror of 01's power3.in exit. Instantaneous inward edge velocity at t=0 ≈ 1150 px/s, decaying to ~0 by 1.30s. A 5px→0px blur over the first 0.55s carries the velocity read.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "Outward + Z-forward, still accelerating. From 15.70s the 12 ledger chips run center-outward-expansion to 1.55× their radius (power2.out) and the 6 radial pills to 1.85×; from 17.60s .f02-cam-target creeps 1.00→1.10 about the counter on power2.in (≈0.13 scale/s at t=20, ≈125 px/s at the canvas edge) while the two halves of the broken ₪0 keep parting (±24px over 18.20–20.00s on power1.in, ≈27 px/s each at the last frame). Net read: a bright empty centre opening toward camera.",
+    "still_moving": true
+  },
+  "first_second": "0.00–1.00s — arrives already in motion: the whole world is at 1.16 scale with a 5px blur and decelerates hard. The title 'הכאב' whips up at 0.10s, its accent underline sweeps at 0.30s, body line 1 at 0.52s, and the first ledger chip begins its depth-scatter assembly at 0.35s. Never at rest in this second.",
+  "last_second": "19.00–20.00s — no reveals, no exits. The chips and pills are still drifting outward on long power2.out tails, the camera is creeping forward on power2.in, the broken counter halves are still separating, and the teal bloom holds the opened centre. Frame 03 (transition_in: cut) lands the phone into exactly that hole.",
+  "seam_note": "Camera is deliberately STATIC through the accumulation and close-in (10.0–13.6s) per the overwhelm-surround contract — the crowd closes on the subject, the lens does not push. The only camera moves are the entry settle (0.0–1.3s) and the post-break forward creep (17.6–20.0s). Hold on the crowded state runs 13.6–15.4s: deliberate stillness before the counter breaks at 15.40s."
+}

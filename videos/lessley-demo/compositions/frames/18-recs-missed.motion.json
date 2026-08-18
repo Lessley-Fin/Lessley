@@ -1,0 +1,28 @@
+{
+  "scene": "18-recs-missed",
+  "duration_s": 18,
+  "rules": [
+    "split-tilt-cards",
+    "waterfall-entry",
+    "spring-pop-entrance",
+    "counting-dynamic-scale",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "ambient-glow-bloom"
+  ],
+  "notes": {
+    "first_second": "Device + screen on-frame at t=0, carried unchanged from frame 17. The in-phone camera opens at scale 1.05 and settles to 1.00 by 0.55s (power3.out) — enters mid-push, matching frame 17's exit direction (+Z). Stage title whips in three fragments at 0.15s / 0.36s / 0.53s; the tab rail staggers in from 0.62s. Neither tab panel has arrived by 1.0s.",
+    "last_second": "Camera is in a linear (ease:none) creep from scale 1.48 to 1.53 running 17.30s → 18.00s, so it is STILL MOVING on the final frame. The last authored reveal (the certainty pips) completes at 17.32s; the last second is a moving hold framed on the three certainty bands.",
+    "signature": "comparison-split, not a sequence: the two equal-weight tab panels arrive from OPPOSITE wings with mirrored book-open rotateY — חיסכון שפוספס from the right (x +250, rotateY +24° → 0) at 1.60s, מבצעים בחנויות שלך from the left (x −250, rotateY −24° → 0) at 9.30s. The scene's last and clearest beat is the certainty trio (מדויקת / חזקה / דומה) arriving as one waterfall-entry cascade at 14.60s / 14.82s / 14.99s with binary opacity and shrinking gaps.",
+    "gold": "The single --stage-gold spend is the ₪340 missed-savings payoff: the in-phone figure uses the app's own warning pairing (pill-save) for AA, and the stage gold glow blooms to 0.62 at 4.45s then settles to 0.30 — the glow reacts to the payoff, it never idles."
+  },
+  "camera_target": "#ms-bands (the three certainty bands)",
+  "exit": {
+    "vector": "push-in (+Z) at ~61 px/s of screen-edge expansion (scale 1.48→1.53, linear)",
+    "still_moving": true
+  },
+  "entry": {
+    "vector": "push-in (+Z) at ~230 px/s of screen-edge contraction (scale 1.05→1.00, power3.out over 0.55s)",
+    "from_rest": false
+  }
+}

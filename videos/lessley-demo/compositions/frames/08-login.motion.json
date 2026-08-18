@@ -1,0 +1,20 @@
+{
+  "scene": "08-login",
+  "duration_s": 15.0,
+  "rules": [
+    "theme-crossfade-morph",
+    "cursor-click-ripple",
+    "viewport-change",
+    "waterfall-entry",
+    "spring-pop-entrance"
+  ],
+  "entry": {
+    "vector": "up (-Y) — #f08-content y +64 → 0 over 0.62s on power3.out from t=0; |v| ≈ 310 px/s upward at frame 0, catching frame 07's rising exit",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "back (-Z) — #f08-content scale 1 → 0.90 over 1.60s on power2.in, ending at t=15.0; 0.125 scale/s ≈ 120 px/s inward at the frame edge, feeding frame 09's inverse-zoom arrival",
+    "still_moving": true
+  },
+  "notes": "Camera pushes into the form 1.70–3.10s (screen-world scale 1 → 1.22, device 1.20) and is then LOCKED for the entire crossfade cycle, as theme-crossfade-morph requires. Four pre-styled skins share one slot geometry; the 'ברוכים השבים' anchor is rendered once above them and receives no tween after its 0.62s settle. Morph boundaries at 4.30 / 7.90 / 10.60s (MORPH_DUR 0.32s), each ignited by a cursor click + ripple 0.16s earlier; the final skin holds 4.1s (emphasis brake). The 13.40s pull-back is the seam, after the cycle has resolved."
+}

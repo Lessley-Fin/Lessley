@@ -1,0 +1,604 @@
+<template>
+<style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
+
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
+
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 72px; padding: 96px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
+
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
+
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 0; font-size: 22px; }
+        .app-header { display: flex; align-items: center; gap: 14px;
+          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
+          background: hsl(var(--card) / 0.8); }
+        .app-header .brand { flex: 1; min-width: 0; }
+        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
+        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
+        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
+          flex-direction: column; gap: 16px; }
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+
+        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
+        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
+          background: hsl(var(--muted) / 0.55); padding: 16px; }
+
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
+          padding: 20px 22px; font-size: 22px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
+          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+
+        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 8px 16px; font-size: 18px; font-weight: 700; }
+        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
+        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+
+        .tabs { display: flex; gap: 6px; }
+        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
+          font-size: 19px; color: hsl(var(--muted-foreground)); }
+        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+
+        .steps { display: flex; gap: 6px; }
+        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
+          border-radius: 999px; color: hsl(var(--muted-foreground));
+          background: hsl(var(--muted)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
+          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
+          color: hsl(203 13% 67%); }
+        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+
+        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+
+        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
+<style>
+  /* ── 15-insights-slides — scene-specific ─────────────────────────── */
+  .is-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+  .is-chrome { position: absolute; inset: 0; pointer-events: none; }
+
+  .is-dots { flex: none; display: flex; justify-content: center; gap: 9px; height: 24px;
+    align-items: center; }
+  .is-d { display: block; width: 36px; height: 9px; border-radius: 5px;
+    background: hsl(var(--border)); transform-origin: center center; }
+
+  .is-window { flex: none; position: relative; height: 440px; overflow: hidden; }
+  .is-track { position: absolute; top: 0; right: 0; display: flex; flex-direction: row;
+    gap: 14px; will-change: transform; }
+  .is-slide { flex: none; width: 366px; height: 440px; box-sizing: border-box;
+    border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9); background: hsl(var(--card));
+    box-shadow: var(--shadow-card); padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+  .nav-tab { font-size: 14px; padding: 12px 2px; }
+  .is-t { font-size: 25px; font-weight: 800; margin: 0; }
+  .is-s { font-size: 17px; color: hsl(var(--muted-foreground)); margin: 3px 0 0; }
+  .is-body { flex: 1; min-height: 0; }
+
+  /* slide 1 — period comparison bars */
+  .is-bars { display: flex; align-items: flex-end; justify-content: center; gap: 34px; height: 268px; }
+  .is-barcol { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .is-bar { width: 104px; border-radius: 14px 14px 6px 6px; transform-origin: bottom center;
+    display: flex; align-items: center; justify-content: center; }
+  .is-bar-prev { background: hsl(var(--muted)); }
+  .is-bar-cur { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+    font-size: 20px; font-weight: 800; }
+  .is-barlbl { font-size: 18px; color: hsl(var(--muted-foreground)); }
+
+  /* slide 2 — top category donut */
+  .is-cat { display: flex; align-items: center; gap: 20px; height: 268px; }
+  .is-donutwrap { position: relative; width: 180px; height: 180px; flex: none; }
+  .is-donutmid { position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 34px; font-weight: 800; }
+  .is-catname { display: flex; align-items: center; gap: 10px; font-size: 25px; font-weight: 700; }
+  .is-catamt { margin-top: 10px; font-size: 34px; font-weight: 800; }
+  .is-dot { width: 15px; height: 15px; border-radius: 50%; background: hsl(var(--primary)); flex: none; }
+
+  /* slides 3 + 5 — ranked rows with fills */
+  .is-rows { display: flex; flex-direction: column; gap: 16px; }
+  .is-row { display: flex; flex-direction: column; gap: 8px; }
+  .is-rowtop { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 700; }
+  .is-rank { color: hsl(var(--muted-foreground)); font-weight: 800; }
+  .is-track-bar { height: 13px; border-radius: 7px; background: hsl(var(--muted)); overflow: hidden; }
+  .is-fill { display: block; width: 100%; height: 100%; border-radius: 7px;
+    background: hsl(var(--primary)); transform-origin: right center; }
+  .is-chip { width: 32px; height: 22px; border-radius: 6px; flex: none;
+    background: hsl(var(--accent)); border: 1px solid hsl(182 38% 36% / 0.4); }
+
+  /* slide 4 — recent transactions */
+  .is-txlist { position: relative; height: 300px; overflow: hidden; }
+  .is-txstack { display: flex; flex-direction: column; gap: 12px; }
+  .is-tx { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    border-radius: 20px; background: hsl(var(--muted) / 0.6); padding: 18px 20px; height: 118px;
+    box-sizing: border-box; }
+  .is-txname { font-size: 22px; font-weight: 700; }
+  .is-txcat { font-size: 18px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
+  .is-txamt { font-size: 23px; font-weight: 800; }
+  .is-txfade { position: absolute; left: 0; right: 0; bottom: 0; height: 58px;
+    background: linear-gradient(to top, hsl(var(--card)), hsl(var(--card) / 0)); }
+
+  /* the fixed stats row under the carousel */
+  .is-stats { flex: none; display: flex; gap: 14px; }
+  .is-stat { flex: 1; border-radius: 24px; background: hsl(var(--card)); box-shadow: var(--shadow-card);
+    border: 1px solid hsl(0 0% 100% / 0.9); padding: 16px 22px; }
+  .is-statk { font-size: 15px; font-weight: 800; letter-spacing: 0.06em;
+    color: hsl(var(--muted-foreground)); }
+  .is-statv { font-size: 27px; font-weight: 800; margin-top: 4px; }
+  .is-statm { font-size: 15px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+</style>
+
+<div id="root" data-composition-id="15-insights-slides" data-width="1920" data-height="1080">
+
+  <div class="clip is-ground" id="is-ground" data-start="0" data-duration="20" data-track-index="0"></div>
+
+  <div class="clip bg-layer" id="is-bg" data-start="0" data-duration="20" data-track-index="1">
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-ghost">Lessley</div>
+    <div class="bg-grain"></div>
+  </div>
+
+  <div class="clip stage" id="is-stage" data-start="0" data-duration="20" data-track-index="2">
+    <div class="col-text">
+      <h1 class="scene-title" id="is-h1">תובנות · חמש השקופיות</h1>
+      <p class="scene-body" id="is-p1">חמש שקופיות של צלילה לעומק.</p>
+      <p class="scene-body" id="is-p2">לאן הכסף הולך, ובאילו חנויות.</p>
+    </div>
+
+    <div class="device" data-layout-allow-overflow>
+      <div class="device-body">
+        <div class="device-screen">
+          <div class="device-island"></div>
+          <div class="screen-world" id="is-world">
+            <div class="app">
+              <div class="app-header">
+                <div class="app-icon">L</div>
+                <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
+                <div class="app-avatar">D</div>
+              </div>
+
+              <div class="app-main">
+                <div class="is-dots">
+                  <i class="is-d" id="is-d0"></i>
+                  <i class="is-d" id="is-d1"></i>
+                  <i class="is-d" id="is-d2"></i>
+                  <i class="is-d" id="is-d3"></i>
+                  <i class="is-d" id="is-d4"></i>
+                </div>
+
+                <div class="is-window" data-camera-target id="is-window">
+                  <div class="is-track" id="is-track" data-layout-allow-overflow>
+
+                    <!-- 1 · סקירה כללית -->
+                    <div class="is-slide">
+                      <div>
+                        <p class="is-t">סקירת הוצאות</p>
+                        <p class="is-s">התקופה הזו לעומת הקודמת</p>
+                      </div>
+                      <div class="is-body">
+                        <div class="is-bars">
+                          <div class="is-barcol">
+                            <div class="is-bar is-bar-prev" id="s1-prev" style="height:172px"></div>
+                            <span class="is-barlbl">קודם</span>
+                          </div>
+                          <div class="is-barcol">
+                            <div class="is-bar is-bar-cur" id="s1-cur" style="height:252px"><span class="num">₪5,630</span></div>
+                            <span class="is-barlbl">נוכחי</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 2 · קטגוריות -->
+                    <div class="is-slide">
+                      <div>
+                        <p class="is-t">קטגוריה מובילה</p>
+                        <p class="is-s">לאן הכסף הולך</p>
+                      </div>
+                      <div class="is-body">
+                        <div class="is-cat">
+                          <div class="is-donutwrap">
+                            <svg viewBox="0 0 120 120" width="180" height="180" aria-hidden="true">
+                              <circle cx="60" cy="60" r="45" fill="none"
+                                stroke="hsl(198 28% 90%)" stroke-width="17" />
+                              <circle id="s2-ring" cx="60" cy="60" r="45" fill="none"
+                                stroke="hsl(182 38% 36%)" stroke-width="17" stroke-linecap="round"
+                                transform="rotate(-90 60 60)" />
+                            </svg>
+                            <div class="is-donutmid"><span class="num" id="s2-pct">38%</span></div>
+                          </div>
+                          <div>
+                            <div class="is-catname"><i class="is-dot"></i><span>מכולת</span></div>
+                            <div class="is-catamt num">₪2,140</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 3 · חנויות מובילות -->
+                    <div class="is-slide">
+                      <div>
+                        <p class="is-t">חנויות מובילות</p>
+                        <p class="is-s">גללו כדי לראות את כל העשר</p>
+                      </div>
+                      <div class="is-body">
+                        <div class="is-rows">
+                          <div class="is-row s3-row">
+                            <div class="is-rowtop"><span class="is-rank num">1</span><span>רמי לוי</span></div>
+                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
+                          </div>
+                          <div class="is-row s3-row">
+                            <div class="is-rowtop"><span class="is-rank num">2</span><span>שופרסל</span></div>
+                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
+                          </div>
+                          <div class="is-row s3-row">
+                            <div class="is-rowtop"><span class="is-rank num">3</span><span>סופר-פארם</span></div>
+                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
+                          </div>
+                          <div class="is-row s3-row">
+                            <div class="is-rowtop"><span class="is-rank num">4</span><span>Be</span></div>
+                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 4 · עסקאות -->
+                    <div class="is-slide">
+                      <div>
+                        <p class="is-t">עסקאות אחרונות</p>
+                        <p class="is-s">התנועות האחרונות</p>
+                      </div>
+                      <div class="is-body">
+                        <div class="is-txlist">
+                          <div class="is-txstack">
+                            <div class="is-tx s4-tx">
+                              <div>
+                                <div class="is-txname">רמי לוי</div>
+                                <div class="is-txcat">מכולת</div>
+                              </div>
+                              <span class="is-txamt num">−₪412</span>
+                            </div>
+                            <div class="is-tx s4-tx">
+                              <div>
+                                <div class="is-txname">רמי לוי</div>
+                                <div class="is-txcat">מכולת</div>
+                              </div>
+                              <span class="is-txamt num">−₪340</span>
+                            </div>
+                            <div class="is-tx s4-tx">
+                              <div>
+                                <div class="is-txname">שופרסל</div>
+                                <div class="is-txcat">מכולת</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="is-txfade"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 5 · חשבונות -->
+                    <div class="is-slide">
+                      <div>
+                        <p class="is-t">הוצאות לפי חשבונות</p>
+                        <p class="is-s">בנקאות פתוחה מחוברת</p>
+                      </div>
+                      <div class="is-body">
+                        <div class="is-rows">
+                          <div class="is-row s5-row">
+                            <div class="is-rowtop"><i class="is-chip"></i><span class="num">•••• 1042</span></div>
+                            <div class="is-track-bar"><i class="is-fill s5-fill"></i></div>
+                          </div>
+                          <div class="is-row s5-row">
+                            <div class="is-rowtop"><i class="is-chip"></i><span class="num">•••• 7788</span></div>
+                            <div class="is-track-bar"><i class="is-fill s5-fill"></i></div>
+                          </div>
+                          <div class="is-row s5-row">
+                            <div class="is-rowtop"><i class="is-chip"></i><span class="num">•••• 3915</span></div>
+                            <div class="is-track-bar"><i class="is-fill s5-fill"></i></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div class="is-stats" id="is-stats">
+                  <div class="is-stat">
+                    <div class="is-statk">עסקאות</div>
+                    <div class="is-statv num">142</div>
+                    <div class="is-statm"><span class="num">30</span> הימים האחרונים</div>
+                  </div>
+                  <div class="is-stat">
+                    <div class="is-statk">סכום כולל</div>
+                    <div class="is-statv num">₪5,630</div>
+                    <div class="is-statm">כל הכרטיסים המקושרים</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="nav">
+                <span class="nav-tab">אופטימיזציה</span>
+                <span class="nav-tab on">תובנות</span>
+                <span class="nav-tab">חם</span>
+                <span class="nav-tab">המלצות</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="clip is-chrome" id="is-chrome-layer" data-start="0" data-duration="20" data-track-index="3">
+    <span class="chapter">15 / 21</span>
+    <div class="rail"><i id="is-rail"></i></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var ID = "15-insights-slides";
+    var root = document.querySelector('[data-composition-id="' + ID + '"]');
+    var q = function (s) { return root.querySelector(s); };
+    var qa = function (s) { return root.querySelectorAll(s); };
+    var world = q("#is-world");
+
+    var SW = 410, SH = 912;
+    var STEP = 380;                     // slide width 366 + 14 gap
+    var IR = { immediateRender: false };
+    var MUTED = "rgb(220,229,233)", PRIMARY = "rgb(57,127,127)";
+
+    function st(s, extra) {
+      var o = { scale: s.scale, x: s.x, y: s.y };
+      for (var key in extra) { o[key] = extra[key]; }
+      return o;
+    }
+
+    var tl = gsap.timeline({ paused: true });
+
+    /* ── chrome ──────────────────────────────────────────────────── */
+    tl.fromTo("#is-rail", { scaleX: 0.6508 }, { scaleX: 0.7143, duration: 20, ease: "none" }, 0);
+
+    /* ── stage copy ──────────────────────────────────────────────── */
+    tl.fromTo(["#is-h1", "#is-p1", "#is-p2"],
+      { opacity: 0, y: 34 },
+      { opacity: 1, y: 0, duration: 0.66, ease: "power3.out", stagger: 0.12 }, 0.12);
+
+    /* ── camera: inherits the previous scene's pan, then holds so the
+          SWIPE is the motion, and leans in again for the hand-off ─── */
+    var CAM = [
+      { t: 0.00,  s: { scale: 1.18, x: 0, y: -8 },  e: "none" },
+      { t: 1.30,  s: { scale: 1.22, x: 0, y: -42 }, e: "power1.out" },
+      { t: 17.60, s: { scale: 1.22, x: 0, y: -46 }, e: "none" },
+      { t: 20.00, s: { scale: 1.24, x: 0, y: -54 }, e: "power2.in" }
+    ];
+    gsap.set(world, st(CAM[0].s));
+    for (var i = 1; i < CAM.length; i++) {
+      tl.fromTo(world, st(CAM[i - 1].s),
+        st(CAM[i].s, {
+          duration: CAM[i].t - CAM[i - 1].t, ease: CAM[i].e, immediateRender: false
+        }), CAM[i - 1].t);
+    }
+
+    /* ── the carousel: four nudge-curve swipes, one per narrated slide ─
+          10% ramp-in (power3.in) → 65% linear burst → 25% power4.out tail.  */
+    var SWIPE = [3.90, 7.80, 11.70, 15.60];
+    gsap.set("#is-track", { x: 0 });
+    for (var s = 0; s < SWIPE.length; s++) {
+      var t0 = SWIPE[s], base = s * STEP;
+      tl.fromTo("#is-track", { x: base },
+        { x: base + STEP * 0.10, duration: 0.12, ease: "power3.in", immediateRender: false }, t0);
+      tl.fromTo("#is-track", { x: base + STEP * 0.10 },
+        { x: base + STEP * 0.75, duration: 0.11, ease: "none", immediateRender: false }, t0 + 0.12);
+      tl.fromTo("#is-track", { x: base + STEP * 0.75 },
+        { x: base + STEP, duration: 0.37, ease: "power4.out", immediateRender: false }, t0 + 0.23);
+    }
+
+    /* ── the dot indicator steps with each swipe ─────────────────── */
+    gsap.set(".is-d", { scaleX: 0.25, backgroundColor: MUTED });
+    gsap.set("#is-d0", { scaleX: 1, backgroundColor: PRIMARY });
+    for (var d = 0; d < SWIPE.length; d++) {
+      tl.fromTo("#is-d" + d, { scaleX: 1, backgroundColor: PRIMARY },
+        { scaleX: 0.25, backgroundColor: MUTED, duration: 0.3, ease: "power2.out", immediateRender: false },
+        SWIPE[d] + 0.14);
+      tl.fromTo("#is-d" + (d + 1), { scaleX: 0.25, backgroundColor: MUTED },
+        { scaleX: 1, backgroundColor: PRIMARY, duration: 0.3, ease: "power2.out", immediateRender: false },
+        SWIPE[d] + 0.14);
+    }
+
+    /* ── each slide's chart is ALREADY MOVING as the slide arrives ─
+          (fired mid-burst, so no slide reads as a card built from zero) */
+    var C1 = 0.15, C2 = SWIPE[0] + 0.15, C3 = SWIPE[1] + 0.15,
+        C4 = SWIPE[2] + 0.15, C5 = SWIPE[3] + 0.15;
+
+    // 1 · period comparison — growth bars, scaleY from the baseline
+    tl.fromTo(["#s1-prev", "#s1-cur"], { scaleY: 0 },
+      { scaleY: 1, duration: 0.85, ease: "power3.out", stagger: 0.1 }, C1);
+    tl.fromTo(".is-barlbl", { opacity: 0, y: 12 },
+      { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, C1 + 0.35);
+
+    // 2 · top category — measured ring draw + the legend under it
+    var ring = q("#s2-ring");
+    var LEN = (ring && ring.getTotalLength) ? ring.getTotalLength() : 282.74;
+    ring.style.strokeDasharray = LEN;
+    tl.fromTo(ring, { strokeDashoffset: LEN },
+      { strokeDashoffset: LEN * (1 - 0.38), duration: 1.05, ease: "power2.out" }, C2);
+    tl.fromTo(["#s2-pct", ".is-catname", ".is-catamt"], { opacity: 0, y: 16 },
+      { opacity: 1, y: 0, duration: 0.46, ease: "power3.out", stagger: 0.09 }, C2 + 0.1);
+
+    // 3 · top stores — rows cascade, fills run right-to-left
+    tl.fromTo(".s3-row", { opacity: 0, x: 26 },
+      { opacity: 1, x: 0, duration: 0.42, ease: "power3.out", stagger: 0.08 }, C3);
+    var S3 = [1, 0.78, 0.6, 0.44], f3 = qa(".s3-fill");
+    for (var a = 0; a < f3.length; a++) {
+      tl.fromTo(f3[a], { scaleX: 0 },
+        { scaleX: S3[a], duration: 0.9, ease: "power3.out" }, C3 + a * 0.08);
+    }
+
+    // 4 · recent transactions — the list pours in past the fold
+    tl.fromTo(".s4-tx", { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 0.46, ease: "power3.out", stagger: 0.11 }, C4);
+
+    // 5 · accounts — the per-card split fills
+    tl.fromTo(".s5-row", { opacity: 0, x: 26 },
+      { opacity: 1, x: 0, duration: 0.42, ease: "power3.out", stagger: 0.09 }, C5);
+    var S5 = [1, 0.72, 0.5], f5 = qa(".s5-fill");
+    for (var b = 0; b < f5.length; b++) {
+      tl.fromTo(f5[b], { scaleX: 0 },
+        { scaleX: S5[b], duration: 0.9, ease: "power3.out" }, C5 + b * 0.09);
+    }
+
+    /* ── the fixed stats row resolves once, under the whole carousel ── */
+    tl.fromTo(".is-stat", { opacity: 0, y: 24 },
+      { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.1 }, 0.55);
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines[ID] = tl;
+  })();
+</script>
+</template>

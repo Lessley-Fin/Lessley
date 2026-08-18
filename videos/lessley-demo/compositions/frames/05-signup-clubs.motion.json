@@ -1,0 +1,27 @@
+{
+  "scene": "05-signup-clubs",
+  "duration_s": 16,
+  "rules": [
+    "cursor-click-ripple",
+    "counting-dynamic-scale",
+    "spring-pop-entrance",
+    "center-outward-expansion",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "viewport-change"
+  ],
+  "exit": {
+    "vector": "camera Z-in (+scale 0.0276/s on .screen-world, 1.02 -> 1.10 linear over 13.1-16.0s); ~4.8 canvas px/s outward flow at the form edge. Cursor parked and still, device locked at cx 737, cy 540.",
+    "still_moving": true
+  },
+  "entry": {
+    "vector": "lateral wizard advance: step body slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. In-phone camera starts at rest (scale 1.0); Z push to the club wall begins at 0.9s.",
+    "from_rest": false
+  },
+  "carrier": {
+    "steps": "5-step .steps row, index 2 (מועדונים). At t=0 it renders in frame 04's landed state (חשבון done, אימות current); at 0.15-0.60s אימות flips to .done and מועדונים to current. Holds through the final second for frame 06 to inherit.",
+    "device": "the phone is never rebuilt: same .device, same slot, no entrance tween.",
+    "rail": "scaleX 0.7838 -> 1.0 linear across the whole 16s (18.41% -> 23.49%).",
+    "data": "the four clubs picked here (רמי לוי, שופרסל, סופר-פארם, Be) are the film's canonical four; counter lands on 4."
+  }
+}

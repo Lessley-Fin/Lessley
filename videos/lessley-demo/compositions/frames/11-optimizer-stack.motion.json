@@ -1,0 +1,27 @@
+{
+  "scene": "11-optimizer-stack",
+  "duration_s": 12.0,
+  "rules": [
+    "counting-dynamic-scale",
+    "spring-pop-entrance",
+    "coordinate-target-zoom",
+    "multi-phase-camera",
+    "ambient-glow-bloom"
+  ],
+  "exit": {
+    "vector": "static — 0 px/s. Camera came to rest at t=8.80s (screen-world scale 1.24, counter-translate at the hero/pill midpoint) and holds to 12.0. Phone locked at true frame centre cx 960, cy 540. Final second carries only the background glow settling in opacity (0.62 -> 0.50, paint-only, ends t=11.0) — no translation, no scale.",
+    "still_moving": false
+  },
+  "entry": {
+    "vector": "static — 0 px/s, and deliberately so. STILLNESS-BEFORE-CLIMAX: the first 1.40s has zero element motion; the phone is already parked at true frame centre from frame 10 and the in-screen camera opens at scale 1.12 — the same framing frame 10 exits on. Nothing translates until the camera push at t=1.40s.",
+    "from_rest": true
+  },
+  "notes": {
+    "camera_moves": 2,
+    "camera_track": "screen-world scale 1.12 (held 0-1.40s, inherited from frame 10's exit) -> 1.32 (push onto the pay figure, 1.40-2.60s) -> 1.24 (bookend ease back to a wider settle, 7.20-8.80s), then LOCKED.",
+    "carrier": "Phone unchanged from frame 10 — same centre, same device scale 0.9442, no reposition. The paragraph's one reposition was spent in frame 10.",
+    "payoff_beat": "t=2.70-4.50s: the figure counts 412 -> 317 (power3.out) while its transform scale grows 0.78 -> 1.0 on the identical ease, and the full-frame teal glow blooms opacity 0 -> 0.62 / scale 0.86 -> 1.10 on exactly that beat. --stage-gold lands ONCE at t=4.70s on the savings pill (spring-pop, power3.out) and nowhere else in the film.",
+    "first_second": "Held card fully visible at t=0 showing the cart figure; no entrance tweens fire before t=1.40s.",
+    "last_second": "Locked frame, climax dwell. Last motion is the chevron nudge ending at 10.08s."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "scene": "03-signup-account",
+  "duration_s": 12.0,
+  "rules": [
+    "discrete-text-sequence",
+    "cursor-click-ripple",
+    "waterfall-entry",
+    "spring-pop-entrance",
+    "coordinate-target-zoom",
+    "multi-phase-camera"
+  ],
+  "blueprint": "cursor-ui-demo",
+  "camera_target": "#f03-f3 — the סיסמה field (screen-space centre 50% / 55.263% of the 410×932 device screen)",
+  "entry": {
+    "vector": "Z− deceleration on a hard CUT. The phone is fully on screen at t=0 with .f03-world at scale 1.07 and a 3px blur, settling to 1.00 over 0.62s on power3.out (blur clears in 0.38s). Inward edge velocity at t=0 ≈ 330 px/s, decaying to ~0 by 0.62s — enough to catch 02's forward creep without reading as a second push.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "Z+ into the screen, slow and near-settled. From 9.50s the in-phone camera creeps .screen-world 1.60→1.665 on power1.in (≈0.052 scale/s at t=12, ≈20 px/s at the phone-screen edge). The cursor has come to REST on the המשך button at 10.52s and does not click — the account is not created in this scene. Effectively a held frame with a live forward vector.",
+    "still_moving": true
+  },
+  "first_second": "0.00–1.00s — the phone is the hero and is visible on frame 0. The world settles out of its 1.07 scale (0.00–0.62s), the stage title 'הרשמה · חשבון' whips up at 0.14s with an underline sweep at 0.34s, the app header rises at 0.34s, and the five-step signup rail begins its waterfall arrival at 0.56s.",
+  "last_second": "11.00–12.00s — held. The cursor is parked on the primary action, its teal hover halo has already bloomed (10.48–11.03s), and only the slow in-phone camera creep is running. No exits: the next frame owns the departure.",
+  "seam_note": "The five-step progress rail lights at 1.18s and stays lit (it must persist through frame 07). The camera runs two phases into the camera target — partial travel 1.00→1.26 (1.90–3.10s) so the whole step rail stays legible during the first typing beat, then lock 1.26→1.60 (7.40–9.50s) onto the password field for the 'no account yet' beat."
+}
