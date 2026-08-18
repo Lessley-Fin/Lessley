@@ -11,15 +11,18 @@ namespace Lessley.Gateway.Api.Services.Classes
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly IPersonalizationService _personalizationService;
+        private readonly ILogger<OpenFinanceService> _logger;
 
         public OpenFinanceService(
             HttpClient httpClient,
             IConfiguration configuration,
-            IPersonalizationService personalizationService)
+            IPersonalizationService personalizationService,
+            ILogger<OpenFinanceService> logger)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _personalizationService = personalizationService;
+            _logger = logger;
         }
 
         public async Task<string> CreateAccessToken(string username)
@@ -101,24 +104,33 @@ namespace Lessley.Gateway.Api.Services.Classes
         private string? ResolveRedirectUrl(string? requested)
         {
             var configured = _configuration["OpenFinanceConfig:RedirectUrl"];
-            if (string.IsNullOrWhiteSpace(configured))
+
+            // It has to be an absolute http(s) URL with a host. Three ways that quietly fails:
+            // the setting is missing entirely; DOMAIN was empty when compose expanded
+            // "https://${DOMAIN}/insights" into "https:///insights"; or someone put a bare path
+            // here. All three end with the user stranded on the provider's site, which is the
+            // bug this setting exists to fix — so none of them may pass without saying so.
+            if (!Uri.TryCreate(configured, UriKind.Absolute, out var baseUri)
+                || (baseUri.Scheme != Uri.UriSchemeHttp && baseUri.Scheme != Uri.UriSchemeHttps)
+                || string.IsNullOrEmpty(baseUri.Host))
+            {
+                _logger.LogError(
+                    "OpenFinanceConfig:RedirectUrl is not an absolute http(s) URL (value: '{Configured}'). " +
+                    "The bank-linking journey will not return the user to Lessley.",
+                    configured);
                 return null;
+            }
 
             if (string.IsNullOrWhiteSpace(requested))
-                return configured;
+                return baseUri.ToString();
 
-            // "//evil.com" is protocol-relative and leaves the site, so one leading slash only.
+            // "//evil.com" is protocol-relative and would leave the site, so one leading slash only.
             var isSafeRelativePath =
                 requested.StartsWith('/') &&
                 !requested.StartsWith("//") &&
                 Uri.IsWellFormedUriString(requested, UriKind.Relative);
 
-            if (!isSafeRelativePath)
-                return configured;
-
-            return Uri.TryCreate(configured, UriKind.Absolute, out var baseUri)
-                ? new Uri(baseUri, requested).ToString()
-                : configured;
+            return isSafeRelativePath ? new Uri(baseUri, requested).ToString() : baseUri.ToString();
         }
 
         public async Task<OBTransactionsResponse> GetTransactions(string username)
