@@ -154,6 +154,7 @@ services:
   # ── Gateway (the only app reachable from the edge) ──────────────────────────
   gateway:
     image: lessley/gateway:prod
+    container_name: gateway
     build:
       context: ../lessley-backend/Lessley.Gateway.Api
       dockerfile: Dockerfile
@@ -212,6 +213,7 @@ services:
   # ── Personalization (reached only via Caddy; gated by X-Edge-Key) ───────────
   personalization:
     image: lessley/personalization:prod
+    container_name: personalization
     build:
       context: ../lessley-backend/Lessley.Personalization
       dockerfile: Dockerfile
@@ -250,6 +252,7 @@ services:
   # The Gateway itself has no knowledge of this service.
   deal-optimizer:
     image: lessley/deal-optimizer:prod
+    container_name: optimizer
     build:
       context: ../deal-optimizer
       target: service

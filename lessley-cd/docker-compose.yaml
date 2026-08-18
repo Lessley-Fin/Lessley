@@ -163,6 +163,7 @@ services:
   # --- Gateway (reached from the edge as gateway:5001, same as prod) ---
   gateway:
     image: lessley/gateway:dev
+    container_name: gateway
     build:
       context: ../lessley-backend/Lessley.Gateway.Api
       dockerfile: Dockerfile
@@ -361,6 +362,7 @@ services:
   # --- Personalization (internal only; reached as personalization:5002, same as prod) ---
   personalization:
     image: lessley/personalization:dev
+    container_name: personalization
     build:
       context: ../lessley-backend/Lessley.Personalization
       dockerfile: Dockerfile
@@ -406,6 +408,7 @@ services:
   # here — the Gateway is not in that path.
   deal-optimizer:
     image: lessley/deal-optimizer:dev
+    container_name: optimizer
     build:
       context: ../deal-optimizer
       target: service
