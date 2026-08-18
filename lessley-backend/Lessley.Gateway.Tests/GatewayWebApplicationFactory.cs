@@ -36,8 +36,6 @@ public sealed class FakePersonalizationService : IPersonalizationService
         return Task.CompletedTask;
     }
 
-    public Task TriggerCalculateMissedSavingsAsync(string userId, bool timeFilter = true, int days = 7, CancellationToken ct = default) => Task.CompletedTask;
-    public Task TriggerCalculateMatchingClubsAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
 }
 
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>

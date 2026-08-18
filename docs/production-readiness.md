@@ -300,6 +300,67 @@ means `npm run lint` cannot be used as a gate.
 
 ---
 
+## Club matching — a control that currently does nothing
+
+Three related findings. They should be decided together, because fixing one without the others
+changes nothing a user can see.
+
+### P2-7 — `is_recommended` is computed and discarded
+
+`recommendation_service.py:158` computes `"is_recommended": fit_score >= threshold`. The field is
+declared on the client as `ClubRecommendation.is_recommended` (`types.ts:92`) and **read nowhere
+else in the frontend**.
+
+`RecommendationsPage` passes `clubData?.recommendations ?? []` straight to `TopClubMatchesSlide`,
+which renders every club sorted by `fit_score` with a percentage badge. Nothing filters on the
+flag. `INSIGHTS_DEFAULTS.TOP_CLUB_RECOMMENDATIONS_LIMIT` is likewise unused — nothing even slices
+to a top N.
+
+Either the UI should use the flag — filter the list, or badge the ones that clear the bar — or it
+should come out of the response. As it stands the threshold has no observable effect on anything.
+
+### P2-8 — The threshold is the same for every user
+
+`calculate_matching_clubs` calls:
+
+```python
+result = self.recommend_clubs(user_id, mcc_codes, user_club_ids=user_club_ids)
+```
+
+`threshold` is never passed, so every user is judged at `LIMITS.HIT_THRESHOLD = 0.20`.
+`MatchingScore` does not reach club matching in any form, and
+`user_repository.get_user_matching_score()` has no callers at all — dead method.
+
+Making the threshold per-user is only worth doing **after P2-7**. A per-user threshold feeding a
+flag nobody reads is still nothing.
+
+### The match level moves club results by a different route
+
+Worth writing down because it is not obvious from either the code or the UI.
+
+`MatchingScore` has exactly one reader — `trim_categories_by_match_level`, where
+`keep = round(len × (1 − x))`:
+
+| Match level | Score | Categories kept |
+|---|---|---|
+| Low | 0.25 | 75% |
+| Medium | 0.50 | 50% |
+| High | 0.75 | 25% |
+
+The surviving categories become the stored `Tags`, and `Tags` are the entire scoring input for
+club matching. So the match level does move club recommendations — by shrinking what clubs are
+scored against, not by changing how strictly they are judged.
+
+The consequence reads backwards from the label: a user on **High** is scored against a quarter of
+their categories, so clubs overlap fewer of their interests and every `fit_score` falls. "High
+match" makes club fits look *worse*.
+
+This is not a defect in the code — `trim_categories_by_match_level` does exactly what its
+docstring says. It is a product question about what the control is supposed to mean, and it needs
+an answer before the threshold work above is worth starting. Added to the open questions.
+
+---
+
 ## Message flow — where RabbitMQ is now
 
 After the categories rewrite the topology is deliberately small. Exchange `lessley_events`,
@@ -355,6 +416,9 @@ flagged where the assumption is load-bearing.
    arithmetic above assumes 3 — at 10 the page-view ceiling drops from ~31/min to ~9/min.
 7. **How long may a stale category last before it matters?** Decides whether the weekly sweep is
    the right cadence or whether it should be daily — which the quota may not permit.
+8. **What is the match level supposed to mean to a user?** Today "High" keeps a quarter of their
+   categories, which lowers every club fit score — the opposite of what the label implies. Decides
+   P2-7 and P2-8, and possibly the direction of the trim itself.
 8. **Is `Auth:IsRotateRefresh` enabled in production?** Rotation with reuse detection is
    implemented and is the safer setting; it is configurable, so it can be off without anyone
    noticing.

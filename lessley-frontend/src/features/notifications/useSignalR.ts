@@ -97,6 +97,9 @@ export function useSignalR() {
     const refreshCategories = () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.insights.all })
       void queryClient.invalidateQueries({ queryKey: queryKeys.user.profile() })
+      // Club matching is scored purely from the stored tags, so it goes stale the moment they
+      // change — and it lives outside the insights tree, so it needs naming separately.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recommendations.all })
     }
 
     connection.on("DealUserNotification", handleIncoming)

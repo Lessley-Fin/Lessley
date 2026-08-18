@@ -26,7 +26,7 @@ export function RecommendationsPage() {
   const { data: isConnected, isLoading: checkingConnection } = useHasConnection()
   const connected = isConnected === true
 
-  const { data: clubData, isFetching: clubsFetching, refetch: refetchClubs } = useMatchingClubs(connected)
+  const { data: clubData } = useMatchingClubs(connected)
   const [missedShopDays, setMissedShopDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
   const { data: missedShops = [], isLoading: missedShopsLoading } = useMissedSavingsByStore(
     missedShopDays,
@@ -87,11 +87,7 @@ export function RecommendationsPage() {
       <Carousel setApi={setApi} opts={{ align: "start", direction }}>
         <CarouselContent>
           <CarouselItem>
-            <TopClubMatchesSlide
-              clubs={clubRecommendations}
-              onRecalculate={() => void refetchClubs()}
-              isPending={clubsFetching}
-            />
+            <TopClubMatchesSlide clubs={clubRecommendations} />
           </CarouselItem>
           <CarouselItem>
             <MissedShopsSlide
