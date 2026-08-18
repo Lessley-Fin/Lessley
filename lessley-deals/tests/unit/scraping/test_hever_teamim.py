@@ -225,13 +225,42 @@ class TestHeverTeamimAdapter:
         assert "Restaurant A" in d1.deal_description
 
 
+class TestHeverTeamimCanonicalName:
+    @staticmethod
+    def _name(*names: str) -> str:
+        adapter = HeverTeamimAdapter(SourceConfig(base_url="https://www.hvr.co.il"))
+        return adapter._canonical_name([_make_branch(name=n) for n in names])
+
+    def test_single_name_is_used_verbatim(self) -> None:
+        assert self._name("אנג'לינה פיצה ופסטה") == "אנג'לינה פיצה ופסטה"
+
+    def test_branch_suffixes_are_dropped_to_the_shared_prefix(self) -> None:
+        assert self._name("פיצה עגבניה גן העיר", "פיצה עגבניה שינקין", "פיצה עגבניה") == "פיצה עגבניה"
+
+    def test_separator_left_by_the_branch_suffix_is_trimmed(self) -> None:
+        assert self._name("הוט סינמה - גרנד קניון", "הוט סינמה - קניון נהריה") == "הוט סינמה"
+
+    def test_shared_prefix_never_cuts_mid_word(self) -> None:
+        # "אנגוס"/"אנגוסרי" share five characters but no whole word — a
+        # character-wise prefix would coin a truncated name.
+        assert self._name("אנגוסרי", "אנגוס") == "אנגוס"
+
+    def test_no_shared_leading_word_falls_back_to_the_shortest_name(self) -> None:
+        assert self._name("kampai street wok", "קאמפיי סטריט ווק") == "קאמפיי סטריט ווק"
+        assert self._name("Moon", "moon") == "Moon"
+
+    def test_repeated_identical_names_collapse_to_that_name(self) -> None:
+        assert self._name("קפה קפה", "קפה קפה", "קפה קפה") == "קפה קפה"
+
+
 class TestHeverTeamimAdapterScrape:
     async def test_scrape_groups_branches_into_one_deal_per_restaurant(self) -> None:
         payload = {
             "branch": [
-                _make_branch(name="קפה קפה", city="דימונה"),
-                _make_branch(name="קפה קפה", city="נתיבות"),  # same chain, different branch
-                _make_branch(name="קאזה דו ברזיל", city="אילת"),
+                _make_branch(name="קפה קפה", img="logo_cafecafe.jpg", city="דימונה"),
+                # same chain, different branch
+                _make_branch(name="קפה קפה", img="logo_cafecafe.jpg", city="נתיבות"),
+                _make_branch(name="קאזה דו ברזיל", img="logo_casa.jpg", city="אילת"),
             ]
         }
 
@@ -274,6 +303,120 @@ class TestHeverTeamimAdapterScrape:
         stores, deals = await adapter.scrape()
         assert stores == []
         assert deals == []
+
+    async def test_scrape_groups_branch_named_rows_of_one_chain_by_logo(self) -> None:
+        # The real failure this grouping exists for: hvr.co.il bakes the branch
+        # into `name` for some chains, so grouping by name split פיצה עגבניה
+        # into six deals carrying the same benefit — which the optimizer then
+        # stacked. Every branch shares one logo, so `img` groups them.
+        payload = {
+            "branch": [
+                _make_branch(name="פיצה עגבניה גן העיר", img="logo_agvania.jpg", city="תל אביב"),
+                _make_branch(name="פיצה עגבניה שינקין", img="logo_agvania.jpg", city="תל אביב"),
+                _make_branch(name="פיצה עגבניה חולון", img="logo_agvania.jpg", city="חולון"),
+                _make_branch(name="פיצה עגבניה", img="logo_agvania.jpg", city="אילת"),
+            ]
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=payload)
+
+        stores, deals = await _mock_adapter(handler).scrape()
+
+        assert len(stores) == len(deals) == 1
+        assert stores[0].name == "פיצה עגבניה"
+        assert stores[0].raw_payload["branch_qty"] == 4
+        assert stores[0].raw_payload["img"] == "logo_agvania.jpg"
+        assert len(deals[0].raw_payload["_locations"]) == 4
+
+    async def test_scrape_keeps_same_named_chains_apart_when_logos_differ(self) -> None:
+        # The other direction: "מאמא גרג" and "קפה גרג" share a name token but
+        # are different brands, and their logos say so.
+        payload = {
+            "branch": [
+                _make_branch(name="קפה גרג", img="logo_greg_cafe.jpg"),
+                _make_branch(name="קפה גרג סינמול", img="logo_greg_cafe.jpg"),
+                _make_branch(name="מאמא גרג", img="logo_mamagreg.jpg"),
+            ]
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=payload)
+
+        stores, _deals = await _mock_adapter(handler).scrape()
+        assert sorted(s.name for s in stores) == ["מאמא גרג", "קפה גרג"]
+
+    async def test_scrape_merges_one_chain_uploaded_under_two_logo_files(self) -> None:
+        # The logo alone isn't enough: the site has "בני הדייג" under both
+        # logo_benny_dayag.png and logo_benihadayag.jpg. The shared name links
+        # the two logo groups back into one restaurant.
+        payload = {
+            "branch": [
+                _make_branch(name="בני הדייג", img="logo_benny_dayag.png", city="ראשון לציון"),
+                _make_branch(name="בני הדייג", img="logo_benny_dayag.png", city="הרצליה"),
+                _make_branch(name="בני הדייג", img="logo_benihadayag.jpg", city="תל אביב - יפו"),
+            ]
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=payload)
+
+        stores, deals = await _mock_adapter(handler).scrape()
+        assert len(stores) == len(deals) == 1
+        assert stores[0].name == "בני הדייג"
+        assert stores[0].raw_payload["branch_qty"] == 3
+
+    async def test_scrape_links_chains_transitively_across_name_and_logo(self) -> None:
+        # A branch-named row shares its logo with the chain, and the chain's
+        # plain-named row shares its name with a second logo file — all three
+        # rows are one restaurant only if both links are followed.
+        payload = {
+            "branch": [
+                _make_branch(name="פיצה עגבניה שינקין", img="logo_agvania.jpg"),
+                _make_branch(name="פיצה עגבניה", img="logo_agvania.jpg"),
+                _make_branch(name="פיצה עגבניה", img="logo_agvania_2025.jpg"),
+            ]
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=payload)
+
+        stores, _deals = await _mock_adapter(handler).scrape()
+        assert len(stores) == 1
+        assert stores[0].name == "פיצה עגבניה"
+        assert stores[0].raw_payload["branch_qty"] == 3
+
+    async def test_scrape_placeholder_logo_falls_back_to_grouping_by_name(self) -> None:
+        # teamim_default.jpg is shared by unrelated businesses — grouping on it
+        # would merge them into one store.
+        payload = {
+            "branch": [
+                _make_branch(name="בורקס השוק", img="teamim_default.jpg"),
+                _make_branch(name="הדיואן", img="teamim_default.jpg"),
+                _make_branch(name="סקואלה", img="teamim_default.jpg"),
+            ]
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=payload)
+
+        stores, deals = await _mock_adapter(handler).scrape()
+        assert len(stores) == len(deals) == 3
+        assert sorted(s.name for s in stores) == ["בורקס השוק", "הדיואן", "סקואלה"]
+
+    async def test_scrape_missing_logo_falls_back_to_grouping_by_name(self) -> None:
+        payload = {
+            "branch": [
+                _make_branch(name="מסעדה א", img=""),
+                _make_branch(name="מסעדה ב", img=""),
+            ]
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(200, json=payload)
+
+        stores, _deals = await _mock_adapter(handler).scrape()
+        assert sorted(s.name for s in stores) == ["מסעדה א", "מסעדה ב"]
 
     async def test_scrape_skips_records_without_name(self) -> None:
         payload = {"branch": [_make_branch(name="קפה קפה"), {"city": "אילת", "name": ""}]}
