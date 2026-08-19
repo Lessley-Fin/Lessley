@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PasswordInput } from "@/components/ui/password-input"
 import { ROUTES } from "@/lib/routes"
 import type { VerificationPolicy } from "../api"
 import { loginWithGateway, requestLoginCode, verifyLoginCode } from "../api"
@@ -91,9 +92,8 @@ function PasswordLoginForm({ onUseEmailCode }: { onUseEmailCode: () => void }) {
             <FormItem className="space-y-1.5">
               <FormLabel>{t("auth.login.password")}</FormLabel>
               <FormControl>
-                <Input
+                <PasswordInput
                   {...field}
-                  type="password"
                   autoComplete="current-password"
                   className="h-12 rounded-2xl"
                   disabled={isLoading}
