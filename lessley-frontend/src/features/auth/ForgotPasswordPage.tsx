@@ -8,6 +8,7 @@ import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PasswordInput } from "@/components/ui/password-input"
 import { ROUTES } from "@/lib/routes"
 import type { VerificationPolicy } from "./api"
 import { requestPasswordReset, resetPassword, verifyPasswordResetCode } from "./api"
@@ -155,9 +156,8 @@ export function ForgotPasswordPage() {
           >
             <div className="space-y-1.5">
               <Label htmlFor="pw">{t("auth.forgotPassword.newPassword")}</Label>
-              <Input
+              <PasswordInput
                 id="pw"
-                type="password"
                 autoComplete="new-password"
                 className="h-12 rounded-2xl"
                 value={password}
@@ -167,9 +167,8 @@ export function ForgotPasswordPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pw2">{t("auth.forgotPassword.confirmNewPassword")}</Label>
-              <Input
+              <PasswordInput
                 id="pw2"
-                type="password"
                 autoComplete="new-password"
                 className="h-12 rounded-2xl"
                 value={confirmPassword}
