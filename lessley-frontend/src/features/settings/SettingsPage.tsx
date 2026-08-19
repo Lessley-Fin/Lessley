@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { useMyProfile } from "@/features/user/hooks"
 import { BankingView } from "./components/BankingView"
+import { DeleteAccountView } from "./components/DeleteAccountView"
 import { LanguageView } from "./components/LanguageView"
 import { LogoutView } from "./components/LogoutView"
 import { PreferencesView } from "./components/PreferencesView"
@@ -43,6 +44,7 @@ export function SettingsPage() {
             {view === "language" ? <LanguageView /> : null}
             {view === "qa" ? <QAView /> : null}
             {view === "logout" ? <LogoutView username={profile.userName} /> : null}
+            {view === "delete-account" ? <DeleteAccountView username={profile.userName} /> : null}
           </>
         )}
       </div>

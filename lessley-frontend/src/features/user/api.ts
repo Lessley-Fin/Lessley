@@ -50,3 +50,7 @@ export async function patchMyProfile(body: PatchMeRequest): Promise<PatchMeRespo
 export async function initOpenFinanceConnection(): Promise<ConnectionInitResponse> {
   return apiFetch<ConnectionInitResponse>("/api/v1/User/init", { method: "POST" })
 }
+
+export async function deleteMyAccount(): Promise<{ deleted: boolean }> {
+  return apiFetch<{ deleted: boolean }>("/api/v1/User/me", { method: "DELETE" })
+}

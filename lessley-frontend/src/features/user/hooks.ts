@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuthStore } from "@/features/auth/store"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchMyProfile, initOpenFinanceConnection, patchMyProfile } from "./api"
+import { deleteMyAccount, fetchMyProfile, initOpenFinanceConnection, patchMyProfile } from "./api"
 
 export function useMyProfile() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -39,5 +39,11 @@ export function useUpdateMyProfile() {
 export function useInitOpenFinance() {
   return useMutation({
     mutationFn: initOpenFinanceConnection,
+  })
+}
+
+export function useDeleteMyAccount() {
+  return useMutation({
+    mutationFn: deleteMyAccount,
   })
 }

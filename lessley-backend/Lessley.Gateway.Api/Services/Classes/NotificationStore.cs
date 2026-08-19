@@ -73,4 +73,16 @@ public class NotificationRepository : INotificationRepository
               .Where(n => n.UserId == userId && n.Type == "calc")
               .OrderByDescending(n => n.SentAt)
               .ToListAsync(ct);
+
+    public async Task DeleteAllForUserAsync(string userId, CancellationToken ct = default)
+    {
+        var notifications = await _db.Notifications
+            .Where(n => n.UserId == userId)
+            .ToListAsync(ct);
+
+        if (notifications.Count == 0) return;
+
+        _db.Notifications.RemoveRange(notifications);
+        await _db.SaveChangesAsync(ct);
+    }
 }

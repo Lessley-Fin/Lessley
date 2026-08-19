@@ -135,6 +135,11 @@
       "stepBanking": "בנקאות",
       "registrationFailed": "ההרשמה נכשלה. נסו שוב.",
       "creatingAccount": "מתבצעת יצירת חשבון...",
+      "welcome": {
+        "title": "ברוכים הבאים, {{username}}!",
+        "body": "החשבון שלכם מוכן. בואו נחבר כרטיס כדי להתחיל למצוא לכם חיסכון.",
+        "continue": "בואו נתחיל"
+      },
       "account": {
         "title": "יצירת חשבון",
         "username": "שם משתמש",
@@ -521,7 +526,8 @@
       "tabRole": "תפקיד",
       "tabTags": "תגיות",
       "tabNotifyUser": "התראה למשתמש",
-      "tabBroadcast": "שידור"
+      "tabBroadcast": "שידור",
+      "tabBroadcastAll": "התראה לכולם"
     },
     "common": {
       "userEmail": "אימייל משתמש",
@@ -549,6 +555,13 @@
       "success": "ההתראה שודרה",
       "broadcasting": "משדר...",
       "broadcastToGroup": "שידור לקבוצה"
+    },
+    "notifyAll": {
+      "heading": "שידור התראה לכל המשתמשים",
+      "failed": "שידור ההתראה נכשל.",
+      "success": "ההתראה שודרה לכולם",
+      "broadcasting": "משדר...",
+      "broadcastToAll": "שליחה לכל המשתמשים"
     },
     "notifyUser": {
       "heading": "שליחת התראה למשתמש",
@@ -686,6 +699,8 @@
       "qaDesc": "איך לסלי עובדת",
       "logoutTitle": "התנתקות",
       "logoutDesc": "סיום ההפעלה הנוכחית",
+      "deleteAccountTitle": "מחיקת חשבון",
+      "deleteAccountDesc": "הסרה קבועה של החשבון שלכם",
       "adminConsoleTitle": "מסוף ניהול",
       "adminConsoleDesc": "תפקידים, תגיות והתראות"
     },
@@ -704,6 +719,16 @@
       "signedInAs": "מחוברים בתור {{username}}",
       "notice": "התנתקות שומרת על המידע שלכם בטוח במכשיר הזה — המועדונים, ההעדפות והכרטיסים המחוברים נשארים בדיוק כפי שהם.",
       "signOut": "התנתקות"
+    },
+    "deleteAccount": {
+      "signedInAs": "מחוברים בתור {{username}}",
+      "notice": "מחיקת החשבון תסיר לצמיתות את הפרופיל, הכרטיסים המחוברים, ההתראות וההעדפות שלכם. לא ניתן לבטל פעולה זו.",
+      "deleteButton": "מחיקת החשבון שלי",
+      "confirmTitle": "למחוק את החשבון שלכם?",
+      "confirmBody": "פעולה זו היא סופית ולא ניתנת לביטול. כל המידע שלכם יוסר.",
+      "confirmButton": "כן, מחקו את החשבון שלי",
+      "deleting": "מוחק...",
+      "error": "מחיקת החשבון נכשלה. נסו שוב."
     },
     "preferences": {
       "loyaltyClubs": "מועדוני נאמנות",

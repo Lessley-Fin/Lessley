@@ -39,4 +39,16 @@ public class VerificationCodeRepository : IVerificationCodeRepository
         _db.VerificationCodes.Remove(code);
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task DeleteAllForUserAsync(string userId, CancellationToken ct = default)
+    {
+        var codes = await _db.VerificationCodes
+            .Where(c => c.UserId == userId)
+            .ToListAsync(ct);
+
+        if (codes.Count == 0) return;
+
+        _db.VerificationCodes.RemoveRange(codes);
+        await _db.SaveChangesAsync(ct);
+    }
 }

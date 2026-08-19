@@ -1,4 +1,4 @@
-import { ChevronRight, Globe, HelpCircle, Landmark, LogOut, Shield, SlidersHorizontal, User } from "lucide-react"
+import { ChevronRight, Globe, HelpCircle, Landmark, LogOut, Shield, SlidersHorizontal, Trash2, User } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
@@ -28,8 +28,9 @@ export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
     { id: "banking", icon: Landmark, title: t("settings.menu.bankingTitle"), desc: t("settings.menu.bankingDesc") },
     { id: "language", icon: Globe, title: t("settings.menu.languageTitle"), desc: currentLanguageName },
     { id: "qa", icon: HelpCircle, title: t("settings.menu.qaTitle"), desc: t("settings.menu.qaDesc") },
+    { id: "delete-account", icon: Trash2, title: t("settings.menu.deleteAccountTitle"), desc: t("settings.menu.deleteAccountDesc"), danger: true },
     { id: "logout", icon: LogOut, title: t("settings.menu.logoutTitle"), desc: t("settings.menu.logoutDesc") },
-  ] as const satisfies readonly { id: Exclude<SettingsView, "menu">; icon: typeof User; title: string; desc: string }[]
+  ] as const satisfies readonly { id: Exclude<SettingsView, "menu">; icon: typeof User; title: string; desc: string; danger?: boolean }[]
 
   return (
     <>
@@ -51,11 +52,11 @@ export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
               onClick={() => onNavigate(item.id)}
               className="flex w-full items-center gap-3 border-b border-border p-4 text-start last:border-0 hover:bg-secondary"
             >
-              <span className="flex size-9 items-center justify-center rounded-full bg-secondary">
-                <item.icon className="size-4 text-primary" aria-hidden />
+              <span className={`flex size-9 items-center justify-center rounded-full ${"danger" in item && item.danger ? "bg-destructive/10" : "bg-secondary"}`}>
+                <item.icon className={`size-4 ${"danger" in item && item.danger ? "text-destructive" : "text-primary"}`} aria-hidden />
               </span>
               <div className="flex-1">
-                <p className="text-sm font-semibold">{item.title}</p>
+                <p className={`text-sm font-semibold ${"danger" in item && item.danger ? "text-destructive" : ""}`}>{item.title}</p>
                 <p className="text-xs text-muted-foreground">{item.desc}</p>
               </div>
               <ChevronRight className="size-4 text-muted-foreground rtl:rotate-180" aria-hidden />

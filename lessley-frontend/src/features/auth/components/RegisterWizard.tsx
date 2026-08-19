@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
 import { StepIndicator } from "@/components/shared/StepIndicator"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form } from "@/components/ui/form"
 import { useAuthStore } from "@/features/auth/store"
 import { ROUTES } from "@/lib/routes"
@@ -50,6 +52,7 @@ export function RegisterWizard() {
   // means starting over — which is exactly the intended behaviour.
   const [registrationToken, setRegistrationToken] = useState("")
   const [policy, setPolicy] = useState<VerificationPolicy | undefined>()
+  const [showWelcome, setShowWelcome] = useState(false)
   const navigate = useNavigate()
   const applyAuthProfile = useApplyAuthProfile()
 
@@ -153,6 +156,7 @@ export function RegisterWizard() {
         email: profile.email ?? values.email,
       })
       setStep(STEP.BANKING)
+      setShowWelcome(true)
     } catch (error) {
       reportError(error, "auth.register.registrationFailed")
     } finally {
@@ -213,6 +217,20 @@ export function RegisterWizard() {
           {step === STEP.BANKING ? <BankingStep onFinish={handleFinish} /> : null}
         </Form>
       </div>
+
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("auth.register.welcome.title", { username: form.getValues().userName })}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("auth.register.welcome.body")}</p>
+          <DialogFooter>
+            <Button type="button" variant="hero" size="xl" onClick={() => setShowWelcome(false)}>
+              {t("auth.register.welcome.continue")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

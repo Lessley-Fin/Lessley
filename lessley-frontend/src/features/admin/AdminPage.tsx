@@ -5,6 +5,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 import { getDirection } from "@/lib/i18n/config"
 import { cn } from "@/lib/utils"
 import { ChangeRoleSlide } from "./components/ChangeRoleSlide"
+import { NotifyAllSlide } from "./components/NotifyAllSlide"
 import { NotifyGroupSlide } from "./components/NotifyGroupSlide"
 import { NotifyUserSlide } from "./components/NotifyUserSlide"
 import { UpdateTagsSlide } from "./components/UpdateTagsSlide"
@@ -17,6 +18,7 @@ export function AdminPage() {
     t("admin.page.tabTags"),
     t("admin.page.tabNotifyUser"),
     t("admin.page.tabBroadcast"),
+    t("admin.page.tabBroadcastAll"),
   ]
   const [api, setApi] = useState<CarouselApi>()
   const [selected, setSelected] = useState(0)
@@ -67,6 +69,9 @@ export function AdminPage() {
           </CarouselItem>
           <CarouselItem>
             <NotifyGroupSlide />
+          </CarouselItem>
+          <CarouselItem>
+            <NotifyAllSlide />
           </CarouselItem>
         </CarouselContent>
       </Carousel>

@@ -13,17 +13,26 @@ public class UserService : IUserService
     private readonly IUserTagService _userTagService;
     private readonly IPersonalizationService _personalizationService;
     private readonly ApplicationDbContext _db;
+    private readonly IAuthSessionService _authSessionService;
+    private readonly INotificationRepository _notificationRepository;
+    private readonly IVerificationCodeRepository _verificationCodeRepository;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
         IPersonalizationService personalizationService,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        IAuthSessionService authSessionService,
+        INotificationRepository notificationRepository,
+        IVerificationCodeRepository verificationCodeRepository)
     {
-        _userManager            = userManager;
-        _userTagService         = userTagService;
-        _personalizationService = personalizationService;
-        _db                     = db;
+        _userManager                = userManager;
+        _userTagService              = userTagService;
+        _personalizationService      = personalizationService;
+        _db                          = db;
+        _authSessionService          = authSessionService;
+        _notificationRepository      = notificationRepository;
+        _verificationCodeRepository  = verificationCodeRepository;
     }
 
     public async Task<UserOperationResult> UpdateAsync(
@@ -126,5 +135,24 @@ public class UserService : IUserService
             mutedTags  = user.MutedTags ?? new List<string>(),
             matchLevel = user.MatchingScore.ToMatchLevel(),
         });
+    }
+
+    public async Task<UserOperationResult> DeleteAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null) return UserOperationResult.NotFound();
+
+        // Refresh tokens are keyed by the Identity user.Id, notifications by email — pass the
+        // right key to each, and delete the Identity user last so a failure partway through
+        // leaves the account still resolvable/retryable rather than orphaning rows.
+        await _authSessionService.RevokeAllRefreshTokensAsync(user.Id, ct);
+        await _notificationRepository.DeleteAllForUserAsync(email, ct);
+        await _verificationCodeRepository.DeleteAllForUserAsync(user.Id, ct);
+
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+            return UserOperationResult.BadRequest(result.Errors);
+
+        return UserOperationResult.Ok(new { deleted = true });
     }
 }
