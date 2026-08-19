@@ -478,17 +478,6 @@
       "rankedFrom_two": "דורג מתוך שני דילים ב-{{store}}",
       "rankedFrom_other": "דורג מתוך {{count}} דילים ב-{{store}}"
     },
-    "engineInfoDialog": {
-      "ariaLabel": "איך המנוע עובד",
-      "title": "מה תקבלו",
-      "subtitle": "איך המנוע עובד",
-      "highlight1Title": "חיסכון משולב",
-      "highlight1Desc": "שילוב קופון חנות עם הטבת הכרטיס הנכונה בצעד אחד.",
-      "highlight2Title": "התאמת מוצר מדויקת",
-      "highlight2Desc": "אנחנו מתמחרים את הפריט שאתם באמת רוצים, לא פריט דומה.",
-      "highlight3Title": "קופונים חולפים",
-      "highlight3Desc": "נאספים מקמעונאים ופורומים דקות ספורות אחרי שהם מופיעים."
-    },
     "winningStack": {
       "title": "השילוב הטוב ביותר",
       "subtitle_one": "{{store}} · דיל אחד הופעל",
