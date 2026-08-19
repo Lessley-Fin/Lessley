@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 import { DealFinderTab } from "./components/DealFinderTab"
-import { EngineInfoDialog } from "./components/EngineInfoDialog"
 import { OptimizeTab } from "./components/OptimizeTab"
 
 type Tab = "optimize" | "deal-finder"
@@ -23,16 +22,13 @@ export function OptimizerPage() {
 
   return (
     <div className="space-y-4 pb-2">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {tab === "optimize" ? t("optimizer.page.priceOptimizerTitle") : t("optimizer.page.dealFinderTitle")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {tab === "optimize" ? t("optimizer.page.priceOptimizerSubtitle") : t("optimizer.page.dealFinderSubtitle")}
-          </p>
-        </div>
-        <EngineInfoDialog />
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {tab === "optimize" ? t("optimizer.page.priceOptimizerTitle") : t("optimizer.page.dealFinderTitle")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {tab === "optimize" ? t("optimizer.page.priceOptimizerSubtitle") : t("optimizer.page.dealFinderSubtitle")}
+        </p>
       </div>
 
       <div className="flex gap-1 rounded-full border border-border bg-card p-1">
