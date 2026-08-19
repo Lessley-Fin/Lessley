@@ -40,7 +40,7 @@ function storeLanguage(language: SupportedLanguage) {
 function getInitialLanguage(): SupportedLanguage {
   const stored = readStoredLanguage()
   if (isSupportedLanguage(stored)) return stored
-  return "en"
+  return "he"
 }
 
 const initialLanguage = getInitialLanguage()
@@ -48,7 +48,7 @@ const initialLanguage = getInitialLanguage()
 void i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, he: { translation: he } },
   lng: initialLanguage,
-  fallbackLng: "en",
+  fallbackLng: "he",
   interpolation: { escapeValue: false },
   returnNull: false,
 })
