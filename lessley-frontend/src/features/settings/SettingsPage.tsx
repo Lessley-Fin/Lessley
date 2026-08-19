@@ -9,6 +9,7 @@ import { LanguageView } from "./components/LanguageView"
 import { LogoutView } from "./components/LogoutView"
 import { PreferencesView } from "./components/PreferencesView"
 import { ProfileView } from "./components/ProfileView"
+import { QAView } from "./components/QAView"
 import { SettingsMenu } from "./components/SettingsMenu"
 import type { SettingsView } from "./types"
 
@@ -40,6 +41,7 @@ export function SettingsPage() {
             {view === "preferences" ? <PreferencesView profile={profile} /> : null}
             {view === "banking" ? <BankingView /> : null}
             {view === "language" ? <LanguageView /> : null}
+            {view === "qa" ? <QAView /> : null}
             {view === "logout" ? <LogoutView username={profile.userName} /> : null}
           </>
         )}
