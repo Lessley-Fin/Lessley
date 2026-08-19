@@ -93,6 +93,36 @@ public class SendNotificationService : ISendNotificationService
         await PublishDispatchedEventAsync("group:" + groupTag, "group", userEmails.Count, sentAt, ct);
     }
 
+    public async Task<int> SendToAllAsync(string message, string? dealId = null, CancellationToken ct = default)
+    {
+        var sentAt  = DateTime.UtcNow;
+        var payload = new { timestamp = sentAt, message, dealId, type = "all" };
+
+        await _hubContext.Clients.All.SendAsync("DealBroadcastNotification", payload, ct);
+
+        var userEmails = await _userManager.Users
+            .Select(u => u.Email!)
+            .ToListAsync(ct);
+
+        if (userEmails.Count > 0)
+        {
+            var notifications = userEmails.Select(email => new Notification
+            {
+                UserId  = email,
+                Message = message,
+                DealId  = dealId,
+                Type    = "all",
+                SentAt  = sentAt,
+            });
+            await _notificationRepository.SaveManyAsync(notifications, ct);
+        }
+
+        _logger.LogInformation(
+            "DealBroadcastNotification sent to all users — {Count} notification(s) created", userEmails.Count);
+        await PublishDispatchedEventAsync("all", "all", userEmails.Count, sentAt, ct);
+        return userEmails.Count;
+    }
+
     private async Task PublishDispatchedEventAsync(string notificationId, string type, int recipientCount, DateTime sentAt, CancellationToken ct)
     {
         var requestId = _httpContextAccessor.HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();

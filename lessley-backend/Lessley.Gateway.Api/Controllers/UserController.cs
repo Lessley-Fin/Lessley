@@ -58,6 +58,17 @@ public class UserController : ControllerBase
         return MapResult(result);
     }
 
+    /// <summary>Permanently deletes the authenticated user's account and all data owned by them.</summary>
+    [HttpDelete("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteMyAccount(CancellationToken ct)
+    {
+        var result = await _userService.DeleteAsync(CallerEmail(), ct);
+        return MapResult(result);
+    }
+
     private string CallerEmail() => User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
 
     private IActionResult MapResult(UserOperationResult result) => result switch

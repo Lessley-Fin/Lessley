@@ -50,3 +50,11 @@ export async function sendNotificationToGroup(
     body: JSON.stringify(payload),
   })
 }
+
+export async function sendNotificationToAll(payload: SendNotificationPayload): Promise<unknown> {
+  return apiFetch("/api/v1/admin/notifications/broadcast", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+}

@@ -13,4 +13,6 @@ public interface IVerificationCodeRepository
     Task UpdateAsync(VerificationCode code, CancellationToken ct = default);
 
     Task DeleteAsync(VerificationCode code, CancellationToken ct = default);
+
+    Task DeleteAllForUserAsync(string userId, CancellationToken ct = default);
 }

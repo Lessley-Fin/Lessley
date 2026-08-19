@@ -136,6 +136,11 @@
       "stepBanking": "Banking",
       "registrationFailed": "Registration failed. Please try again.",
       "creatingAccount": "Creating account...",
+      "welcome": {
+        "title": "Welcome, {{username}}!",
+        "body": "Your account is ready. Let's connect a card to start finding you savings.",
+        "continue": "Let's go"
+      },
       "account": {
         "title": "Create account",
         "username": "Username",
@@ -513,7 +518,8 @@
       "tabRole": "Role",
       "tabTags": "Tags",
       "tabNotifyUser": "Notify user",
-      "tabBroadcast": "Broadcast"
+      "tabBroadcast": "Broadcast",
+      "tabBroadcastAll": "Notify all"
     },
     "common": {
       "userEmail": "User email",
@@ -541,6 +547,13 @@
       "success": "Notification broadcast",
       "broadcasting": "Broadcasting...",
       "broadcastToGroup": "Broadcast to group"
+    },
+    "notifyAll": {
+      "heading": "Broadcast notification to all users",
+      "failed": "Failed to broadcast notification.",
+      "success": "Notification broadcast to everyone",
+      "broadcasting": "Broadcasting...",
+      "broadcastToAll": "Notify all users"
     },
     "notifyUser": {
       "heading": "Send notification to user",
@@ -677,6 +690,8 @@
       "qaDesc": "How Lessley works",
       "logoutTitle": "Log out",
       "logoutDesc": "End this session",
+      "deleteAccountTitle": "Delete account",
+      "deleteAccountDesc": "Permanently remove your account",
       "adminConsoleTitle": "Admin console",
       "adminConsoleDesc": "Roles, tags and notifications"
     },
@@ -695,6 +710,16 @@
       "signedInAs": "Signed in as {{username}}",
       "notice": "Signing out keeps your data safe on this device — your clubs, preferences and connected cards stay exactly as they are.",
       "signOut": "Sign out"
+    },
+    "deleteAccount": {
+      "signedInAs": "Signed in as {{username}}",
+      "notice": "Deleting your account permanently removes your profile, connected cards, notifications and preferences. This cannot be undone.",
+      "deleteButton": "Delete my account",
+      "confirmTitle": "Delete your account?",
+      "confirmBody": "This action is permanent and cannot be undone. All your data will be removed.",
+      "confirmButton": "Yes, delete my account",
+      "deleting": "Deleting...",
+      "error": "Failed to delete your account. Please try again."
     },
     "preferences": {
       "loyaltyClubs": "Loyalty clubs",

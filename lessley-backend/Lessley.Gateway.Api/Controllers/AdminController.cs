@@ -155,6 +155,18 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Notification sent to group successfully", group = tag });
     }
 
+    /// <summary>Broadcasts a notification to every user. Admin only.</summary>
+    [HttpPost("notifications/broadcast")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> SendNotificationToAll([FromBody] SendNotificationDto dto)
+    {
+        var recipientCount = await _sendNotificationService.SendToAllAsync(dto.Message, dto.DealId);
+        return Ok(new { message = "Notification broadcast to all users", recipientCount });
+    }
+
     private IActionResult MapResult(UserOperationResult result) => result switch
     {
         UserOperationResult.NotFoundResult      => NotFound(new { error = "User not found" }),

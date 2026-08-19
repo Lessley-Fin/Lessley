@@ -104,6 +104,7 @@ export function useSignalR() {
 
     connection.on("DealUserNotification", handleIncoming)
     connection.on("DealGroupNotification", handleIncoming)
+    connection.on("DealBroadcastNotification", handleIncoming)
     connection.on("CalcNotification", handleIncoming)
     connection.on("CategoriesUpdated", refreshCategories)
 
@@ -124,6 +125,7 @@ export function useSignalR() {
     return () => {
       connection.off("DealUserNotification")
       connection.off("DealGroupNotification")
+      connection.off("DealBroadcastNotification")
       connection.off("CalcNotification")
       connection.off("CategoriesUpdated")
       clearTimeout(advanceTimeoutId)

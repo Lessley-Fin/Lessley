@@ -24,4 +24,7 @@ public interface IUserService
     /// <summary>Returns the user's tags from the DB, or null if the user does not exist.</summary>
     Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default);
     Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default);
+
+    /// <summary>Permanently deletes the user and all data owned by them.</summary>
+    Task<UserOperationResult> DeleteAsync(string email, CancellationToken ct = default);
 }
