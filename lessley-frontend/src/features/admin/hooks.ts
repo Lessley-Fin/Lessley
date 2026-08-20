@@ -3,6 +3,7 @@ import { queryKeys } from "@/lib/query-keys"
 import {
   changeUserRole,
   fetchMccCategories,
+  sendNotificationToAll,
   sendNotificationToGroup,
   sendNotificationToUser,
   updateUserTags,
@@ -54,5 +55,11 @@ export function useSendNotificationToGroup() {
       message: string
       dealId?: string
     }) => sendNotificationToGroup(tag, { message, dealId: dealId || undefined }),
+  })
+}
+
+export function useSendNotificationToAll() {
+  return useMutation({
+    mutationFn: ({ message }: { message: string }) => sendNotificationToAll({ message }),
   })
 }

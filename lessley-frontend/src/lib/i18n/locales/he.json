@@ -522,7 +522,8 @@
       "tabRole": "תפקיד",
       "tabTags": "תגיות",
       "tabNotifyUser": "התראה למשתמש",
-      "tabBroadcast": "שידור"
+      "tabBroadcast": "התראה לקבוצה",
+      "tabBroadcastAll": "התראה לכולם"
     },
     "common": {
       "userEmail": "אימייל משתמש",
@@ -550,6 +551,13 @@
       "success": "ההתראה שודרה",
       "broadcasting": "משדר...",
       "broadcastToGroup": "שידור לקבוצה"
+    },
+    "notifyAll": {
+      "heading": "שידור התראה לכל המשתמשים",
+      "failed": "שידור ההתראה נכשל.",
+      "success": "ההתראה שודרה לכולם",
+      "broadcasting": "משדר...",
+      "broadcastToAll": "שליחה לכל המשתמשים"
     },
     "notifyUser": {
       "heading": "שליחת התראה למשתמש",

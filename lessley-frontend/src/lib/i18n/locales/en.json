@@ -513,7 +513,8 @@
       "tabRole": "Role",
       "tabTags": "Tags",
       "tabNotifyUser": "Notify user",
-      "tabBroadcast": "Broadcast"
+      "tabBroadcast": "Notify group",
+      "tabBroadcastAll": "Notify all"
     },
     "common": {
       "userEmail": "User email",
@@ -541,6 +542,13 @@
       "success": "Notification broadcast",
       "broadcasting": "Broadcasting...",
       "broadcastToGroup": "Broadcast to group"
+    },
+    "notifyAll": {
+      "heading": "Broadcast notification to all users",
+      "failed": "Failed to broadcast notification.",
+      "success": "Notification broadcast to everyone",
+      "broadcasting": "Broadcasting...",
+      "broadcastToAll": "Notify all users"
     },
     "notifyUser": {
       "heading": "Send notification to user",
