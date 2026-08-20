@@ -60,7 +60,6 @@ export function useSendNotificationToGroup() {
 
 export function useSendNotificationToAll() {
   return useMutation({
-    mutationFn: ({ message, dealId }: { message: string; dealId?: string }) =>
-      sendNotificationToAll({ message, dealId: dealId || undefined }),
+    mutationFn: ({ message }: { message: string }) => sendNotificationToAll({ message }),
   })
 }

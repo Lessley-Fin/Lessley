@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next"
 
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useSendNotificationToAll } from "../hooks"
 
@@ -15,17 +14,15 @@ const TEXTAREA_CLASS =
 export function NotifyAllSlide() {
   const { t } = useTranslation()
   const [message, setMessage] = useState("")
-  const [dealId, setDealId] = useState("")
   const mutation = useSendNotificationToAll()
 
   function submit(e: FormEvent) {
     e.preventDefault()
     mutation.mutate(
-      { message: message.trim(), dealId: dealId.trim() },
+      { message: message.trim() },
       {
         onSuccess: () => {
           setMessage("")
-          setDealId("")
         },
       },
     )
@@ -54,18 +51,6 @@ export function NotifyAllSlide() {
           required
           rows={3}
           className={TEXTAREA_CLASS}
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="admin-broadcast-all-deal">
-          {t("admin.common.dealId")} <span className="text-muted-foreground">{t("admin.common.optional")}</span>
-        </Label>
-        <Input
-          id="admin-broadcast-all-deal"
-          placeholder="deal-abc-123"
-          value={dealId}
-          onChange={(e) => setDealId(e.target.value)}
-          className="h-12 rounded-2xl"
         />
       </div>
       <ErrorAlert

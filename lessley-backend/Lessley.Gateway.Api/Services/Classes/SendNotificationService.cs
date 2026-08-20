@@ -93,12 +93,12 @@ public class SendNotificationService : ISendNotificationService
         await PublishDispatchedEventAsync("group:" + groupTag, "group", userEmails.Count, sentAt, ct);
     }
 
-    public async Task<int> SendToAllAsync(string message, string? dealId = null, CancellationToken ct = default)
+    public async Task<int> SendToAllAsync(string message, CancellationToken ct = default)
     {
         var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, dealId, type = "all" };
+        var payload = new { timestamp = sentAt, message, type = "all" };
 
-        await _hubContext.Clients.All.SendAsync("DealBroadcastNotification", payload, ct);
+        await _hubContext.Clients.All.SendAsync("SystemBroadcastNotification", payload, ct);
 
         var userEmails = await _userManager.Users
             .Select(u => u.Email!)
@@ -110,7 +110,6 @@ public class SendNotificationService : ISendNotificationService
             {
                 UserId  = email,
                 Message = message,
-                DealId  = dealId,
                 Type    = "all",
                 SentAt  = sentAt,
             });
@@ -118,7 +117,7 @@ public class SendNotificationService : ISendNotificationService
         }
 
         _logger.LogInformation(
-            "DealBroadcastNotification sent to all users — {Count} notification(s) created", userEmails.Count);
+            "SystemBroadcastNotification sent to all users — {Count} notification(s) created", userEmails.Count);
         await PublishDispatchedEventAsync("all", "all", userEmails.Count, sentAt, ct);
         return userEmails.Count;
     }

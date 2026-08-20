@@ -161,9 +161,9 @@ public class AdminController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> SendNotificationToAll([FromBody] SendNotificationDto dto)
+    public async Task<IActionResult> SendNotificationToAll([FromBody] BroadcastNotificationDto dto)
     {
-        var recipientCount = await _sendNotificationService.SendToAllAsync(dto.Message, dto.DealId);
+        var recipientCount = await _sendNotificationService.SendToAllAsync(dto.Message);
         return Ok(new { message = "Notification broadcast to all users", recipientCount });
     }
 

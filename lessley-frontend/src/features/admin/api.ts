@@ -51,7 +51,7 @@ export async function sendNotificationToGroup(
   })
 }
 
-export async function sendNotificationToAll(payload: SendNotificationPayload): Promise<unknown> {
+export async function sendNotificationToAll(payload: { message: string }): Promise<unknown> {
   return apiFetch("/api/v1/admin/notifications/broadcast", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
