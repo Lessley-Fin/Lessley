@@ -513,7 +513,7 @@
       "tabRole": "Role",
       "tabTags": "Tags",
       "tabNotifyUser": "Notify user",
-      "tabBroadcast": "Broadcast",
+      "tabBroadcast": "Notify group",
       "tabBroadcastAll": "Notify all"
     },
     "common": {
