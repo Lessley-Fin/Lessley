@@ -45,6 +45,12 @@ function getInitialLanguage(): SupportedLanguage {
 
 const initialLanguage = getInitialLanguage()
 
+// First launch — nothing stored yet. Persist the default so it stays the
+// user's language even if the browser's default later changes.
+if (readStoredLanguage() === null) {
+  storeLanguage(initialLanguage)
+}
+
 void i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, he: { translation: he } },
   lng: initialLanguage,
