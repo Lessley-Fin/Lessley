@@ -68,21 +68,65 @@
     background-color: #ffffff;
   }
 
-  input[type="password"]::-ms-reveal,
-  input[type="password"]::-ms-clear {
-    display: none;
-  }
+}
 
-  input[type="password"]::-webkit-textfield-decoration-container,
-  input[type="password"]::-webkit-credentials-auto-fill-button,
-  input[type="password"]::-webkit-strong-password-auto-fill-button,
-  input[type="password"]::-webkit-contacts-auto-fill-button {
-    visibility: hidden;
-    display: none !important;
-    pointer-events: none;
-    position: absolute;
-    right: 0;
-  }
+/* Masking for components/ui/password-input.tsx. The field is a plain text input so that
+   iOS/Android stop echoing the last typed character — an input[type=password] always gets
+   that echo — and this hides the characters instead. Kept at top level rather than in a
+   Tailwind layer so a utility class on the input can never win against it.
+
+   Firefox before 141 does not support this property; PasswordInput feature-detects and
+   falls back to a real password field there, so this class is never applied blind. */
+.password-masked {
+  -webkit-text-security: disc;
+}
+
+/* Native reveal / autofill affordances that browsers inject into password fields.
+   Still needed for the feature-detect fallback above, which does use type="password".
+   The app has its own eye toggle (components/ui/password-input.tsx); the vendor ones
+   are removed so a stray tap can't unmask the field.
+
+   Each pseudo-element gets its OWN rule on purpose. CSS throws away a whole selector
+   list if any single selector in it is unrecognised, and no engine below knows all of
+   these (-ms-* is Edge, the -auto-fill-button ones are WebKit). Grouped, the rule was
+   dropped everywhere except the one browser that happened to know every selector.
+
+   -webkit-textfield-decoration-container is deliberately NOT hidden: in WebKit it is
+   the flex wrapper around the input's inner editor, so display:none on it takes the
+   typed text with it. */
+input[type="password"]::-ms-reveal {
+  display: none !important;
+}
+
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  width: 0;
+  margin: 0;
+}
+
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  width: 0;
+  margin: 0;
+}
+
+input[type="password"]::-webkit-contacts-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  width: 0;
+  margin: 0;
 }
 
 @keyframes slideDown {
