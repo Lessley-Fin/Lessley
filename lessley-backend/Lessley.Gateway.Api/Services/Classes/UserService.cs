@@ -12,18 +12,21 @@ public class UserService : IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserTagService _userTagService;
     private readonly IPersonalizationService _personalizationService;
+    private readonly ISendNotificationService _sendNotificationService;
     private readonly ApplicationDbContext _db;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
         IPersonalizationService personalizationService,
+        ISendNotificationService sendNotificationService,
         ApplicationDbContext db)
     {
-        _userManager            = userManager;
-        _userTagService         = userTagService;
-        _personalizationService = personalizationService;
-        _db                     = db;
+        _userManager             = userManager;
+        _userTagService          = userTagService;
+        _personalizationService  = personalizationService;
+        _sendNotificationService = sendNotificationService;
+        _db                      = db;
     }
 
     public async Task<UserOperationResult> UpdateAsync(
@@ -125,6 +128,25 @@ public class UserService : IUserService
             tags       = user.Tags     ?? new List<string>(),
             mutedTags  = user.MutedTags ?? new List<string>(),
             matchLevel = user.MatchingScore.ToMatchLevel(),
+            pendingWelcomeNotification = user.WelcomeNotificationSent != true,
         });
+    }
+
+    public async Task<UserOperationResult> SendWelcomeNotificationAsync(string email, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null) return UserOperationResult.NotFound();
+
+        if (user.WelcomeNotificationSent == true)
+            return UserOperationResult.Ok(new { sent = false });
+
+        await _sendNotificationService.SendToUserAsync(user.Email!, user.UserName ?? "", dealId: null, type: "welcome", ct: ct);
+
+        user.WelcomeNotificationSent = true;
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return UserOperationResult.BadRequest(result.Errors);
+
+        return UserOperationResult.Ok(new { sent = true });
     }
 }

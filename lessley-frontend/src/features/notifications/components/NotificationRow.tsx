@@ -41,8 +41,12 @@ export function NotificationRow({ item, onRead }: NotificationRowProps) {
             <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} aria-hidden />
           ) : null}
         </div>
-        <p className="mt-2 text-[15px] font-semibold">{t(`notifications.title.${notificationTitleKey(item)}`)}</p>
-        <p className="text-sm text-muted-foreground">{item.message}</p>
+        <p className="mt-2 text-[15px] font-semibold">
+          {item.type === "welcome"
+            ? t("notifications.title.welcome", { username: item.message })
+            : t(`notifications.title.${notificationTitleKey(item)}`)}
+        </p>
+        {item.type !== "welcome" ? <p className="text-sm text-muted-foreground">{item.message}</p> : null}
       </button>
       {expanded && hasDetail ? <NotificationDetail item={item} /> : null}
     </li>

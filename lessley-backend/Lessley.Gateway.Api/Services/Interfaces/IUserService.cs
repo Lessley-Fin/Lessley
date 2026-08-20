@@ -24,4 +24,6 @@ public interface IUserService
     /// <summary>Returns the user's tags from the DB, or null if the user does not exist.</summary>
     Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default);
     Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default);
+    /// <summary>Sends the one-time "welcome" notification for a newly registered user. No-op if already sent.</summary>
+    Task<UserOperationResult> SendWelcomeNotificationAsync(string email, CancellationToken ct = default);
 }

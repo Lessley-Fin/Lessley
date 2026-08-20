@@ -37,10 +37,10 @@ public class SendNotificationService : ISendNotificationService
         _logger                 = logger;
     }
 
-    public async Task<int> SendToUserAsync(string userId, string message, string? dealId = null, CancellationToken ct = default)
+    public async Task<int> SendToUserAsync(string userId, string message, string? dealId = null, string type = "user", CancellationToken ct = default)
     {
         var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, dealId, type = "user" };
+        var payload = new { timestamp = sentAt, message, dealId, type };
 
         var connections = _connectionManager.GetConnections(userId).ToList();
         foreach (var connectionId in connections)
@@ -51,12 +51,12 @@ public class SendNotificationService : ISendNotificationService
             UserId  = userId,
             Message = message,
             DealId  = dealId,
-            Type    = "user",
+            Type    = type,
             SentAt  = sentAt,
         }, ct);
 
         _logger.LogInformation("DealUserNotification sent to user {UserId} ({Count} live connections)", userId, connections.Count);
-        await PublishDispatchedEventAsync("user:" + userId, "user", connections.Count, sentAt, ct);
+        await PublishDispatchedEventAsync("user:" + userId, type, connections.Count, sentAt, ct);
         return connections.Count;
     }
 

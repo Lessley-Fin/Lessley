@@ -643,13 +643,15 @@
       "Analysis": "Analysis",
       "Clubs": "Clubs",
       "Deal": "Deal",
-      "System": "System"
+      "System": "System",
+      "Welcome": "Welcome"
     },
     "title": {
       "dealMatch": "New deal match",
       "clubMatch": "New club match",
       "analysisReady": "Analysis ready",
-      "systemUpdate": "System update"
+      "systemUpdate": "System update",
+      "welcome": "Welcome to Lessley, {{username}}!"
     },
     "detail": {
       "missedSavingsAnalysis": "Missed savings analysis",

@@ -8,4 +8,5 @@ public class ApplicationUser : IdentityUser
     public List<string>? MutedTags { get; set; } = new();
     public List<string>? Clubs { get; set; } = new();
     public double? MatchingScore { get; set; }
+    public bool? WelcomeNotificationSent { get; set; }
 }

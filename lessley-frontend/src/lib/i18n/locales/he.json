@@ -653,13 +653,15 @@
       "Analysis": "ניתוח",
       "Clubs": "מועדונים",
       "Deal": "דיל",
-      "System": "מערכת"
+      "System": "מערכת",
+      "Welcome": "ברוכים הבאים"
     },
     "title": {
       "dealMatch": "התאמת דיל חדשה",
       "clubMatch": "התאמת מועדון חדשה",
       "analysisReady": "הניתוח מוכן",
-      "systemUpdate": "עדכון מערכת"
+      "systemUpdate": "עדכון מערכת",
+      "welcome": "ברוכים הבאים ל-Lessley, {{username}}!"
     },
     "detail": {
       "missedSavingsAnalysis": "ניתוח חיסכון שפוספס",

@@ -18,6 +18,7 @@ export function NotificationToast({ type, message, dealId, onView, onDismiss }: 
   const { t } = useTranslation()
   const [exiting, setExiting] = useState(false)
   const onDismissRef = useRef(onDismiss)
+  const displayMessage = type === "welcome" ? t("notifications.title.welcome", { username: message }) : message
 
   useEffect(() => {
     onDismissRef.current = onDismiss
@@ -65,11 +66,15 @@ export function NotificationToast({ type, message, dealId, onView, onDismiss }: 
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-secondary-foreground">
-                {type === "group" ? t("notifications.toast.group") : t("notifications.toast.direct")}
+                {type === "welcome"
+                  ? t("notifications.badge.Welcome")
+                  : type === "group"
+                    ? t("notifications.toast.group")
+                    : t("notifications.toast.direct")}
               </span>
               <span className="text-[10px] text-muted-foreground">{t("notifications.toast.justNow")}</span>
             </div>
-            <p className="text-sm font-medium leading-relaxed text-foreground">{message}</p>
+            <p className="text-sm font-medium leading-relaxed text-foreground">{displayMessage}</p>
             {dealId ? (
               <p className="truncate text-xs text-muted-foreground">
                 {t("notifications.toast.deal")} · {dealId}

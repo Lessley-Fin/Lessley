@@ -8,6 +8,7 @@ export interface MeResponse {
   tags: string[]
   mutedTags: string[]
   matchLevel: "Low" | "Medium" | "High" | null
+  pendingWelcomeNotification: boolean
 }
 
 export interface PatchMeRequest {
@@ -49,4 +50,8 @@ export async function patchMyProfile(body: PatchMeRequest): Promise<PatchMeRespo
 
 export async function initOpenFinanceConnection(): Promise<ConnectionInitResponse> {
   return apiFetch<ConnectionInitResponse>("/api/v1/User/init", { method: "POST" })
+}
+
+export async function sendWelcomeNotification(): Promise<void> {
+  await apiFetch("/api/v1/User/welcome-notification", { method: "POST" })
 }
