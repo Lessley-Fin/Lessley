@@ -10,6 +10,7 @@ import {
   fetchSpendingByDayInsights,
   fetchSpendingPeriodComparison,
   fetchSpendingSaved,
+  fetchSpendingTotal,
   fetchSpendingSavedByAccount,
   fetchTopAccountInsights,
   fetchTopStoreInsights,
@@ -83,6 +84,14 @@ export function useSpendingPeriodComparison(days: number, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.insights.spendingPeriodComparison(days),
     queryFn: () => fetchSpendingPeriodComparison(days),
+    enabled,
+  })
+}
+
+export function useSpendingTotal(days: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.insights.spendingTotal(days),
+    queryFn: () => fetchSpendingTotal(days),
     enabled,
   })
 }

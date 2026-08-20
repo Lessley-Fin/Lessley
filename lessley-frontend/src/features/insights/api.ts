@@ -11,6 +11,7 @@ import type {
   SpendingPeriodComparison,
   SpendingSavedByAccountInsight,
   SpendingSavedInsight,
+  SpendingTotalInsight,
   TopAccountInsight,
   TopStoreInsight,
 } from "@/lib/types"
@@ -98,6 +99,16 @@ export async function fetchSpendingPeriodComparison(
   const params = new URLSearchParams({ days: String(days) })
   const payload = await apiFetch<BasicApiResponse<SpendingPeriodComparison>>(
     `/api/v1/insights/spending-difference-between-two-periods?${params.toString()}`,
+  )
+  return payload.data ?? null
+}
+
+export async function fetchSpendingTotal(
+  days: number = 90,
+): Promise<SpendingTotalInsight | null> {
+  const params = new URLSearchParams({ days: String(days) })
+  const payload = await apiFetch<BasicApiResponse<SpendingTotalInsight>>(
+    `/api/v1/insights/spending-total?${params.toString()}`,
   )
   return payload.data ?? null
 }

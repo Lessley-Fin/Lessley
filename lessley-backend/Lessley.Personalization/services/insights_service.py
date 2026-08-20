@@ -10,6 +10,7 @@ from services.publisher_service import PublisherService
 from services.user_repository import UserRepository
 from services.reference_data_repository import ReferenceDataRepository
 from services.mcc_service import MccService
+from services.transaction_amount_service import TransactionAmountService
 from config.constants import LIMITS, SHOP_MATCH
 from models.transaction import Transaction
 from services.utils.store_similarity import EXACT, SIMILAR, STRONG, SURFACEABLE, WEAK
@@ -70,6 +71,7 @@ class InsightsService:
         user_repository: UserRepository,
         reference_data_repository: ReferenceDataRepository,
         mcc_service: MccService,
+        amount_service: TransactionAmountService | None = None,
     ):
         self.open_finance_service = open_finance_service
         self.files_service = files_service
@@ -77,6 +79,10 @@ class InsightsService:
         self.user_repository = user_repository
         self.reference_data_repository = reference_data_repository
         self.mcc_service = mcc_service
+        # Every reading of money off a transaction goes through here. Defaulted rather than
+        # required because it holds no state and has no collaborators — there is nothing for a
+        # caller to configure, and nothing to mock.
+        self.amount_service = amount_service or TransactionAmountService()
 
     # ── Reading a single purchase ─────────────────────────────────────────────
     # Small helpers so the chains below can stay one idea per line.
@@ -88,33 +94,32 @@ class InsightsService:
             return None
         return transaction.date.transactionDate or transaction.date.bookingDate or transaction.date.valueDate
 
-    @staticmethod
-    def _amount_spent(transaction: Transaction) -> float:
-        """How much money left the account, as a positive number."""
-        amount = transaction.amount
-        if amount and amount.chargedAmount and amount.chargedAmount.amount is not None:
-            return abs(amount.chargedAmount.amount)
-        if amount and amount.originalAmount and amount.originalAmount.amount is not None:
-            return abs(amount.originalAmount.amount)
-        return 0.0
+    # Money is never read off a transaction here — `TransactionAmountService` owns that, so
+    # that "what is this row worth" has one answer across every insight below. These stay as
+    # thin names because the `seq(...).sum(...)` chains read better with them.
 
-    @staticmethod
-    def _amount_charged(transaction: Transaction) -> float:
-        """The billed figure exactly as the bank reported it — sign and all."""
-        amount = transaction.amount
-        if amount and amount.chargedAmount and amount.chargedAmount.amount is not None:
-            return amount.chargedAmount.amount
-        if amount and amount.originalAmount and amount.originalAmount.amount is not None:
-            return amount.originalAmount.amount
-        return 0.0
+    def _purchase_amount(self, transaction: Transaction) -> float:
+        """
+        What this purchase was worth, signed so a refund cancels what it reverses.
 
-    @staticmethod
-    def _amount_saved(transaction: Transaction) -> float:
-        """The gap between the sticker price and what was actually charged."""
-        amount = transaction.amount
-        charged = amount.chargedAmount.amount if amount and amount.chargedAmount else None
-        original = amount.originalAmount.amount if amount and amount.originalAmount else None
-        return abs((charged or 0.0) - (original or 0.0))
+        Every breakdown below sums this rather than `amount_spent`, because they answer "what
+        does the user buy" and not "what did it cost them". A voucher purchase is worth its full
+        price here even though no money left the bank — otherwise a card used only for vouchers
+        reports no activity at all.
+        """
+        return self.amount_service.net_purchase_value(transaction)
+
+    def _purchase_count(self, transactions: list[Transaction]) -> int:
+        """How many of these are the user buying something. A refund is not a visit."""
+        return self.amount_service.purchase_count(transactions)
+
+    def _amount_saved(self, transaction: Transaction) -> float:
+        """How much this purchase actually knocked off the price."""
+        return self.amount_service.amount_saved(transaction)
+
+    def _countable(self, transactions: list[Transaction]) -> list[Transaction]:
+        """Everything not flagged a duplicate. Refunds stay in, so the sums can net them out."""
+        return self.amount_service.countable(transactions)
 
     @staticmethod
     def _category_of(transaction: Transaction) -> str:
@@ -151,7 +156,7 @@ class InsightsService:
             return []
 
         return (
-            seq(transactions)                                  # every purchase the user made
+            seq(self._countable(transactions))             # every purchase the user made
             .group_by(self._category_of)                       # one pile per kind of purchase
             .select(self._summarise_category)                  # each pile becomes one summary line
             .sorted(key=lambda row: row["category"])           # settle ties alphabetically
@@ -165,8 +170,8 @@ class InsightsService:
         category_name, purchases = group
         return {
             "category": category_name,
-            "total_count": len(purchases),
-            "total_amount": seq(purchases).sum(self._amount_spent),
+            "total_count": self._purchase_count(purchases),
+            "total_amount": seq(purchases).sum(self._purchase_amount),
             "mcc_codes": (
                 seq(purchases)                                            # the purchases in this pile
                 .where(lambda purchase: purchase.categoryCode)            # those the bank gave a code for
@@ -187,7 +192,7 @@ class InsightsService:
             return []
 
         return (
-            seq(transactions)                                     # every purchase the user made
+            seq(self._countable(transactions))                # every purchase the user made
             .group_by(lambda purchase: purchase.accountId)        # one pile per account it came from
             .select(self._summarise_account)                      # each pile becomes one summary line
             .sorted(key=lambda row: row["accountId"] or "")       # settle ties by account id
@@ -202,8 +207,8 @@ class InsightsService:
         return {
             "accountId": account_id,
             "accountNumber": purchases[0].accountNumber,
-            "total_count": len(purchases),
-            "total_amount": seq(purchases).sum(self._amount_spent),
+            "total_count": self._purchase_count(purchases),
+            "total_amount": seq(purchases).sum(self._purchase_amount),
         }
 
     # ── Which shops take the user's money? ────────────────────────────────────
@@ -215,7 +220,7 @@ class InsightsService:
 
         # First work out, for every shop-and-account pairing, how much went through it.
         per_shop_and_account = (
-            seq(transactions)                                                 # every purchase the user made
+            seq(self._countable(transactions))                            # every purchase the user made
             .group_by(lambda purchase: (self._merchant_of(purchase),          # one pile per shop
                                         purchase.accountNumber))              #   and account together
             .select(self._summarise_shop_account_pair)                        # each pile becomes one line
@@ -241,8 +246,8 @@ class InsightsService:
         return {
             "normalized_merchantName": merchant_name,
             "accountNumber": account_number,
-            "transaction_count": len(purchases),
-            "transaction_amount": seq(purchases).sum(self._amount_spent),
+            "transaction_count": self._purchase_count(purchases),
+            "transaction_amount": seq(purchases).sum(self._purchase_amount),
         }
 
     def _summarise_shop(self, group: tuple) -> dict:
@@ -270,11 +275,11 @@ class InsightsService:
     def spending_by_day_of_week(self, transactions: list[Transaction]) -> list[dict]:
         """How much the user spends on each day of the week, Sunday through Saturday."""
         spent_on = (
-            seq(transactions)                                      # every purchase the user made
+            seq(self._countable(transactions))                 # every purchase the user made
             .where(lambda purchase: self._date_of(purchase))       # those we know the date of
             .group_by(self._day_name_of)                           # one pile per weekday
             .map(lambda group: (group[0],                          # weekday ->
-                                seq(group[1]).sum(self._amount_spent)))  # money spent that day
+                                seq(group[1]).sum(self._purchase_amount)))  # money spent that day
             .to_dict()
         )
 
@@ -288,17 +293,17 @@ class InsightsService:
     def spending_difference_between_two_periods(self, transactions: list[Transaction], days: int) -> dict:
         """Whether the user spent more or less than they did in the run-up to this period."""
         cutoff = (datetime.utcnow() - timedelta(days=days)).date()
-        dated_purchases = seq(transactions).where(lambda purchase: self._date_of(purchase))
+        dated_purchases = seq(self._countable(transactions)).where(lambda purchase: self._date_of(purchase))
 
         current_total = (
             dated_purchases                                                    # every dated purchase
             .where(lambda purchase: self._date_of(purchase) >= cutoff)         # the recent stretch
-            .sum(self._amount_spent)                                           # added up
+            .sum(self._purchase_amount)                                           # added up
         )
         previous_total = (
             dated_purchases                                                    # every dated purchase
             .where(lambda purchase: self._date_of(purchase) < cutoff)          # the stretch before that
-            .sum(self._amount_spent)                                           # added up
+            .sum(self._purchase_amount)                                           # added up
         )
 
         return {
@@ -309,12 +314,31 @@ class InsightsService:
 
     # ── How much did the user save? ───────────────────────────────────────────
 
+    def spending_total(self, transactions: list[Transaction]) -> dict:
+        """
+        The headline total: how much worse off the account is over this period.
+
+        Deliberately not the sum of the breakdowns. Those answer "what does the user buy" and
+        count a voucher purchase at its full worth; this one answers "what did it cost", where
+        a voucher cost nothing and a refund gives money back. The two disagreeing is the point,
+        not a bug — `purchase_count` says how many purchases stand behind the figure.
+        """
+        countable = self.amount_service.countable(transactions)
+        return {
+            "total_amount": self.amount_service.total_spent(countable),
+            "purchase_count": self.amount_service.purchase_count(countable),
+        }
+
     def spending_saved(self, transactions: list[Transaction]) -> float:
         """Total money the user did not have to pay, thanks to discounts."""
         return (
             seq(transactions)          # every purchase the user made
             .sum(self._amount_saved)   # add up what each one knocked off the price
         )
+
+    def savings_exclusions(self, transactions: list[Transaction]) -> dict[str, int]:
+        """How many purchases landed in each reason, for the caller to log."""
+        return self.amount_service.savings_exclusions(transactions)
 
     def spending_saved_by_account(self, transactions: list[Transaction]) -> list[dict]:
         """The same savings total, split by which account earned it."""
@@ -383,8 +407,11 @@ class InsightsService:
         if not transactions:
             return []
 
+        # A refunded purchase is not a reason to suggest a coupon, and a duplicate would put
+        # the same purchase under the shop twice. Unlike the breakdowns above, nothing is netted
+        # here — this is a list of visits, not a total.
         gathered: Dict[str, dict] = {}
-        for transaction in transactions:
+        for transaction in self.amount_service.purchases_only(transactions):
             if not transaction.id:
                 continue
             for match, clubs in self._shops_for(transaction, user_club_ids):
@@ -397,7 +424,7 @@ class InsightsService:
                     entry["match"] = match
                 entry["clubs"].update(clubs)
                 entry["purchases"].append(transaction)
-                entry["amount"] += self._amount_spent(transaction)
+                entry["amount"] += self.amount_service.purchase_value(transaction)
 
         shops = [self._describe_shop(entry) for entry in gathered.values()]
 
@@ -440,7 +467,7 @@ class InsightsService:
                 MissedShopPurchaseSchema(
                     transaction_id=transaction.id,
                     merchant_name=self._merchant_of(transaction),
-                    amount=self._amount_spent(transaction),
+                    amount=self.amount_service.purchase_value(transaction),
                     date=str(self._date_of(transaction)) if self._date_of(transaction) else None,
                     account_id=transaction.accountId,
                 )
@@ -670,6 +697,40 @@ class InsightsService:
             )
             raise
 
+    async def calculate_spending_total_async(
+        self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
+    ) -> dict:
+        """
+        Calculates the headline spending total: money out, less money that came back.
+        """
+        logger.info(
+            "Service method called",
+            extra={
+                "reason": "Method invocation",
+                "extra_data": {"user_id": user_id, "time_filter": time_filter, "days": days, "use_mock": use_mock},
+            },
+        )
+
+        try:
+            transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
+            total = self.spending_total(transactions)
+
+            logger.info(
+                "Spending total calculated successfully",
+                extra={
+                    "reason": "Business logic complete",
+                    "extra_data": {"user_id": user_id, **total},
+                },
+            )
+            return total
+        except Exception as e:
+            logger.error(
+                f"Error: {str(e)}",
+                exc_info=e,
+                extra={"reason": "Service execution failure", "extra_data": {"user_id": user_id}},
+            )
+            raise
+
     async def calculate_spending_saved_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
     ) -> float:
@@ -692,7 +753,11 @@ class InsightsService:
                 "Spending saved calculated successfully",
                 extra={
                     "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "total_saved": total_saved},
+                    "extra_data": {
+                        "user_id": user_id,
+                        "total_saved": total_saved,
+                        "excluded": self.savings_exclusions(transactions),
+                    },
                 },
             )
             return total_saved
@@ -727,7 +792,11 @@ class InsightsService:
                 "Spending saved by account calculated successfully",
                 extra={
                     "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "account_count": len(saved_by_account)},
+                    "extra_data": {
+                        "user_id": user_id,
+                        "account_count": len(saved_by_account),
+                        "excluded": self.savings_exclusions(transactions),
+                    },
                 },
             )
             return saved_by_account

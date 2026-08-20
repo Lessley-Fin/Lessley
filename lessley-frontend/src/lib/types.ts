@@ -219,6 +219,13 @@ export interface SpendingPeriodComparison {
   difference: number
 }
 
+export interface SpendingTotalInsight {
+  /** Money that left the account, less money that came back. Excludes vouchers, which cost
+   *  nothing — so this is deliberately smaller than the sum of the per-category breakdowns. */
+  total_amount: number
+  purchase_count: number
+}
+
 export interface SpendingSavedInsight {
   total_saved: number
 }

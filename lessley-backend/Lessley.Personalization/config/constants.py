@@ -93,3 +93,35 @@ class STORE_MATCH:
     # Words this common are useless for narrowing candidates down; skip them when
     # gathering shops to score.
     CANDIDATE_DF_CAP = 400
+
+
+class SAVINGS:
+    """
+    Thresholds for deciding whether a gap between the original and charged amount is a discount.
+
+    The gap on its own is not one. `originalAmount` does not mean "sticker price before the
+    promotion" — in the Open Finance feed it means "the amount before the issuer converted or
+    split it". Israeli issuers use the field for foreign currency and for installment plans,
+    and never for promotions. Summing every gap over a real year of 338 transactions produced
+    a savings total of 51,499 against a total spend of 51,668: 75% of it was koruna and dollars
+    subtracted from shekels, 24% was installment plans, and 2 shekels were a genuine discount.
+
+    An installment plan is what these numbers are for. It arrives as N sibling rows whose
+    charged amount is the original divided by N — ILS 3,728 charged as four payments of 932 —
+    which looks exactly like a 75%-off promotion.
+
+    The full provider payload settles it outright: `isCreditCardInstallment`, plus an
+    `installments` object saying which payment of how many this row is. That flag is what
+    `TransactionAmountService` checks first, and these numbers are never consulted when it is
+    present. They are the fallback for a trimmed payload that has dropped the flag, where a plan
+    can only be recognised by its shape. In that mode a genuine half-price sale is suppressed
+    along with the plans; that is deliberate, and cheaper than reporting 12,482 of savings that
+    were never earned. Please do not "fix" it back.
+    """
+
+    # Longest plan the Israeli issuers sell. Past this a ratio is a coincidence, not a plan.
+    MAX_INSTALLMENTS = 36
+
+    # Rounding slack on |original| / |charged|. Payments do not always divide evenly — the
+    # issuer rounds the last one — so 4.000 and 3.998 are both four payments.
+    INSTALLMENT_RATIO_TOLERANCE = 0.005
