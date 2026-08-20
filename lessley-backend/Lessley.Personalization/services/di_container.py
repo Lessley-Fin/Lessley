@@ -8,6 +8,7 @@ from .recommendation_service import RecommendationService
 from .reference_data_repository import ReferenceDataRepository
 from .user_repository import UserRepository
 from .publisher_service import PublisherService
+from .transaction_amount_service import TransactionAmountService
 
 
 class DIContainer:
@@ -43,6 +44,13 @@ class DIContainer:
             return DIContainer._instances["mcc_service"]
 
     @staticmethod
+    def get_transaction_amount_service() -> TransactionAmountService:
+        with DIContainer._lock:
+            if "transaction_amount_service" not in DIContainer._instances:
+                DIContainer._instances["transaction_amount_service"] = TransactionAmountService()
+            return DIContainer._instances["transaction_amount_service"]
+
+    @staticmethod
     def get_insights_service() -> InsightsService:
         with DIContainer._lock:
             if "insights_service" not in DIContainer._instances:
@@ -53,6 +61,7 @@ class DIContainer:
                     user_repository=DIContainer.get_user_repository(),
                     reference_data_repository=DIContainer.get_reference_data_repository(),
                     mcc_service=DIContainer.get_mcc_service(),
+                    amount_service=DIContainer.get_transaction_amount_service(),
                 )
             return DIContainer._instances["insights_service"]
 

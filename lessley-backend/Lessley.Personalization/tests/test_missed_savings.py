@@ -53,7 +53,9 @@ def _tx(tx_id="t1", merchant="קפה קפה", category_code="5812", charged=100.
         merchantName=merchant,
         merchantAddress=MerchantAddress(townName=town) if town else None,
         category=TransactionCategory(sub=sub),
-        amount=TransactionAmount(chargedAmount=AmountDetail(amount=charged)),
+        # `charged` reads as "spent this much", but the feed signs a purchase negative and a
+        # refund positive — and the insights now rely on that sign to tell the two apart.
+        amount=TransactionAmount(chargedAmount=AmountDetail(amount=-abs(charged), currency="ILS")),
     )
 
 
@@ -344,7 +346,12 @@ def test_purchases_without_an_id_are_skipped():
 def test_falls_back_to_the_original_amount_when_nothing_was_charged():
     service = _service(_world([_store("s1", "סטימצקי")]))
     transaction = _tx(merchant="סטימצקי")
-    transaction.amount = TransactionAmount(originalAmount=AmountDetail(amount=42.5))
+    # How a not-yet-billed row really arrives: the charged node is there with its currency,
+    # only the amount is blank.
+    transaction.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-42.5, currency="ILS"),
+        chargedAmount=AmountDetail(amount=None, currency="ILS"),
+    )
 
     shops = service.missed_savings_by_store([transaction], user_club_ids=["c1"])
     assert shops[0].covered_amount == 42.5

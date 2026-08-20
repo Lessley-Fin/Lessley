@@ -44,6 +44,27 @@ class MerchantAddress(BaseModel):
     townName: str | None = None
 
 
+class InstallmentPlan(BaseModel):
+    """
+    Which payment of a plan this row is: payment ``number`` out of ``total``.
+
+    A four-payment plan arrives as four rows that all carry the same ``originalAmount`` (the
+    whole purchase) and the same ``chargedAmount`` (one payment). Without this, the gap between
+    the two reads as a discount — see ``SAVINGS`` in config/constants.py.
+    """
+
+    number: int | None = None
+    total: int | None = None
+
+
+class TransactionClassification(BaseModel):
+    """The provider's own reading of the row: VARIABLE_EXPENSE, VARIABLE_INCOME, REGULAR_EXPENSE."""
+
+    type: str | None = None
+    classifiedBy: str | None = None
+    source: str | None = None
+
+
 class Transaction(BaseModel):
     id: str | None = None
     userId: str | None = None
@@ -64,6 +85,15 @@ class Transaction(BaseModel):
     merchantName: str | None = None
     merchantAddress: MerchantAddress | None = None
     createdAt: datetime | None = None
+
+    # The provider sends all of these on every row; until now Pydantic dropped them on the
+    # floor, and the insight calculations guessed at what they say outright. Keep them.
+    isCreditCardInstallment: bool = False
+    installments: InstallmentPlan | None = None
+    isDuplicate: bool = False
+    isInvoiced: bool | None = None              # corroborates `status`: the invoice went out
+    markupFee: AmountDetail | None = None       # the issuer's cut on a currency conversion
+    classification: TransactionClassification | None = None
 
 
 class PaginatedTransactionsResponse(BaseModel):

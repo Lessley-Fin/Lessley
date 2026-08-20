@@ -29,6 +29,7 @@ import {
   useInitOpenFinance,
   useSpendingPeriodComparison,
   useSpendingSaved,
+  useSpendingTotal,
   useTopAccounts,
   useTopStores,
   useTransactions,
@@ -58,7 +59,15 @@ export function InsightsRecommendationsPage() {
 
   const { data: profile } = useMyProfile()
 
-  const { data: transactions = [], isLoading: txLoading, error: txError } = useTransactions(timeRangeDays, connected)
+  // Not summed on the client. Falling back to originalAmount when the charge is blank counted
+  // voucher purchases as money spent, and the rules for what a row is worth live in one place
+  // on the backend — see TransactionAmountService. This also replaces a full-year transaction
+  // fetch that existed only to drive the spinner below.
+  const {
+    data: spendingTotal = null,
+    isLoading: txLoading,
+    error: txError,
+  } = useSpendingTotal(timeRangeDays, connected)
   const { data: spendingSaved = null } = useSpendingSaved(timeRangeDays, connected)
   const { data: linkedAccounts = [] } = useTopAccounts(timeRangeDays, connected)
 
@@ -76,11 +85,6 @@ export function InsightsRecommendationsPage() {
 
   const insightsError = txError instanceof Error ? txError.message : ""
   const deepDiveErrorMessage = deepDiveError instanceof Error ? deepDiveError.message : ""
-
-  const totalSpend = transactions.reduce((sum, tx) => {
-    const amount = tx.amount?.chargedAmount?.amount ?? tx.amount?.originalAmount?.amount
-    return sum + (typeof amount === "number" ? amount : 0)
-  }, 0)
 
   const periodLabel = periodLabelFor(timeRangeDays)
   const deepDivePeriodLabel = periodLabelFor(deepDiveDays)
@@ -130,7 +134,11 @@ export function InsightsRecommendationsPage() {
             periodLabel={periodLabel}
             clubsCount={profile?.clubs?.length ?? 0}
           />
-          <StatsGridCard transactionCount={transactions.length} totalAmount={totalSpend} periodLabel={periodLabel} />
+          <StatsGridCard
+            transactionCount={spendingTotal?.purchase_count ?? 0}
+            totalAmount={spendingTotal?.total_amount ?? 0}
+            periodLabel={periodLabel}
+          />
         </>
       )}
 
