@@ -23,6 +23,7 @@ import { SpendingOverviewSlide } from "./components/SpendingOverviewSlide"
 import { StatsGridCard } from "./components/StatsGridCard"
 import { TopCategorySlide } from "./components/TopCategorySlide"
 import { TopStoresSlide } from "./components/TopStoresSlide"
+import { TransactionMixSlide } from "./components/TransactionMixSlide"
 import {
   useCategoryInsights,
   useHasConnection,
@@ -44,6 +45,7 @@ export function InsightsRecommendationsPage() {
     t("insights.carousel.topStores"),
     t("insights.carousel.transactions"),
     t("insights.carousel.accounts"),
+    t("insights.carousel.mix"),
   ]
 
   function periodLabelFor(days: number) {
@@ -80,6 +82,8 @@ export function InsightsRecommendationsPage() {
   const { data: deepDiveAccounts = [] } = useTopAccounts(deepDiveDays, connected)
   const { data: topStoresRaw = [] } = useTopStores(deepDiveDays, connected)
   const { data: spendingComparison = null } = useSpendingPeriodComparison(deepDiveDays, connected)
+  // The mix slide follows the deep-dive range, which moves independently of the range above.
+  const { data: deepDiveTotal = null } = useSpendingTotal(deepDiveDays, connected)
 
   const initOpenFinance = useInitOpenFinance()
 
@@ -138,6 +142,7 @@ export function InsightsRecommendationsPage() {
             transactionCount={spendingTotal?.purchase_count ?? 0}
             totalAmount={spendingTotal?.total_amount ?? 0}
             periodLabel={periodLabel}
+            composition={spendingTotal?.composition}
           />
         </>
       )}
@@ -174,6 +179,12 @@ export function InsightsRecommendationsPage() {
                 </CarouselItem>
                 <CarouselItem>
                   <AccountsSlide accounts={deepDiveAccounts} />
+                </CarouselItem>
+                <CarouselItem>
+                  <TransactionMixSlide
+                    composition={deepDiveTotal?.composition ?? []}
+                    periodLabel={deepDivePeriodLabel}
+                  />
                 </CarouselItem>
               </CarouselContent>
               <div className="mt-4 flex items-center justify-center gap-3">

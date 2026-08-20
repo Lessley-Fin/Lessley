@@ -279,7 +279,8 @@
       "categories": "Categories",
       "topStores": "Top stores",
       "transactions": "Transactions",
-      "accounts": "Accounts"
+      "accounts": "Accounts",
+      "mix": "Mix"
     },
     "accountsSlide": {
       "title": "Spending by accounts",
@@ -315,7 +316,12 @@
     "statsGrid": {
       "transactions": "Transactions",
       "totalAmount": "Total amount",
-      "allLinkedCards": "All linked cards"
+      "allLinkedCards": "All linked cards",
+      "breakdownSeparator": " · ",
+      "abroad": "{{count}} abroad",
+      "installments": "{{count}} in payments",
+      "refunded": "{{count}} refunded",
+      "vouchers": "{{count}} on vouchers"
     },
     "topCategorySlide": {
       "title": "Top category",
@@ -335,6 +341,39 @@
     },
     "common": {
       "transactionsCount": "{{count}} transactions"
+    },
+    "transactionMixSlide": {
+      "title": "Transaction mix",
+      "subtitle": "What your {{period}} was actually made of.",
+      "empty": "No transactions in this period.",
+      "count": "{{count}} transaction",
+      "count_other": "{{count}} transactions",
+      "markupFees": "{{amount}} of it went on conversion fees",
+      "plans": "Payments on {{count}} plan",
+      "plans_other": "Payments on {{count}} plans",
+      "savedNote": "Money you kept"
+    },
+    "transactionKinds": {
+      "ordinary": {
+        "label": "Everyday",
+        "note": "Charged in shekels, exactly as the shop asked"
+      },
+      "foreign": {
+        "label": "Abroad",
+        "note": "Billed in another currency and converted"
+      },
+      "installment": {
+        "label": "In payments",
+        "note": "Spread over a plan instead of paid at once"
+      },
+      "refund": {
+        "label": "Came back",
+        "note": "Refunds and credits returned to your card"
+      },
+      "voucher": {
+        "label": "Cost nothing",
+        "note": "A voucher, gift card or waived fee covered it"
+      }
     }
   },
   "recommendations": {

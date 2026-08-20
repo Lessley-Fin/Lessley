@@ -77,6 +77,20 @@ UNKNOWN = "unknown"
 # charge that never happened.
 SETTLED = "BOOKED"
 
+# What kind of thing happened, for describing a year back to the user. Every countable row gets
+# exactly one of these — see `kind_of` for why they are ranked rather than combined.
+KIND_ORDINARY = "ordinary"
+KIND_FOREIGN = "foreign"
+KIND_INSTALLMENT = "installment"
+KIND_REFUND = "refund"
+KIND_VOUCHER = "voucher"
+KIND_DUPLICATE = "duplicate"
+
+# The order the client reads them in: the everyday case first, then the exceptions by how much
+# explaining they need. Fixed rather than sorted by count, so the legend does not reshuffle
+# between one time range and the next.
+KIND_ORDER = [KIND_ORDINARY, KIND_FOREIGN, KIND_INSTALLMENT, KIND_REFUND, KIND_VOUCHER]
+
 
 class TransactionAmountService:
     """
@@ -369,6 +383,89 @@ class TransactionAmountService:
         `installment_inferred` says the feed has stopped sending the flag.
         """
         return dict(Counter(self.saving_of(purchase)[1] for purchase in transactions))
+
+    # ── What kind of row is this? ─────────────────────────────────────────────────
+
+    def kind_of(self, transaction: Transaction) -> str:
+        """
+        The one label that best describes this row, for telling the user what their year held.
+
+        A row can carry more than one of these traits — four of the Prague credits are both a
+        refund and a foreign purchase — so the checks run in a fixed priority and the first one
+        wins. That keeps the census summing to the transaction count, which is what makes it
+        legible as a proportional bar rather than a set of overlapping figures.
+
+        The order runs most-surprising first: being told "this came back to you" matters more
+        than "this was in koruna", and both matter more than "this was a normal purchase".
+        """
+        if self.is_duplicate(transaction):
+            return KIND_DUPLICATE
+        if self.direction(transaction) == INFLOW:
+            return KIND_REFUND
+        if self.was_never_charged(transaction):
+            return KIND_VOUCHER
+        if transaction.isCreditCardInstallment:
+            return KIND_INSTALLMENT
+        _, charged_currency = self._charged(transaction)
+        _, original_currency = self._original(transaction)
+        # Both currencies have to be known before they can disagree. A row missing one of the
+        # two amounts entirely is not a conversion — it is an ordinary purchase we know less
+        # about, and calling it foreign would put it under the wrong heading.
+        if charged_currency and original_currency and charged_currency != original_currency:
+            return KIND_FOREIGN
+        return KIND_ORDINARY
+
+    def composition(self, transactions: list[Transaction]) -> list[dict]:
+        """
+        The make-up of the user's year: how many transactions of each kind, and worth how much.
+
+        Duplicates are left out rather than given a row — they are not a thing that happened to
+        the user. Kinds with nothing in them are omitted too, so the client renders only what the
+        year actually contained. Two kinds carry an extra figure worth surfacing: what the
+        currency conversions cost in markup, and how many distinct plans the installments belong
+        to, since seven payments across two plans reads very differently from seven plans.
+        """
+        rows = []
+        for kind in KIND_ORDER:
+            of_kind = [t for t in transactions if self.kind_of(t) == kind]
+            if not of_kind:
+                continue
+
+            # A refund's worth is what came back; everything else is what was bought.
+            amount = (
+                sum(self.amount_received(t) for t in of_kind)
+                if kind == KIND_REFUND
+                else sum(self.purchase_value(t) for t in of_kind)
+            )
+            row = {"kind": kind, "count": len(of_kind), "amount": amount}
+
+            if kind == KIND_FOREIGN:
+                row["markup_fees"] = sum(self.markup_fee(t) for t in of_kind)
+            if kind == KIND_INSTALLMENT:
+                row["plan_count"] = self._distinct_plans(of_kind)
+
+            rows.append(row)
+        return rows
+
+    @staticmethod
+    def _distinct_plans(installment_rows: list[Transaction]) -> int:
+        """
+        How many separate plans these payments belong to.
+
+        A plan repeats the merchant, the full price and the number of payments on every one of
+        its rows, which is enough to tell two plans apart without the feed naming them.
+        """
+        plans = set()
+        for transaction in installment_rows:
+            original = transaction.amount.originalAmount if transaction.amount else None
+            plans.add(
+                (
+                    transaction.merchantName,
+                    original.amount if original else None,
+                    transaction.installments.total if transaction.installments else None,
+                )
+            )
+        return len(plans)
 
     def total_spent(self, transactions: list[Transaction]) -> float:
         """

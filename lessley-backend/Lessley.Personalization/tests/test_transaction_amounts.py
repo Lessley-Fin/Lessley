@@ -257,6 +257,96 @@ def test_a_duplicate_saves_nothing(service):
     assert service.saving_of(_tx(charged=-47.81, original=-49.80, duplicate=True)) == (0.0, "duplicate")
 
 
+# ── What kind of thing happened ───────────────────────────────────────────────
+
+def test_kind_of_names_each_sort_of_row(service):
+    assert service.kind_of(_tx(charged=-86)) == "ordinary"
+    assert service.kind_of(_tx(charged=-60.26, original=-20.0, original_currency="USD")) == "foreign"
+    assert service.kind_of(_tx(charged=-932, original=-3728, installment=True, installment_total=4)) == "installment"
+    assert service.kind_of(_tx(charged=141.86)) == "refund"
+    assert service.kind_of(_tx(charged=None, original=-176.15)) == "voucher"
+    assert service.kind_of(_tx(charged=-86, duplicate=True)) == "duplicate"
+
+
+def test_a_refund_from_abroad_is_labelled_a_refund(service):
+    """Four Prague credits are both; being told money came back matters more than the currency."""
+    assert service.kind_of(_tx(charged=141.86, original=942, original_currency="CZK")) == "refund"
+
+
+def test_every_countable_row_gets_exactly_one_kind(service):
+    """What makes the census add up to the transaction count, and so readable as a bar."""
+    transactions = [
+        _tx(charged=-86),
+        _tx(charged=-60.26, original=-20.0, original_currency="USD"),
+        _tx(charged=141.86, original=942, original_currency="CZK"),
+        _tx(charged=None, original=-176.15),
+        _tx(charged=-932, original=-3728, installment=True, installment_total=4),
+    ]
+
+    assert sum(row["count"] for row in service.composition(transactions)) == len(transactions)
+
+
+def test_composition_reports_count_and_worth_per_kind(service):
+    transactions = [_tx(charged=-86), _tx(charged=-100), _tx(charged=None, original=-176.15)]
+
+    by_kind = {row["kind"]: row for row in service.composition(transactions)}
+
+    assert by_kind["ordinary"]["count"] == 2
+    assert by_kind["ordinary"]["amount"] == 186
+    assert by_kind["voucher"]["count"] == 1
+    assert by_kind["voucher"]["amount"] == pytest.approx(176.15)
+
+
+def test_composition_values_a_refund_by_what_came_back(service):
+    by_kind = {row["kind"]: row for row in service.composition([_tx(charged=141.86)])}
+
+    assert by_kind["refund"]["amount"] == pytest.approx(141.86)
+
+
+def test_composition_reports_what_the_conversions_cost(service):
+    """The honest figure for a foreign purchase is the markup, not the gap in the amounts."""
+    transactions = [_tx(charged=-6815.43, original=-41328, original_currency="CZK", markup=198.51)]
+
+    assert service.composition(transactions)[0]["markup_fees"] == pytest.approx(198.51)
+
+
+def test_composition_counts_plans_not_just_payments(service):
+    """Seven payments across two plans reads very differently from seven plans."""
+    transactions = [
+        _tx(charged=-932, original=-3728, installment=True, installment_number=n, installment_total=4)
+        for n in (1, 2, 3, 4)
+    ] + [
+        _tx(charged=-216, original=-648, installment=True, installment_number=n, installment_total=3)
+        for n in (1, 2, 3)
+    ]
+
+    row = service.composition(transactions)[0]
+
+    assert (row["count"], row["plan_count"]) == (7, 2)
+
+
+def test_composition_omits_kinds_the_year_did_not_contain(service):
+    assert [row["kind"] for row in service.composition([_tx(charged=-86)])] == ["ordinary"]
+
+
+def test_composition_leaves_duplicates_out_entirely(service):
+    """A duplicate is not a thing that happened to the user, so it gets no row."""
+    assert service.composition([_tx(charged=-86, duplicate=True)]) == []
+
+
+def test_composition_keeps_a_fixed_order_so_the_legend_does_not_reshuffle(service):
+    transactions = [
+        _tx(charged=141.86),
+        _tx(charged=None, original=-176.15),
+        _tx(charged=-86),
+        _tx(charged=-60.26, original=-20.0, original_currency="USD"),
+    ]
+
+    assert [row["kind"] for row in service.composition(transactions)] == [
+        "ordinary", "foreign", "refund", "voucher",
+    ]
+
+
 # ── Explaining a total ────────────────────────────────────────────────────────
 
 def test_savings_exclusions_names_why_each_purchase_was_dropped(service):

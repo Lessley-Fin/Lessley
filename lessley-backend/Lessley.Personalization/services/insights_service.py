@@ -327,6 +327,8 @@ class InsightsService:
         return {
             "total_amount": self.amount_service.total_spent(countable),
             "purchase_count": self.amount_service.purchase_count(countable),
+            # What the year was made of, for the client to describe rather than just total.
+            "composition": self.amount_service.composition(countable),
         }
 
     def spending_saved(self, transactions: list[Transaction]) -> float:

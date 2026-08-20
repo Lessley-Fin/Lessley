@@ -219,11 +219,25 @@ export interface SpendingPeriodComparison {
   difference: number
 }
 
+/** One kind of thing that happened in the period. Every countable transaction carries exactly
+ *  one kind, so the counts sum to the transaction total and can be drawn as a proportional bar. */
+export interface TransactionMixEntry {
+  kind: "ordinary" | "foreign" | "installment" | "refund" | "voucher"
+  count: number
+  /** What was bought, or for a refund, what came back. */
+  amount: number
+  /** foreign only — what the currency conversions cost in issuer markup. */
+  markup_fees?: number
+  /** installment only — how many distinct plans these payments belong to. */
+  plan_count?: number
+}
+
 export interface SpendingTotalInsight {
   /** Money that left the account, less money that came back. Excludes vouchers, which cost
    *  nothing — so this is deliberately smaller than the sum of the per-category breakdowns. */
   total_amount: number
   purchase_count: number
+  composition: TransactionMixEntry[]
 }
 
 export interface SpendingSavedInsight {

@@ -238,7 +238,12 @@ def test_the_headline_total_leaves_the_voucher_out():
         _tx(charged=None, original=-176.15, account_id="voucher"),
     ]
 
-    assert service.spending_total(transactions) == {"total_amount": 100, "purchase_count": 2}
+    total = service.spending_total(transactions)
+
+    assert total["total_amount"] == 100
+    assert total["purchase_count"] == 2
+    # ...while the composition beside it still describes the voucher as a thing that happened.
+    assert {row["kind"]: row["count"] for row in total["composition"]} == {"ordinary": 1, "voucher": 1}
 
 
 def test_the_headline_total_gives_back_what_was_reclaimed():
