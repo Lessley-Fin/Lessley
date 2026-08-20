@@ -50,6 +50,11 @@
     --navy: 208 34% 17%;
     --navy-foreground: 203 36% 96%;
     --navy-muted: 203 13% 67%;
+    --app-bg: 203 34% 97%;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
     --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
     --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
     --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
@@ -60,12 +65,61 @@
     @apply border-border;
   }
 
+  html {
+    /* Keep the layout width identical whether or not the page scrolls, so
+       switching tabs never shifts the content sideways on desktop. */
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     @apply text-foreground antialiased;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
     margin: 0;
+    /* dvh tracks the mobile browser chrome as it collapses; svh is the fallback. */
     min-height: 100svh;
-    background-color: #ffffff;
+    min-height: 100dvh;
+    background-color: hsl(var(--app-bg));
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* The document is the only scroller, so tame its scrollbar instead of hiding it. */
+  body {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  body::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  body::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+
+  @media (max-width: 767px) {
+    html {
+      scrollbar-gutter: auto;
+    }
+
+    body::-webkit-scrollbar {
+      width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   input[type="password"]::-ms-reveal,
@@ -113,17 +167,85 @@
 }
 
 @layer components {
+  /* The shell is a normal, document-scrolled page: the header sticks to the top,
+     the bottom nav sticks to the bottom, and everything between them scrolls.
+     Sticky (rather than fixed) keeps both bars in flow, so the nav can never
+     cover the last row of content and mobile browsers still collapse their
+     address bar while the user scrolls. */
   .app-shell {
-    @apply relative flex min-h-svh w-full flex-col overflow-hidden bg-background;
-    background-color: hsl(203 34% 97%);
+    @apply relative flex w-full flex-col;
+    /* One fluid gutter for every bar in the shell — grows with the viewport
+       instead of stepping at a breakpoint. */
+    --app-gutter: clamp(1rem, 3.5vw, 1.5rem);
+    min-height: 100svh;
+    min-height: 100dvh;
+    /* `clip` instead of `hidden`: it contains stray wide children without
+       turning the shell into a scroll container, which would break the
+       sticky header and nav. */
+    overflow-x: clip;
+  }
+
+  /* Viewport-anchored decorative background, so the gradients keep their
+     proportions no matter how long the page is. */
+  .app-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: hsl(var(--app-bg));
     background-image:
       radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
       radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.1), transparent 50%),
       radial-gradient(ellipse 50% 40% at 0% 80%, hsl(182 38% 36% / 0.06), transparent 45%);
   }
 
+  .app-header {
+    @apply sticky top-0 z-30 flex items-center border-b border-border/70 bg-card/80 backdrop-blur-xl;
+    padding-top: max(0.75rem, var(--safe-top));
+    padding-bottom: 0.75rem;
+    padding-inline-start: max(var(--app-gutter), var(--safe-left));
+    padding-inline-end: max(var(--app-gutter), var(--safe-right));
+  }
+
+  .app-main {
+    @apply w-full flex-1 pb-4 pt-4;
+    padding-inline-start: max(var(--app-gutter), var(--safe-left));
+    padding-inline-end: max(var(--app-gutter), var(--safe-right));
+  }
+
+  /* Auth screens have no bars of their own — they just need the safe area. */
+  .app-auth-main {
+    @apply flex w-full flex-1 flex-col;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    padding-inline-start: var(--safe-left);
+    padding-inline-end: var(--safe-right);
+  }
+
+  .app-bottom-nav {
+    @apply sticky bottom-0 z-30 pt-3;
+    padding-bottom: max(0.75rem, var(--safe-bottom));
+    padding-inline-start: max(var(--app-gutter), var(--safe-left));
+    padding-inline-end: max(var(--app-gutter), var(--safe-right));
+    /* Dissolve whatever scrolls underneath the floating bar. */
+    background-image: linear-gradient(
+      to top,
+      hsl(var(--app-bg)) 0%,
+      hsl(var(--app-bg) / 0.92) 60%,
+      hsl(var(--app-bg) / 0) 100%
+    );
+  }
+
+  .app-nav-tab {
+    @apply flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-1 py-2 font-medium leading-tight transition-all;
+    /* Shrinks the label just enough to keep long translations on one line. */
+    font-size: clamp(0.5625rem, 2.5vw, 0.6875rem);
+    min-height: 2.75rem;
+  }
+
   .app-content-width {
-    @apply mx-auto w-full max-w-md md:max-w-xl lg:max-w-2xl;
+    @apply mx-auto w-full max-w-md md:max-w-xl lg:max-w-2xl xl:max-w-3xl;
   }
 
   .fintech-shell {
