@@ -23,12 +23,14 @@ import { SpendingOverviewSlide } from "./components/SpendingOverviewSlide"
 import { StatsGridCard } from "./components/StatsGridCard"
 import { TopCategorySlide } from "./components/TopCategorySlide"
 import { TopStoresSlide } from "./components/TopStoresSlide"
+import { TransactionMixSlide } from "./components/TransactionMixSlide"
 import {
   useCategoryInsights,
   useHasConnection,
   useInitOpenFinance,
   useSpendingPeriodComparison,
   useSpendingSaved,
+  useSpendingTotal,
   useTopAccounts,
   useTopStores,
   useTransactions,
@@ -43,6 +45,7 @@ export function InsightsRecommendationsPage() {
     t("insights.carousel.topStores"),
     t("insights.carousel.transactions"),
     t("insights.carousel.accounts"),
+    t("insights.carousel.mix"),
   ]
 
   function periodLabelFor(days: number) {
@@ -58,7 +61,15 @@ export function InsightsRecommendationsPage() {
 
   const { data: profile } = useMyProfile()
 
-  const { data: transactions = [], isLoading: txLoading, error: txError } = useTransactions(timeRangeDays, connected)
+  // Not summed on the client. Falling back to originalAmount when the charge is blank counted
+  // voucher purchases as money spent, and the rules for what a row is worth live in one place
+  // on the backend — see TransactionAmountService. This also replaces a full-year transaction
+  // fetch that existed only to drive the spinner below.
+  const {
+    data: spendingTotal = null,
+    isLoading: txLoading,
+    error: txError,
+  } = useSpendingTotal(timeRangeDays, connected)
   const { data: spendingSaved = null } = useSpendingSaved(timeRangeDays, connected)
   const { data: linkedAccounts = [] } = useTopAccounts(timeRangeDays, connected)
 
@@ -71,16 +82,13 @@ export function InsightsRecommendationsPage() {
   const { data: deepDiveAccounts = [] } = useTopAccounts(deepDiveDays, connected)
   const { data: topStoresRaw = [] } = useTopStores(deepDiveDays, connected)
   const { data: spendingComparison = null } = useSpendingPeriodComparison(deepDiveDays, connected)
+  // The mix slide follows the deep-dive range, which moves independently of the range above.
+  const { data: deepDiveTotal = null } = useSpendingTotal(deepDiveDays, connected)
 
   const initOpenFinance = useInitOpenFinance()
 
   const insightsError = txError instanceof Error ? txError.message : ""
   const deepDiveErrorMessage = deepDiveError instanceof Error ? deepDiveError.message : ""
-
-  const totalSpend = transactions.reduce((sum, tx) => {
-    const amount = tx.amount?.chargedAmount?.amount ?? tx.amount?.originalAmount?.amount
-    return sum + (typeof amount === "number" ? amount : 0)
-  }, 0)
 
   const periodLabel = periodLabelFor(timeRangeDays)
   const deepDivePeriodLabel = periodLabelFor(deepDiveDays)
@@ -130,7 +138,12 @@ export function InsightsRecommendationsPage() {
             periodLabel={periodLabel}
             clubsCount={profile?.clubs?.length ?? 0}
           />
-          <StatsGridCard transactionCount={transactions.length} totalAmount={totalSpend} periodLabel={periodLabel} />
+          <StatsGridCard
+            transactionCount={spendingTotal?.purchase_count ?? 0}
+            totalAmount={spendingTotal?.total_amount ?? 0}
+            periodLabel={periodLabel}
+            composition={spendingTotal?.composition}
+          />
         </>
       )}
 
@@ -166,6 +179,12 @@ export function InsightsRecommendationsPage() {
                 </CarouselItem>
                 <CarouselItem>
                   <AccountsSlide accounts={deepDiveAccounts} />
+                </CarouselItem>
+                <CarouselItem>
+                  <TransactionMixSlide
+                    composition={deepDiveTotal?.composition ?? []}
+                    periodLabel={deepDivePeriodLabel}
+                  />
                 </CarouselItem>
               </CarouselContent>
               <div className="mt-4 flex items-center justify-center gap-3">

@@ -279,7 +279,8 @@
       "categories": "קטגוריות",
       "topStores": "חנויות מובילות",
       "transactions": "עסקאות",
-      "accounts": "חשבונות"
+      "accounts": "חשבונות",
+      "mix": "תמהיל"
     },
     "accountsSlide": {
       "title": "הוצאות לפי חשבונות",
@@ -315,7 +316,12 @@
     "statsGrid": {
       "transactions": "עסקאות",
       "totalAmount": "סכום כולל",
-      "allLinkedCards": "כל הכרטיסים המקושרים"
+      "allLinkedCards": "כל הכרטיסים המקושרים",
+      "breakdownSeparator": " · ",
+      "abroad": "{{count}} בחו\"ל",
+      "installments": "{{count}} בתשלומים",
+      "refunded": "{{count}} זוכו",
+      "vouchers": "{{count}} בשוברים"
     },
     "topCategorySlide": {
       "title": "קטגוריה מובילה",
@@ -335,6 +341,39 @@
     },
     "common": {
       "transactionsCount": "{{count}} עסקאות"
+    },
+    "transactionMixSlide": {
+      "title": "תמהיל העסקאות",
+      "subtitle": "ממה {{period}} שלך באמת מורכבת.",
+      "empty": "אין עסקאות בתקופה הזו.",
+      "count": "עסקה {{count}}",
+      "count_other": "{{count}} עסקאות",
+      "markupFees": "{{amount}} מתוכן על עמלות המרה",
+      "plans": "תשלומים בפריסה אחת",
+      "plans_other": "תשלומים ב-{{count}} פריסות",
+      "savedNote": "כסף שנשאר אצלך"
+    },
+    "transactionKinds": {
+      "ordinary": {
+        "label": "רגילות",
+        "note": "חויבו בשקלים, בדיוק כפי שהחנות ביקשה"
+      },
+      "foreign": {
+        "label": "בחו\"ל",
+        "note": "חויבו במטבע אחר והומרו לשקלים"
+      },
+      "installment": {
+        "label": "בתשלומים",
+        "note": "נפרסו לתשלומים במקום חיוב אחד"
+      },
+      "refund": {
+        "label": "חזרו אליך",
+        "note": "זיכויים והחזרים שחזרו לכרטיס"
+      },
+      "voucher": {
+        "label": "לא עלו כלום",
+        "note": "שובר, גיפט קארד או ויתור על עמלה כיסו את זה"
+      }
     }
   },
   "recommendations": {

@@ -336,6 +336,73 @@ async def calculate_spending_difference_between_two_periods(
         raise
 
 
+@router.get("/spending-total")
+async def calculate_spending_total(
+    request: Request,
+    req: InsightsCalcRequests = Depends(),
+    email: str = Depends(authenticated_email),
+):
+    """
+    Triggers the calculation of the headline spending total: money that left the account,
+    less money that came back. Vouchers cost nothing and so do not appear here, unlike in the
+    per-category and per-account breakdowns.
+    """
+    start_time = time.time()
+
+    logger.info(
+        f"API request: {request.method} {request.url}",
+        extra={
+            "reason": "Request received",
+            "extra_data": {
+                "email": email,
+                "time_filter": req.time_filter,
+                "days": req.days,
+                "method": request.method,
+                "endpoint": request.url.path,
+            },
+        },
+    )
+
+    try:
+        service = DIContainer.get_insights_service()
+        total = await service.calculate_spending_total_async(email, req.time_filter, req.days)
+
+        response_time_ms = (time.time() - start_time) * 1000
+
+        logger.info(
+            "API response: 200",
+            extra={
+                "reason": "Request completed",
+                "extra_data": {
+                    "email": email,
+                    "time_filter": req.time_filter,
+                    "days": req.days,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                    "response_time_ms": response_time_ms,
+                    **total,
+                },
+            },
+        )
+
+        return BasicResponse(status="success", data=total)
+
+    except Exception as e:
+        logger.error(
+            f"Error calculating spending total: {str(e)}",
+            exc_info=e,
+            extra={
+                "reason": "Service call failed",
+                "extra_data": {
+                    "email": email,
+                    "method": request.method,
+                    "endpoint": request.url.path,
+                },
+            },
+        )
+        raise
+
+
 @router.get("/spending-saved")
 async def calculate_spending_saved(
     request: Request,
