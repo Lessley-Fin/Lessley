@@ -1,4 +1,4 @@
-import { createElement, useEffect } from "react"
+import { createElement, useEffect, useState } from "react"
 import {
   HubConnectionBuilder,
   HubConnectionState,
@@ -18,6 +18,7 @@ export function useSignalR() {
   const queryClient = useQueryClient()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const navigate = useNavigate()
+  const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -109,6 +110,7 @@ export function useSignalR() {
     connection.on("CategoriesUpdated", refreshCategories)
 
     connection.onreconnected(() => {
+      setIsConnected(true)
       void queryClient.invalidateQueries({
         queryKey: queryKeys.notifications.all,
       })
@@ -117,10 +119,10 @@ export function useSignalR() {
       // and the weekly sweep runs at midnight when nobody is looking.
       refreshCategories()
     })
-    connection.onreconnecting(() => {})
-    connection.onclose(() => {})
+    connection.onreconnecting(() => setIsConnected(false))
+    connection.onclose(() => setIsConnected(false))
 
-    void connection.start()
+    void connection.start().then(() => setIsConnected(true))
 
     return () => {
       connection.off("DealUserNotification")
@@ -130,9 +132,12 @@ export function useSignalR() {
       connection.off("CategoriesUpdated")
       clearTimeout(advanceTimeoutId)
       toastQueue.length = 0
+      setIsConnected(false)
       if (connection.state !== HubConnectionState.Disconnected) {
         void connection.stop()
       }
     }
   }, [isAuthenticated, queryClient, navigate])
+
+  return { isConnected }
 }
