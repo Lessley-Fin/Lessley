@@ -8,6 +8,7 @@ export const ROUTES = {
   DEAL_FINDER: "/deal-finder",
   HOT_DEALS: "/hot-deals",
   NOTIFICATIONS: "/notifications",
+  QA: "/qa",
   SETTINGS: "/settings",
   ADMIN: "/admin",
 } as const

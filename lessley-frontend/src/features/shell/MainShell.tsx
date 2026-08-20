@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Bell } from "lucide-react"
+import { Bell, HelpCircle } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
@@ -32,6 +32,13 @@ export function MainShell({ children }: { children: ReactNode }) {
             <p className="truncate text-[15px] font-bold leading-tight">{t("common.appName")}</p>
             <p className="truncate text-xs text-muted-foreground">{t("common.tagline")}</p>
           </div>
+          <Link
+            to={ROUTES.QA}
+            aria-label={t("nav.qa")}
+            className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-[var(--shadow-card)]"
+          >
+            <HelpCircle className="size-[18px]" aria-hidden />
+          </Link>
           <Link
             to={ROUTES.NOTIFICATIONS}
             aria-label={t("nav.notifications")}

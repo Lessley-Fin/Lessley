@@ -88,6 +88,7 @@
     "optimizer": "Optimizer",
     "recommend": "Recommend",
     "notifications": "Notifications",
+    "qa": "Questions & answers",
     "profileAndSettings": "Profile and settings"
   },
   "auth": {
@@ -683,6 +684,8 @@
       "bankingTitle": "Open banking",
       "bankingDesc": "Connected cards",
       "languageTitle": "Language",
+      "qaTitle": "Questions & answers",
+      "qaDesc": "How Lessley works",
       "logoutTitle": "Log out",
       "logoutDesc": "End this session",
       "adminConsoleTitle": "Admin console",
@@ -723,6 +726,21 @@
     },
     "language": {
       "title": "Change language"
+    },
+    "qa": {
+      "title": "Questions & answers",
+      "q1": "What does Lessley do?",
+      "a1": "Lessley links your connected cards to loyalty clubs and flags purchases where you're missing out on cashback, points or discounts — so you don't have to track it yourself.",
+      "q2": "Is it safe to connect my bank?",
+      "a2": "Yes. Bank access is read-only and can be revoked at any time from the Open banking screen.",
+      "q3": "What is \"match level\"?",
+      "a3": "Match level controls how confident Lessley must be before it suggests a club match — a stricter level means fewer but more accurate matches.",
+      "q4": "What do muted categories do?",
+      "a4": "Muting a category or tag hides its purchases from matches and notifications, without deleting any data.",
+      "q5": "Will signing out delete my data?",
+      "a5": "No. Signing out only ends your session — your clubs, preferences and connected cards stay exactly as they are.",
+      "q6": "Can I change the app language?",
+      "a6": "Yes, open Settings → Language and pick your preferred language at any time."
     }
   },
   "menu": {
