@@ -473,17 +473,6 @@
       "rankedFrom_one": "Ranked from 1 deal at {{store}}",
       "rankedFrom_other": "Ranked from {{count}} deals at {{store}}"
     },
-    "engineInfoDialog": {
-      "ariaLabel": "How the engine works",
-      "title": "What you'll get",
-      "subtitle": "How the engine works",
-      "highlight1Title": "Stacked savings",
-      "highlight1Desc": "Combine a store coupon with the right card benefit in one step.",
-      "highlight2Title": "Exact product match",
-      "highlight2Desc": "We price the item you actually want, not a lookalike.",
-      "highlight3Title": "Ephemeral coupons",
-      "highlight3Desc": "Scraped from retailers and forums minutes after they appear."
-    },
     "winningStack": {
       "title": "Best stack",
       "subtitle_one": "{{store}} · 1 deal applied",
