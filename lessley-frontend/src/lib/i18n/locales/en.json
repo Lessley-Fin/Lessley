@@ -88,6 +88,7 @@
     "optimizer": "Optimizer",
     "recommend": "Recommend",
     "notifications": "Notifications",
+    "qa": "Questions & answers",
     "profileAndSettings": "Profile and settings"
   },
   "auth": {

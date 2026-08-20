@@ -1,4 +1,4 @@
-import { ChevronRight, Globe, HelpCircle, Landmark, LogOut, Shield, SlidersHorizontal, User } from "lucide-react"
+import { ChevronRight, Globe, Landmark, LogOut, Shield, SlidersHorizontal, User } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
@@ -27,7 +27,6 @@ export function SettingsMenu({ profile, onNavigate }: SettingsMenuProps) {
     { id: "preferences", icon: SlidersHorizontal, title: t("settings.menu.preferencesTitle"), desc: t("settings.menu.preferencesDesc") },
     { id: "banking", icon: Landmark, title: t("settings.menu.bankingTitle"), desc: t("settings.menu.bankingDesc") },
     { id: "language", icon: Globe, title: t("settings.menu.languageTitle"), desc: currentLanguageName },
-    { id: "qa", icon: HelpCircle, title: t("settings.menu.qaTitle"), desc: t("settings.menu.qaDesc") },
     { id: "logout", icon: LogOut, title: t("settings.menu.logoutTitle"), desc: t("settings.menu.logoutDesc") },
   ] as const satisfies readonly { id: Exclude<SettingsView, "menu">; icon: typeof User; title: string; desc: string }[]
 
