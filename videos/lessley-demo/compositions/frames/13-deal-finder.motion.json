@@ -1,0 +1,28 @@
+{
+  "scene": "13-deal-finder",
+  "duration_s": 14,
+  "rules": [
+    "oversized-cursor",
+    "waterfall-entry",
+    "spring-pop-entrance",
+    "directional-wipe",
+    "svg-icon-enrichment"
+  ],
+  "entry": {
+    "vector": "0 px/s of camera travel — there is no in-phone camera in this film. .screen-world holds scale 1 / x 0 / y 0 for the whole scene and .device is never transformed. The scene instead enters mid-gesture: the oversized pointer is already crossing the screen at t=0 (off-screen -70,1010 → the store filter over 0.00-0.86s, power2.out), so the cut from frame 12 lands on continuing motion, not on a dead frame.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "0 px/s — the layout is static from 13.44s. The stage glow's answering bloom to the coupon copy resolves at 13.44s and nothing enters, exits or moves for the final 0.56s. Frame 14 opens on the same still, un-zoomed screen geometry, so the seam is a content cut, not a velocity match.",
+    "still_moving": false
+  },
+  "camera_target": "none. No data-camera-target attribute survives in this scene; nothing zooms.",
+  "notes": {
+    "first_second": "Device + fully populated חיפוש דילים tab present at t=0: header, page head (חיפוש דילים / חיפוש דילים חיים בכל מועדוני הנאמנות שלכם), .tabs with the deal-finder tab teal-filled, the empty filter card, the empty-state prompt and the navy nav (אופטימיזציה active). Motion in second one: the pointer's 0.86s traverse (already running at frame 0), the stage title whip at 0.10s, its accent rule filling from 0.30s, the first stage body line at 0.38s and the store filter taking FOX - פוקס at 0.92s.",
+    "last_second": "Locked hold. Last motion is the stage glow's bloom answering the copy press, 12.34 → 13.44s; 13.44-14.00s is a still frame with the deal-terms sheet fully read out — chips, the two terms rows, the source's own fine print, the SAVE20 coupon left in its copied (mint / teal-bordered) state, and the dialog footer's קבלת הדיל button and כניסה לחנות link.",
+    "staged_reveals": "Filters are taken on the narration beats — store field 0.92s, category chips 1.84s and 2.58s, search press 3.34s — then the results pour in: card 1 assembles part by part 3.52-5.30s (card, art, rank, discount pill, store, category, title, club chip, date chip) and cards 2-4 arrive whole on a 0.46s stagger 5.12-6.52s. The card is opened at 7.20s and the deal-terms sheet reads out briskly 7.70-10.72s so the sheet is fully populated long before the climax; the copy press lands at 12.30s.",
+    "real_data": "Every string on screen traces to the real collections. The store filter is FOX - פוקס and the four result cards are the four real FOX deals: Hever (חבר) — Gift Cards at 30% capped ₪300, PaisPlus — Networks Cash Card at 25%, HOT Israel's תו קניה FOX (רק ₪154.00) and Isracard TopCash's 3% cashback. The opened sheet is the Hever deal, with its own terms_and_conditions text verbatim. Club-name chips carry direction:ltr isolation so 'Hever (חבר) — Gift Cards' survives the RTL run intact.",
+    "in_app_scroll": "The two #dl-scroll tweens (y 0 → -300 at 3.44s, -300 → -560 at 5.06s) are the page's OWN scroll following its results — a content move inside a clipped .app-main, not a camera. Four cards make the list 1,216px tall, so the second stop keeps the screen full instead of leaving white above the nav. The pointer withdraws to a bottom-left rest at 3.66s rather than hovering over content that has slid out from under it.",
+    "no_gold": "Zero --stage-gold in this scene — the payoff colour is spent in frame 14."
+  }
+}

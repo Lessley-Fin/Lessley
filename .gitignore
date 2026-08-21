@@ -59,3 +59,12 @@ lessley-deals/src/lessley_deals/enrichment/data/*
 
 # Backups of env files — these hold the same secrets as the originals
 .env.bak*
+
+# HyperFrames video project caches & renders
+videos/**/.thumbnails/
+videos/**/.waveform-cache/
+videos/**/.hyperframes/backup/
+videos/**/.media/
+videos/**/renders/
+*.bak.mp3
+*.bak.*.mp3

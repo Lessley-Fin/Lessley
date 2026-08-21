@@ -1,4 +1,15 @@
 <template>
+      <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
       <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
@@ -43,6 +54,11 @@
           --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -85,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -102,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -122,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -197,7 +369,13 @@
       </style>
       <style>
         /* ── 19-notifications — scene styles ───────────────────────────────── */
-        #root { --input: 201 21% 89%; }
+        #root {
+          /* App tokens the shared primitives reference but the shared block does not
+             declare. Values copied verbatim from lessley-frontend/src/index.css :root. */
+          --secondary: 195 33% 94%;        --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;  --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        }
 
         .f19-ground { position: absolute; inset: 0; background: var(--stage-bg); }
         .f19-scene { position: absolute; inset: 0; }
@@ -208,70 +386,96 @@
           text-align: right;
         }
         .f19-title { margin: 0; }
-        .f19-body { margin: 0; }
+        .f19-body, .f19-body2 { margin: 0; }
+        /* the two body lines read as one paragraph, not two stacked blocks */
+        .f19-body2 { margin-top: -14px; }
 
-        /* the carrier — iPhone at cx 620 / cy 540, 880px tall (frame.md) */
-        .f19-rig { position: absolute; left: 405px; top: 74px; width: 430px; height: 932px; }
-        .f19-scale { width: 430px; height: 932px; transform: scale(0.9442); transform-origin: 50% 50%; }
+        /* The carrier — iPhone at cx 620 / cy 540, held 940px tall (frame.md).
+           460 x 997 device, so scale = 940 / 997. Nothing else transforms it. */
+        .f19-rig { position: absolute; left: 390px; top: 41.5px; width: 460px; height: 997px; }
+        .f19-scale { width: 460px; height: 997px; transform: scale(0.9428);
+          transform-origin: 50% 50%; }
+
+        /* The shared header's `order` values (avatar 1 · bell 2 · brand 3) are authored
+           for an LTR flex main axis, which is what puts the bell and avatar at the LEFT
+           edge and the logo at the right. Text inside the brand stays RTL. */
+        .app-header { direction: ltr; }
+        .app-header .brand-text { direction: rtl; }
 
         /* app-main hosts two stacked page bodies — the swap happens inside it */
-        .f19-main { position: relative; }
-        .f19-page { position: absolute; top: 20px; right: 22px; left: 22px; bottom: 20px;
-          display: flex; flex-direction: column; gap: 16px; }
+        .f19-main { position: relative; padding: 0; gap: 0; }
+        .f19-page { position: absolute; inset: 0; padding: 18px 18px 0;
+          display: flex; flex-direction: column; gap: 14px; }
         .f19-feed-page { background: hsl(var(--background)); z-index: 3; }
 
-        /* — previous page (recommendations · missed savings, carried from frame 18) — */
-        .f19-tabs .tab { font-size: 18px; }
-        .f19-rec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .f19-rec-kicker { font-size: 19px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        /* — previous page: המלצות · חיסכון שפוספס, carried in from frame 18 — */
+        .f19-tabs > span { font-size: 15px; padding: 12px 2px; }
+        .f19-rec-head { display: flex; align-items: center; justify-content: space-between;
+          gap: 12px; }
+        .f19-rec-kicker { font-size: 14px; font-weight: 700; letter-spacing: 0.09em;
+          color: hsl(var(--muted-foreground)); }
         .f19-spin-slot { position: relative; width: 32px; height: 32px; flex: none; }
         .f19-spin, .f19-check { position: absolute; inset: 0; }
-        .f19-rec-body { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
-        .f19-rec-line { font-size: 25px; font-weight: 800; line-height: 1.2; }
-        .f19-rec-sub { font-size: 19px; line-height: 1.35; color: hsl(var(--muted-foreground)); }
+        .f19-rec-body { margin-top: 14px; text-align: right; }
+        .f19-rec-line { font-size: 22px; font-weight: 800; line-height: 1.25; }
+        .f19-rec-sub { font-size: 16px; line-height: 1.35; margin-top: 6px;
+          color: hsl(var(--muted-foreground)); }
 
         /* — the real-time toast, riding OVER the live screen — */
-        .f19-toast {
-          position: absolute; top: 64px; right: 14px; left: 14px; z-index: 8;
-          display: flex; align-items: center; gap: 14px; height: 102px; box-sizing: border-box;
-        }
-        .f19-toast-ico { width: 46px; height: 46px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; background: hsl(var(--accent)); }
-        .f19-toast-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-        .f19-toast-head { display: flex; align-items: center; gap: 9px; }
-        .f19-toast-head b { font-size: 19px; font-weight: 700; color: hsl(var(--muted-foreground)); }
-        .f19-toast-title { font-size: 24px; font-weight: 800; line-height: 1.1; }
-        .f19-toast-time { font-size: 17px; color: hsl(var(--muted-foreground)); flex: none; }
+        .f19-toast { position: absolute; top: 132px; right: 16px; left: 16px; z-index: 8;
+          padding: 0; overflow: hidden; }
+        .f19-toast-band { display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; padding: 9px 16px; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .f19-toast-band .lead { display: flex; align-items: center; gap: 8px; }
+        .f19-toast-band b { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
+        .f19-toast-band svg { width: 16px; height: 16px; }
+        .f19-toast-body { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+        .f19-toast-dot { width: 10px; height: 10px; border-radius: 50%; flex: none;
+          margin-top: 8px; background: hsl(var(--primary)); }
+        .f19-toast-tx { flex: 1; min-width: 0; }
+        .f19-toast-meta { display: flex; align-items: center; gap: 10px; }
+        .f19-toast-msg { font-size: 18px; font-weight: 500; line-height: 1.4; margin-top: 8px; }
+        .f19-toast-sub { font-size: 15px; margin-top: 3px; color: hsl(var(--muted-foreground)); }
+        .f19-toast-time { font-size: 14px; color: hsl(var(--muted-foreground)); }
+        .f19-toast-prog { height: 5px; background: hsl(var(--secondary)); }
+        .f19-toast-prog > i { display: block; height: 100%; background: hsl(var(--primary));
+          transform-origin: right center; }
 
-        .f19-badge { border-radius: 999px; padding: 4px 12px; font-size: 16px; font-weight: 700;
-          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .f19-badge.is-sys { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+        /* The type badge is the app's uppercase pill — a .chip at the app's real
+           badge size (10px in-app · the device runs the UI ~1.33x its CSS px). */
+        .f19-badge { padding: 5px 12px; font-size: 13px; font-weight: 700;
+          letter-spacing: 0.04em; }
 
-        /* — the feed (anchored-layout-expand) — */
-        .f19-mask { height: 410px; overflow: hidden; }
-        .f19-sheet { height: 410px; display: flex; flex-direction: column; gap: 10px;
-          will-change: transform; }
-        .f19-below { display: flex; align-items: center; gap: 10px; font-size: 20px;
-          color: hsl(var(--muted-foreground)); will-change: transform; }
-        .f19-below i { display: block; width: 8px; height: 8px; border-radius: 50%;
-          background: hsl(var(--success)); }
-
-        .f19-row { height: 95px; box-sizing: border-box; border-radius: 22px; padding: 16px 18px;
-          border: 1px solid hsl(var(--border)); background: hsl(var(--card));
-          box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 6px; }
-        .f19-row.is-read { background: hsl(var(--muted) / 0.5); box-shadow: none; }
+        /* — the feed — */
+        /* Five rows is what the endpoint returns and what the screen must show, so the
+           list runs one notch tighter than the 16px/12px it was authored at when only
+           four fitted — otherwise the last row is cut through its own message line. */
+        .f19-list { display: flex; flex-direction: column; gap: 10px; }
+        .f19-row { position: relative; border-radius: 26px; padding: 14px 18px;
+          text-align: right; background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .f19-row.is-unread { box-shadow: var(--shadow-card),
+          0 0 0 2px hsl(var(--primary) / 0.4); }
         .f19-row-top { display: flex; align-items: center; gap: 10px; }
         .f19-dot { width: 10px; height: 10px; border-radius: 50%; flex: none;
           background: hsl(var(--primary)); }
-        .f19-row-title { flex: 1; min-width: 0; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .f19-row-time { font-size: 16px; color: hsl(var(--muted-foreground)); flex: none; }
-        .f19-row-meta { font-size: 18px; color: hsl(var(--muted-foreground)); line-height: 1.25;
-          padding-right: 20px; }
+        .f19-row-time { margin-inline-start: auto; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .f19-row-chev { display: flex; color: hsl(var(--muted-foreground)); }
+        .f19-row-chev svg { width: 18px; height: 18px; }
+        .f19-row-title { font-size: 20px; font-weight: 700; line-height: 1.25; margin-top: 10px; }
+        .f19-row-meta { font-size: 18px; line-height: 1.3; color: hsl(var(--muted-foreground)); }
+
+        /* Real store and club names mix Latin and Hebrew. Inside an RTL run the bidi
+           algorithm reorders the two scripts, so "FOX - פוקס" renders as "פוקס - FOX".
+           Same guard as .num: isolate the name and give it its own LTR base direction so
+           it reads exactly as it is spelled in the clubs / deals collections. */
+        .f19-nm { unicode-bidi: isolate; direction: ltr; }
       </style>
 
       <div id="root" data-composition-id="19-notifications" data-width="1920" data-height="1080">
 
-        <div id="f19-ground" class="clip f19-ground" data-start="0" data-duration="15" data-track-index="0">
+        <div id="f19-ground" class="clip f19-ground" data-start="0" data-duration="12" data-track-index="0">
           <div class="bg-layer">
             <div class="bg-glow"></div>
             <div class="bg-grid"></div>
@@ -280,13 +484,14 @@
           </div>
         </div>
 
-        <div id="f19-scene" class="clip f19-scene" data-start="0" data-duration="15" data-track-index="1">
+        <div id="f19-scene" class="clip f19-scene" data-start="0" data-duration="12" data-track-index="1">
           <span class="chapter">19 / 21</span>
 
           <div class="f19-text">
             <p class="scene-kicker">התראות</p>
-            <h1 class="scene-title f19-title">בזמן אמת</h1>
-            <p class="scene-body f19-body">בלי לרענן.</p>
+            <h1 class="scene-title f19-title">מגיע אליכם לבד</h1>
+            <p class="scene-body f19-body">כשהניתוח מסתיים, ההתראה קופצת.</p>
+            <p class="scene-body f19-body2">בלי לרענן ובלי לחפש.</p>
           </div>
 
           <div class="f19-rig">
@@ -298,26 +503,31 @@
 
                       <div class="app">
                         <div class="app-header">
+                          <div class="app-avatar">D</div>
                           <div class="app-icon">
-                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
-                                 stroke="hsl(var(--primary))" stroke-width="1.8" stroke-linecap="round">
-                              <path d="M6 9a6 6 0 0 1 12 0c0 4 1.4 5.4 1.4 5.4H4.6S6 13 6 9Z" />
-                              <path d="M10 18.4a2.2 2.2 0 0 0 4 0" />
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(var(--foreground))"
+                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                              <g class="f19-bell">
+                                <path d="M6 9a6 6 0 0 1 12 0c0 4 1.4 5.4 1.4 5.4H4.6S6 13 6 9Z" />
+                                <path d="M10 18.4a2.2 2.2 0 0 0 4 0" />
+                              </g>
                             </svg>
                           </div>
-                          <div class="brand"><b>Lessley</b><span>dor.h</span></div>
-                          <div class="app-avatar">D</div>
+                          <div class="brand">
+                            <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
+                            <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                          </div>
                         </div>
 
                         <div class="app-main f19-main">
 
-                          <div class="f19-page f19-prev-page">
+                          <div class="f19-page f19-prev-page" data-layout-allow-overflow>
                             <h1 class="app-h1">המלצות</h1>
                             <p class="app-sub">התאמת מועדונים מחושבת מ-<span class="num">90</span> הימים האחרונים שלכם</p>
                             <div class="tabs f19-tabs">
-                              <span class="tab">התאמות מובילות</span>
-                              <span class="tab on">חיסכון שפוספס</span>
-                              <span class="tab">החנויות שלך</span>
+                              <span>התאמות מובילות</span>
+                              <span class="on">חיסכון שפוספס</span>
+                              <span>החנויות שלך</span>
                             </div>
                             <div class="card">
                               <div class="f19-rec-head">
@@ -331,91 +541,164 @@
                                   </svg>
                                   <svg class="f19-check" viewBox="0 0 40 40" width="32" height="32">
                                     <circle cx="20" cy="20" r="15" fill="hsl(var(--success) / 0.16)" />
-                                    <path d="M13 20.5 l5 5 l9.5 -11" fill="none" stroke="hsl(150 60% 28%)"
+                                    <path d="M13 20.5 l5 5 l9.5 -11" fill="none" stroke="hsl(150 60% 26%)"
                                           stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
                                   </svg>
                                 </span>
                               </div>
                               <div class="f19-rec-body">
-                                <div class="f19-rec-line">הוצאתם <span class="num">₪340</span> ב-רמי לוי</div>
-                                <div class="f19-rec-sub">חיסכון היה זמין בקטגוריית מכולת</div>
+                                <div class="f19-rec-line">הוצאתם <span class="num">₪340</span> ב-<span class="f19-nm">FOX - פוקס</span></div>
+                                <div class="f19-rec-sub">חיסכון היה זמין בקטגוריית ביגוד ואביזרים</div>
                               </div>
                             </div>
                           </div>
 
-                          <div class="f19-page f19-feed-page">
+                          <div class="f19-page f19-feed-page" data-layout-allow-overflow>
                             <h1 class="app-h1">התראות</h1>
                             <p class="app-sub"><span class="num">3</span> שלא נקראו</p>
 
-                            <div class="f19-mask" data-layout-allow-overflow>
-                              <div class="f19-sheet">
-                                <div class="f19-row">
-                                  <div class="f19-row-top">
-                                    <i class="f19-dot"></i>
-                                    <span class="f19-badge">ניתוח</span>
-                                    <span class="f19-row-title">הניתוח מוכן</span>
-                                    <span class="f19-row-time">הרגע</span>
-                                  </div>
-                                  <div class="f19-row-meta">ניתוח חיסכון שפוספס</div>
+                            <!-- The real feed: five rows off the notifications endpoint, ordered
+                                 newest-first. Badge = notifications.badge.*, title =
+                                 notifications.title.*, message line = notifications.detail.*,
+                                 relative time = common.justNow / hoursAgo / daysAgo. Unread rows
+                                 carry the primary ring + dot; the count above says 3, so exactly
+                                 three of them are unread. A System row has no detail, hence no
+                                 chevron (notificationHasDetail === false). -->
+                            <div class="f19-list">
+                              <div class="f19-row is-unread">
+                                <div class="f19-row-top">
+                                  <span class="chip f19-badge">ניתוח</span>
+                                  <i class="f19-dot"></i>
+                                  <span class="f19-row-time">הרגע</span>
+                                  <span class="f19-row-chev">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                  </span>
                                 </div>
-                                <div class="f19-row">
-                                  <div class="f19-row-top">
-                                    <i class="f19-dot"></i>
-                                    <span class="f19-badge">מועדונים</span>
-                                    <span class="f19-row-title">התאמת מועדון חדשה</span>
-                                    <span class="f19-row-time">לפני <span class="num">2</span> שע'</span>
-                                  </div>
-                                  <div class="f19-row-meta">המלצות מועדונים</div>
+                                <div class="f19-row-title">הניתוח מוכן</div>
+                                <div class="f19-row-meta">ניתוח חיסכון שפוספס</div>
+                              </div>
+
+                              <div class="f19-row is-unread">
+                                <div class="f19-row-top">
+                                  <span class="chip f19-badge">מועדונים</span>
+                                  <i class="f19-dot"></i>
+                                  <span class="f19-row-time">לפני <span class="num">2</span> שע'</span>
+                                  <span class="f19-row-chev">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                  </span>
                                 </div>
-                                <div class="f19-row">
-                                  <div class="f19-row-top">
-                                    <i class="f19-dot"></i>
-                                    <span class="f19-badge">דיל</span>
-                                    <span class="f19-row-title">התאמת דיל חדשה</span>
-                                    <span class="f19-row-time">לפני <span class="num">5</span> שע'</span>
-                                  </div>
-                                  <div class="f19-row-meta">סופר-פארם</div>
+                                <div class="f19-row-title">התאמת מועדון חדשה</div>
+                                <div class="f19-row-meta">המלצות מועדונים</div>
+                              </div>
+
+                              <div class="f19-row is-unread">
+                                <div class="f19-row-top">
+                                  <span class="chip f19-badge">דיל</span>
+                                  <i class="f19-dot"></i>
+                                  <span class="f19-row-time">לפני <span class="num">5</span> שע'</span>
+                                  <span class="f19-row-chev">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                  </span>
                                 </div>
-                                <div class="f19-row is-read">
-                                  <div class="f19-row-top">
-                                    <span class="f19-badge is-sys">מערכת</span>
-                                    <span class="f19-row-title">עדכון מערכת</span>
-                                    <span class="f19-row-time">לפני <span class="num">3</span> ימים</span>
-                                  </div>
-                                  <div class="f19-row-meta">אין פרטים נוספים.</div>
+                                <div class="f19-row-title">התאמת דיל חדשה</div>
+                                <div class="f19-row-meta">דיל · <span class="f19-nm">FOX - פוקס</span></div>
+                              </div>
+
+                              <div class="f19-row">
+                                <div class="f19-row-top">
+                                  <span class="chip f19-badge">מועדונים</span>
+                                  <span class="f19-row-time">לפני <span class="num">2</span> ימים</span>
+                                  <span class="f19-row-chev">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                  </span>
                                 </div>
+                                <div class="f19-row-title">התאמת מועדון חדשה</div>
+                                <div class="f19-row-meta">המלצות מועדונים</div>
+                              </div>
+
+                              <div class="f19-row">
+                                <div class="f19-row-top">
+                                  <span class="chip f19-badge">מערכת</span>
+                                  <span class="f19-row-time">לפני <span class="num">3</span> ימים</span>
+                                </div>
+                                <div class="f19-row-title">עדכון מערכת</div>
+                                <div class="f19-row-meta">אין פרטים נוספים.</div>
                               </div>
                             </div>
-
-                            <div class="f19-below"><i></i>הכול עדכני</div>
                           </div>
 
                         </div>
 
                         <div class="nav">
-                          <span class="nav-tab">אופטימיזציה</span>
-                          <span class="nav-tab">תובנות</span>
-                          <span class="nav-tab">חם</span>
-                          <span class="nav-tab on">המלצות</span>
+                          <span class="nav-tab on">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M11 3 12.9 8.1 18 10 12.9 11.9 11 17 9.1 11.9 4 10 9.1 8.1Z" />
+                              <path d="M18.5 15 19.3 17.2 21.5 18 19.3 18.8 18.5 21 17.7 18.8 15.5 18 17.7 17.2Z" />
+                            </svg>אופטימיזציה
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M3 3v16.5h18" />
+                              <path d="M7.5 16V11M12 16V6.5M16.5 16v-3" />
+                            </svg>תובנות
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M12 22c4 0 7-2.6 7-6.4 0-4.4-4.6-6.4-4-11.6-2.6 1.4-4.2 3.6-4.4 6-1-.8-1.4-2-1.4-3C7 8.6 5 11.2 5 15.6 5 19.4 8 22 12 22Z" />
+                            </svg>חם
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M9.5 18.5h5M10.5 21.5h3" />
+                              <path d="M12 2.5a6.2 6.2 0 0 0-3.7 11.2c.6.5 1 1.2 1.1 2h5.2c.1-.8.5-1.5 1.1-2A6.2 6.2 0 0 0 12 2.5Z" />
+                            </svg>המלצות
+                          </span>
                         </div>
                       </div>
 
-                      <div class="toast f19-toast" data-camera-target>
-                        <span class="f19-toast-ico">
-                          <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
-                               stroke="hsl(var(--accent-foreground))" stroke-width="1.9" stroke-linecap="round">
-                            <path d="M6 9a6 6 0 0 1 12 0c0 4 1.4 5.4 1.4 5.4H4.6S6 13 6 9Z" />
-                            <path d="M10 18.4a2.2 2.2 0 0 0 4 0" />
-                          </svg>
-                        </span>
-                        <span class="f19-toast-txt">
-                          <span class="f19-toast-head">
+                      <div class="toast f19-toast">
+                        <div class="f19-toast-band">
+                          <span class="lead">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M6 9a6 6 0 0 1 12 0c0 4 1.4 5.4 1.4 5.4H4.6S6 13 6 9Z" />
+                              <path d="M10 18.4a2.2 2.2 0 0 0 4 0" />
+                            </svg>
                             <b>התראה חדשה</b>
-                            <span class="f19-badge">ניתוח</span>
                           </span>
-                          <span class="f19-toast-title">הניתוח מוכן</span>
-                        </span>
-                        <span class="f19-toast-time">הרגע</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                               stroke-linecap="round" opacity="0.75">
+                            <path d="M6 6 18 18 M18 6 6 18" />
+                          </svg>
+                        </div>
+                        <div class="f19-toast-body">
+                          <i class="f19-toast-dot"></i>
+                          <span class="f19-toast-tx">
+                            <span class="f19-toast-meta">
+                              <span class="chip f19-badge">ישירה</span>
+                              <span class="f19-toast-time">הרגע</span>
+                            </span>
+                            <span class="f19-toast-msg">הניתוח מוכן</span>
+                            <span class="f19-toast-sub">ניתוח חיסכון שפוספס</span>
+                          </span>
+                        </div>
+                        <div class="f19-toast-prog"><i></i></div>
                       </div>
 
                     </div>
@@ -437,80 +720,68 @@
           var one = function (s) { return root.querySelector(s); };
           var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
 
-          var world = one(".screen-world");
           var prevPage = one(".f19-prev-page");
           var feedPage = one(".f19-feed-page");
           var toast = one(".f19-toast");
-          var sheet = one(".f19-sheet");
-          var below = one(".f19-below");
+          var toastProg = one(".f19-toast-prog > i");
           var rows = all(".f19-row");
-          var badges = all(".f19-sheet .f19-badge");
+          var badges = all(".f19-row .f19-badge");
           var arc = one(".f19-arc");
           var spin = one(".f19-spin");
           var check = one(".f19-check");
+          var bell = one(".f19-bell");
           var recBody = one(".f19-rec-body");
           var glow = one(".bg-glow");
           var railFill = one(".rail > i");
 
-          // ── the in-phone camera (coordinate-target-zoom, clamped to the screen) ──
-          var CX = 205, CY = 456;
-          function cam(S, tx, ty) {
-            var mx = CX * (S - 1), my = CY * (S - 1);
-            var x = S * (CX - tx), y = S * (CY - ty);
-            if (x > mx) { x = mx; } if (x < -mx) { x = -mx; }
-            if (y > my) { y = my; } if (y < -my) { y = -my; }
-            return { scale: S, x: x, y: y };
-          }
-          var camIn = cam(1.06, 205, 456);       // arriving — frame 18 handed over a +Z push
-          var camAnticipate = cam(1.12, 205, 300);
-          var camToast = cam(1.42, 205, 115);    // data-camera-target: the toast
-          var camFeed = cam(1.16, 205, 456);     // the opened feed
-          var camHold = cam(1.30, 205, 456);     // the slow closing push
-
-          var PAGE_H = 642;                      // app-main content height (912 - 133 - 97 - 40)
-          var BODY_H = 410;                      // .f19-mask CSS height — authored constant
+          // No in-phone camera. .screen-world is never transformed — it holds
+          // scale 1 / x 0 / y 0 for the whole scene (frame.md, revised 18/08).
+          var PAGE_H = 730;   // .app-main height — the swap travel distance
 
           var tl = gsap.timeline({ paused: true });
 
           // ── initial state ────────────────────────────────────────────────
-          tl.set(world, { scale: camIn.scale, x: camIn.x, y: camIn.y }, 0);
           tl.set(feedPage, { y: -PAGE_H, opacity: 0, rotation: 0.9 }, 0);
           tl.set(prevPage, { y: 0, opacity: 1 }, 0);
           tl.set(check, { scale: 0, opacity: 0 }, 0);
+          tl.set(bell, { transformOrigin: "12px 4px" }, 0);
 
-          // ── Scene 1 (0.0–2.0) — the engine is still working, then finishes ──
+          // ── 0.0–1.95 — the engine is still working, then it finishes ──────
           var spinState = { deg: 0 };
           tl.fromTo(spinState, { deg: 0 }, {
-            deg: 690, duration: 1.9, ease: "none",
+            deg: 690, duration: 1.5, ease: "none",
             onUpdate: function () { arc.setAttribute("transform", "rotate(" + spinState.deg + " 20 20)"); }
           }, 0);
-          tl.fromTo(recBody, { opacity: 0.5 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 1.9);
-          tl.fromTo(spin, { scale: 1, opacity: 1 }, { scale: 0.4, opacity: 0, duration: 0.28, ease: "power2.in" }, 1.86);
-          tl.fromTo(check, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.42, ease: "back.out(2)" }, 1.96);
+          tl.fromTo(recBody, { opacity: 0.5 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.5);
+          tl.fromTo(spin, { scale: 1, opacity: 1 }, { scale: 0.4, opacity: 0, duration: 0.24, ease: "power2.in" }, 1.46);
+          tl.fromTo(check, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.38, ease: "back.out(2)" }, 1.56);
 
-          tl.fromTo(one(".scene-kicker"), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.35);
-          tl.fromTo(one(".f19-title"), { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.75, ease: "power3.out" }, 0.55);
+          tl.fromTo(one(".scene-kicker"), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+          tl.fromTo(one(".f19-title"), { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.62, ease: "power3.out" }, 0.45);
 
-          // ── Scene 2 (2.05–5.3) — the toast lands OVER the live screen ─────
-          tl.fromTo(toast, { y: -230, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.25)" }, 2.05);
-          tl.fromTo(glow, { opacity: 0.85 }, { opacity: 1.3, duration: 0.4, ease: "power2.out" }, 2.05);
-          tl.fromTo(glow, { opacity: 1.3 }, { opacity: 1, duration: 1.1, ease: "power2.inOut", immediateRender: false }, 2.5);
+          // ── 1.8–4.1 — the toast lands OVER the live screen ────────────────
+          // The recommendations page underneath stays fully visible: that overlay
+          // is the whole argument for "in real time, without refreshing". The dwell
+          // is the beat that must not be cut — the retime took the time out of the
+          // silence that used to follow it, not out of the read.
+          tl.fromTo(toast, { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "back.out(1.2)" }, 1.8);
+          tl.fromTo(glow, { opacity: 0.85 }, { opacity: 1.3, duration: 0.35, ease: "power2.out" }, 1.8);
+          tl.fromTo(glow, { opacity: 1.3 }, { opacity: 1, duration: 0.9, ease: "power2.inOut", immediateRender: false }, 2.15);
 
-          // the camera is already creeping when the frame opens (cut seam from frame 18),
-          // drifting toward the top of the screen just before the toast lands there
-          tl.fromTo(world, camIn, {
-            scale: camAnticipate.scale, x: camAnticipate.x, y: camAnticipate.y,
-            duration: 2.35, ease: "none"
-          }, 0);
-          tl.fromTo(world, { scale: camAnticipate.scale, x: camAnticipate.x, y: camAnticipate.y }, {
-            scale: camToast.scale, x: camToast.x, y: camToast.y,
-            duration: 1.4, ease: "power2.inOut", immediateRender: false
-          }, 2.35);
+          // the header bell answers the arrival — one ring, then it stops
+          tl.fromTo(bell, { rotation: 0 }, { rotation: -11, duration: 0.10, ease: "power2.out" }, 1.95);
+          tl.fromTo(bell, { rotation: -11 }, { rotation: 9, duration: 0.14, ease: "power1.inOut", immediateRender: false }, 2.05);
+          tl.fromTo(bell, { rotation: 9 }, { rotation: 0, duration: 0.20, ease: "power2.out", immediateRender: false }, 2.19);
 
-          tl.fromTo(one(".f19-body"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 4.0);
+          // the app's own dismiss meter, cut to the beat the toast is consumed on
+          tl.fromTo(toastProg, { scaleX: 1 }, { scaleX: 0, duration: 2.3, ease: "none" }, 1.8);
 
-          // ── Scene 3 (5.3–6.5) — reactive-displacement: the feed hits the page ──
-          var DRIVER_DUR = 1.2, VICTIM_FRACTION = 0.45, TILT = 0.9, FADE_IN_SHARPNESS = 4;
+          tl.fromTo(one(".f19-body"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 2.95);
+          // second body line — same entrance, landing on the beat the feed arrives on
+          tl.fromTo(one(".f19-body2"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 5.4);
+
+          // ── 4.10–5.20 — reactive-displacement: the feed hits the page ─────
+          var DRIVER_DUR = 1.1, VICTIM_FRACTION = 0.45, TILT = 0.9, FADE_IN_SHARPNESS = 4;
           var driver = { p: 0 };
           tl.fromTo(driver, { p: 0 }, {
             p: 1, duration: DRIVER_DUR, ease: "back.out(1.4)",
@@ -527,35 +798,45 @@
               gsap.set(prevPage, { y: PAGE_H * vp, opacity: 1 - vp * 0.9 });
               // the toast is consumed by the thing it announced
               var tp = Math.min(1, p / 0.3);
-              gsap.set(toast, { y: -34 * tp, opacity: 1 - tp, scale: 1 - 0.05 * tp });
+              gsap.set(toast, { y: -40 * tp, opacity: 1 - tp, scale: 1 - 0.05 * tp });
             }
-          }, 5.3);
+          }, 4.1);
 
-          tl.fromTo(world, { scale: camToast.scale, x: camToast.x, y: camToast.y }, {
-            scale: camFeed.scale, x: camFeed.x, y: camFeed.y,
-            duration: 1.3, ease: "power2.inOut", immediateRender: false
-          }, 5.7);
+          // ── 5.30–6.95 — the feed arrives as a FULL list ───────────────────
+          // The old cut gave one row every two seconds, so for most of the scene the
+          // screen was a title over empty space. The real screen is a populated feed:
+          // all five rows cascade in inside 1.1s and the list then stands complete.
+          tl.fromTo(one(".f19-feed-page .app-h1"), { opacity: 0, y: 18 },
+            { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 5.3);
+          tl.fromTo(one(".f19-feed-page .app-sub"), { opacity: 0, y: 14 },
+            { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 5.48);
 
-          // ── Scene 4 (6.6–13.6) — anchored-layout-expand: the feed opens, sorted by tag ──
-          tl.fromTo([sheet, below], { y: -BODY_H }, { y: 0, duration: 0.5, ease: "power3.out" }, 6.6);
+          tl.fromTo(rows, { opacity: 0, y: 22 },
+            { opacity: 1, y: 0, duration: 0.46, stagger: 0.16, ease: "power3.out" }, 5.85);
+          tl.fromTo(badges, { scale: 0.6, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 0.32, stagger: 0.16, ease: "back.out(2)" }, 5.93);
 
-          var rowAt = [7.5, 9.1, 10.6, 12.1];
-          for (var i = 0; i < rows.length; i++) {
-            tl.fromTo(rows[i], { opacity: 0, y: 16 },
-              { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, rowAt[i]);
-            tl.fromTo(badges[i], { scale: 0.6, opacity: 0 },
-              { scale: 1, opacity: 1, duration: 0.34, ease: "back.out(2)" }, rowAt[i] + 0.06);
+          // ── 7.6–11.2 — the four types are called out, one per narration beat ──
+          // ניתוח · מועדונים (two rows) · דיל · מערכת — the badge answers the word.
+          var typeAt = [7.6, 8.6, 9.6, 10.6];
+          var typeRows = [[rows[0]], [rows[1], rows[3]], [rows[2]], [rows[4]]];
+          var typeBadges = [[badges[0]], [badges[1], badges[3]], [badges[2]], [badges[4]]];
+          for (var i = 0; i < typeAt.length; i++) {
+            var t = typeAt[i];
+            tl.fromTo(typeBadges[i], { scale: 1 },
+              { scale: 1.12, duration: 0.16, stagger: 0.06, ease: "power2.out", immediateRender: false }, t);
+            tl.fromTo(typeBadges[i], { scale: 1.12 },
+              { scale: 1, duration: 0.34, stagger: 0.06, ease: "power2.inOut", immediateRender: false }, t + 0.16);
+            tl.fromTo(typeRows[i], { scale: 1 },
+              { scale: 1.015, duration: 0.18, stagger: 0.06, ease: "power2.out", immediateRender: false }, t);
+            tl.fromTo(typeRows[i], { scale: 1.015 },
+              { scale: 1, duration: 0.40, stagger: 0.06, ease: "power2.inOut", immediateRender: false }, t + 0.18);
           }
-          tl.fromTo(below, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 12.9);
 
-          // closing push — the camera never stops travelling into the feed
-          tl.fromTo(world, { scale: camFeed.scale, x: camFeed.x, y: camFeed.y }, {
-            scale: camHold.scale, x: camHold.x, y: camHold.y,
-            duration: 7.9, ease: "none", immediateRender: false
-          }, 7.1);
+          // film-long progress rail: 217s → 229s of 253s
+          tl.fromTo(railFill, { scaleX: 0.857 }, { scaleX: 0.905, duration: 12, ease: "none" }, 0);
 
-          // film-long progress rail: 270s → 285s of 315s
-          tl.fromTo(railFill, { scaleX: 0.857 }, { scaleX: 0.905, duration: 15, ease: "none" }, 0);
+          // 11.24 → 12.0 the feed stands complete and completely still.
 
           window.__timelines = window.__timelines || {};
           window.__timelines[ID] = tl;

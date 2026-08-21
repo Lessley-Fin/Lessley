@@ -1,5 +1,16 @@
 <template>
-<style id="lessley-shared">
+<style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
+      <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
           src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
@@ -43,6 +54,11 @@
           --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -85,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -102,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -122,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -197,80 +369,110 @@
       </style>
 <style>
   /* ══ 12-optimizer-steps — scene-specific ══════════════════════════════
+     REVISED 18/08: the coordinate-target-zoom onto the step figures is GONE,
+     along with every other in-phone camera move. `.screen-world` is
+     untransformed and carries no id. What moves instead is the PAGE — the app's
+     own scroll, driven by the step cascade, exactly as a screen recording would
+     show it. The device never scales and never translates.
+
      Transparency is the argument. No gold anywhere in this scene — the payoff
      colour was spent once, in frame 11.                                       */
-  #root { --input: 201 21% 89%; --ring: 182 38% 36%; }
+
+  /* tokens the shared block references but does not declare (real app values) */
+  #root {
+    --secondary: 195 33% 94%;        --secondary-foreground: 209 28% 20%;
+    --navy-foreground: 203 36% 96%;  --navy-muted: 203 13% 67%;
+    --input: 201 21% 89%;            --ring: 182 38% 36%;
+    /* AA gate: the app's own --muted-foreground (208 11% 46%) lands at 4.28:1 on
+       the app-shell ground and 4.24:1 on --secondary. Three points of lightness
+       clears WCAG AA without a perceptible shift in the token. */
+    --muted-foreground: 208 12% 43%;
+    --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+    --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+  }
 
   .f12-ground { position: absolute; inset: 0; background: var(--stage-bg); }
-  #f12-glow { left: 410px; top: -10px; }
+  #f12-glow { left: 410px; top: -10px; opacity: 0.78; }
 
-  .f12-camin { position: absolute; inset: 0; }
-  .f12-camfill { position: absolute; inset: -700px; background: hsl(var(--background)); }
-  .f12-campage { position: absolute; inset: 0; background-image:
-      radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
-      radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%); }
+  /* The header and the step head are authored for an LTR flex flow: the ordered
+     slots put the avatar / numeral circle at one edge and the brand / discount
+     at the other. Text inside them stays RTL. */
+  .app-header, .sstep-top { direction: ltr; }
+  .app-header .brand, .app-header .brand-text, .sstep-id, .sstep-off { direction: rtl; }
 
   /* the phone still holds true frame centre */
-  .f12-rig { position: absolute; left: 745px; top: 74px; width: 430px; height: 932px; }
-  .f12-rig-in { width: 430px; height: 932px; transform: scale(0.944206); transform-origin: 50% 50%; }
+  .f12-rig { position: absolute; left: 730px; top: 41px; width: 460px; height: 997px; }
+  .f12-rig-in { width: 460px; height: 997px; transform: scale(0.9428); transform-origin: 50% 50%; }
 
-  .f12-mark { background: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
-    border-color: transparent; color: hsl(182 37% 98%); font-weight: 800; font-size: 24px; }
-  .f12-ico { width: 26px; height: 26px; display: block; }
+  .f12-main > * { flex: none; }
+  /* The page's own end padding. It also absorbs the difference between the
+     sheet height measured when this scene is built and the height it settles at
+     once the embedded Hebrew faces have loaded — without it the last ranked row
+     and the "דורג מתוך" line stay under the fold at full scroll. */
+  .f12-sheet { position: relative; will-change: transform; padding-bottom: 96px; }
+  .stack-band .trophy svg { width: 22px; height: 22px; display: block; }
+  .stack-pay .num { display: inline-block; }
+  .stack-save { gap: 12px; }
 
-  /* ── the accordion: authored at its EXPANDED height, collapsed by transform ── */
-  .f12-head { position: relative; z-index: 2; display: flex; align-items: center; gap: 14px;
-    background: hsl(var(--card)); }
-  .f12-headt { flex: 1; font-size: 24px; font-weight: 800; line-height: 1.15; }
-  .f12-run { text-align: left; line-height: 1.2; }
-  .f12-run .lbl { display: block; font-size: 14px; color: hsl(var(--muted-foreground)); }
-  .f12-run .amt { display: inline-block; font-size: 23px; font-weight: 800; transform-origin: 50% 50%; }
-  .f12-chev { display: block; width: 24px; height: 24px; transform-origin: 50% 50%; }
-  .f12-chev svg { width: 24px; height: 24px; display: block; }
-
-  /* Wider side gutters than the app's own: the in-phone camera crops ~34px per
-     side at its peak scale, and no RTL line start may ever fall inside that. */
-  .app-main { padding-left: 40px; padding-right: 40px; }
-  .app-main > * { flex: none; }
-  .f12-mask { height: 288px; overflow: hidden; }
-  .f12-sheet { height: 288px; box-sizing: border-box; padding-top: 12px;
-    display: flex; flex-direction: column; gap: 12px; will-change: transform; }
-  .f12-sheet > * { flex: none; }
-  .f12-below { display: flex; flex-direction: column; gap: 14px; will-change: transform; }
-  .f12-below > * { flex: none; }
-
-  .f12-step { display: flex; align-items: center; gap: 14px; height: 84px; box-sizing: border-box;
-    padding: 14px 16px; border-radius: 20px; border: 1px solid hsl(var(--border) / 0.7);
-    background: hsl(var(--muted) / 0.55); transform-origin: 50% 50%; }
-  .f12-idx { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-    background: hsl(var(--primary)); color: hsl(182 37% 98%); font-size: 19px; font-weight: 800; }
-  .f12-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-  .f12-l1 { font-size: 19px; font-weight: 700; line-height: 1.2; }
-  .f12-l2 { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 1.3;
+  .f12-sec { text-align: right; margin-top: 18px; }
+  .f12-caps { font-size: 14px; font-weight: 700; letter-spacing: 0.08em; margin: 0 0 8px;
     color: hsl(var(--muted-foreground)); }
-  .f12-badge { border-radius: 999px; padding: 2px 8px; font-size: 13px; font-weight: 700;
-    background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-  .f12-src { border-radius: 6px; padding: 1px 4px; }
-  .f12-bal { flex: none; text-align: left; line-height: 1.1; }
-  .f12-bal .amt { display: inline-block; font-size: 24px; font-weight: 800; transform-origin: 50% 50%; }
+  .f12-cart { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border-radius: 18px; border: 1px dashed hsl(var(--border)); padding: 12px 14px; font-size: 17px; }
+  .f12-cart .k { color: hsl(var(--muted-foreground)); }
+  .f12-cart .v { font-weight: 700; }
+  .f12-steps { margin-top: 12px; }
 
-  .f12-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 19px; }
-  .f12-total .k { color: hsl(var(--muted-foreground)); }
-  .f12-total b { font-weight: 800; }
-  .f12-arrow { width: 22px; height: 22px; display: block; flex: none; }
+  .sstep-id .meta { display: flex; align-items: center; gap: 8px; margin-top: 5px;
+    font-size: 15px; color: hsl(var(--muted-foreground)); }
+  .sstep-id .meta .chip { padding: 3px 10px; font-size: 14px; background: hsl(var(--card));
+    color: hsl(var(--secondary-foreground)); }
+  /* frame.md § Stack step: the provider slug sits BENEATH the type chip. It is one
+     unbreakable Latin token, so its own line is also what stops the head row from
+     being pushed past the card's edge. */
+  .sstep-id .slug { display: block; margin-top: 4px; font-size: 13px;
+    color: hsl(var(--muted-foreground)); }
+  .sstep-off .amt { display: inline-block; transform-origin: 50% 50%; }
+  .sstep-btns > span svg { width: 15px; height: 15px; display: block; }
+  /* AA gate: --primary on --secondary is 4.38:1; three points darker clears it. */
+  .sstep-off .amt { color: hsl(182 40% 33%); }
+  .f12-bal { display: inline-block; transform-origin: 100% 50%; }
+  /* The read-down wash walks these three rows. The inline padding is cancelled
+     by an equal negative margin, so the highlight rounds off without moving a
+     single value off the alignment the shared primitive sets. */
+  .sstep-rows > div { border-radius: 10px; padding-inline: 8px; margin-inline: -8px; }
 
-  .f12-more { position: relative; overflow: hidden; }
-  .f12-moret { font-size: 24px; font-weight: 800; line-height: 1.15; margin: 0; }
-  .f12-mores { font-size: 18px; line-height: 1.3; color: hsl(var(--muted-foreground)); margin: 4px 0 12px; }
-  .f12-ghost { display: flex; align-items: center; gap: 12px; height: 44px; box-sizing: border-box;
-    padding: 0 14px; border-radius: 16px; background: hsl(var(--muted) / 0.7); margin-bottom: 8px; }
-  .f12-ghostbar { height: 12px; border-radius: 999px; background: hsl(201 21% 82%); }
-  .f12-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 60px; pointer-events: none;
-    background: linear-gradient(to top, hsl(var(--card)), hsl(var(--card) / 0)); }
+  /* the connector between consecutive steps */
+  .f12-conn { display: flex; justify-content: center; padding: 4px 0; }
+  .f12-conn svg { width: 18px; height: 18px; display: block; }
+
+  .f12-pay { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border-radius: 18px; background: hsl(var(--secondary)); padding: 13px 14px;
+    font-size: 17px; margin-top: 12px; }
+  .f12-pay b { font-weight: 700; }
+  .f12-pay .v { font-size: 20px; font-weight: 800; color: hsl(var(--primary)); }
+
+  .f12-ranked { margin-top: 14px; }
+  .f12-subs { font-size: 15px; color: hsl(var(--muted-foreground)); margin: 0 0 12px; }
+  .f12-rank { display: flex; align-items: center; gap: 12px; border-radius: 18px;
+    border: 1px solid hsl(var(--border)); padding: 12px 14px; text-align: right; }
+  .f12-rank + .f12-rank { margin-top: 10px; }
+  .f12-rank .n { width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid;
+    place-items: center; font-size: 16px; font-weight: 700; background: hsl(var(--secondary)); }
+  .f12-rank .t { flex: 1; min-width: 0; }
+  /* Child combinators, not descendant: `.t span` also matched the inline
+     `<span class="num">` inside the saves line and broke it onto its own row,
+     so "חוסך ₪250 · דיל אחד" rendered as three stacked lines. */
+  .f12-rank .t > b { display: block; font-size: 18px; font-weight: 700; }
+  .f12-rank .t > span { display: block; font-size: 15px; color: hsl(var(--muted-foreground)); }
+  .f12-rank svg { width: 18px; height: 18px; flex: none; display: block; }
+
+  .f12-from { font-size: 15px; text-align: center; color: hsl(var(--muted-foreground));
+    margin: 12px 0 0; }
 </style>
 
 <div id="root" data-composition-id="12-optimizer-steps" data-width="1920" data-height="1080">
-  <div class="clip f12-ground" id="f12-ground" data-start="0" data-duration="13" data-track-index="0"></div>
+  <div class="clip f12-ground" id="f12-ground" data-start="0" data-duration="10" data-track-index="0"></div>
 
   <div class="bg-layer">
     <div class="bg-grid"></div>
@@ -286,90 +488,139 @@
       <div class="device">
         <div class="device-body">
           <div class="device-screen">
-            <div class="screen-world" id="f12-cam" data-layout-allow-overflow>
-              <div class="f12-camin" id="f12-camin" data-layout-allow-overflow>
-                <div class="f12-camfill"></div>
-                <div class="f12-campage"></div>
+            <div class="screen-world">
 
-                <div class="app">
-                  <div class="app-header">
-                    <div class="app-icon f12-mark">L</div>
-                    <div class="brand"><b>Lessley</b></div>
-                    <div class="app-icon">
-                      <svg class="f12-ico" viewBox="0 0 24 24" fill="none" stroke="hsl(208 34% 17%)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-                    </div>
-                    <div class="app-avatar">D</div>
+              <div class="app">
+                <div class="app-header">
+                  <div class="app-avatar">D</div>
+                  <div class="app-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 34% 17%)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
                   </div>
+                  <div class="brand">
+                    <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                    <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
+                  </div>
+                </div>
 
-                  <div class="app-main">
-                    <div class="card f12-head" id="f12-head">
-                      <span class="f12-headt">איך זה מצטבר</span>
-                      <span class="f12-run">
-                        <span class="lbl">נשאר לתשלום</span>
-                        <span class="amt num" id="f12-run">₪<span id="f12-runv">412</span></span>
-                      </span>
-                      <span class="f12-chev" id="f12-chev">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6 8 12l6 6"/></svg>
-                      </span>
-                    </div>
+                <div class="app-main f12-main" id="f12-main">
+                  <div class="f12-sheet" id="f12-sheet" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>
 
-                    <div class="f12-mask" id="f12-mask" data-camera-target data-layout-allow-overflow>
-                      <div class="f12-sheet" id="f12-sheet">
+                    <div class="stack">
+                      <div class="stack-band">
+                        <span class="trophy">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.5v1.5a3.5 3.5 0 0 0 3 3.4"/><path d="M17 5.5h2.5V7a3.5 3.5 0 0 1-3 3.4"/><path d="M12 14v3"/><path d="M8.5 20h7"/><path d="M10 17h4l.8 3h-5.6z"/></svg>
+                        </span>
+                        <div>
+                          <b>השילוב הטוב ביותר</b>
+                          <span><bdi>FOX - פוקס</bdi> · דיל אחד הופעל</span>
+                        </div>
+                      </div>
 
-                        <div class="f12-step" id="f12-s1">
-                          <span class="f12-idx num">1</span>
-                          <span class="f12-b">
-                            <span class="f12-l1">קופון חנות</span>
-                            <span class="f12-l2"><span class="f12-badge"><span class="num">15%</span> הנחה</span>· <span class="f12-src" id="f12-src1">מועדון רמי לוי</span></span>
-                          </span>
-                          <span class="f12-bal"><span class="amt num">₪350</span></span>
+                      <div class="stack-body">
+                        <div class="stack-lbl">אתם משלמים</div>
+                        <div class="stack-pay"><span class="num">₪700</span></div>
+                        <div class="stack-save">
+                          <span class="was num">₪1,000</span>
+                          <span class="pill-save">חיסכון <span class="num">₪300</span> <span class="num">(30%)</span></span>
                         </div>
 
-                        <div class="f12-step" id="f12-s2">
-                          <span class="f12-idx num">2</span>
-                          <span class="f12-b">
-                            <span class="f12-l1">הטבת כרטיס</span>
-                            <span class="f12-l2"><span class="f12-badge num">₪20</span>· <span class="f12-src" id="f12-src2">כרטיס מקושר</span></span>
-                          </span>
-                          <span class="f12-bal"><span class="amt num">₪330</span></span>
-                        </div>
+                        <div class="f12-sec">
+                          <p class="f12-caps">איך זה מצטבר</p>
+                          <div class="f12-cart">
+                            <span class="k">סכום העגלה</span>
+                            <span class="v num">₪1,000</span>
+                          </div>
 
-                        <div class="f12-step" id="f12-s3">
-                          <span class="f12-idx num">3</span>
-                          <span class="f12-b">
-                            <span class="f12-l1">החזר כספי</span>
-                            <span class="f12-l2"><span class="f12-badge">בשיעור <span class="num">4%</span></span>· <span class="f12-src" id="f12-src3">כרטיס מקושר</span></span>
-                          </span>
-                          <span class="f12-bal"><span class="amt num">₪317</span></span>
-                        </div>
+                          <!-- ONE step. The engine returns a single deal for this cart:
+                               the two PaisPlus FOX deals are also giftcard_discount, one
+                               sets stackable_with_giftcards:false, and they share the
+                               exclusive_group paisplus:chit-5001 — so neither can join
+                               the Hever gift-card deal, and there is no chevron because
+                               there is no second step to connect to. -->
+                          <div class="f12-steps">
+                            <div class="sstep" id="f12-s1">
+                              <div class="sstep-top">
+                                <span class="sstep-n num">1</span>
+                                <span class="sstep-id">
+                                  <b><bdi>FOX - פוקס</bdi></b>
+                                  <span class="meta"><span class="chip">כרטיס מתנה</span></span>
+                                  <span class="slug"><bdi>hever_gift_card_company</bdi></span>
+                                </span>
+                                <span class="sstep-off">
+                                  <span class="pct"><span class="num">30%</span> הנחה</span>
+                                  <span class="amt num" id="f12-a1">−₪300.00</span>
+                                </span>
+                              </div>
+                              <div class="sstep-rows">
+                                <div id="f12-row1"><span class="k">ההנחה חלה על</span><span class="v num">₪1,000</span></div>
+                                <div id="f12-row2"><span class="k">משלמים עליו</span><span class="v num">₪700</span></div>
+                                <div id="f12-row3"><span class="k">נשאר לתשלום</span><span class="v"><span class="was num">₪1,000</span> <span class="num f12-bal" id="f12-b1">₪700</span></span></div>
+                              </div>
+                              <div class="sstep-btns">
+                                <span><svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>פרטים</span>
+                                <span><svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>מעבר לדיל</span>
+                              </div>
+                            </div>
+                          </div>
 
+                          <div class="f12-pay" id="f12-payrow">
+                            <b>אתם משלמים</b>
+                            <span class="v num">₪700</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div class="f12-below" id="f12-below" data-layout-allow-overflow>
-                      <div class="card-inset f12-total">
-                        <span><span class="k">סכום העגלה</span> <b class="num">₪412</b></span>
-                        <svg class="f12-arrow" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"/><path d="M10 6l-6 6 6 6"/></svg>
-                        <span><span class="k">אתם משלמים</span> <b class="num">₪317</b></span>
+                    <div class="card f12-ranked" id="f12-ranked">
+                      <p class="f12-caps">אפשרויות נוספות</p>
+                      <p class="f12-subs">שני שילובים מדורגים נוספים</p>
+                      <!-- The runners-up are the two PaisPlus FOX gift-card deals, priced
+                           on the same ₪1,000 cart from their real tier tables:
+                           VIP     25% on the 0–1,200 tier, cap ₪390 → −₪250 → ₪750
+                           Regular 15% on the 600–1,500 tier, cap ₪285 → −₪150 → ₪850
+                           Each is a one-deal combination — they share an exclusive group. -->
+                      <div class="f12-rank" id="f12-r1">
+                        <span class="n num">2</span>
+                        <span class="t">
+                          <b class="num">₪750</b>
+                          <span>חוסך <span class="num">₪250</span> · דיל אחד</span>
+                        </span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                       </div>
-
-                      <div class="card f12-more" id="f12-more">
-                        <h2 class="f12-moret">אפשרויות נוספות</h2>
-                        <p class="f12-mores">שני שילובים מדורגים נוספים</p>
-                        <div class="f12-ghost" id="f12-g1">
-                          <span class="f12-ghostbar" style="width:132px"></span>
-                          <span class="f12-ghostbar" style="width:64px;opacity:.6"></span>
-                        </div>
-                        <div class="f12-ghost" id="f12-g2">
-                          <span class="f12-ghostbar" style="width:104px"></span>
-                          <span class="f12-ghostbar" style="width:78px;opacity:.6"></span>
-                        </div>
-                        <div class="f12-fade"></div>
+                      <div class="f12-rank" id="f12-r2">
+                        <span class="n num">3</span>
+                        <span class="t">
+                          <b class="num">₪850</b>
+                          <span>חוסך <span class="num">₪150</span> · דיל אחד</span>
+                        </span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                       </div>
                     </div>
+
+                    <p class="f12-from" id="f12-from">דורג מתוך <span class="num">3</span> דילים ב-<bdi>FOX - פוקס</bdi></p>
+                  </div>
+                </div>
+
+                <div class="nav">
+                  <div class="nav-tab on">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M18.6 15l.8 2.3 2.2.7-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.7z" opacity=".7"/></svg>
+                    <span>אופטימיזציה</span>
+                  </div>
+                  <div class="nav-tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-8"/></svg>
+                    <span>תובנות</span>
+                  </div>
+                  <div class="nav-tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c.8 3.8 4.6 4.8 4.6 9A5.6 5.6 0 0 1 6.8 15c-.6 3.4 1.6 7 5.2 7a5.8 5.8 0 0 0 5.8-5.8c0-4.6-4-6.4-5.8-14.2z"/></svg>
+                    <span>חם</span>
+                  </div>
+                  <div class="nav-tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .8 1.6V16h5.6v-.6c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg>
+                    <span>המלצות</span>
                   </div>
                 </div>
               </div>
+
             </div>
             <div class="device-island"></div>
           </div>
@@ -384,88 +635,100 @@
 <script>
   (function () {
     var ID = "12-optimizer-steps";
-    var D = 13;
-    var SW = 410, SH = 912, SCX = SW / 2, SCY = SH / 2;
-    var BODY_H = 288;   /* authored constant — equals .f12-mask / .f12-sheet CSS height */
+    var D = 10;
 
     var g = function (id) { return document.getElementById(id); };
-    var cam = g("f12-cam"), camin = g("f12-camin");
+    var sheet = g("f12-sheet"), main = g("f12-main");
 
-    function offsetOf(el, root) {
-      var x = 0, y = 0, n = el;
-      while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-      return { x: x + el.offsetWidth / 2 - SCX, y: y + el.offsetHeight / 2 - SCY };
-    }
-    var offMask = g("f12-mask").offsetHeight ? offsetOf(g("f12-mask"), camin) : { x: 0, y: -55 };
+    /* ── the app's own scroll ───────────────────────────────────────────
+       Not a camera: the device never scales or moves, and `.screen-world` is
+       untransformed. This is the results page scrolling under the chain, the
+       way a screen recording of the real app would show it.
 
-    /* Peak scale is capped: the screen-world crops 205*(1-1/S) px per side and the
-       app's line starts sit 40px in. 1.20 -> 34px crop, so nothing is ever clipped. */
-    var S0 = 1.10, S1 = 1.20, S2 = 1.02;      /* inherited -> push on the steps -> pull out */
-    var T0x = 0, T0y = 26;                    /* continues frame 11's exit framing */
-    var T1x = -offMask.x, T1y = -offMask.y;   /* T = -offset (nested wrappers) */
-    var T2x = 0, T2y = 10;
+       REVISED 19/08: the stack is now a SINGLE step, so the page is much
+       shorter and element-anchored targets would all clamp to the same
+       bottom. The travel is expressed as fractions of the page's real
+       scrollable range instead — measured when layout is available, with an
+       authored fallback so the scene stays correct when it is not.        */
+    var VIS = main.clientHeight ? main.clientHeight - 18 : 716;
+    var MAXY = sheet.offsetHeight ? Math.max(0, sheet.offsetHeight - VIS) : 266;
+    var Y0 = 0;
+    var Y1 = -Math.round(MAXY * 0.45);   /* the step's rows sit centre-screen */
+    var Y2 = -Math.round(MAXY * 0.75);   /* the foot of the chain            */
+    var Y3 = -MAXY;                      /* the ranked alternatives          */
 
     var tl = gsap.timeline({ paused: true });
     window.__timelines = window.__timelines || {};
     window.__timelines[ID] = tl;
 
-    tl.fromTo(g("f12-rail"), { scaleX: 0.514286 }, { scaleX: 0.555556, duration: D, ease: "none" }, 0);
+    /* Values are cumulative film time / 253s: this scene runs 131s → 141s. */
+    tl.fromTo(g("f12-rail"), { scaleX: 0.517787 }, { scaleX: 0.557312, duration: D, ease: "none" }, 0);
 
-    /* camera holds the inherited framing while the accordion opens */
-    tl.fromTo(cam, { scale: S0 }, { scale: S0, duration: 2.60, ease: "none" }, 0);
-    tl.fromTo(camin, { x: T0x, y: T0y }, { x: T0x, y: T0y, duration: 2.60, ease: "none" }, 0);
+    /* ══ RETIMED 19/08: 13s → 10s, and rebuilt around one step instead of three.
+       Nothing here re-animates a figure frame 11 already resolved — the chain
+       is inherited intact and this scene only reads it, then shows what the
+       engine ranked behind it.                                              */
 
-    /* ── Scene 1 (0.2–1.0s) — the trigger: the row takes focus, the chevron turns ── */
-    tl.fromTo(g("f12-head"), { backgroundColor: "hsl(0 0% 100%)" },
-      { backgroundColor: "hsl(179 50% 88% / 0.55)", duration: 0.26, ease: "power2.out" }, 0.72);
-    tl.fromTo(g("f12-head"), { backgroundColor: "hsl(179 50% 88% / 0.55)" },
-      { backgroundColor: "hsl(0 0% 100%)", duration: 0.62, ease: "power2.out", immediateRender: false }, 1.02);
-    tl.fromTo(g("f12-chev"), { rotation: 0 }, { rotation: -90, duration: 0.48, ease: "power3.out" }, 0.94);
+    /* ── Scene 1 (0.0–0.65s) — the frame is inherited from frame 11: the winning
+       stack, the saving, and the one step of the chain, all at rest. ── */
+    tl.fromTo(sheet, { y: Y0 }, { y: Y0, duration: 0.65, ease: "none" }, 0);
 
-    /* ── Scene 2 (1.0–1.55s) — anchored-layout-expand: ONE tween drives the sheet AND
-       everything downstream, so the travelling bottom edge never separates from it.  */
-    tl.fromTo([g("f12-sheet"), g("f12-below")], { y: -BODY_H },
-      { y: 0, duration: 0.55, ease: "power3.out" }, 1.00);
+    /* ── Scene 2 (0.65–1.45s) — the page moves onto the step ── */
+    tl.fromTo(sheet, { y: Y0 }, { y: Y1, duration: 0.80, ease: "power2.inOut", immediateRender: false }, 0.65);
 
-    /* ── Scene 3 (1.85–7.0s) — the three steps land one at a time, balance updating ──
-       The running balance is a property tween (not an onUpdate callback) so every
-       seeked frame renders the right number.                                        */
-    function balBeat(rowId, at, from, to, first) {
-      tl.fromTo(g(rowId), { opacity: 0, y: 24, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, at);
-      tl.fromTo(g(rowId), { borderColor: "hsl(182 38% 36% / 0.75)", backgroundColor: "hsl(179 50% 88% / 0.55)" },
-        { borderColor: "hsl(201 21% 89% / 0.7)", backgroundColor: "hsl(198 28% 94% / 0.55)", duration: 0.9, ease: "power2.out" }, at + 0.45);
+    /* ── Scene 3 (1.55–3.10s) — the read-down. The three rows are already on
+       screen from frame 11, so nothing enters: a mint wash walks down them in
+       order, and the discount and the closing balance take a beat of weight.
+       Paint and transform only — the numbers never restate themselves.      */
+    tl.fromTo(g("f12-a1"), { scale: 1 }, { scale: 1.12, duration: 0.16, ease: "power2.out" }, 1.55);
+    tl.fromTo(g("f12-a1"), { scale: 1.12 }, { scale: 1, duration: 0.40, ease: "power2.out", immediateRender: false }, 1.71);
 
-      tl.fromTo(g("f12-runv"), { innerText: from },
-        { innerText: to, duration: 0.55, ease: "power2.out", snap: { innerText: 1 }, immediateRender: !!first }, at + 0.35);
-      tl.fromTo(g("f12-run"), { scale: 1 }, { scale: 1.12, duration: 0.16, ease: "power2.out", immediateRender: false }, at + 0.35);
-      tl.fromTo(g("f12-run"), { scale: 1.12 }, { scale: 1, duration: 0.40, ease: "power2.out", immediateRender: false }, at + 0.51);
-    }
-    balBeat("f12-s1", 1.85, 412, 350, true);
-    balBeat("f12-s2", 4.30, 350, 330, false);
-    balBeat("f12-s3", 6.20, 330, 317, false);
-
-    /* ── camera move 1 (2.6–4.3s) — coordinate-target-zoom onto the step list:
-       the one time in the film the frame goes inside the screen to read figures. */
-    tl.fromTo(cam, { scale: S0 }, { scale: S1, duration: 1.70, ease: "power3.inOut", immediateRender: false }, 2.60);
-    tl.fromTo(camin, { x: T0x, y: T0y }, { x: T1x, y: T1y, duration: 1.70, ease: "power3.inOut", immediateRender: false }, 2.60);
-
-    /* ── Scene 4 (7.5–9.3s) — provenance: which club or card each benefit came from ── */
-    [["f12-src1", 7.50], ["f12-src2", 8.10], ["f12-src3", 8.70]].forEach(function (p) {
-      tl.fromTo(g(p[0]), { backgroundColor: "hsl(179 50% 88% / 0)", color: "hsl(208 11% 46%)" },
-        { backgroundColor: "hsl(179 50% 88% / 0.95)", color: "hsl(182 73% 18%)", duration: 0.26, ease: "power2.out" }, p[1]);
-      tl.fromTo(g(p[0]), { backgroundColor: "hsl(179 50% 88% / 0.95)", color: "hsl(182 73% 18%)" },
-        { backgroundColor: "hsl(179 50% 88% / 0)", color: "hsl(208 11% 46%)", duration: 0.70, ease: "power2.out", immediateRender: false }, p[1] + 0.52);
+    /* AA gate: the wash is brighter than the card ground it sits on, so every
+       muted-token run in the row — the label and the struck previous balance —
+       rides down to the app's own --accent-foreground for exactly as long as the
+       mint is up. Both ends of the pulse are legible, and so is every interpolated
+       frame between them, because the colour and the wash share the beat. */
+    var K_REST = "hsl(208 12% 43%)", K_LIT = "hsl(182 73% 18%)";
+    ["f12-row1", "f12-row2", "f12-row3"].forEach(function (id, i) {
+      var at = 1.80 + i * 0.34;
+      var muted = g(id).querySelectorAll(".k, .was");
+      tl.fromTo(g(id), { backgroundColor: "hsl(179 50% 88% / 0)" },
+        { backgroundColor: "hsl(179 50% 88% / 0.85)", duration: 0.22, ease: "power2.out" }, at);
+      tl.fromTo(muted, { color: K_REST }, { color: K_LIT, duration: 0.22, ease: "power2.out" }, at);
+      tl.fromTo(g(id), { backgroundColor: "hsl(179 50% 88% / 0.85)" },
+        { backgroundColor: "hsl(179 50% 88% / 0)", duration: 0.52, ease: "power2.in", immediateRender: false }, at + 0.22);
+      tl.fromTo(muted, { color: K_LIT }, { color: K_REST, duration: 0.52, ease: "power2.in", immediateRender: false }, at + 0.22);
     });
+    tl.fromTo(g("f12-b1"), { scale: 1 }, { scale: 1.14, duration: 0.16, ease: "power2.out" }, 2.52);
+    tl.fromTo(g("f12-b1"), { scale: 1.14 }, { scale: 1, duration: 0.42, ease: "power2.out", immediateRender: false }, 2.68);
 
-    /* ── camera move 2 (9.4–11.0s) — the pull-out: the whole result page reads,
-       and "אפשרויות נוספות" arrives underneath it.                              */
-    tl.fromTo(cam, { scale: S1 }, { scale: S2, duration: 1.60, ease: "power3.out", immediateRender: false }, 9.40);
-    tl.fromTo(camin, { x: T1x, y: T1y }, { x: T2x, y: T2y, duration: 1.60, ease: "power3.out", immediateRender: false }, 9.40);
+    /* ── Scene 4 (3.25–4.05s) — the page moves to the foot of the chain ── */
+    tl.fromTo(sheet, { y: Y1 }, { y: Y2, duration: 0.80, ease: "power2.inOut", immediateRender: false }, 3.25);
 
-    tl.fromTo(g("f12-more"), { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.62, ease: "power3.out" }, 9.70);
-    tl.fromTo(g("f12-g1"), { opacity: 0, x: -22 }, { opacity: 1, x: 0, duration: 0.46, ease: "power3.out" }, 10.30);
-    tl.fromTo(g("f12-g2"), { opacity: 0, x: -22 }, { opacity: 1, x: 0, duration: 0.46, ease: "power3.out" }, 10.52);
+    /* ── Scene 5 (4.20–5.60s) — what the one step adds up to; the stage answers ── */
+    tl.fromTo(g("f12-payrow"), { opacity: 0, y: 22 },
+      { opacity: 1, y: 0, duration: 0.52, ease: "power3.out" }, 4.20);
+    tl.fromTo(g("f12-glow"), { opacity: 0.78, scale: 1 },
+      { opacity: 1, scale: 1.06, duration: 0.62, ease: "power2.out" }, 4.40);
+    tl.fromTo(g("f12-glow"), { opacity: 1, scale: 1.06 },
+      { opacity: 0.86, scale: 1, duration: 1.10, ease: "power2.inOut", immediateRender: false }, 5.02);
+
+    /* ── Scene 6 (5.55–6.35s) — the page settles on the alternatives ── */
+    tl.fromTo(sheet, { y: Y2 }, { y: Y3, duration: 0.80, ease: "power2.inOut", immediateRender: false }, 5.55);
+
+    /* ── Scene 7 (6.50–8.85s) — the runners-up: the two PaisPlus combinations
+       the engine priced and rejected, at their real values.                 */
+    tl.fromTo(g("f12-ranked"), { opacity: 0, y: 28 },
+      { opacity: 1, y: 0, duration: 0.58, ease: "power3.out" }, 6.50);
+    tl.fromTo(g("f12-r1"), { opacity: 0, x: -24 },
+      { opacity: 1, x: 0, duration: 0.46, ease: "power3.out" }, 7.10);
+    tl.fromTo(g("f12-r2"), { opacity: 0, x: -24 },
+      { opacity: 1, x: 0, duration: 0.46, ease: "power3.out" }, 7.66);
+    tl.fromTo(g("f12-from"), { opacity: 0 },
+      { opacity: 1, duration: 0.50, ease: "power2.out" }, 8.35);
+
+    /* ── Scene 8 (8.85–10.0s) — LOCKED. The whole breakdown holds, with no
+       translation left anywhere, so the cut into frame 13 starts from rest. ── */
   })();
 </script>
 </template>

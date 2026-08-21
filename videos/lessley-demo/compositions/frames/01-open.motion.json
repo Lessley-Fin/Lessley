@@ -1,24 +1,25 @@
 {
   "scene": "01-open",
-  "duration_s": 15.0,
+  "duration_s": 12.0,
   "rules": [
     "waterfall-entry",
     "spring-pop-entrance",
     "counting-dynamic-scale",
-    "coordinate-target-zoom",
-    "multi-phase-camera"
+    "staged-reveal-cascade"
   ],
   "blueprint": "logo-assemble-lockup",
-  "camera_target": ".f01-brandcard (in-app brand lockup card; screen-space centre 50% / 32.18%)",
+  "camera_target": "none — the in-phone camera is withdrawn (frame.md, revised 18/08). .screen-world holds scale 1 / x 0 / y 0 for the whole scene and no wrapper is ever scaled. The device keeps its film-wide rig sizing and is never rescaled by this scene.",
   "entry": {
-    "vector": "Z+ from rest — cold open, no predecessor. Stage is dark at t=0; the brand mark spring-pops scale 0→1 (power3.out, 0.05–0.51s), so the frame starts at 0 px/s.",
+    "vector": "Z+ from rest — cold open, no predecessor. Stage is dark at t=0; the brand mark spring-pops scale 0→1 (power3.out, 0.04–0.41s), so the frame starts at 0 px/s.",
     "from_rest": true
   },
   "exit": {
-    "vector": "Z-forward push INTO the screen, accelerating on power3.in through the final frame. Two stacked scales share the 12.20–15.00s window: .screen-world 1.55→2.90 about the brand card (≈1.45 scale/s at t=15, ≈560 px/s at the phone-screen edge) and .f01-world 1.00→1.30 about the phone centre (32.29% / 50%) (≈0.32 scale/s, ≈620 px/s at the canvas edge). Combined edge velocity ≈900–1150 px/s outward, still increasing.",
-    "still_moving": true
+    "vector": "At rest. The last content beat is the deep-dive carousel dots landing 10.72–11.48s; 11.48–12.00s is a single background resolve (glow scale 1.02→1.00, opacity 0.86→0.72 on power2.out) that decays to ~0 px/s at the final frame. No element is travelling when frame 02 takes over.",
+    "still_moving": false
   },
-  "first_second": "0.00–1.00s — cold open on the navy stage. Brand mark spring-pops (0.05–0.51s), then the 'Lessley' wordmark cascades letter by letter as a waterfall-entry (0.62–1.66s). No phone yet; the background glow lifts 0.32→0.55. Nothing is moving at t=0.",
-  "last_second": "14.00–15.00s — pure Z-forward flight. No element reveals, no exits: only the two nested camera scales accelerating on power3.in, plus a 0→7px blur ramp on the stage text column as it passes the lens. Velocity is at its maximum on the last frame — frame 02 must catch it mid-push.",
-  "seam_note": "Hand-off to 02-problem (transition_in: zoom-through). 02 should enter at ≈1.16 world scale about the same 32.29% / 50% origin and decelerate to 1.0 on a mirrored power4.out — which is what 02-problem.html does."
+  "first_second": "0.00–1.00s — cold open on the navy stage. Brand mark spring-pops (0.04–0.41s), then the 'Lessley' wordmark cascades letter by letter as a waterfall-entry (0.50–1.30s). No phone yet; the background glow lifts 0.32→0.55. Nothing is moving at t=0.",
+  "last_second": "11.00–12.00s — the five deep-dive carousel dots finish popping in (the last lands at 11.48s) and the background glow performs a one-shot settle onto the finished screen (11.48–12.00s). The phone is static, the app UI is complete, and the frame comes to rest.",
+  "retime_note": "RETIMED 19/08 — 15s → 12s (−20%) for the tightened cut. Positions and durations were scaled ×0.8 and then hand-tuned. Held over proportional: the phone's landing (1.05s → 0.92s, not 0.84s) and the ₪1,284 count-up (2.80s → 2.50s, not 2.24s) — both are beats that must be read. The time was recovered from the holds instead: the dead air between the belldot and the deep-dive divider, the gap after the last carousel dot, and the closing glow resolve (0.75s → 0.52s). Entrances (letter whips, period pills, stat rises) absorbed the rest. Content still fills the scene to 12.00s.",
+  "seam_note": "REVISED 18/08 — the Z-forward push into the screen that used to own the scene's tail is deleted, so 01 no longer hands 02 any velocity. The storyboard's `transition_in` on frame 02 is stamped as a cut (or a short cross-dissolve). 02-problem's mirrored entry settle has been removed to match.",
+  "data_note": "The savings hero sub now reads `30 הימים האחרונים · 10 מועדונים` — the user is a member of all ten real clubs (frame.md § Demo data). The ₪1,284 total is unchanged."
 }

@@ -1,203 +1,401 @@
 <template>
-  <style id="lessley-shared">
-    /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
-    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
-      src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
-      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
-    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
-      src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
-      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
-    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
-      src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
-      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
-    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
-      src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
-      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
-    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
-      src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
-      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
-    @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
-      src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
-      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
-    @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
-      src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
-      unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
-    @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
-      src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
-      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+  <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
 
-    /* ── tokens ───────────────────────────────────────────────────────── */
-    #root {
-      /* stage — outside the phone */
-      --stage-bg: oklch(19% 0.028 245);
-      --stage-surface: oklch(24% 0.030 240);
-      --stage-ink: hsl(203 36% 96%);
-      --stage-ink-muted: hsl(203 13% 67%);
-      --stage-accent: hsl(180 45% 62%);
-      --stage-accent-deep: hsl(182 38% 36%);
-      --stage-gold: hsl(33 86% 61%);
-      /* in-phone — the app's real tokens, verbatim */
-      --background: 203 34% 96%;   --foreground: 209 37% 15%;
-      --card: 0 0% 100%;           --primary: 182 38% 36%;
-      --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
-      --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
-      --success: 150 60% 45%;      --warning: 33 86% 61%;
-      --border: 201 21% 89%;       --navy: 208 34% 17%;
-      --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
-      --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
+      <style id="lessley-shared">
+        /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
+          src: url("assets/fonts/heebo-400-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 600; font-display: block;
+          src: url("assets/fonts/heebo-600-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Heebo"; font-style: normal; font-weight: 800; font-display: block;
+          src: url("assets/fonts/heebo-800-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");
+          unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+        @font-face { font-family: "Frank Ruhl Libre"; font-style: normal; font-weight: 700; font-display: block;
+          src: url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");
+          unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
 
-      position: absolute;
-      inset: 0;
-      width: 1920px;
-      height: 1080px;
-      overflow: hidden;
-      background: var(--stage-bg);
-      color: var(--stage-ink);
-      direction: rtl;
-      font-family: "Heebo", system-ui, sans-serif;
-      font-feature-settings: "tnum" 0;
-    }
+        /* ── tokens ───────────────────────────────────────────────────────── */
+        #root {
+          /* stage — outside the phone */
+          --stage-bg: oklch(19% 0.028 245);
+          --stage-surface: oklch(24% 0.030 240);
+          --stage-ink: hsl(203 36% 96%);
+          --stage-ink-muted: hsl(203 13% 67%);
+          --stage-accent: hsl(180 45% 62%);
+          --stage-accent-deep: hsl(182 38% 36%);
+          --stage-gold: hsl(33 86% 61%);
+          /* in-phone — the app's real tokens, verbatim */
+          --background: 203 34% 96%;   --foreground: 209 37% 15%;
+          --card: 0 0% 100%;           --primary: 182 38% 36%;
+          --muted: 198 28% 94%;        --muted-foreground: 208 11% 46%;
+          --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
+          --success: 150 60% 45%;      --warning: 33 86% 61%;
+          --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
+          --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
-    /* Currency and figures never flip in an RTL run. */
-    .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          background: var(--stage-bg);
+          color: var(--stage-ink);
+          direction: rtl;
+          font-family: "Heebo", system-ui, sans-serif;
+          font-feature-settings: "tnum" 0;
+        }
 
-    /* ── stage layout ─────────────────────────────────────────────────── */
-    .bg-layer { position: absolute; inset: 0; pointer-events: none; }
-    .bg-glow {
-      position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
-      background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
-      left: 60px; top: -50px;
-    }
-    .bg-grid {
-      position: absolute; inset: 0; opacity: 0.03;
-      background-image:
-        linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
-      background-size: 120px 120px;
-    }
-    .bg-ghost {
-      position: absolute; bottom: -90px; right: -40px;
-      font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
-      color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
-    }
-    .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
-      background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
-      background-size: 3px 3px; }
+        /* Currency and figures never flip in an RTL run. */
+        .num { unicode-bidi: isolate; direction: ltr; font-variant-numeric: tabular-nums; }
 
-    .stage { position: absolute; inset: 0; display: flex; align-items: center;
-      gap: 72px; padding: 96px; }
-    .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
-      text-align: right; max-width: 800px; }
-    .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
-      line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
-    .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
-    .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
-      color: var(--stage-accent); margin: 0; }
+        /* ── stage layout ─────────────────────────────────────────────────── */
+        .bg-layer { position: absolute; inset: 0; pointer-events: none; }
+        .bg-glow {
+          position: absolute; width: 1100px; height: 1100px; border-radius: 50%;
+          background: radial-gradient(circle, hsl(182 38% 36% / 0.16), transparent 62%);
+          left: 60px; top: -50px;
+        }
+        .bg-grid {
+          position: absolute; inset: 0; opacity: 0.03;
+          background-image:
+            linear-gradient(to right, var(--stage-ink) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--stage-ink) 1px, transparent 1px);
+          background-size: 120px 120px;
+        }
+        .bg-ghost {
+          position: absolute; bottom: -90px; right: -40px;
+          font-family: "Frank Ruhl Libre", serif; font-size: 340px; font-weight: 700;
+          color: var(--stage-ink); opacity: 0.04; letter-spacing: -0.03em; line-height: 1;
+        }
+        .bg-grain { position: absolute; inset: 0; opacity: 0.03; mix-blend-mode: overlay;
+          background-image: radial-gradient(hsl(0 0% 100%) 0.5px, transparent 0.5px);
+          background-size: 3px 3px; }
 
-    .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
-      letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
-    .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
-      background: hsl(203 36% 96% / 0.14); }
-    .rail > i { display: block; height: 100%; background: var(--stage-accent);
-      transform-origin: right center; }
+        .stage { position: absolute; inset: 0; display: flex; align-items: center;
+          gap: 56px; padding: 42px 80px; }
+        .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
+          text-align: right; max-width: 800px; }
+        .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
+          line-height: 1.08; letter-spacing: -0.01em; margin: 0; }
+        .scene-body { font-size: 30px; line-height: 1.5; color: var(--stage-ink-muted); margin: 0; }
+        .scene-kicker { font-size: 20px; font-weight: 600; letter-spacing: 0.06em;
+          color: var(--stage-accent); margin: 0; }
 
-    /* ── the device — the film's carrier ─────────────────────────────── */
-    .device { position: relative; width: 430px; height: 932px; flex: none; }
-    .device-body {
-      position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
-      background: oklch(28% 0.010 250);
-      box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
-    }
-    .device-screen {
-      position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
-      background: hsl(var(--background)); color: hsl(var(--foreground));
-      background-image:
-        radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
-        radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
-      display: flex; flex-direction: column;
-    }
-    .device-island {
-      position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
-      width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
-    }
-    /* The screen's own camera wrapper: scenes push into a card by transforming this. */
-    .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        .chapter { position: absolute; top: 64px; left: 96px; font-size: 20px; font-weight: 600;
+          letter-spacing: 0.06em; color: var(--stage-ink-muted); direction: ltr; }
+        .rail { position: absolute; bottom: 60px; left: 96px; right: 96px; height: 3px;
+          background: hsl(203 36% 96% / 0.14); }
+        .rail > i { display: block; height: 100%; background: var(--stage-accent);
+          transform-origin: right center; }
 
-    /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
-    .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-      padding: 0; font-size: 22px; }
-    .app-header { display: flex; align-items: center; gap: 14px;
-      padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-      background: hsl(var(--card) / 0.8); }
-    .app-header .brand { flex: 1; min-width: 0; }
-    .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-    .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-    .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
-      display: grid; place-items: center; border: 1px solid hsl(var(--border));
-      background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-    .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-      display: grid; place-items: center; font-weight: 800; font-size: 22px;
-      background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-    .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-      flex-direction: column; gap: 16px; }
-    .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-    .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        /* ── the device — the film's carrier ─────────────────────────────── */
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
+        .device-body {
+          position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
+          background: oklch(28% 0.010 250);
+          box-shadow: 0 0 0 2px hsl(210 8% 62%), 0 40px 90px oklch(12% 0.02 245 / 0.6);
+        }
+        .device-screen {
+          position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden;
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%);
+          display: flex; flex-direction: column;
+        }
+        .device-island {
+          position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+          width: 126px; height: 37px; border-radius: 20px; background: oklch(12% 0 0); z-index: 9;
+        }
+        /* The screen's own camera wrapper: scenes push into a card by transforming this. */
+        .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-    .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-      background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-    .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-      background: hsl(var(--muted) / 0.55); padding: 16px; }
+        .app { position: absolute; inset: 0; display: flex; flex-direction: column;
+          font-size: 15px; }
 
-    .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-      padding: 20px 22px; font-size: 22px; }
-    .field .lbl { color: hsl(var(--muted-foreground)); }
-    .field .val { font-weight: 700; }
-    .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
+          display: grid; place-items: center; border: 1px solid hsl(var(--border));
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
 
-    .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-      font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-      color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-    .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
 
-    .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-      padding: 8px 16px; font-size: 18px; font-weight: 700; }
-    .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-    .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — page head — */
+        .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-    .tabs { display: flex; gap: 6px; }
-    .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-      font-size: 19px; color: hsl(var(--muted-foreground)); }
-    .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-    .steps { display: flex; gap: 6px; }
-    .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-      border-radius: 999px; color: hsl(var(--muted-foreground));
-      background: hsl(var(--muted)); }
-    .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-    .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-      border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
-      box-shadow: var(--shadow-float); }
-    .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-      border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-      color: hsl(203 13% 67%); }
-    .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-    .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-    .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-    .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-      border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-    /* Oversized macOS-style pointer for cursor-led scenes. */
-    .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
-      filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
-  </style>
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
+        .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
+
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
+          box-shadow: var(--shadow-float); }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
+
+        /* Oversized macOS-style pointer for cursor-led scenes. */
+        .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
+          filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
+      </style>
 
   <style>
     /* ── scene 16 — hot deals ─────────────────────────────────────────── */
+
+    /* Tokens the shared block references but does not itself declare —
+       copied verbatim from lessley-frontend/src/index.css :root. */
+    #root {
+      --secondary: 195 33% 94%;        --secondary-foreground: 209 28% 20%;
+      --navy-foreground: 203 36% 96%;  --navy-muted: 203 13% 67%;
+      --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+      --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+    }
+
+    /* RTL corrections. The shared primitives order their children as if the
+       document ran LTR; the real app is RTL — brand right / bell + avatar left,
+       meta chips packed to the right. Values are the app's, only the side flips. */
+    .app-header .brand { order: 1; margin-inline-start: 0; margin-inline-end: auto; }
+    .app-header .app-icon { order: 2; }
+    .app-header .app-avatar { order: 3; }
+    /* Real club names are long ("PaisPlus — Food Chains Cash Card"), so the
+       meta row is sized to carry the club chip beside the date chip and still
+       wraps rather than squeezing if a name runs longer. */
+    .deal-meta { justify-content: flex-start; flex-wrap: wrap; row-gap: 8px; }
+    .hd-stage .chip { font-size: 14px; padding: 7px 12px; gap: 6px; }
+    /* A club name that mixes Latin and Hebrew ("Hever (חבר) — Gift Cards") is
+       reordered by the bidi algorithm inside an RTL run. Isolating it as its
+       own LTR run is the same guard `.num` gives figures. */
+    .hd-clubchip { direction: ltr; unicode-bidi: isolate; }
+
     .hd-ground { position: absolute; inset: 0; background: var(--stage-bg); }
     .hd-stage  { position: absolute; inset: 0; }
 
@@ -205,44 +403,40 @@
       position: absolute; right: 96px; top: 0; bottom: 0; width: 748px; max-width: none;
       flex: none; display: flex; flex-direction: column; justify-content: center; gap: 22px;
     }
-    .hd-stage .device { position: absolute; left: 405px; top: 74px; transform: scale(0.9442); }
+    /* The carrier: held large, at rest, for the whole scene. Never transformed. */
+    .hd-stage .device { position: absolute; left: 390px; top: 30px;
+      transform: scale(0.9428); transform-origin: 50% 50%; }
 
     .hd-rule { width: 224px; height: 3px; background: hsl(203 36% 96% / 0.16); margin: 4px 0 6px; }
     .hd-rule > i { display: block; height: 100%; background: var(--stage-accent); transform-origin: right center; }
     .hd-stage .rail > i { width: 100%; }
 
-    /* in-phone */
-    .hd-stage .app-main { gap: 13px; padding: 16px 20px; }
-    .hd-stage .app-h1 { font-size: 31px; }
-    .hd-stage .app-sub { font-size: 18px; }
-    .hd-logo { color: hsl(var(--primary)); }
+    /* ── in-phone ─────────────────────────────────────────────────────── */
+    .hd-head { display: flex; align-items: flex-start; gap: 10px; flex: none; }
+    .hd-head-tx { flex: 1; min-width: 0; }
+    .hd-info-btn { align-self: flex-start; }
 
-    .hd-list { position: relative; display: flex; flex-direction: column; gap: 11px;
-      border-radius: 26px; overflow: hidden; flex: none; }
-    .hd-deal { display: flex; align-items: center; gap: 12px; padding: 15px 18px;
-      border-radius: 22px; border: 1px solid hsl(var(--border));
-      background: hsl(var(--card)); box-shadow: var(--shadow-card); }
-    .hd-deal .d-main { flex: 1; min-width: 0; display: block; }
-    .hd-deal .d-store { display: block; font-size: 22px; font-weight: 700; line-height: 1.2; }
-    .hd-deal .d-cat { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); line-height: 1.3; }
-    .hd-pill { background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
-      font-size: 18px; padding: 9px 15px; white-space: nowrap; }
+    .hd-list { display: flex; flex-direction: column; gap: 12px; flex: none; }
+    /* The list is longer than the viewport — the real screen scrolls. Cards must
+       CLIP at the fold, never shrink to fit, so every card opts out of flex. */
+    .hd-list > .deal { flex: none; }
+    .hd-stage .deal-art { height: 92px; }
+    .hd-stage .deal-art svg { width: 72px; height: 72px; opacity: 0.32; }
+    .hd-chipico { width: 16px; height: 16px; display: block; }
 
-    .hd-sweep { position: absolute; top: 0; bottom: 0; right: 0; width: 44%; opacity: 0;
-      pointer-events: none;
-      background: linear-gradient(90deg, transparent, hsl(182 38% 36% / 0.20), transparent); }
-
-    .hd-info { flex: none; }
-    .hd-info .i-h { display: block; font-size: 23px; font-weight: 800; line-height: 1.25; }
-    .hd-info .i-b { display: block; font-size: 18px; line-height: 1.42;
-      color: hsl(var(--muted-foreground)); margin-top: 9px; }
-
-    .hd-navico { width: 21px; height: 21px; display: block; }
+    /* the info dialog — centred card over a scrim (shadcn Dialog, max-w 340) */
+    .hd-scrim { position: absolute; inset: 0; background: oklch(15% 0.02 245); opacity: 0; z-index: 14; }
+    .hd-dialog { position: absolute; z-index: 15; left: 50px; right: 50px; top: 300px;
+      border-radius: 26px; background: hsl(var(--card)); box-shadow: var(--shadow-float);
+      padding: 24px 22px; text-align: right; }
+    .hd-dlg-t { display: block; font-size: 21px; font-weight: 800; line-height: 1.25; }
+    .hd-dlg-b { display: block; font-size: 17px; line-height: 1.45;
+      color: hsl(var(--muted-foreground)); margin-top: 12px; }
   </style>
 
   <div id="root" data-composition-id="16-hot-deals" data-width="1920" data-height="1080">
 
-    <div class="clip hd-ground" id="hd-ground" data-start="0" data-duration="12" data-track-index="0">
+    <div class="clip hd-ground" id="hd-ground" data-start="0" data-duration="10" data-track-index="0">
       <div class="bg-layer">
         <div class="bg-glow" id="hd-glow"></div>
         <div class="bg-grid" id="hd-grid"></div>
@@ -251,14 +445,14 @@
       </div>
     </div>
 
-    <div class="clip hd-stage" id="hd-scene" data-start="0" data-duration="12" data-track-index="1">
+    <div class="clip hd-stage" id="hd-scene" data-start="0" data-duration="10" data-track-index="1">
       <span class="chapter" id="hd-chapter">16 / 21</span>
 
       <div class="col-text">
-        <h1 class="scene-title" id="hd-title">חם</h1>
+        <h1 class="scene-title" id="hd-title">מה שווה עכשיו</h1>
         <div class="hd-rule"><i id="hd-rule-fill"></i></div>
-        <p class="scene-body" id="hd-p1">הדילים המומלצים נשפכים פנימה.</p>
-        <p class="scene-body" id="hd-p2">לא דירוג פופולריות — בחירה אצורה.</p>
+        <p class="scene-body" id="hd-p1">בחירה אצורה מכל המועדונים שלכם.</p>
+        <p class="scene-body" id="hd-p2">לא מה שטרנדי — מה שבאמת משתלם.</p>
       </div>
 
       <div class="device">
@@ -268,14 +462,12 @@
               <div class="app">
 
                 <div class="app-header" id="hd-header">
-                  <div class="app-icon hd-logo">
-                    <svg viewBox="0 0 24 24" width="25" height="25" aria-hidden="true">
-                      <path d="M12 2.6 L14.7 9.3 L21.4 12 L14.7 14.7 L12 21.4 L9.3 14.7 L2.6 12 L9.3 9.3 Z" fill="currentColor"></path>
-                    </svg>
+                  <div class="brand">
+                    <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                    <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
                   </div>
-                  <div class="brand"><b>Lessley</b><span>דילים מומלצים</span></div>
                   <div class="app-icon">
-                    <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor"
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M18 8.4a6 6 0 1 0-12 0c0 6.6-2.7 7.6-2.7 7.6h17.4S18 15 18 8.4"></path>
                       <path d="M13.6 20.2a2 2 0 0 1-3.2 0"></path>
@@ -285,61 +477,198 @@
                 </div>
 
                 <div class="app-main">
-                  <div>
-                    <h1 class="app-h1" id="hd-apph1">דילים מומלצים</h1>
-                    <p class="app-sub" id="hd-appsub">דילים אמיתיים מכל מועדוני הנאמנות שלכם, מתעדכנים באופן שוטף</p>
+                  <div class="hd-head">
+                    <div class="hd-head-tx">
+                      <h1 class="app-h1" id="hd-apph1">דילים מומלצים</h1>
+                      <p class="app-sub" id="hd-appsub">דילים אמיתיים מכל מועדוני הנאמנות שלכם, מתעדכנים באופן שוטף</p>
+                    </div>
+                    <div class="app-icon hd-info-btn" id="hd-infobtn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9.2"></circle>
+                        <path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.5-2.4 2.5"></path>
+                        <path d="M12 17h.01"></path>
+                      </svg>
+                    </div>
                   </div>
 
-                  <div class="hd-list" id="hd-deals" data-camera-target>
-                    <div class="hd-deal" id="hd-deal1">
-                      <span class="d-main">
-                        <span class="d-store">יינות ביתן</span>
-                        <span class="d-cat">מכולת</span>
-                      </span>
-                      <span class="pill hd-pill" id="hd-pill1"><span class="num">30%</span>&nbsp;הנחה</span>
-                    </div>
-                    <div class="hd-deal" id="hd-deal2">
-                      <span class="d-main">
-                        <span class="d-store">סופר-פארם</span>
-                        <span class="d-cat">בית מרקחת</span>
-                      </span>
-                      <span class="pill hd-pill" id="hd-pill2"><span class="num">1+1</span></span>
-                    </div>
-                    <div class="hd-deal" id="hd-deal3">
-                      <span class="d-main">
-                        <span class="d-store">KSP</span>
-                        <span class="d-cat">אלקטרוניקה</span>
-                      </span>
-                      <span class="pill hd-pill" id="hd-pill3"><span class="num">₪50</span>&nbsp;הנחה</span>
-                    </div>
-                    <div class="hd-sweep" id="hd-sweep"></div>
-                  </div>
+                  <div class="hd-list" id="hd-list">
 
-                  <div class="card hd-info" id="hd-info">
-                    <span class="i-h" id="hd-info-h">מה הופך דיל ל"מומלץ"?</span>
-                    <span class="i-b" id="hd-info-a">זה לא דירוג פופולריות — אנחנו לא עוקבים אחרי מה טרנדי.</span>
-                    <span class="i-b" id="hd-info-b">זו בחירה אצורה של דילים אמיתיים בקטגוריות פופולריות כמו מכולת, מסעדות ואלקטרוניקה.</span>
+                    <!-- Rank 1 — the film's running example: the real FOX giftcard
+                         deal, 30% capped at ₪300, via Hever (חבר) — Gift Cards. -->
+                    <div class="deal" id="hd-d1">
+                      <span class="deal-pct" id="hd-pct1"><span class="num">30%</span>&nbsp;הנחה</span>
+                      <span class="deal-rank" id="hd-rank1"><span class="num">1</span></span>
+                      <div class="deal-art" id="hd-art1">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                          <path d="M24 10h16l14 7-5 11-6-3v29H21V25l-6 3-5-11Z" fill="none"
+                                stroke="hsl(210 12% 42%)" stroke-width="4"
+                                stroke-linecap="round" stroke-linejoin="round"></path>
+                          <path d="M24 10a8 8 0 0 0 16 0" fill="none" stroke="hsl(210 16% 32%)"
+                                stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                      </div>
+                      <div class="deal-store" id="hd-store1">FOX - פוקס</div>
+                      <div class="deal-cat" id="hd-cat1">ביגוד ואביזרים</div>
+                      <div class="deal-title" id="hd-dt1">כרטיס מתנה · עד <span class="num">₪300</span></div>
+                      <div class="deal-meta" id="hd-meta1">
+                        <span class="chip hd-clubchip" id="hd-club1">Hever (חבר) — Gift Cards</span>
+                        <span class="chip chip-muted" id="hd-date1">
+                          <svg class="hd-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                            <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                            <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                          </svg>
+                          <span class="num">08/08/2026</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="deal" id="hd-d2">
+                      <span class="deal-pct" id="hd-pct2"><span class="num">25%</span>&nbsp;הנחה</span>
+                      <span class="deal-rank" id="hd-rank2"><span class="num">2</span></span>
+                      <div class="deal-art" id="hd-art2">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                          <path d="M11 26a21 12 0 0 1 42 0Z" fill="none" stroke="hsl(210 12% 42%)"
+                                stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                          <path d="M10 34h44M12 42h40a10 10 0 0 1-10 10H22a10 10 0 0 1-10-10Z"
+                                fill="none" stroke="hsl(210 16% 32%)" stroke-width="4"
+                                stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                      </div>
+                      <div class="deal-store" id="hd-store2">מקדונלד'ס - McDonald's</div>
+                      <div class="deal-cat" id="hd-cat2">מסעדות</div>
+                      <div class="deal-title" id="hd-dt2">כרטיס מתנה · עד <span class="num">₪285</span></div>
+                      <div class="deal-meta" id="hd-meta2">
+                        <span class="chip hd-clubchip" id="hd-club2">PaisPlus — Networks Cash Card</span>
+                        <span class="chip chip-muted" id="hd-date2">
+                          <svg class="hd-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                            <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                            <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                          </svg>
+                          <span class="num">08/08/2026</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="deal" id="hd-d3">
+                      <span class="deal-pct" id="hd-pct3"><span class="num">10%</span>&nbsp;הנחה</span>
+                      <span class="deal-rank" id="hd-rank3"><span class="num">3</span></span>
+                      <div class="deal-art" id="hd-art3">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                          <path d="M7 12h8l7.5 27h27.5l6.5-19H19" fill="none" stroke="hsl(210 12% 42%)"
+                                stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                          <circle cx="26" cy="50" r="4.6" fill="hsl(210 16% 32%)"></circle>
+                          <circle cx="45" cy="50" r="4.6" fill="hsl(210 16% 32%)"></circle>
+                        </svg>
+                      </div>
+                      <div class="deal-store" id="hd-store3">טיב טעם</div>
+                      <div class="deal-cat" id="hd-cat3">מכולת</div>
+                      <div class="deal-title" id="hd-dt3">כרטיס מתנה · עד <span class="num">₪180</span></div>
+                      <div class="deal-meta" id="hd-meta3">
+                        <span class="chip hd-clubchip" id="hd-club3">PaisPlus — Food Chains Cash Card</span>
+                        <span class="chip chip-muted" id="hd-date3">
+                          <svg class="hd-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                            <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                            <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                          </svg>
+                          <span class="num">08/08/2026</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Ranks 4-5 sit past the fold. The real screen scrolls, so the
+                         list keeps going and the app-main clips it. -->
+                    <div class="deal" id="hd-d4">
+                      <span class="deal-pct" id="hd-pct4"><span class="num">15%</span>&nbsp;הנחה</span>
+                      <span class="deal-rank" id="hd-rank4"><span class="num">4</span></span>
+                      <div class="deal-art" id="hd-art4">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                          <path d="M14 22v20M22 18v28M42 18v28M50 22v20M22 32h20" fill="none"
+                                stroke="hsl(210 12% 42%)" stroke-width="5" stroke-linecap="round"></path>
+                        </svg>
+                      </div>
+                      <div class="deal-store" id="hd-store4">מגה ספורט אונליין</div>
+                      <div class="deal-cat" id="hd-cat4">ציוד תחביבים וספורט</div>
+                      <div class="deal-title" id="hd-dt4">כרטיס מתנה · עד <span class="num">₪150</span></div>
+                      <div class="deal-meta" id="hd-meta4">
+                        <span class="chip hd-clubchip" id="hd-club4">Behatsdaa</span>
+                        <span class="chip chip-muted" id="hd-date4">
+                          <svg class="hd-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                            <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                            <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                          </svg>
+                          <span class="num">08/08/2026</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="deal" id="hd-d5">
+                      <span class="deal-pct" id="hd-pct5"><span class="num">30%</span>&nbsp;הנחה</span>
+                      <span class="deal-rank" id="hd-rank5"><span class="num">5</span></span>
+                      <div class="deal-art" id="hd-art5">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                          <path d="M9 30 32 12l23 18" fill="none" stroke="hsl(210 12% 42%)"
+                                stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                          <path d="M15 30v22h34V30" fill="none" stroke="hsl(210 16% 32%)"
+                                stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                      </div>
+                      <div class="deal-store" id="hd-store5">הום סנטר</div>
+                      <div class="deal-cat" id="hd-cat5">שיפוצים ותיקונים</div>
+                      <div class="deal-title" id="hd-dt5">כרטיס מתנה · עד <span class="num">₪300</span></div>
+                      <div class="deal-meta" id="hd-meta5">
+                        <span class="chip hd-clubchip" id="hd-club5">Hever (חבר) — Gift Cards</span>
+                        <span class="chip chip-muted" id="hd-date5">
+                          <svg class="hd-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                            <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                            <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                          </svg>
+                          <span class="num">08/08/2026</span>
+                        </span>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
                 <div class="nav">
                   <span class="nav-tab">
-                    <svg class="hd-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-                      <path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 3.2 13.7 8.3 18.8 10 13.7 11.7 12 16.8 10.3 11.7 5.2 10 10.3 8.3Z"></path>
+                      <path d="M18.5 15.5 19.3 17.7 21.5 18.5 19.3 19.3 18.5 21.5 17.7 19.3 15.5 18.5 17.7 17.7Z"></path>
                     </svg>אופטימיזציה</span>
                   <span class="nav-tab">
-                    <svg class="hd-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-                      <path d="M4 19V9M10 19V5M16 19v-6M21 19H3"></path>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 3v16.5a1.5 1.5 0 0 0 1.5 1.5H21"></path>
+                      <path d="M8 17v-5M13 17V8M18 17v-3"></path>
                     </svg>תובנות</span>
                   <span class="nav-tab on">
-                    <svg class="hd-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M12 3c3 3.4 4.6 6 4.6 8.2a4.6 4.6 0 1 1-9.2 0C7.4 9 9 6.4 12 3Z"></path>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M8.6 14.4A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.6 2.4Z"></path>
                     </svg>חם</span>
                   <span class="nav-tab">
-                    <svg class="hd-navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M12 4.2 13.9 9l5.1.3-3.9 3.3 1.3 4.9L12 14.8 7.6 17.5l1.3-4.9L5 9.3 10.1 9Z"></path>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.9 5.9 0 0 0 18 7.6 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                      <path d="M9.5 18h5M10.5 21.5h3"></path>
                     </svg>המלצות</span>
                 </div>
+
+                <div class="hd-scrim" id="hd-scrim"></div>
+                <div class="hd-dialog" id="hd-dialog">
+                  <span class="hd-dlg-t" id="hd-dlg-t">מה הופך דיל ל"מומלץ"?</span>
+                  <span class="hd-dlg-b" id="hd-dlg-a">זה לא דירוג פופולריות — אנחנו לא עוקבים אחרי מה טרנדי.</span>
+                  <span class="hd-dlg-b" id="hd-dlg-b">זו בחירה אצורה של דילים אמיתיים בקטגוריות פופולריות כמו מכולת, מסעדות ואלקטרוניקה.</span>
+                </div>
+
+                <svg class="cursor" id="hd-cursor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 2 L4 20.6 L9.1 15.5 L12.3 22.4 L15.6 20.9 L12.4 14.2 L19.4 14.1 Z"
+                        fill="#ffffff" stroke="hsl(209 37% 15%)" stroke-width="1.3" stroke-linejoin="round"></path>
+                </svg>
 
               </div>
             </div>
@@ -362,29 +691,12 @@
       var tl = gsap.timeline({ paused: true });
       window.__timelines[ID] = tl;
 
-      /* ── in-phone camera (screen-world is the transform surface) ───────── */
-      var world = q("#hd-world");
-      var W = world.offsetWidth || 410;
-      var H = world.offsetHeight || 912;
+      /* ── NO in-phone camera ────────────────────────────────────────────
+         `.screen-world` and `.device` are never transformed in this film
+         (frame.md § Fidelity outranks everything, revised 18/08). The screen
+         renders the app at its real proportions and legibility is bought with
+         frame real estate. Everything below animates CONTENT only.        */
 
-      function centerOf(el, fallbackY) {
-        var px = W / 2, py = fallbackY, t = 0, l = 0, n = el, guard = 0;
-        while (n && n !== world && guard < 24) { t += n.offsetTop; l += n.offsetLeft; n = n.offsetParent; guard++; }
-        if (n === world && el.offsetHeight) { py = t + el.offsetHeight / 2; px = l + el.offsetWidth / 2; }
-        return { x: px, y: py };
-      }
-      function cam(p, s) { return { scale: s, x: -(p.x - W / 2) * s, y: -(p.y - H / 2) * s }; }
-
-      var pDeals = centerOf(q("#hd-deals"), H * 0.50);
-      var pInfo = centerOf(q("#hd-info"), H * 0.70);
-      var pWide = { x: (pDeals.x + pInfo.x) / 2, y: (pDeals.y + pInfo.y) / 2 };
-
-      var camRest = { scale: 1, x: 0, y: 0 };
-      var camIn = cam(pDeals, 1.42);
-      var camOut = cam(pWide, 1.16);
-      var camEnd = cam(pWide, 1.22);
-
-      /* ── helpers ──────────────────────────────────────────────────────── */
       var F = 1 / 60;
 
       // waterfall-entry: BINARY opacity 0->1, then a y whip on power4.out
@@ -404,62 +716,101 @@
           { clipPath: "inset(0px 0px 0px 100%)", opacity: 1 },
           { clipPath: "inset(0px 0px 0px 0%)", duration: dur, ease: "power2.out" }, at);
       }
+      // press: the pointer dips, the target answers
+      function press(at, sel, down) {
+        tl.fromTo(sel, { scale: 1 },
+          { scale: down, duration: 0.08, ease: "power2.in", immediateRender: false }, at);
+        tl.fromTo(sel, { scale: down },
+          { scale: 1, duration: 0.1, ease: "power2.out", immediateRender: false }, at + 0.08);
+      }
 
       /* ── persistent rail: 15/21 -> 16/21 across the whole scene ───────── */
-      tl.fromTo("#hd-rail", { scaleX: 0.7143 }, { scaleX: 0.7619, duration: 12, ease: "none" }, 0);
+      tl.fromTo("#hd-rail", { scaleX: 0.7143 }, { scaleX: 0.7619, duration: 10, ease: "none" }, 0);
 
-      /* ── Scene 1 (0.0–3.4s): open + the deals cascade in ──────────────── */
-      // the carried-in push: the screen arrives still moving inward, then settles
-      tl.fromTo(world, { scale: 1.05, x: 0, y: 0 },
-        { scale: 1, x: 0, y: 0, duration: 0.55, ease: "power3.out" }, 0);
-
+      /* ── Beat 1 (0.0–1.2s): the screen and the page head set up ───────── */
       tl.fromTo("#hd-header", { opacity: 0, y: -16 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.04);
-      tl.fromTo("#hd-chapter", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 0.1);
+        { opacity: 1, y: 0, duration: 0.46, ease: "power3.out" }, 0.04);
+      tl.fromTo("#hd-chapter", { opacity: 0 }, { opacity: 1, duration: 0.36, ease: "power1.out" }, 0.1);
 
-      whip("#hd-title", 80, 0.18, 0.15);                       // anchor, heaviest
+      whip("#hd-title", 80, 0.17, 0.12);                       // anchor, heaviest
       tl.fromTo("#hd-rule-fill", { scaleX: 0 },
-        { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.15 + 0.18 + 2 * F);
-      whip("#hd-apph1", 48, 0.16, 0.42);
+        { scaleX: 1, duration: 0.44, ease: "power3.out" }, 0.12 + 0.17 + 2 * F);
+      whip("#hd-apph1", 48, 0.15, 0.36);
       tl.fromTo("#hd-appsub", { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.62);
-      whip("#hd-p1", 44, 0.15, 0.95);
+        { opacity: 1, y: 0, duration: 0.44, ease: "power2.out" }, 0.54);
+      pop("#hd-infobtn", 0.5, 0.4, 0.74);
+      whip("#hd-p1", 44, 0.14, 0.82);
 
-      // grid-card-assemble: items slide a short distance directly into their slot
-      whip("#hd-deal1", 46, 0.17, 1.80);
-      pop("#hd-pill1", 0, 0.45, 2.06);
-      whip("#hd-deal2", 44, 0.16, 2.34);
-      pop("#hd-pill2", 0, 0.45, 2.58);
-      whip("#hd-deal3", 42, 0.15, 2.86);
-      pop("#hd-pill3", 0, 0.45, 3.08);
+      /* ── Beat 2 (1.28–3.48s): deal card 1 assembles, part by part ─────── */
+      whip("#hd-d1", 46, 0.16, 1.28);
+      pop("#hd-art1", 0.82, 0.44, 1.46);
+      pop("#hd-rank1", 0.4, 0.4, 1.64);
+      pop("#hd-pct1", 0.4, 0.42, 1.76);
+      wipe("#hd-store1", 0.38, 1.96);
+      wipe("#hd-cat1", 0.36, 2.16);
+      wipe("#hd-dt1", 0.52, 2.42);
+      pop("#hd-club1", 0.5, 0.38, 2.94);
+      pop("#hd-date1", 0.5, 0.38, 3.10);
 
-      /* ── Scene 2 (3.4–7.3s): camera pushes into the list, glow sweeps ─── */
-      tl.fromTo(world, camRest,
-        { scale: camIn.scale, x: camIn.x, y: camIn.y, duration: 2.8, ease: "power2.inOut", immediateRender: false }, 3.30);
+      /* ── Beat 3 (3.62–5.65s): deal card 2, same order, tighter ────────── */
+      whip("#hd-d2", 44, 0.15, 3.62);
+      pop("#hd-art2", 0.82, 0.42, 3.79);
+      pop("#hd-rank2", 0.4, 0.38, 3.96);
+      pop("#hd-pct2", 0.4, 0.4, 4.08);
+      wipe("#hd-store2", 0.36, 4.27);
+      wipe("#hd-cat2", 0.34, 4.45);
+      wipe("#hd-dt2", 0.5, 4.69);
+      pop("#hd-club2", 0.5, 0.36, 5.15);
+      pop("#hd-date2", 0.5, 0.36, 5.29);
 
-      // ambient-glow-bloom: one traveling pass across the assembled list
-      tl.fromTo("#hd-sweep", { xPercent: -230, opacity: 0 },
-        { xPercent: 0, opacity: 1, duration: 0.55, ease: "power1.out" }, 6.15);
-      tl.fromTo("#hd-sweep", { xPercent: 0, opacity: 1 },
-        { xPercent: 230, opacity: 0, duration: 0.85, ease: "power1.in", immediateRender: false }, 6.70);
+      /* ── Beat 4 (5.7–6.3s): the list keeps going under the fold ───────── */
+      whip("#hd-d3", 42, 0.15, 5.70);
+      pop("#hd-rank3", 0.4, 0.38, 5.86);
+      pop("#hd-pct3", 0.4, 0.38, 5.96);
+      whip("#hd-d4", 38, 0.14, 5.92);
+      whip("#hd-d5", 34, 0.13, 6.08);
 
-      /* ── Scene 3 (7.3–12s): re-frame, the curation card lands ─────────── */
-      whip("#hd-p2", 46, 0.16, 7.25);
+      whip("#hd-p2", 46, 0.15, 6.10);
 
-      tl.fromTo(world, { scale: camIn.scale, x: camIn.x, y: camIn.y },
-        { scale: camOut.scale, x: camOut.x, y: camOut.y, duration: 1.85, ease: "power2.inOut", immediateRender: false }, 7.55);
+      /* ── Beat 5 (6.3–9.9s): the curation question is answered ─────────
+         The pointer opens the page's own info dialog — the copy under it is
+         he.json's dealFinder.hotDeals.infoDialog, verbatim.                */
+      var CUR_FROM = { x: 470, y: 1010 };
+      var TIP_X = 7.7, TIP_Y = 3.8;
+      var appEl = q(".app");                       // the cursor's own offsetParent
+      var infoBtn = q("#hd-infobtn");
+      var bx = 0, by = 0, n = infoBtn, guard = 0;
+      while (n && n !== appEl && guard < 24) { bx += n.offsetLeft; by += n.offsetTop; n = n.offsetParent; guard++; }
+      var target = (n === appEl && infoBtn.offsetWidth)
+        ? { x: bx + infoBtn.offsetWidth / 2, y: by + infoBtn.offsetHeight / 2 }
+        : { x: 46, y: 178 };
 
-      pop("#hd-info", 0.9, 0.62, 7.92, 26);
-      wipe("#hd-info-h", 0.5, 8.55);
-      wipe("#hd-info-a", 0.62, 9.15);
-      wipe("#hd-info-b", 0.7, 10.25);
+      gsap.set("#hd-cursor", { x: CUR_FROM.x, y: CUR_FROM.y, scale: 1 });
+      gsap.set("#hd-scrim", { opacity: 0 });
 
-      // the glow answers the curation beat, then the camera keeps creeping to the seam
-      tl.fromTo("#hd-glow", { opacity: 0.72, scale: 0.94 },
-        { opacity: 1, scale: 1, duration: 0.9, ease: "power2.out" }, 9.15);
+      tl.fromTo("#hd-cursor", { x: CUR_FROM.x, y: CUR_FROM.y },
+        { x: target.x - TIP_X, y: target.y - TIP_Y, duration: 0.70, ease: "power2.inOut" }, 6.32);
 
-      tl.fromTo(world, { scale: camOut.scale, x: camOut.x, y: camOut.y },
-        { scale: camEnd.scale, x: camEnd.x, y: camEnd.y, duration: 1.1, ease: "none", immediateRender: false }, 10.90);
+      var CLICK = 7.06;
+      press(CLICK, "#hd-cursor", 0.84);
+      press(CLICK, "#hd-infobtn", 0.9);
+
+      tl.fromTo("#hd-scrim", { opacity: 0 },
+        { opacity: 0.26, duration: 0.4, ease: "power2.out" }, CLICK + 0.06);
+      tl.fromTo("#hd-dialog", { opacity: 0, scale: 0.92, y: 26 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.54, ease: "power3.out" }, CLICK + 0.08);
+
+      wipe("#hd-dlg-t", 0.44, 7.62);
+      wipe("#hd-dlg-a", 0.58, 8.04);
+      wipe("#hd-dlg-b", 0.8, 8.72);
+
+      // the stage glow answers the beat — it reacts, it never idles
+      tl.fromTo("#hd-glow", { opacity: 0.74, scale: 0.96 },
+        { opacity: 1, scale: 1, duration: 0.95, ease: "power2.out" }, 8.80);
+
+      /* 9.75–10.0 is deliberate stillness: the last reveal (info body line B)
+         lands at 9.52 and the glow resolves at 9.75, so nothing is travelling
+         on the final frame and frame 17 opens on a content cut. */
     })();
   </script>
 </template>

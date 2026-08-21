@@ -1,24 +1,27 @@
 {
   "scene": "16-hot-deals",
-  "duration_s": 12,
+  "duration_s": 10,
   "rules": [
     "waterfall-entry",
     "spring-pop-entrance",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
+    "rtl-clip-wipe",
+    "oversized-cursor",
     "ambient-glow-bloom"
   ],
-  "notes": {
-    "first_second": "Device + screen are on-frame at t=0 and never rebuilt. The in-phone camera (.screen-world) opens at scale 1.05 and settles to 1.00 by 0.55s on power3.out — it enters already travelling inward, so a cut from frame 15 lands mid-push rather than on a dead frame. The stage title cascade ignites at 0.15s; the deals list is still empty at 1.0s.",
-    "last_second": "Camera is in a linear (ease:none) creep from scale 1.16 to 1.22 running 10.90s → 12.00s and is therefore STILL MOVING on the final frame — no settle, no fade. Framing at 12.00s is centred between the deals list and the curation card; the final reveal (info body line B) completes at 10.95s, so the last second is a moving hold."
-  },
-  "camera_target": "#hd-deals (the recommended-deals list)",
-  "exit": {
-    "vector": "push-in (+Z) at ~47 px/s of screen-edge expansion (scale 1.16→1.22, linear), with ~6 px/s downward drift of the framing point",
-    "still_moving": true
-  },
+  "camera_target": "none. There is no in-phone camera in this film. `.screen-world` holds scale 1 / x 0 / y 0 for the whole scene, the .device wrapper and its `scale(0.9428)` rig sizing are static CSS and are never tweened, and no data-camera-target attribute is animated.",
   "entry": {
-    "vector": "push-in (+Z) at ~230 px/s of screen-edge contraction (scale 1.05→1.00, power3.out over 0.55s)",
+    "vector": "0 px/s of camera travel — nothing zooms, pans or scales. The scene opens mid-BUILD: the device is on-frame and unchanged from frame 15, the header whips down from 0.04s and the stage title cascade ignites at 0.12s. The deals list is still empty at 1.0s.",
     "from_rest": false
+  },
+  "exit": {
+    "vector": "0 px/s. The last authored reveal — the info dialog's second body line — completes at 9.52s and the stage glow bloom resolves at 9.75s; nothing enters, exits or moves for the final 0.25s. Frame 17 opens on the same still, un-zoomed screen geometry, so the seam is a content cut, not a velocity match.",
+    "still_moving": false
+  },
+  "notes": {
+    "first_second": "Device + screen are on-frame at t=0 and never rebuilt. Chrome and the דילים מומלצים page head arrive 0.04-1.0s (header 0.04s, app h1 0.36s, subtitle 0.54s, info button 0.74s); the stage title whips at 0.12s and its rule fills from 0.32s. The deals list has not started at 1.0s — the first card lands at 1.28s.",
+    "last_second": "Static. The dialog copy finishes wiping at 9.52s and the glow settles at 9.75s; 9.75-10.00s is deliberate stillness before the cut. Framing never changed: the screen is the same size on the last frame as on the first.",
+    "signature": "The pointer opens the page's OWN info dialog. The oversized cursor travels from off-screen bottom (470, 1010) to the measured centre of the info button over 0.70s on power2.inOut, presses at 7.06s, and the dialog + scrim answer the click 0.06-0.08s later. The three lines of he.json's dealFinder.hotDeals.infoDialog then RTL-wipe in at 7.62 / 8.04 / 8.72s — the curation claim is answered by the product, not by the stage.",
+    "staged_reveals": "Where a camera would have owned time, content does: chrome + page head 0.04-1.0s, deal card 1 (FOX - פוקס, Hever (חבר) — Gift Cards) assembles part by part 1.28-3.48s, deal card 2 (מקדונלד'ס - McDonald's, PaisPlus — Networks Cash Card) 3.62-5.65s, then ranks 3-5 continue the list past the fold as a shrinking-gap cascade 5.70-6.21s. No idle loop, no breathe, no float — every tween is a one-shot arrival or a reaction to a completed beat.",
+    "content": "The list is five real deals, longer than the viewport: the app-main clips it at the fold exactly as the real screen scrolls. Every store and every club chip is read from the real collections (FOX - פוקס · מקדונלד'ס - McDonald's · טיב טעם · מגה ספורט אונליין · הום סנטר; Hever (חבר) — Gift Cards · PaisPlus — Networks Cash Card · PaisPlus — Food Chains Cash Card · Behatsdaa)."
   }
 }

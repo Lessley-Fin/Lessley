@@ -1,6 +1,6 @@
 {
   "scene": "21-close",
-  "duration_s": 15,
+  "duration_s": 12,
   "rules": [
     "waterfall-entry",
     "svg-icon-enrichment",
@@ -10,16 +10,16 @@
     "asr-keyword-glow"
   ],
   "entry": {
-    "vector": "Z- outward (INVERSE zoom, arrival) — the stage world lands at scale 1.13 and decelerates to 1.0 over 0-1.7s on power3.out, pivoting on the phone centre (620, 540). Initial speed 0.229 scale/s: ~230 px/s outward at 1000px from the pivot, ~103 px/s at the phone's edge. Inverts frame 20's outgoing inward push; the phone appears to retreat into the composition.",
+    "vector": "Z- outward (INVERSE zoom, arrival) — the stage world lands at scale 1.13 and decelerates to 1.0 over 0-1.5s on power3.out, pivoting on the phone centre (620, 540). Initial speed 0.26 scale/s: ~260 px/s outward at 1000px from the pivot, ~117 px/s at the phone's edge. Inverts frame 20's outgoing inward push; the phone appears to retreat into the composition.",
     "from_rest": false
   },
   "exit": {
-    "vector": "0 px/s — dead still. Final frame of the film. Every tween has landed by 13.9s (in-phone lockup push 12.6-13.9s on power3.out decelerating to zero, brand rule sweep ends 13.5s, progress rail reaches 100% at 14.0s on power1.out). The last 1.1s is a completely held frame; no exit tween, no fade.",
+    "vector": "0 px/s — dead still. Final frame of the film. Every tween has landed by 10.8s (in-phone lockup 9.65-10.7s, brand rule sweep ends 10.5s, progress rail reaches 100% at 10.8s on power1.out). The last 1.2s is a completely held frame; no exit tween, no fade. The 20% retime was taken out of the holds BETWEEN the three promises (1.7 / 5.35 / 8.0 instead of 1.9 / 7.3 / 10.7) — every arrival keeps its original duration and ease, and the held close was protected rather than trimmed.",
     "still_moving": false
   },
   "notes": {
-    "first_second": "the phone is present and full from frame 0, carrying the brand lockup, the ₪1,284 recall and the 4 clubs / 3 accounts bar; the arrival is the inverse zoom settling around it. Stage kicker at 0.6s, headline waterfall 0.95-1.6s.",
-    "last_second": "held lockup — stillness is the intended close.",
+    "first_second": "the phone is present and full from frame 0, carrying the brand lockup, the ₪1,284 recall and the 10 clubs / 3 accounts bar; the arrival is the inverse zoom settling around it. Stage kicker at 0.5s, headline waterfall 0.85-1.46s. Nothing scales the device — its 0.9428 rig sizing is film-wide.",
+    "last_second": "held lockup — stillness is the intended close. From 10.8s to 12.0s not one property changes: the trio rule is drawn, the three promise icons have finished their enrichment at rest, the brand rule is full width and the progress rail sits at 100%.",
     "camera_target": "the in-phone brand lockup (data-camera-target); the film's one gold spend is the ₪1,284 figure on the navy recall card."
   }
 }

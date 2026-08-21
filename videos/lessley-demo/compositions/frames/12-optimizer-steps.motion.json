@@ -1,28 +1,29 @@
 {
   "scene": "12-optimizer-steps",
-  "duration_s": 13.0,
+  "duration_s": 10.0,
   "rules": [
-    "anchored-layout-expand",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
     "spring-pop-entrance",
-    "counting-dynamic-scale"
+    "waterfall-entry",
+    "ambient-glow-bloom"
   ],
   "exit": {
-    "vector": "static — 0 px/s. The pull-out decelerates to rest at t=11.00s (power3.out) leaving screen-world scale 1.10 with zero counter-translate — the whole result page framed square. Phone still at true frame centre cx 960, cy 540. Final ~2s is a locked hold; last motion is the second ranked-option row landing at 10.98s.",
+    "vector": "static — 0 px/s. The page's last scroll settled at t=6.35s; the last element motion is the 'דורג מתוך' line fading in, ending t=8.85s. Phone still at true frame centre cx 960, cy 540, rig scale 0.9428, `.screen-world` at scale 1 / x 0 / y 0. Final ~1.15s is a locked hold with nothing translating.",
     "still_moving": false
   },
   "entry": {
-    "vector": "static — 0 px/s. Continues frame 11's exact exit framing: phone at true frame centre, screen-world scale 1.24, counter-translate (0, -10). Camera holds that framing untouched until t=2.60s; the first motion is element-level (the accordion trigger tint at t=0.72s).",
+    "vector": "static — 0 px/s. Continues frame 11's exact exit framing: phone at true frame centre, no camera, the whole winning-stack card inherited intact including the single step and its resolved figures. The page holds y=0 until t=0.65s; the first motion is the app's own scroll.",
     "from_rest": true
   },
   "notes": {
-    "camera_moves": 2,
-    "camera_track": "screen-world scale 1.24 (held 0-2.60s, inherited from frame 11's exit) -> 1.34 (coordinate-target-zoom onto the step list, 2.60-4.30s — the one time in the film the frame goes inside the screen to read figures) -> 1.10 pull-out to the whole page (9.40-11.00s), then LOCKED.",
-    "carrier": "Phone unchanged from frames 10-11 — no reposition, no device-scale change. The three frames read as one continuous camera paragraph.",
-    "expand": "anchored-layout-expand at t=1.00s: ONE fromTo drives .f12-sheet AND .f12-below from y:-288 to 0 (BODY_H = 288px, authored constant matching the mask CSS height) so the travelling bottom edge and the pushed content never separate. No width/height is ever tweened.",
+    "camera_moves": 0,
+    "camera_track": "None. `.screen-world` is untransformed. What moves is the PAGE — the results sheet scrolling inside `.app-main`, exactly as a screen recording of the real app would show it.",
+    "carrier": "Phone unchanged from frames 10-11 — no reposition, no device-scale change. The three frames read as one continuous paragraph.",
+    "scroll": "Three-stage page travel expressed as fractions of the sheet's real scrollable range (measured at layout, authored fallback 266px): 0 -> 45% at 0.65s (the step's rows centre-screen) -> 75% at 3.25s (the foot of the chain) -> 100% at 5.55s (the ranked alternatives). Fractions rather than element anchors because a one-step stack is short enough that element-anchored targets would all clamp to the same bottom.",
+    "no_restated_figures": "Nothing here re-animates a number frame 11 already resolved. The step's three rows arrive inherited and are only READ: a mint wash walks down them at 1.80 / 2.14 / 2.48s and the closing balance takes one beat of weight at 2.52s. Paint and transform only.",
+    "retime": "13s -> 10s (19/08), and rebuilt around ONE step instead of three. Most of the cut is structural: the two invented cascade beats (steps ② and ③, their connectors and their balance counts) are gone because the real engine returns a single deal.",
+    "data": "One step: FOX - פוקס · כרטיס מתנה · hever_gift_card_company · 30% הנחה · −₪300.00 · ₪1,000 -> ₪700. Runners-up are the two real PaisPlus FOX gift-card deals priced on the same ₪1,000 cart from their own tier tables — ₪750 (saves ₪250) and ₪850 (saves ₪150) — each a one-deal combination, since they share the exclusive_group paisplus:chit-5001.",
     "no_gold": "Zero --stage-gold in this scene — the payoff colour was spent once, in frame 11.",
-    "first_second": "Collapsed accordion fully visible at t=0; trigger tint at 0.72s, chevron rotation 0 -> -90deg at 0.94s.",
+    "first_second": "Inherited page fully visible and stationary at t=0; the first move is the scroll starting at 0.65s.",
     "last_second": "Locked frame."
   }
 }

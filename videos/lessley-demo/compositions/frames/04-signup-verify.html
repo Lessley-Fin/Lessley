@@ -1,4 +1,15 @@
 <template>
+      <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
       <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
@@ -43,6 +54,11 @@
           --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -85,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -102,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -122,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -197,57 +369,83 @@
       </style>
       <style>
         /* ── 04-signup-verify — scene layer ─────────────────────────────── */
+
+        /* Tokens the shared primitives reference but the shared #root block does not
+           declare. Values copied verbatim from lessley-frontend/src/index.css :root. */
+        #root {
+          --secondary: 195 33% 94%;
+          --secondary-foreground: 209 28% 20%;
+          --primary-foreground: 182 37% 98%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+        }
+
         .v4-ground { position: absolute; inset: 0; background: var(--stage-bg); }
         .v4-ground .bg-glow { opacity: 0.7; }
 
-        .v4-slot { flex: none; width: 406px; height: 880px;
-          display: flex; align-items: center; justify-content: center; }
-        .v4-slot .device { transform: scale(0.9442); }
+        /* ── register chrome — AuthLayout, not MainShell: the wizard is a guest
+              route, so there is no app header and no bottom nav on screen. ── */
+        .reg { position: absolute; inset: 0; display: flex; flex-direction: column;
+          padding: 66px 24px 28px; font-size: 15px; }
+        .reg-back { display: flex; align-items: center; gap: 9px; flex: none;
+          font-size: 16px; font-weight: 500; color: hsl(var(--muted-foreground));
+          margin-bottom: 22px; }
+        .reg-back svg { width: 18px; height: 18px; flex: none; }
+        .reg-back path { fill: none; stroke: currentColor; stroke-width: 2;
+          stroke-linecap: round; stroke-linejoin: round; }
+        .reg-inner { width: 100%; max-width: 392px; margin: 0 auto; flex: 1; min-height: 0;
+          display: flex; flex-direction: column; gap: 22px; }
+        .steps .step { white-space: nowrap; }
+        .step.done { background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
+          font-weight: 700; }
+        .reg-stack { display: flex; flex-direction: column; gap: 16px; }
 
-        /* the 5-step carrier — real wizard labels, fitted to the device width */
-        .steps .step { font-size: 14px; white-space: nowrap; flex: 1 1 auto; padding: 10px 5px; }
-        .step.done { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* ── the verify-email step ── */
+        .v4-head { text-align: center; }
+        .v4-t { font-size: 20px; font-weight: 700; line-height: 1.25; margin: 0; }
+        .v4-s { font-size: 15px; line-height: 1.35; margin: 4px 0 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .v4-hdr-dot { width: 22px; height: 22px; border-radius: 50%; flex: none;
-          background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); }
-
-        .v4-app .app-main { gap: 22px; }
-        #v4-body { display: flex; flex-direction: column; gap: 26px; }
-        .v4-title { display: flex; flex-direction: column; gap: 6px; text-align: center; }
-        .v4-sent { font-size: 19px; line-height: 1.35; color: hsl(var(--muted-foreground));
-          text-align: center; margin: 0; }
+        .v4-card { display: flex; flex-direction: column; gap: 16px; }
+        .v4-sent { font-size: 15px; line-height: 1.4; margin: 0;
+          color: hsl(var(--muted-foreground)); }
         .ltr { unicode-bidi: isolate; direction: ltr; }
 
-        .v4-code { direction: ltr; display: flex; gap: 6px; justify-content: center; }
-        .v4-box { width: 42px; height: 60px; border-radius: 15px; display: grid; place-items: center;
-          border: 1px solid hsl(201 21% 89%); background: hsl(0 0% 100%);
-          box-shadow: var(--shadow-card); }
-        .v4-digit { font-size: 27px; font-weight: 800; line-height: 1;
-          font-variant-numeric: tabular-nums; color: hsl(var(--foreground)); }
+        .v4-lbl { font-size: 15px; font-weight: 500; line-height: 1; margin-bottom: 8px; }
+        .v4-input { position: relative; height: 52px; border-radius: 16px;
+          border: 1px solid hsl(201 21% 89%); background: hsl(203 34% 96%);
+          box-shadow: 0 1px 2px oklch(30% 0.03 240 / 0.05); }
+        .v4-ph, .v4-digits { position: absolute; inset: 0; display: flex;
+          align-items: center; justify-content: center; gap: 9px; direction: ltr;
+          font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .v4-ph { color: hsl(var(--muted-foreground)); font-weight: 500; }
+        .v4-digits i { font-style: normal; display: inline-block; }
 
-        .v4-status { height: 74px; display: grid; place-items: center; }
-        .v4-check { width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center;
-          background: hsl(150 60% 45% / 0.14); }
-        .v4-check svg { width: 40px; height: 40px; overflow: visible; }
-        .v4-check path { fill: none; stroke: hsl(150 60% 32%); stroke-width: 5;
+        .v4-valid { font-size: 14px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
+
+        .v4-btn { display: flex; align-items: center; justify-content: center; gap: 12px;
+          opacity: 0.5; }
+        .v4-ic { position: relative; width: 26px; height: 26px; flex: none; }
+        .v4-ic svg { position: absolute; inset: 0; width: 26px; height: 26px; }
+        .v4-shield path { fill: none; stroke: hsl(182 37% 98%); stroke-width: 2;
           stroke-linecap: round; stroke-linejoin: round; }
+        .v4-spin { opacity: 0; }
+        .v4-spin circle { fill: none; stroke: hsl(182 37% 98% / 0.35); stroke-width: 3; }
+        .v4-spin path { fill: none; stroke: hsl(182 37% 98%); stroke-width: 3;
+          stroke-linecap: round; }
 
-        .v4-meta { display: flex; flex-direction: column; gap: 8px;
-          font-size: 18px; color: hsl(var(--muted-foreground)); }
-        .v4-resend { color: hsl(var(--primary)); font-weight: 600; }
-
-        .v4-btn { position: relative; height: 74px; padding: 0;
-          background: hsl(198 28% 94%); color: hsl(208 11% 46%); }
-        .v4-btn-face { position: absolute; inset: 0; display: flex; align-items: center;
-          justify-content: center; gap: 12px; }
-        .v4-btn-working { opacity: 0; }
-        .v4-spin { width: 26px; height: 26px; }
-        .v4-spin circle { fill: none; stroke: hsl(182 37% 98% / 0.35); stroke-width: 4; }
-        .v4-spin path { fill: none; stroke: hsl(182 37% 98%); stroke-width: 4; stroke-linecap: round; }
+        /* resend — Button variant="pill" size="xl", disabled while the cooldown runs */
+        .v4-resend { display: block; text-align: center; line-height: 1.25;
+          border-radius: 999px; padding: 15px; font-size: 17px; font-weight: 500;
+          border: 1px solid hsl(var(--border)); background: hsl(var(--card));
+          color: hsl(var(--foreground)); box-shadow: var(--shadow-card); opacity: 0.5; }
       </style>
 
       <div id="root" data-composition-id="04-signup-verify" data-width="1920" data-height="1080">
-        <div class="clip v4-ground" id="v4-ground" data-start="0" data-duration="11" data-track-index="0">
+        <div class="clip v4-ground" id="v4-ground" data-start="0" data-duration="9" data-track-index="0">
           <div class="bg-layer">
             <div class="bg-glow" id="v4-glow"></div>
             <div class="bg-grid"></div>
@@ -260,79 +458,75 @@
 
         <div class="stage">
           <div class="col-text">
-            <h1 class="scene-title" id="v4-h1">הרשמה · אימות אימייל</h1>
-            <p class="scene-body v4-line">שש ספרות נוחתות בתאים אחת-אחת.</p>
-            <p class="scene-body v4-line">רק אחרי אימות מוצלח החשבון באמת נוצר.</p>
+            <h1 class="scene-title" id="v4-h1">קוד אחד, וזה רשמי</h1>
+            <p class="scene-body" id="v4-l1">שש ספרות נשלחות לאימייל שלכם.</p>
+            <p class="scene-body" id="v4-l2">רק אחריהן החשבון באמת נוצר.</p>
           </div>
 
-          <div class="v4-slot" data-layout-allow-overflow>
-            <div class="device">
-              <div class="device-body">
-                <div class="device-screen">
-                  <div class="screen-world" id="v4-world">
-                    <div class="app v4-app">
-                      <div class="app-header">
-                        <div class="app-icon">L</div>
-                        <div class="brand"><b>Lessley</b></div>
-                        <span class="v4-hdr-dot"></span>
-                        <span class="v4-hdr-dot"></span>
+          <div class="device" data-layout-allow-overflow>
+            <div class="device-body">
+              <div class="device-screen">
+                <div class="screen-world" id="v4-world">
+                  <div class="reg">
+                    <!-- lucide ArrowLeft under rtl:rotate-180 — authored as the rotated mark -->
+                    <div class="reg-back">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+                      <span>חזרה</span>
+                    </div>
+
+                    <div class="reg-inner">
+                      <div class="steps">
+                        <span class="step" id="v4-s0">חשבון</span>
+                        <span class="step" id="v4-s1">אימות</span>
+                        <span class="step">מועדונים</span>
+                        <span class="step">רמת התאמה</span>
+                        <span class="step">בנקאות</span>
                       </div>
 
-                      <div class="app-main">
-                        <div class="steps">
-                          <span class="step" id="v4-s0">חשבון</span>
-                          <span class="step" id="v4-s1">אימות</span>
-                          <span class="step">מועדונים</span>
-                          <span class="step">רמת התאמה</span>
-                          <span class="step">בנקאות</span>
+                      <div class="reg-stack" id="v4-stack">
+                        <div class="v4-head">
+                          <h2 class="v4-t">בדקו את תיבת הדואר</h2>
+                          <p class="v4-s">החשבון נוצר רק לאחר שלב זה.</p>
                         </div>
 
-                        <div id="v4-body">
-                          <div class="v4-title">
-                            <h2 class="app-h1">בדקו את תיבת הדואר</h2>
-                            <p class="app-sub">החשבון נוצר רק לאחר שלב זה.</p>
-                          </div>
+                        <div class="card v4-card">
+                          <p class="v4-sent v4-row">הזינו את הקוד בן <span class="num">6</span> הספרות שנשלח אל <span class="ltr">dor@example.com</span>.</p>
 
-                          <p class="v4-sent">הזינו את הקוד בן <span class="num">6</span> הספרות שנשלח אל <span class="ltr">dor@example.com</span>.</p>
-
-                          <div class="v4-code" id="v4-camtarget" data-camera-target>
-                            <span class="v4-box"><span class="v4-digit">3</span></span>
-                            <span class="v4-box"><span class="v4-digit">7</span></span>
-                            <span class="v4-box"><span class="v4-digit">4</span></span>
-                            <span class="v4-box"><span class="v4-digit">2</span></span>
-                            <span class="v4-box"><span class="v4-digit">9</span></span>
-                            <span class="v4-box"><span class="v4-digit">1</span></span>
-                          </div>
-
-                          <div class="v4-status">
-                            <div class="v4-check" id="v4-check">
-                              <svg viewBox="0 0 40 40">
-                                <path id="v4-tick" d="M 9 21 L 17 29 L 31 12" />
-                              </svg>
+                          <div class="v4-row">
+                            <div class="v4-lbl">קוד אימות</div>
+                            <div class="v4-input" id="v4-input">
+                              <span class="v4-ph" id="v4-ph">000000</span>
+                              <span class="v4-digits" id="v4-digits">
+                                <i>3</i><i>7</i><i>4</i><i>2</i><i>9</i><i>1</i>
+                              </span>
                             </div>
                           </div>
 
-                          <div class="card-inset v4-meta">
-                            <div>הקוד תקף למשך <span class="num">10</span> דקות.</div>
-                            <div class="v4-resend">שליחת קוד חדש בעוד <span class="num" id="v4-sec">40</span> שניות</div>
+                          <p class="v4-valid v4-row">הקוד תקף למשך <span class="num">10</span> דקות.</p>
+
+                          <div class="btn v4-btn v4-row" id="v4-btn">
+                            <span class="v4-ic">
+                              <!-- lucide ShieldCheck -->
+                              <svg class="v4-shield" id="v4-shield" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                                <path d="m9 12 2 2 4-4" />
+                              </svg>
+                              <!-- lucide Loader2 -->
+                              <svg class="v4-spin" id="v4-spin" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M 12 3 A 9 9 0 0 1 21 12" />
+                              </svg>
+                            </span>
+                            <span>אימות</span>
                           </div>
 
-                          <div class="btn v4-btn" id="v4-btn">
-                            <span class="v4-btn-face" id="v4-btn-label">אימות</span>
-                            <span class="v4-btn-face v4-btn-working" id="v4-btn-working">
-                              <svg class="v4-spin" id="v4-spin" viewBox="0 0 32 32">
-                                <circle cx="16" cy="16" r="13" />
-                                <path d="M 16 3 A 13 13 0 0 1 29 16" />
-                              </svg>
-                              <span>מתבצעת יצירת חשבון...</span>
-                            </span>
-                          </div>
+                          <div class="v4-resend v4-row" id="v4-resend">שליחת קוד חדש בעוד <span class="num" id="v4-sec">58</span> שניות</div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="device-island"></div>
                 </div>
+                <div class="device-island"></div>
               </div>
             </div>
           </div>
@@ -343,115 +537,87 @@
 
       <script>
         (function () {
-          var DUR = 11;
+          var DUR = 9;
           var q = function (id) { return document.getElementById(id); };
 
-          var world = q("v4-world");
-          var target = q("v4-camtarget");
+          var MUTED_BG = "hsl(198, 28%, 94%)", MUTED_FG = "hsl(208, 11%, 46%)";
+          var TEAL = "hsl(182, 38%, 36%)", ON_FG = "hsl(182, 37%, 98%)";
+          var ACCENT = "hsl(179, 50%, 88%)", ACCENT_FG = "hsl(182, 73%, 18%)";
+          var BORDER = "hsl(201, 21%, 89%)", INPUT_BG = "hsl(203, 34%, 96%)";
+          var WHITE = "hsl(0, 0%, 100%)";
 
-          // Camera: coordinate-target-zoom on the in-phone .screen-world.
-          // offset* is layout geometry — unaffected by the device's CSS scale.
-          function aim(el, s) {
-            var cx = world.offsetWidth / 2, cy = world.offsetHeight / 2;
-            var x = 0, y = 0, n = el;
-            while (n && n !== world) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-            var tx = x + el.offsetWidth / 2, ty = y + el.offsetHeight / 2;
-            return { scale: s, x: -s * (tx - cx), y: -s * (ty - cy) };
-          }
-
-          // The Dynamic Island is fixed to the device, not the world: clamp the camera's
-          // vertical travel so the 5-step carrier never slides under it.
-          var stepsEl = world.querySelector(".steps");
-          function clamp(c) {
-            var cy = world.offsetHeight / 2, sy = 0, n = stepsEl;
-            while (n && n !== world) { sy += n.offsetTop; n = n.offsetParent; }
-            var minY = 62 - cy - c.scale * (sy - cy);
-            if (c.y < minY) c.y = minY;
-            return c;
-          }
-
-          var C0 = { scale: 1, x: 0, y: 0 };
-          var C1 = clamp(aim(target, 1.03));
-          var C2 = clamp(aim(target, 1.06));
-          var C3 = clamp(aim(target, 1.08));
-
-          var boxes = Array.prototype.slice.call(world.querySelectorAll(".v4-box"));
-          var digits = Array.prototype.slice.call(world.querySelectorAll(".v4-digit"));
-
-          var BORDER = "hsl(201 21% 89%)", TEAL = "hsl(182 38% 36%)", OK = "hsl(150 60% 45%)";
-
-          var tick = q("v4-tick");
-          var tickLen = tick.getTotalLength();
-          tick.style.strokeDasharray = tickLen;
-          tick.style.strokeDashoffset = tickLen;
+          var digits = Array.prototype.slice.call(q("v4-digits").children);
 
           var tl = gsap.timeline({ paused: true });
 
           /* ── the rail: the film's only end-to-end carrier ── */
           tl.fromTo("#v4-rail", { scaleX: 0.8095 }, { scaleX: 1, duration: DUR, ease: "none" }, 0);
 
-          /* ── Scene 1 (0.0–1.0) — the step content arrives laterally; chrome persists ── */
-          tl.set(world, C0, 0);
-          tl.fromTo("#v4-body", { x: -46, opacity: 0 },
+          /* ── 0.0–1.4 — the wizard advances laterally; the step card assembles ── */
+          tl.fromTo("#v4-stack", { x: -46, opacity: 0 },
             { x: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0);
-          // the 5-step carrier advances: account -> done, verify -> current
-          tl.fromTo("#v4-s0",
-            { backgroundColor: "hsl(198 28% 94%)", color: "hsl(208 11% 46%)" },
-            { backgroundColor: "hsl(179 50% 88%)", color: "hsl(182 73% 18%)", duration: 0.45, ease: "power2.out" }, 0.15);
-          tl.fromTo("#v4-s1",
-            { backgroundColor: "hsl(198 28% 94%)", color: "hsl(208 11% 46%)" },
-            { backgroundColor: TEAL, color: "hsl(182 37% 98%)", duration: 0.45, ease: "power2.out" }, 0.15);
+          // the 5-step rail advances: חשבון -> done, אימות -> current
+          tl.fromTo("#v4-s0", { backgroundColor: MUTED_BG, color: MUTED_FG },
+            { backgroundColor: ACCENT, color: ACCENT_FG, duration: 0.45, ease: "power2.out" }, 0.15);
+          tl.fromTo("#v4-s1", { backgroundColor: MUTED_BG, color: MUTED_FG },
+            { backgroundColor: TEAL, color: ON_FG, duration: 0.45, ease: "power2.out" }, 0.15);
           tl.fromTo("#v4-h1", { y: 26, opacity: 0 },
             { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0.15);
-          tl.fromTo(".v4-line", { y: 18, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", stagger: 0.14 }, 0.35);
+          tl.fromTo("#v4-l1", { y: 18, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0.35);
+          tl.fromTo(".v4-row", { y: 16, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.45, ease: "power3.out", stagger: 0.09 }, 0.55);
 
-          /* ── Scene 2 (0.8–4.5) — camera pushes to the code row, digits land one by one ── */
-          tl.fromTo(world, C0, { scale: C1.scale, x: C1.x, y: C1.y, duration: 2.0, ease: "power2.inOut" }, 0.8);
+          /* ── the resend cooldown: the scene's clock, one tick per second.
+                Tweened as a property (not onUpdate) so it is correct under a suppressed seek. ── */
+          tl.fromTo("#v4-sec", { innerText: 58 },
+            { innerText: 49, duration: DUR, ease: "none", snap: { innerText: 1 } }, 0);
 
-          // resend timer counts down under the code — the scene's clock.
-          // Tweened as a property (not onUpdate) so it is correct under a suppressed seek.
-          tl.to("#v4-sec", { innerText: 32, duration: 8, ease: "none", snap: { innerText: 1 } }, 1.0);
+          /* ── 1.55–5.5 — the field takes focus and the six digits are typed in.
+                The retime took it out of the typing GAP (0.8 -> 0.62), not out of the
+                per-digit landing, so each digit still reads as a discrete arrival. ── */
+          tl.fromTo("#v4-input", { borderColor: BORDER, backgroundColor: INPUT_BG },
+            { borderColor: TEAL, backgroundColor: WHITE, duration: 0.4, ease: "power2.out" }, 1.55);
+          tl.fromTo("#v4-ph", { opacity: 1 },
+            { opacity: 0, duration: 0.25, ease: "power2.in" }, 1.7);
 
-          var D0 = 2.0, GAP = 0.42;
+          var D0 = 2.15, GAP = 0.62;
           digits.forEach(function (d, i) {
-            var at = D0 + i * GAP;
-            tl.fromTo(d, { scale: 0.3, opacity: 0, y: 8 },
-              { scale: 1, opacity: 1, y: 0, duration: 0.34, ease: "power3.out" }, at);
-            tl.fromTo(boxes[i], { borderColor: BORDER }, { borderColor: TEAL, duration: 0.3, ease: "power2.out" }, at);
+            tl.fromTo(d, { opacity: 0, y: 7, scale: 0.6 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.24, ease: "power3.out" }, D0 + i * GAP);
           });
 
-          /* ── Scene 3 (4.5–7.0) — the sixth digit lands, the check draws, commit unlocks ── */
-          tl.fromTo("#v4-glow", { opacity: 0.7 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, 4.5);
-          tl.fromTo(boxes, { borderColor: TEAL },
-            { borderColor: OK, duration: 0.4, ease: "power2.out", immediateRender: false }, 4.6);
-          tl.fromTo("#v4-check", { scale: 0, opacity: 0 },
-            { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" }, 4.6);
-          tl.fromTo(tick, { strokeDashoffset: tickLen },
-            { strokeDashoffset: 0, duration: 0.6, ease: "power2.out" }, 4.75);
-          tl.fromTo(world, { scale: C1.scale, x: C1.x, y: C1.y },
-            { scale: C2.scale, x: C2.x, y: C2.y, duration: 1.0, ease: "power2.out", immediateRender: false }, 5.3);
-          tl.fromTo("#v4-btn",
-            { backgroundColor: "hsl(198 28% 94%)", color: "hsl(208 11% 46%)" },
-            { backgroundColor: TEAL, color: "hsl(182 37% 98%)", duration: 0.5, ease: "power2.out" }, 5.5);
+          /* ── 5.7 — six digits in: the verify button leaves its disabled state
+                (the real button is `disabled` until code.length === 6 → opacity-50) ── */
+          tl.fromTo("#v4-btn", { opacity: 0.5 },
+            { opacity: 1, duration: 0.45, ease: "power2.out" }, 5.7);
 
-          /* ── Scene 4 (6.9–11) — the commit: press dip, then the account is actually created ── */
-          tl.fromTo("#v4-btn", { scale: 1 }, { scale: 0.97, duration: 0.1, ease: "power2.in" }, 6.9);
+          /* ── 6.35–9.0 — the commit: press dip, then the account is actually created ── */
+          tl.fromTo("#v4-btn", { scale: 1 }, { scale: 0.97, duration: 0.1, ease: "power2.in" }, 6.35);
           tl.fromTo("#v4-btn", { scale: 0.97 },
-            { scale: 1, duration: 0.18, ease: "power2.out", immediateRender: false }, 7.0);
-          tl.fromTo("#v4-btn-label", { opacity: 1, scale: 1 },
-            { opacity: 0, scale: 0.9, duration: 0.18, ease: "power2.in" }, 7.1);
-          tl.fromTo("#v4-btn-working", { opacity: 0, scale: 0.92 },
-            { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" }, 7.2);
+            { scale: 1, duration: 0.18, ease: "power2.out", immediateRender: false }, 6.45);
+          // the button's leading icon swaps ShieldCheck -> Loader2, the label stays "אימות"
+          tl.fromTo("#v4-shield", { opacity: 1, scale: 1 },
+            { opacity: 0, scale: 0.8, duration: 0.18, ease: "power2.in" }, 6.55);
+          tl.fromTo("#v4-spin", { opacity: 0, scale: 0.8 },
+            { opacity: 1, scale: 1, duration: 0.26, ease: "power3.out" }, 6.67);
+          // 840deg over the remaining 2.33s keeps the spinner at its old ~1 rev/s —
+          // the retime shortened the run, not the rate.
           tl.fromTo("#v4-spin", { rotation: 0 },
-            { rotation: 1080, duration: 3.6, ease: "none", transformOrigin: "50% 50%" }, 7.2);
+            { rotation: 840, duration: DUR - 6.67, ease: "none", transformOrigin: "50% 50%" }, 6.67);
+          // the code field goes disabled while the request is in flight
+          tl.fromTo("#v4-input", { opacity: 1 },
+            { opacity: 0.5, duration: 0.3, ease: "power2.out" }, 6.67);
 
-          // camera keeps travelling into the screen through the last frame (exit vector = Z in)
-          tl.fromTo(world, { scale: C2.scale, x: C2.x, y: C2.y },
-            { scale: C3.scale, x: C3.x, y: C3.y, duration: DUR - 6.3, ease: "none", immediateRender: false }, 6.3);
+          /* ── the stage copy cascades: the second line lands on the commit ── */
+          tl.fromTo("#v4-l2", { y: 18, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 6.95);
+          tl.fromTo("#v4-glow", { opacity: 0.7 },
+            { opacity: 1, duration: 1.0, ease: "power2.out" }, 7.7);
 
           window.__timelines = window.__timelines || {};
           window.__timelines["04-signup-verify"] = tl;
         })();
       </script>
+
 </template>

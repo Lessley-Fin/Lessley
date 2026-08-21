@@ -1,26 +1,27 @@
 {
   "scene": "19-notifications",
-  "duration_s": 15,
+  "duration_s": 12,
   "rules": [
     "reactive-displacement",
-    "anchored-layout-expand",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
+    "waterfall-entry",
     "svg-icon-enrichment",
     "scale-swap-transition",
     "spring-pop-entrance"
   ],
   "entry": {
-    "vector": "Z+ inward, already travelling — in-phone camera opens at scale 1.06 and creeps to 1.12 on ease:none over 0-2.35s (0.0255 scale/s), ~11.6 px/s inward at the screen edge, drifting toward the top of the screen where the toast is about to land. Picks up frame 18's outgoing push-in across the cut.",
+    "vector": "0 px/s of camera travel — there is no in-phone camera in this film. .screen-world holds scale 1 / x 0 / y 0 for the whole scene and the device never transforms. The scene opens mid-action instead: the missed-savings analysis arc is already spinning at t=0 (690deg over 0-1.5s, ease:none) over a fully populated המלצות screen, so the cut from frame 18 lands on continuing content, not on a continuing move.",
     "from_rest": false
   },
   "exit": {
-    "vector": "Z+ inward — .screen-world mid-tween 1.16 -> 1.30 on ease:none over 7.1-15.0s (0.0177 scale/s), ~8.1 px/s inward at the screen edge, framed on the opened feed. Stage geometry and phone position are static; the last reveal lands at 12.9s.",
-    "still_moving": true
+    "vector": "0 px/s — the layout is static from 11.24s. The last type call-out settles at 11.24s and nothing enters, exits or moves for the final 0.76s; the completed five-row feed is what the cut to frame 20 hands over. Frame 20 opens on the same still, un-zoomed screen geometry, so the seam is a content cut, not a velocity match.",
+    "still_moving": false
   },
   "notes": {
-    "first_second": "device + already-populated recommendations screen present at t=0 under a creeping push; stage kicker 0.35s, title 0.55s; the analysis arc spinner is running (diegetic working state) and resolves at 1.9s.",
-    "last_second": "held layout under a constant-velocity slow push; nothing enters or exits after 13.4s — the inward Z vector is handed to frame 20's entry.",
-    "camera_target": "the real-time toast (data-camera-target) — pushed into at 2.35-3.75s and held to 5.3s, then eased back to frame the opened feed."
+    "first_second": "device + already-populated המלצות · חיסכון שפוספס screen present at t=0, camera-free; the analysis spinner is running (diegetic working state) and resolves into the success check at 1.46-1.94s. Stage kicker 0.3s, title 0.45s. Nothing scales the device.",
+    "last_second": "held. From 11.24s the notifications feed stands complete and completely still — five rows, three of them unread, all badges at rest.",
+    "toast_overlay": "1.8-4.1s the .toast rides OVER the live screen (y -260 -> 0, back.out(1.2)) while the recommendations page stays fully visible underneath — that overlay is the entire argument for 'בזמן אמת, בלי לרענן'. The header bell rings once on arrival (1.95-2.39s) and the app's own dismiss meter runs 1.8-4.1s. The 20% retime shortened the silence around this beat, not the read itself.",
+    "staged_reveals": "reactive-displacement swap 4.1-5.2s (feed in from above, previous page displaced down, toast consumed), page head 5.3s / sub 5.48s, then — the fix for the near-empty render — the feed arrives as a FULL list: all five rows cascade 5.85-6.95s (stagger 0.16s) with their type badges popping 0.08s behind each row. From 6.95s the screen is a real, populated app screen. The four notification types are then called out one per narration beat at 7.6 / 8.6 / 9.6 / 10.6s (ניתוח · מועדונים, two rows · דיל · מערכת) as a badge + row scale accent, ending 11.24s.",
+    "feed_content": "the real notifications endpoint payload: badges from notifications.badge.* (ניתוח / מועדונים / דיל / מערכת), titles from notifications.title.* (הניתוח מוכן / התאמת מועדון חדשה / התאמת דיל חדשה / עדכון מערכת), message lines from notifications.detail.*, relative times from common.justNow / hoursAgo / daysAgo. Exactly three rows carry the unread ring + dot, matching the '3 שלא נקראו' count. Store name FOX - פוקס is the real demo-data store, isolated LTR so the bidi algorithm cannot reverse it.",
+    "camera_target": "none. Any data-camera-target attribute has been removed from this scene; nothing zooms."
   }
 }

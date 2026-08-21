@@ -1,4 +1,15 @@
 <template>
+      <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
       <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
@@ -44,6 +55,10 @@
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
           --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -86,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -103,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -123,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -198,15 +369,21 @@
       </style>
       <style>
         /* ── 09-nav-map — the film's one pull-back. Camera is on the STAGE. ─ */
+
+
         .f09-ground { position: absolute; inset: 0; background: var(--stage-bg); }
         .f09-content { position: absolute; inset: 0; }
         .f09-content * { box-sizing: border-box; }
 
-        /* the virtual camera: one wrapper, everything in world space inside */
+        /* the virtual camera: one wrapper, everything in world space inside.
+           This is a STAGE camera — there is no phone here and no in-phone camera. */
         .f09-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
 
+        /* Stage padding is the film-wide 42px 80px (frame.md § Safe margins) —
+           it was 96px here, which put the text column 16px inside every other
+           scene's right edge. */
         .f09-stage { position: absolute; inset: 0; display: flex; flex-direction: column;
-          justify-content: center; align-items: stretch; gap: 40px; padding: 96px; }
+          justify-content: center; align-items: stretch; gap: 40px; padding: 42px 80px; }
 
         .f09-text { height: 224px; overflow: hidden; display: flex; flex-direction: column;
           gap: 22px; text-align: right; }
@@ -214,37 +391,58 @@
         .f09-p { opacity: 0; }
 
         /* ── the four stations, pre-placed in world space ─────────────────── */
+        /* The row is capped at 1490px and centred rather than filling the
+           padded box. The stage camera opens at scale 1.18, so a full-width
+           row throws its outer stations past the frame edge on the arrival —
+           1490 x 1.18 = 1758, which keeps the row inside the 80px stage
+           padding at every scale this scene reaches. */
         .f09-stations { height: 513px; display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 28px; }
+          gap: 28px; max-width: 1490px; margin-inline: auto; width: 100%; }
         .f09-station { height: 513px; display: flex; flex-direction: column; align-items: center;
           gap: 12px; padding: 24px 22px; border-radius: 28px; opacity: 0;
           background: var(--stage-surface); border: 1px solid hsl(203 36% 96% / 0.13); }
-        .f09-station b { display: block; font-size: 32px; font-weight: 700; line-height: 1.15;
+        /* DIRECT children only. As a descendant selector this also matched every
+           <b> inside the miniature app — the Lessley brand lockup, the section
+           heads and the club names — and held them at opacity 0, so the screens
+           rendered with their bold lines missing. */
+        .f09-station > b { display: block; font-size: 32px; font-weight: 700; line-height: 1.15;
           opacity: 0; }
-        .f09-station i { display: block; font-style: normal; font-size: 20px; line-height: 1.25;
+        .f09-station > i { display: block; font-style: normal; font-size: 20px; line-height: 1.25;
           color: var(--stage-ink-muted); text-align: center; opacity: 0; }
 
-        /* mini app screen — phone-shaped, so the last push hands a phone to 10 */
-        .f09-thumb { width: 165px; height: 358px; flex: none; border-radius: 22px;
-          overflow: hidden; padding: 10px 9px 9px; display: flex; flex-direction: column;
-          background: hsl(var(--background)); border: 1px solid hsl(203 36% 96% / 0.22);
-          box-shadow: var(--shadow-float);
-          background-image: radial-gradient(ellipse 90% 55% at 50% -12%, hsl(182 38% 36% / 0.16), transparent 55%); }
-        .f09-mhead { height: 15px; border-radius: 6px; background: hsl(var(--muted));
-          margin-bottom: 9px; flex: none; }
-        .f09-mcard { border-radius: 12px; background: hsl(var(--card)); flex: none;
-          box-shadow: var(--shadow-card); margin-bottom: 9px; height: 52px; }
-        .f09-mcard.tall { height: 94px; }
-        .f09-mcard.short { height: 32px; }
-        .f09-mcard.accent { background: hsl(var(--accent) / 0.75); }
-        .f09-mnav { margin-top: auto; display: flex; align-items: center; gap: 4px; padding: 5px;
-          border-radius: 999px; flex: none;
-          background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240)); }
-        .f09-mnav span { width: 20px; height: 20px; border-radius: 999px; flex: none;
-          background: hsl(203 13% 67% / 0.35); }
-        .f09-mnav span.on { flex: 1; width: auto; padding: 0 6px; line-height: 20px;
-          text-align: center; font-size: 8px; font-weight: 700; white-space: nowrap;
-          overflow: hidden; background: hsl(179 50% 88%); color: hsl(182 73% 18%); }
+        /* ── the REAL screens, in miniature ───────────────────────────────
+           Each thumb holds a full 460×997 app screen built from the shared
+           primitives and scaled down uniformly — not a placeholder abstraction.
+           358 / 997 = 0.3587, so 460 × 0.3587 = 165. */
+        .f09-thumb { position: relative; width: 165px; height: 358px; flex: none;
+          border-radius: 22px; overflow: hidden; background: hsl(var(--background));
+          border: 1px solid hsl(203 36% 96% / 0.22); box-shadow: var(--shadow-float); }
+        .f09-mini { position: absolute; top: 0; left: 0; width: 460px; height: 997px;
+          transform-origin: 0 0; transform: scale(0.3587);
+          background: hsl(var(--background)); color: hsl(var(--foreground));
+          background-image:
+            radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%); }
+        .f09-mini .app-main > * { flex: none; }
+
+        /* .deal-meta packs to flex-end, which is the LEFT edge under RTL; the deal
+           card's text column is right-aligned, so the chip row follows it. */
+        .f09-mini .deal-meta { justify-content: flex-start; }
+
+        .f09-mini .app-icon { position: relative; }
+        .f09-dot { position: absolute; top: 8px; left: 8px; width: 10px; height: 10px;
+          border-radius: 50%; background: hsl(var(--warning));
+          box-shadow: 0 0 0 2px hsl(var(--card)); }
+        .f09-inl { width: 17px; height: 17px; display: inline-block; vertical-align: -3px;
+          margin-inline-start: 4px; }
+        .f09-prompt { margin: 0; font-size: 15px; line-height: 1.35;
+          color: hsl(var(--muted-foreground)); text-align: right; }
+        .f09-sec { text-align: right; }
+        .f09-sec b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
+        .f09-sec span { display: block; font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .f09-mini .card { display: flex; flex-direction: column; gap: 14px; }
+        .f09-cardglyph { width: 17px; height: 17px; display: inline-block; vertical-align: -3px;
+          margin-inline-start: 6px; }
 
         /* ── the top-bar strip ────────────────────────────────────────────── */
         .f09-strip { height: 44px; display: flex; justify-content: center; gap: 56px; }
@@ -269,70 +467,308 @@
 
       <div id="root" data-composition-id="09-nav-map" data-width="1920" data-height="1080">
 
-        <div class="bg-layer f09-ground clip" id="f09-ground" data-start="0" data-duration="15" data-track-index="0">
+        <div class="bg-layer f09-ground clip" id="f09-ground" data-start="0" data-duration="12" data-track-index="0">
           <div class="bg-glow" id="f09-glow"></div>
           <div class="bg-grid"></div>
           <div class="bg-ghost">Lessley</div>
           <div class="bg-grain"></div>
         </div>
 
-        <div class="f09-content clip" id="f09-content" data-start="0" data-duration="15" data-track-index="1">
+        <div class="f09-content clip" id="f09-content" data-start="0" data-duration="12" data-track-index="1">
           <span class="chapter">09 / 21</span>
 
           <div class="f09-world" id="f09-world">
             <div class="f09-stage">
 
               <div class="f09-text">
-                <h1 class="scene-title"><span class="f09-title-w">מפת האפליקציה</span></h1>
-                <p class="scene-body f09-p" id="f09-p1">ארבעה מסכים ראשיים, בסרגל התחתון.</p>
-                <p class="scene-body f09-p" id="f09-p2">התראות ופרופיל תמיד בהישג יד למעלה.</p>
+                <h1 class="scene-title"><span class="f09-title-w">ארבעה מסכים. זהו.</span></h1>
+                <p class="scene-body f09-p" id="f09-p1">אופטימיזציה, תובנות, חם והמלצות.</p>
+                <p class="scene-body f09-p" id="f09-p2">התראות ופרופיל תמיד בהישג יד.</p>
               </div>
 
               <div class="f09-stations" id="f09-stations" data-camera-target>
 
+                <!-- ══ station 1 — אופטימיזציה ══════════════════════════════ -->
                 <div class="f09-station" id="f09-st1">
                   <div class="f09-thumb" id="f09-thumb1">
-                    <div class="f09-mhead"></div>
-                    <div class="f09-mcard short"></div>
-                    <div class="f09-mcard tall accent"></div>
-                    <div class="f09-mcard"></div>
-                    <div class="f09-mnav"><span class="on" id="f09-nav1">אופטימיזציה</span><span></span><span></span><span></span></div>
+                    <div class="f09-mini">
+                      <div class="app">
+                        <div class="app-header">
+                          <span class="brand">
+                            <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                            <span class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></span>
+                          </span>
+                          <span class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(209 37% 15%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 6-2.2 7-2.2 7h16.4S18 14 18 8z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+                            <span class="f09-dot"></span>
+                          </span>
+                          <span class="app-avatar">D</span>
+                        </div>
+                        <div class="app-main">
+                          <div>
+                            <h1 class="app-h1">אופטימיזציית מחיר</h1>
+                            <p class="app-sub">גילוי דילים מונע בינה מלאכותית<svg class="f09-inl" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7z"/><path d="M18.6 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></p>
+                          </div>
+                          <div class="tabs"><span class="on">אופטימיזציה</span><span>חיפוש דילים</span></div>
+                          <p class="f09-prompt">בחרו חנות והזינו את סכום העגלה — נמצא את השילוב החוקי והזול ביותר של דילים.</p>
+                          <div class="field"><span class="lbl">מתמחרים מול</span><span class="val"><bdi>FOX - פוקס</bdi></span></div>
+                          <div class="field is-active"><span class="lbl">מחיר כולל ₪</span><span class="val"><span class="num">₪1,000</span></span></div>
+                          <div class="field"><span class="lbl">מקסימום דילים בשילוב</span><span class="val"><span class="num">3</span> דילים</span></div>
+                          <div class="btn">מציאת המחירים הטובים ביותר</div>
+                        </div>
+                        <div class="nav">
+                          <span class="nav-tab on" id="f09-nav1">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7z"/><path d="M18.6 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+                            אופטימיזציה
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 17v-5"/><path d="M13 17v-9"/><path d="M18 17v-3"/></svg>
+                            תובנות
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5s4 4.3 4 7.7a4 4 0 0 1-8 0c0-1 .5-1.9.5-1.9S6 11 6 14a6 6 0 0 0 12 0c0-5-6-11.5-6-11.5z"/></svg>
+                            חם
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5.9 1.2.9 1.9v.2h5.2v-.2c0-.7.3-1.4.9-1.9A6 6 0 0 0 12 3z"/></svg>
+                            המלצות
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <b id="f09-lb1">אופטימיזציה</b>
                   <i id="f09-ds1">שילוב הדילים הזול ביותר</i>
                 </div>
 
+                <!-- ══ station 2 — תובנות ═══════════════════════════════════ -->
                 <div class="f09-station" id="f09-st2">
                   <div class="f09-thumb">
-                    <div class="f09-mhead"></div>
-                    <div class="f09-mcard tall"></div>
-                    <div class="f09-mcard"></div>
-                    <div class="f09-mcard short"></div>
-                    <div class="f09-mnav"><span></span><span class="on" id="f09-nav2">תובנות</span><span></span><span></span></div>
+                    <div class="f09-mini">
+                      <div class="app">
+                        <div class="app-header">
+                          <span class="brand">
+                            <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                            <span class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></span>
+                          </span>
+                          <span class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(209 37% 15%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 6-2.2 7-2.2 7h16.4S18 14 18 8z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+                            <span class="f09-dot"></span>
+                          </span>
+                          <span class="app-avatar">D</span>
+                        </div>
+                        <div class="app-main">
+                          <div>
+                            <h1 class="app-h1">הכסף שלכם, מפוענח</h1>
+                            <p class="app-sub"><span class="num">3</span> חשבונות מקושרים</p>
+                          </div>
+                          <div class="period">
+                            <span><span class="num">7</span> ימים</span>
+                            <span class="on"><span class="num">30</span> ימים</span>
+                            <span><span class="num">90</span> ימים</span>
+                            <span>שנה</span>
+                          </div>
+                          <div class="hero">
+                            <div class="hero-cap">נחסך עם Lessley</div>
+                            <div class="hero-help">?</div>
+                            <div class="hero-figure"><span class="num">₪1,284</span></div>
+                            <div class="hero-sub"><span class="num">30</span> הימים האחרונים · <span class="num">10</span> מועדונים</div>
+                          </div>
+                          <div class="stat-row">
+                            <div class="stat">
+                              <div class="stat-lbl">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2v20l2.3-1.4L9.7 22l2.3-1.4L14.3 22l2.4-1.4L19 22V2l-2.3 1.4L14.3 2l-2.3 1.4L9.7 2 7.3 3.4z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg>
+                                עסקאות
+                              </div>
+                              <div class="stat-val"><span class="num">142</span></div>
+                              <div class="stat-cap"><span class="num">30</span> הימים האחרונים</div>
+                            </div>
+                            <div class="stat">
+                              <div class="stat-lbl">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M21 11h-4a2 2 0 0 0 0 4h4z"/></svg>
+                                סכום כולל
+                              </div>
+                              <div class="stat-val"><span class="num">₪5,630</span></div>
+                              <div class="stat-cap">כל הכרטיסים המקושרים</div>
+                            </div>
+                          </div>
+                          <div class="f09-sec">
+                            <b>צלילה לעומק</b>
+                            <span>החליקו כדי לראות פרטים עבור <span class="num">30</span> הימים האחרונים.</span>
+                          </div>
+                        </div>
+                        <div class="nav">
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7z"/><path d="M18.6 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+                            אופטימיזציה
+                          </span>
+                          <span class="nav-tab on" id="f09-nav2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 17v-5"/><path d="M13 17v-9"/><path d="M18 17v-3"/></svg>
+                            תובנות
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5s4 4.3 4 7.7a4 4 0 0 1-8 0c0-1 .5-1.9.5-1.9S6 11 6 14a6 6 0 0 0 12 0c0-5-6-11.5-6-11.5z"/></svg>
+                            חם
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5.9 1.2.9 1.9v.2h5.2v-.2c0-.7.3-1.4.9-1.9A6 6 0 0 0 12 3z"/></svg>
+                            המלצות
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <b id="f09-lb2">תובנות</b>
                   <i id="f09-ds2">ההוצאות שלכם, מפוענחות</i>
                 </div>
 
+                <!-- ══ station 3 — חם ═══════════════════════════════════════ -->
                 <div class="f09-station" id="f09-st3">
                   <div class="f09-thumb">
-                    <div class="f09-mhead"></div>
-                    <div class="f09-mcard"></div>
-                    <div class="f09-mcard accent"></div>
-                    <div class="f09-mcard tall"></div>
-                    <div class="f09-mnav"><span></span><span></span><span class="on" id="f09-nav3">חם</span><span></span></div>
+                    <div class="f09-mini">
+                      <div class="app">
+                        <div class="app-header">
+                          <span class="brand">
+                            <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                            <span class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></span>
+                          </span>
+                          <span class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(209 37% 15%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 6-2.2 7-2.2 7h16.4S18 14 18 8z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+                            <span class="f09-dot"></span>
+                          </span>
+                          <span class="app-avatar">D</span>
+                        </div>
+                        <div class="app-main">
+                          <div>
+                            <h1 class="app-h1">דילים מומלצים</h1>
+                            <p class="app-sub">דילים אמיתיים מכל מועדוני הנאמנות שלכם, מתעדכנים באופן שוטף</p>
+                          </div>
+                          <div class="deal">
+                            <span class="deal-pct"><span class="num">30%</span> הנחה</span>
+                            <span class="deal-rank"><span class="num">1</span></span>
+                            <div class="deal-art">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l3 2.4L15 3l5.4 3.1-2.3 4-1.8-1V21H7.7V9.1l-1.8 1-2.3-4z"/></svg>
+                            </div>
+                            <div class="deal-store"><bdi>FOX - פוקס</bdi></div>
+                            <div class="deal-cat">ביגוד ואביזרים</div>
+                            <div class="deal-meta">
+                              <span class="chip">
+                                <svg class="f09-cardglyph" viewBox="0 0 24 24" fill="none" stroke="hsl(209 28% 20%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 9h18"/><rect x="3" y="4.5" width="18" height="17" rx="2"/></svg>
+                                <span class="num">08/08/2026</span>
+                              </span>
+                              <span class="chip chip-muted"><bdi>Hever (חבר) — Gift Cards</bdi></span>
+                            </div>
+                          </div>
+                          <div class="deal">
+                            <span class="deal-pct"><span class="num">20%</span> הנחה</span>
+                            <span class="deal-rank"><span class="num">2</span></span>
+                            <div class="deal-art">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12l2 6H4z"/><path d="M5 8v12a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 20V8"/><path d="M9.5 12.5h5"/></svg>
+                            </div>
+                            <div class="deal-store">סופר-פארם</div>
+                            <div class="deal-cat">בית מרקחת</div>
+                          </div>
+                        </div>
+                        <div class="nav">
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7z"/><path d="M18.6 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+                            אופטימיזציה
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 17v-5"/><path d="M13 17v-9"/><path d="M18 17v-3"/></svg>
+                            תובנות
+                          </span>
+                          <span class="nav-tab on" id="f09-nav3">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5s4 4.3 4 7.7a4 4 0 0 1-8 0c0-1 .5-1.9.5-1.9S6 11 6 14a6 6 0 0 0 12 0c0-5-6-11.5-6-11.5z"/></svg>
+                            חם
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5.9 1.2.9 1.9v.2h5.2v-.2c0-.7.3-1.4.9-1.9A6 6 0 0 0 12 3z"/></svg>
+                            המלצות
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <b id="f09-lb3">חם</b>
                   <i id="f09-ds3">דילים מומלצים אצורים</i>
                 </div>
 
+                <!-- ══ station 4 — המלצות ═══════════════════════════════════ -->
                 <div class="f09-station" id="f09-st4">
                   <div class="f09-thumb">
-                    <div class="f09-mhead"></div>
-                    <div class="f09-mcard short"></div>
-                    <div class="f09-mcard"></div>
-                    <div class="f09-mcard tall"></div>
-                    <div class="f09-mnav"><span></span><span></span><span></span><span class="on" id="f09-nav4">המלצות</span></div>
+                    <div class="f09-mini">
+                      <div class="app">
+                        <div class="app-header">
+                          <span class="brand">
+                            <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                            <span class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></span>
+                          </span>
+                          <span class="app-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(209 37% 15%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 6-2.2 7-2.2 7h16.4S18 14 18 8z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+                            <span class="f09-dot"></span>
+                          </span>
+                          <span class="app-avatar">D</span>
+                        </div>
+                        <div class="app-main">
+                          <div>
+                            <h1 class="app-h1">המלצות</h1>
+                            <p class="app-sub">התאמת מועדונים מחושבת מ-<span class="num">90</span> הימים האחרונים שלכם</p>
+                          </div>
+                          <div class="tabs">
+                            <span class="on">התאמות מובילות</span>
+                            <span>חיסכון שפוספס</span>
+                            <span>החנויות שלך</span>
+                          </div>
+                          <div class="card">
+                            <div class="f09-sec">
+                              <b>התאמות המועדונים המובילות</b>
+                              <span>מדורגות לפי חפיפת חנויות עם ההוצאות שלכם</span>
+                            </div>
+                            <div class="club">
+                              <div class="club-top">
+                                <span class="club-n"><span class="num">1</span></span>
+                                <span class="club-id">
+                                  <b><bdi>Mastercard Israel</bdi><svg class="f09-cardglyph" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19"/></svg></b>
+                                  <span><span class="num">10/35</span> חנויות תואמות</span>
+                                </span>
+                                <span class="club-pct"><span class="num">29%</span></span>
+                              </div>
+                              <div class="club-track"><span class="club-fill" style="width:29%"></span></div>
+                            </div>
+                            <div class="club">
+                              <div class="club-top">
+                                <span class="club-n"><span class="num">2</span></span>
+                                <span class="club-id">
+                                  <b><bdi>Isracard TopCash</bdi><svg class="f09-cardglyph" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19"/></svg></b>
+                                  <span><span class="num">31/300</span> חנויות תואמות</span>
+                                </span>
+                                <span class="club-pct"><span class="num">10%</span></span>
+                              </div>
+                              <div class="club-track"><span class="club-fill" style="width:10%"></span></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="nav">
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7z"/><path d="M18.6 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+                            אופטימיזציה
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 17v-5"/><path d="M13 17v-9"/><path d="M18 17v-3"/></svg>
+                            תובנות
+                          </span>
+                          <span class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5s4 4.3 4 7.7a4 4 0 0 1-8 0c0-1 .5-1.9.5-1.9S6 11 6 14a6 6 0 0 0 12 0c0-5-6-11.5-6-11.5z"/></svg>
+                            חם
+                          </span>
+                          <span class="nav-tab on" id="f09-nav4">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5.9 1.2.9 1.9v.2h5.2v-.2c0-.7.3-1.4.9-1.9A6 6 0 0 0 12 3z"/></svg>
+                            המלצות
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <b id="f09-lb4">המלצות</b>
                   <i id="f09-ds4">מועדונים שכדאי להצטרף אליהם</i>
@@ -364,10 +800,11 @@
 
       <script>
         (function () {
-          var F = 1 / 60;
           var tl = gsap.timeline({ paused: true });
 
-          /* ── the stage camera: one .world wrapper, T = -offset x S ──────── */
+          /* ── the STAGE camera: one .world wrapper, T = -offset x S ────────
+             There is no phone in this scene, so no in-phone camera exists to
+             remove — this traverse is the film's one pull-back and it stays. */
           var world = document.getElementById("f09-world");
           function pose(id, S, biasX, biasY) {
             var el = document.getElementById(id);
@@ -386,20 +823,21 @@
           var P3 = pose("f09-st3", PAN), P4 = pose("f09-st4", PAN);
           var PB = pose("f09-bell", STRIP, 0, 250);
           var PA = pose("f09-avatar", STRIP, 0, 250);
-          /* the hand-off: thumb 1 lands phone-shaped on frame 10's phone mark */
-          var PM = pose("f09-thumb1", 1.45, 737 - 960, 0);
-          var PL = pose("f09-thumb1", LAND, 737 - 960, 0);
+          /* the hand-off: thumb 1 lands phone-shaped on frame 10's phone mark
+             (cx 754 under the tightened 80px stage padding) */
+          var PM = pose("f09-thumb1", 1.45, 754 - 960, 0);
+          var PL = pose("f09-thumb1", LAND, 754 - 960, 0);
 
           /* ── Scene 1 (0.0–1.0s) — INVERSE-ZOOM arrival: something bigger lands */
           tl.fromTo("#f09-world", { x: 0, y: 0, scale: 1.18 },
-            { x: 0, y: 0, scale: 1, duration: 0.95, ease: "power3.out" }, 0);
+            { x: 0, y: 0, scale: 1, duration: 0.88, ease: "power3.out" }, 0);
 
           /* the four screens spread out as stations (waterfall-entry) */
           var st = [
-            { id: "#f09-st1", at: 0.50, dy: 96, d: 0.22 },
-            { id: "#f09-st2", at: 0.76, dy: 78, d: 0.19 },
-            { id: "#f09-st3", at: 0.96, dy: 68, d: 0.17 },
-            { id: "#f09-st4", at: 1.12, dy: 60, d: 0.16 }
+            { id: "#f09-st1", at: 0.42, dy: 96, d: 0.22 },
+            { id: "#f09-st2", at: 0.64, dy: 78, d: 0.19 },
+            { id: "#f09-st3", at: 0.82, dy: 68, d: 0.17 },
+            { id: "#f09-st4", at: 0.98, dy: 60, d: 0.16 }
           ];
           for (var i = 0; i < st.length; i++) {
             tl.set(st[i].id, { opacity: 1, y: st[i].dy }, st[i].at);
@@ -407,9 +845,9 @@
           }
 
           tl.fromTo("#f09-p1", { opacity: 0, y: 22 },
-            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 1.35);
+            { opacity: 1, y: 0, duration: 0.50, ease: "power3.out" }, 1.14);
           tl.fromTo("#f09-p2", { opacity: 0, y: 22 },
-            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 1.70);
+            { opacity: 1, y: 0, duration: 0.50, ease: "power3.out" }, 1.44);
 
           /* ── Scenes 2–5 — the pan traverse; each station is named on arrival */
           function nameStation(n, at) {
@@ -421,52 +859,57 @@
               { scale: 1, duration: 0.5, ease: "back.out(2.2)" }, at + 0.04);
           }
 
+          /* Retimed to 12s: the traverse keeps all four stops and keeps naming
+             each station on arrival — the cut comes out of the dwell after each
+             name lands, so the camera never travels faster than it did at 15s. */
           tl.to("#f09-world", { x: P1.x, y: P1.y, scale: P1.scale,
-            duration: 1.30, ease: "power2.inOut" }, 2.20);
-          nameStation(1, 3.62);
+            duration: 1.10, ease: "power2.inOut" }, 1.70);
+          nameStation(1, 2.90);
 
           tl.to("#f09-world", { x: P2.x, y: P2.y, scale: P2.scale,
-            duration: 0.60, ease: "power2.inOut" }, 4.05);
-          nameStation(2, 4.78);
+            duration: 0.52, ease: "power2.inOut" }, 3.14);
+          nameStation(2, 3.76);
 
           tl.to("#f09-world", { x: P3.x, y: P3.y, scale: P3.scale,
-            duration: 0.50, ease: "power2.inOut" }, 5.05);
-          nameStation(3, 5.68);
+            duration: 0.44, ease: "power2.inOut" }, 4.04);
+          nameStation(3, 4.58);
 
           tl.to("#f09-world", { x: P4.x, y: P4.y, scale: P4.scale,
-            duration: 0.45, ease: "power2.inOut" }, 5.90);
-          nameStation(4, 6.48);
+            duration: 0.40, ease: "power2.inOut" }, 4.84);
+          nameStation(4, 5.34);
 
           /* the cascade resolves into the composed layout — all four at once */
           tl.to("#f09-world", { x: 0, y: 0, scale: 1,
-            duration: 1.10, ease: "power2.inOut" }, 6.95);
+            duration: 1.00, ease: "power2.inOut" }, 5.88);
 
-          /* ── Scene 6 (8.3–12.6s) — the top bar: bell, red badge, avatar ─── */
-          tl.set("#f09-bell", { opacity: 1, y: 54 }, 8.30);
-          tl.to("#f09-bell", { y: 0, duration: 0.22, ease: "power4.out" }, 8.30);
-          tl.set("#f09-avatar", { opacity: 1, y: 44 }, 8.55);
-          tl.to("#f09-avatar", { y: 0, duration: 0.19, ease: "power4.out" }, 8.55);
+          /* ── Scene 6 (6.9–10.4s) — the top bar: bell, red badge, avatar ─── */
+          tl.set("#f09-bell", { opacity: 1, y: 54 }, 6.90);
+          tl.to("#f09-bell", { y: 0, duration: 0.22, ease: "power4.out" }, 6.90);
+          tl.set("#f09-avatar", { opacity: 1, y: 44 }, 7.10);
+          tl.to("#f09-avatar", { y: 0, duration: 0.19, ease: "power4.out" }, 7.10);
 
           tl.to("#f09-world", { x: PB.x, y: PB.y, scale: PB.scale,
-            duration: 1.00, ease: "power2.inOut" }, 9.00);
+            duration: 0.85, ease: "power2.inOut" }, 7.44);
 
           tl.fromTo("#f09-badge", { opacity: 0, scale: 0.3 },
-            { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2.4)",
-              immediateRender: false }, 10.25);
+            { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2.4)",
+              immediateRender: false }, 8.44);
           tl.fromTo("#f09-ring", { opacity: 0.8, scale: 0.35 },
-            { opacity: 0, scale: 1.9, duration: 0.8, ease: "power2.out",
-              immediateRender: false }, 10.32);
+            { opacity: 0, scale: 1.9, duration: 0.72, ease: "power2.out",
+              immediateRender: false }, 8.50);
 
           tl.to("#f09-world", { x: PA.x, y: PA.y, scale: PA.scale,
-            duration: 0.80, ease: "power2.inOut" }, 11.15);
+            duration: 0.70, ease: "power2.inOut" }, 9.14);
           tl.fromTo("#f09-face", { scale: 0.74 },
-            { scale: 1, duration: 0.55, ease: "back.out(2.2)", immediateRender: false }, 12.20);
+            { scale: 1, duration: 0.50, ease: "back.out(2.2)", immediateRender: false }, 9.94);
 
-          /* ── the hand-off: push into the optimizer screen for frame 10 ──── */
+          /* ── the hand-off: push into the optimizer screen for frame 10 ────
+             Reposition then accelerate, back to back so the seam carries one
+             unbroken velocity into the cut at exactly 12.0s. */
           tl.to("#f09-world", { x: PM.x, y: PM.y, scale: PM.scale,
-            duration: 1.00, ease: "power2.inOut" }, 12.55);
+            duration: 0.75, ease: "power2.inOut" }, 10.10);
           tl.to("#f09-world", { x: PL.x, y: PL.y, scale: PL.scale,
-            duration: 1.40, ease: "power2.in" }, 13.60);
+            duration: 1.15, ease: "power2.in" }, 10.85);
 
           window.__timelines = window.__timelines || {};
           window.__timelines["09-nav-map"] = tl;

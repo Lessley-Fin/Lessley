@@ -1,0 +1,28 @@
+{
+  "scene": "14-insights-hero",
+  "duration_s": 10,
+  "rules": [
+    "waterfall-entry",
+    "counting-dynamic-scale",
+    "spring-pop-entrance",
+    "directional-wipe",
+    "ambient-glow-bloom"
+  ],
+  "entry": {
+    "vector": "0 px/s of camera travel — there is no in-phone camera in this film. .screen-world holds scale 1 / x 0 / y 0 for the whole scene and .device is never transformed. The scene enters mid-arrival instead: the navy savings hero is already travelling at t=0 (y 56 → 0 over 0.00-0.22s, power4.out, binary opacity), so the cut from frame 13 lands on a card in flight.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "0 px/s — the layout is static from 9.30s. The second info-dialog line finishes wiping at 9.30s and nothing moves for the final 0.70s. Frame 15 opens on the same still, un-zoomed screen geometry and answers with charts already in motion, so the seam is a content cut.",
+    "still_moving": false
+  },
+  "camera_target": "none. No data-camera-target attribute survives in this scene; nothing zooms.",
+  "notes": {
+    "first_second": "Device + the תובנות page present at t=0: header, page head (הכסף שלכם, מפוענח / 30 הימים האחרונים · 3 חשבונות מקושרים), the .period track with 30 ימים as a filled NAVY pill, and the navy nav with תובנות active. Motion in second one: the hero card whipping in from 0.00s, its נחסך עם LESSLEY caption wiping at 0.28s, the ? circle popping at 0.42s, the stage title whip at 0.12s and the first stage body line at 0.52s.",
+    "last_second": "Locked hold. Last motion is the info-dialog's second body line, 8.62 → 9.30s; 9.30-10.00s is a still frame with the dialog open over the hero.",
+    "payoff": "counting-dynamic-scale at 1.02-3.17s: the ₪ figure counts 0 → 1,284 while .ih-figwrap scales 0.62 → 1 on the same position, duration and ease (power3.out). The figure itself stays WHITE — fidelity to the app's navy hero. The scene's one gold element is the stage rule under the title, which fills 2.94-3.48s as the number settles; the glow blooms 3.04-4.24s in answer. Gold appears exactly once.",
+    "real_data": "The hero sub-line now reads 30 הימים האחרונים · 10 מועדונים — the user is a member of all ten clubs in the real clubs collection, so ₪1,284 is saved across ten programmes, not four.",
+    "staged_reveals": "Where a camera move used to own time, content does: hero sub-line 3.30s, second stage body line 3.58s, then the two white stat cards land at 3.92s and 4.42s with their own counts (142 עסקאות over 1.00s, ₪5,630 over 1.08s). The pointer then crosses to the hero's ? button 5.62-6.48s and opens the app's own savingsHero info dialog at 6.62s, whose verbatim he.json copy is the answer to the stage line לא אומדן.",
+    "camera_target": "none — this scene used to push into .ih-hero; that tween and the measurement code behind it are gone."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "scene": "09-nav-map",
-  "duration_s": 15.0,
+  "duration_s": 12.0,
   "rules": [
     "viewport-change",
     "waterfall-entry",
@@ -9,12 +9,12 @@
     "spring-pop-entrance"
   ],
   "entry": {
-    "vector": "inverse-zoom, back-to-rest (-Z) — #f09-world scale 1.18 → 1.00 over 0.95s on power3.out from t=0; 0.568 scale/s ≈ 546 px/s inward at the frame edge on frame 0 (arrival: something bigger lands)",
+    "vector": "inverse-zoom, back-to-rest (-Z) — #f09-world scale 1.18 → 1.00 over 0.88s on power3.out from t=0; 0.614 scale/s ≈ 589 px/s inward at the frame edge on frame 0 (arrival: something bigger lands), catching frame 08's receding exit",
     "from_rest": false
   },
   "exit": {
-    "vector": "forward push-in (+Z) — #f09-world scale 1.45 → 1.95 over 1.40s on power2.in ending at t=15.0; 0.714 scale/s ≈ 686 px/s outward at the frame edge, plus 470 px/s of leftward pan. The optimizer station's phone-shaped thumbnail lands at cx 737 / cy 540 — frame 10's phone mark",
+    "vector": "forward push-in (+Z) — #f09-world scale 1.45 → 1.95 over 1.15s on power2.in ending at t=12.0; 0.870 scale/s ≈ 835 px/s outward at the frame edge, plus 570 px/s of leftward pan. The optimizer station's phone-shaped thumbnail lands at cx 754 / cy 540 — frame 10's phone mark under the 80px stage padding",
     "still_moving": true
   },
-  "notes": "The film's one pull-back: no device, the camera lives on the stage (.f09-world, single-wrapper T = -offset x S). Four stations waterfall in 0.50–1.28s, then the camera traverses them 2.20–6.35s at scale 1.70, naming each on arrival; pulls back to 1.00 at 6.95–8.05s for the composed layout; pushes to the notification bell and the avatar 9.00–11.95s at scale 1.65; repositions on the optimizer thumbnail at 12.55s and accelerates into the hand-off from 13.60s. data-camera-target is the stations row."
+  "notes": "Retimed 15.0s → 12.0s. The film's one pull-back: no device, so there is no in-phone camera here to remove — the camera lives on the STAGE (.f09-world, single-wrapper T = -offset x S) and is unchanged in kind. The traverse keeps all four stops and still names each station on arrival; the 3s came out of the dwell after each name lands and out of the tail, so the camera never travels faster per move than it did at 15s. Layout: .f09-stage now uses the film-wide 42px 80px stage padding (it was 96px, which sat the text column 16px inside every other scene's right edge), and the station row is capped at 1490px and centred — at the 1.18 arrival scale a full-width row threw its outer stations past the frame edge, and 1490 x 1.18 = 1758 keeps the row inside the 80px padding at every scale this scene reaches. Each of the four station thumbnails holds a REAL screen in miniature — a full 460x997 app built from the shared primitives (app-header with the robot mascot, page head, period/tabs, hero, stat cards, deal cards, club rows, navy nav bar) scaled by 0.3587 into a 165x358 phone-shaped thumb. Every figure in them now traces to frame.md's demo table: station 1 prices FOX - פוקס at a ₪1,000 cart with max 3 deals, station 2 shows ₪1,284 saved across 10 מועדונים over 30 ימים with 142 עסקאות / ₪5,630 / 3 linked accounts, station 3 leads with the real Hever (חבר) — Gift Cards deal on FOX - פוקס at 30% in ביגוד ואביזרים, and station 4 ranks Mastercard Israel 29% (10/35 חנויות תואמות) over Isracard TopCash 10% (31/300). Beats: stations waterfall in 0.42–1.14s, the camera traverses them 1.70–5.24s at scale 1.70 naming each on arrival, pulls back to 1.00 at 5.88–6.88s for the composed layout, pushes to the notification bell and the avatar 7.44–9.84s at scale 1.65, repositions on the optimizer thumbnail at 10.10s and accelerates into the hand-off from 10.85s. data-camera-target is the stations row. First second: the inverse-zoom arrival is still resolving (scale 1.18 → 1.00 by 0.88s) while stations 1–3 waterfall up behind it — the frame is never still. Last second (11.0–12.0s): pure seam, 0.15s into the 1.15s power2.in push from scale 1.45 toward 1.95 with the optimizer thumb tracking to cx 754, accelerating through the cut into frame 10."
 }

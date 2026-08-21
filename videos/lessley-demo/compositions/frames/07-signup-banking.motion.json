@@ -1,14 +1,14 @@
 {
   "scene": "07-signup-banking",
-  "duration_s": 15.0,
-  "rules": ["waterfall-entry", "svg-icon-enrichment", "viewport-change"],
+  "duration_s": 12.0,
+  "rules": ["waterfall-entry", "svg-icon-enrichment"],
   "entry": {
     "vector": "static — 0 px/s at frame 0 (hard cut onto a held device; the first tween fires at t=0.10s)",
     "from_rest": true
   },
   "exit": {
-    "vector": "up (-Y) — #f07-content y 0 → -102px over 2.70s on power2.in, ending at t=15.0; |v| ≈ 76 px/s upward and still accelerating",
+    "vector": "up (-Y) — #f07-content y 0 → -102px over 2.30s on power2.in, ending at t=12.0; |v| ≈ 89 px/s upward and still accelerating",
     "still_moving": true
   },
-  "notes": "Allocated-stillness beat (titlecard-reveal). One restrained move: the in-phone camera (.screen-world) pushes to the read-only card (scale 1 → 1.28, clamped translate) while the device grows to 1.22, 7.05–9.10s. The lock shackle snaps shut at 9.34s. Camera holds 9.4–12.3s, then the whole frame rises into the seam."
+  "notes": "Retimed 15.0s → 12.0s. The quiet beat of the act, so the cut was taken out of HOLD, not out of travel: every rise keeps its original duration and ease and only the gaps between them shrink (the waterfall of value props goes from 0.64s of dead air between entries to 0.42s; the pre-seam stillness from 1.88s to 0.78s). NO in-phone camera and no device scaling — .screen-world holds scale 1 / x 0 / y 0 for the whole scene (the push-into-the-card treatment was withdrawn 18/08). The screen is the real BankingStep: back row + 5-step rail (0.44–0.74s), the surface-navy value block states the ask (1.14–2.06s), the three value props waterfall in (2.86 / 3.62 / 4.34s), the action card and its two buttons arrive staged (5.20–6.62s), and the read-only trust card lands at 7.30s. The lock shackle snaps shut at 7.78s with a ring pulse and a teal ring on the card; the background glow answers at 7.82s. First second: the stage title waterfalls in word by word from t=0.10s while the wizard chrome settles behind it — nothing is on screen at frame 0 except the empty device. Last second (11.0–12.0s): nothing but the seam — #f07-content is 0.9s into a 2.30s power2.in rise, travelling from about -40px to -102px and accelerating into frame 08. Allocated stillness 8.92–9.70s."
 }

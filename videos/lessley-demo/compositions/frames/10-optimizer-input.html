@@ -1,5 +1,16 @@
 <template>
-<style id="lessley-shared">
+<style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
+      <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
           src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
@@ -43,6 +54,11 @@
           --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -85,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -102,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -122,131 +138,323 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
           filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
       </style>
 <style>
-  /* ══ 10-optimizer-input — scene-specific ══════════════════════════════ */
-  #root { --input: 201 21% 89%; --ring: 182 38% 36%; }
+  /* ══ 10-optimizer-input — scene-specific ══════════════════════════════
+     REVISED 18/08: every in-phone camera move is gone. `.screen-world` holds
+     scale 1 / x 0 / y 0 for the whole scene and carries no id and no tween.
+     The only travel is the STAGE reposition (nudge-curve) that walks the whole
+     device to true frame centre. The screen itself is the real app at its real
+     sizes — the legibility is bought with frame real estate.                  */
+
+  /* tokens the shared block references but does not declare (real app values) */
+  #root {
+    --secondary: 195 33% 94%;        --secondary-foreground: 209 28% 20%;
+    --navy-foreground: 203 36% 96%;  --navy-muted: 203 13% 67%;
+    --input: 201 21% 89%;            --ring: 182 38% 36%;
+    /* AA gate: the app's own --muted-foreground (208 11% 46%) lands at 4.28:1 on
+       the app-shell ground and 4.24:1 on --secondary. Three points of lightness
+       clears WCAG AA without a perceptible shift in the token. */
+    --muted-foreground: 208 12% 43%;
+    --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+    --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+  }
 
   .f10-ground { position: absolute; inset: 0; background: var(--stage-bg); }
 
-  /* in-phone camera (the .screen-world is the outer scaler) */
-  .f10-camin { position: absolute; inset: 0; }
-  .f10-camfill { position: absolute; inset: -700px; background: hsl(var(--background)); }
-  .f10-campage { position: absolute; inset: 0; background-image:
-      radial-gradient(ellipse 90% 60% at 50% -15%, hsl(182 38% 36% / 0.14), transparent 55%),
-      radial-gradient(ellipse 70% 50% at 100% 10%, hsl(186 43% 32% / 0.10), transparent 50%); }
+  /* The header primitive is authored for an LTR flex flow: bell + avatar hold
+     the left edge, the brand is pushed right by margin-inline-start:auto. */
+  .app-header { direction: ltr; }
+  .app-header .brand { direction: rtl; }
 
-  /* device rig — travel on the outer box, static scale on the inner box */
-  .f10-rig { position: absolute; left: 405px; top: 74px; width: 430px; height: 932px; }
-  .f10-rig-in { width: 430px; height: 932px; transform: scale(0.944206); transform-origin: 50% 50%; }
+  /* device rig — travel on the outer box, static rest scale on the inner box.
+     460x997 device rendered 880px tall => 880/997 = 0.882648. */
+  .f10-rig { position: absolute; left: 390px; top: 41px; width: 460px; height: 997px; }
+  .f10-rig-in { width: 460px; height: 997px; transform: scale(0.9428); transform-origin: 50% 50%; }
 
   .f10-text { position: absolute; top: 0; bottom: 0; right: 160px; width: 760px;
     display: flex; flex-direction: column; justify-content: center; gap: 24px; text-align: right; }
 
-  /* app chrome */
-  .f10-mark { background: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
-    border-color: transparent; color: hsl(182 37% 98%); font-weight: 800; font-size: 24px; }
-  .f10-ico { width: 26px; height: 26px; display: block; }
-
-  /* Wider side gutters than the app's own: the in-phone camera crops ~34px per
-     side at its peak scale, and no RTL line start may ever fall inside that. */
-  .f10-main { gap: 15px; padding-left: 40px; padding-right: 40px; }
+  /* ── the real optimizer screen ─────────────────────────────────────── */
   .f10-main > * { flex: none; }
-  .f10-titles { padding: 0 8px; }
-  .f10-main .field { font-size: 20px; padding: 18px; }
-  .f10-main .tab { padding: 13px 14px; }
-  .f10-main .btn { font-size: 22px; padding: 20px 16px; }
-  .f10-sparkle { display: inline-block; width: 20px; height: 20px; vertical-align: -3px; margin-left: 6px; }
-  .f10-alt { align-self: flex-start; font-size: 18px; font-weight: 700; color: hsl(var(--primary));
-    padding: 2px 4px; }
-  .f10-hint { font-size: 16px; line-height: 1.3; color: hsl(var(--muted-foreground)); padding: 0 6px; opacity: 0; }
+  .f10-head .app-sub { margin-top: 4px; }
+  .f10-sparkle { width: 19px; height: 19px; display: inline-block; vertical-align: -3px;
+    margin-inline-start: 5px; }
 
-  .f10-field { position: relative; }
-  .f10-caret { display: inline-block; width: 3px; height: 25px; margin-right: 5px;
+  .f10-form { display: flex; flex-direction: column; gap: 12px; }
+  .f10-caps { font-size: 14px; font-weight: 700; letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground)); margin: 0; }
+
+  .f10-searchwrap { position: relative; }
+  .f10-search { justify-content: flex-start; gap: 12px; }
+  .f10-search .mag { width: 20px; height: 20px; flex: none; }
+  .f10-caret { display: inline-block; width: 2px; height: 21px; margin-inline-start: 4px;
     background: hsl(var(--primary)); vertical-align: -4px; opacity: 0; }
 
-  .f10-btnwrap { position: relative; margin-top: 4px; }
-  .f10-burst { position: absolute; inset: -8px; border-radius: 999px; z-index: 1; opacity: 0;
+  /* the store-suggestion list — a popover, so opening it costs no layout */
+  .f10-sug { position: absolute; top: calc(100% + 8px); right: 0; left: 0; z-index: 6;
+    border-radius: 18px; background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-float); padding: 6px; transform-origin: 50% 0%; opacity: 0; }
+  .f10-sugrow { display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    border-radius: 14px; font-size: 17px; }
+  .f10-sugrow svg { width: 17px; height: 17px; flex: none; }
+
+  .f10-confirm { display: flex; align-items: center; gap: 8px; font-size: 16px;
+    color: hsl(var(--primary)); margin: 0; opacity: 0; }
+  .f10-confirm svg { width: 16px; height: 16px; flex: none; }
+  .f10-change { text-decoration: underline; text-underline-offset: 3px; }
+
+  .f10-row { display: flex; gap: 10px; }
+  .f10-price { flex: 1; min-width: 0; }
+  .f10-deals { width: 150px; flex: none; justify-content: flex-start; gap: 8px; }
+  .f10-deals .lay { width: 18px; height: 18px; flex: none; }
+  .f10-deals .chev { width: 17px; height: 17px; flex: none; margin-inline-start: auto; }
+  .f10-dealsv { display: inline-block; transform-origin: 50% 50%; font-weight: 700; }
+
+  .f10-btnwrap { position: relative; margin-top: 2px; }
+  .f10-burst { position: absolute; inset: -10px; border-radius: 999px; z-index: 1; opacity: 0;
     background: radial-gradient(circle, hsl(182 38% 36% / 0.95), hsl(182 38% 36% / 0) 70%);
-    filter: blur(16px); transform-origin: 50% 50%; }
+    filter: blur(18px); transform-origin: 50% 50%; }
   .f10-btn { position: relative; z-index: 2; overflow: hidden; transform-origin: 50% 50%; }
-  .f10-lbl-b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    gap: 12px; opacity: 0; }
-  .f10-spin { width: 26px; height: 26px; display: block; transform-origin: 50% 50%; }
+  .f10-lbl-a { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .f10-lbl-b { position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; gap: 10px; opacity: 0; }
+  .f10-btn svg { width: 23px; height: 23px; flex: none; display: block; }
+  .f10-spin { transform-origin: 50% 50%; }
   .f10-sheen { position: absolute; top: 0; bottom: 0; left: -170px; width: 150px; opacity: 0;
     background: linear-gradient(90deg, hsl(0 0% 100% / 0), hsl(0 0% 100% / 0.40), hsl(0 0% 100% / 0)); }
+
+  .f10-notice { border-radius: 26px; background: hsl(var(--card)); box-shadow: var(--shadow-card);
+    padding: 22px; margin: 0; text-align: center; font-size: 17px; line-height: 1.45;
+    color: hsl(var(--muted-foreground)); }
 
   .f10-glow2 { position: absolute; left: 960px; top: 540px; width: 1400px; height: 1400px;
     margin: -700px 0 0 -700px; border-radius: 50%; opacity: 0;
@@ -257,7 +465,7 @@
 </style>
 
 <div id="root" data-composition-id="10-optimizer-input" data-width="1920" data-height="1080">
-  <div class="clip f10-ground" id="f10-ground" data-start="0" data-duration="15" data-track-index="0"></div>
+  <div class="clip f10-ground" id="f10-ground" data-start="0" data-duration="12" data-track-index="0"></div>
 
   <div class="bg-layer">
     <div class="bg-grid" id="f10-grid"></div>
@@ -270,62 +478,96 @@
   <span class="chapter">10 / 21</span>
 
   <div class="f10-text" id="f10-text">
-    <h1 class="scene-title" id="f10-title">אופטימיזציה · הקלט</h1>
-    <p class="scene-body" id="f10-body">חנות נבחרת, <span class="num">₪412</span> מוקלד, מקסימום דילים נקבע.</p>
+    <h1 class="scene-title" id="f10-title">כמה תשלמו בפועל?</h1>
+    <p class="scene-body" id="f10-body">בוחרים חנות ומזינים את סכום העגלה.</p>
+    <p class="scene-body" id="f10-body2">המנוע בודק כל צירוף אפשרי.</p>
   </div>
 
   <div class="f10-rig" id="f10-rig">
     <div class="f10-rig-in">
       <div class="device">
         <div class="device-body">
-          <div class="device-screen">
-            <div class="screen-world" id="f10-cam" data-layout-allow-overflow>
-              <div class="f10-camin" id="f10-camin" data-layout-allow-overflow>
-                <div class="f10-camfill"></div>
-                <div class="f10-campage"></div>
+          <div class="device-screen" id="f10-screen">
+            <div class="screen-world">
 
-                <div class="app">
-                  <div class="app-header">
-                    <div class="app-icon f10-mark">L</div>
-                    <div class="brand"><b>Lessley</b></div>
-                    <div class="app-icon">
-                      <svg class="f10-ico" viewBox="0 0 24 24" fill="none" stroke="hsl(208 34% 17%)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-                    </div>
-                    <div class="app-avatar">D</div>
+              <div class="app">
+                <div class="app-header">
+                  <div class="app-avatar">D</div>
+                  <div class="app-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 34% 17%)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                  </div>
+                  <div class="brand">
+                    <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                    <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
+                  </div>
+                </div>
+
+                <div class="app-main f10-main">
+                  <div class="tabs">
+                    <span class="on">אופטימיזציה</span>
+                    <span>חיפוש דילים</span>
                   </div>
 
-                  <div class="app-main f10-main">
-                    <div class="tabs">
-                      <div class="tab on">אופטימיזציה</div>
-                      <div class="tab">חיפוש דילים</div>
+                  <div class="f10-head">
+                    <h1 class="app-h1">אופטימיזציית מחיר</h1>
+                    <p class="app-sub">גילוי דילים מונע בינה מלאכותית<svg class="f10-sparkle" viewBox="0 0 24 24" fill="hsl(182 38% 36%)"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M18.6 15l.8 2.3 2.2.7-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.7z" opacity=".65"/></svg></p>
+                  </div>
+
+                  <div class="card f10-form">
+                    <p class="f10-caps">חיפוש בכל השוק</p>
+
+                    <div class="f10-searchwrap">
+                      <div class="field f10-search" id="f10-fstore">
+                        <svg class="mag" viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+                        <span class="lbl" id="f10-ph">שם חנות</span>
+                        <span class="val" id="f10-storewrap"><span id="f10-store"></span><i class="f10-caret" id="f10-caret"></i></span>
+                      </div>
+
+                      <!-- A popover: it is SUPPOSED to sit over the price and max-deals
+                           fields while the store is being chosen, so the layout pass is
+                           told the occlusion is intentional. -->
+                      <div class="f10-sug" id="f10-sug" data-layout-allow-overlap data-layout-allow-occlusion>
+                        <div class="f10-sugrow" id="f10-sug1">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1 11H5z"/><path d="M4 9l1.4-4h13.2L20 9"/><path d="M9 13h6"/></svg>
+                          <span><bdi>FOX - פוקס</bdi></span>
+                        </div>
+                        <div class="f10-sugrow" id="f10-sug2">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1 11H5z"/><path d="M4 9l1.4-4h13.2L20 9"/><path d="M9 13h6"/></svg>
+                          <span><bdi>FOX Home</bdi></span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div class="f10-titles">
-                      <h1 class="app-h1">אופטימיזציית מחיר</h1>
-                      <p class="app-sub">גילוי דילים מונע בינה מלאכותית<svg class="f10-sparkle" viewBox="0 0 24 24" fill="hsl(182 38% 36%)"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M18.5 15l.8 2.3 2.2.7-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.7z" opacity=".7"/></svg></p>
-                    </div>
+                    <p class="f10-confirm" id="f10-confirm">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>
+                      <span>מתמחרים מול <bdi>FOX - פוקס</bdi></span>
+                      <span class="f10-change">שינוי</span>
+                    </p>
 
-                    <div class="field f10-field" id="f10-f-store">
-                      <span class="lbl">שם חנות</span>
-                      <span class="val"><span id="f10-store"></span></span>
-                    </div>
-                    <div class="f10-alt" id="f10-alt">חיפוש בכל השוק</div>
+                    <!-- Marked on both sides of the layering: the store popover is meant
+                         to cover this row while the store is being chosen. -->
+                    <div class="f10-row" data-layout-allow-occlusion>
+                      <div class="field f10-price" id="f10-fprice">
+                        <span class="lbl" id="f10-pph">מחיר כולל ₪</span>
+                        <span class="val" id="f10-pricewrap"><span class="num" id="f10-price"></span><i class="f10-caret" id="f10-caret2"></i></span>
+                      </div>
 
-                    <div class="field f10-field" id="f10-f-price" data-camera-target>
-                      <span class="lbl">מחיר כולל ₪</span>
-                      <span class="val" id="f10-pricewrap"><span class="num" id="f10-price"></span><i class="f10-caret" id="f10-caret"></i></span>
+                      <div class="field f10-deals" id="f10-fdeals">
+                        <svg class="lay" viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>
+                        <span class="f10-dealsv" id="f10-deals">דיל אחד</span>
+                        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
                     </div>
-
-                    <div class="field f10-field" id="f10-f-deals">
-                      <span class="lbl">מקסימום דילים בשילוב</span>
-                      <span class="val" id="f10-deals">דיל אחד</span>
-                    </div>
-                    <div class="f10-hint" id="f10-hint">מספר הדילים המרבי שאפשר לשלב בהצעה אחת.</div>
 
                     <div class="f10-btnwrap">
-                      <div class="f10-burst" id="f10-burst"></div>
+                      <!-- The click bloom scales to 4.6x on purpose; it is meant to leave the
+             control's box. -->
+        <div class="f10-burst" id="f10-burst" data-layout-allow-overflow></div>
                       <div class="btn f10-btn" id="f10-btn">
-                        <span id="f10-lbl-a">מציאת המחירים הטובים ביותר</span>
+                        <span class="f10-lbl-a" id="f10-lbl-a">
+                          <svg viewBox="0 0 24 24" fill="hsl(182 37% 98%)"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M18.6 15l.8 2.3 2.2.7-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.7z" opacity=".7"/></svg>
+                          <span>מציאת המחירים הטובים ביותר</span>
+                        </span>
                         <span class="f10-lbl-b" id="f10-lbl-b">
                           <svg class="f10-spin" id="f10-spin" viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9" opacity=".28"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
                           <span>משלבים דילים…</span>
@@ -334,8 +576,30 @@
                       </div>
                     </div>
                   </div>
+
+                  <p class="f10-notice" id="f10-notice">בחרו חנות והזינו את סכום העגלה — נמצא את השילוב החוקי והזול ביותר של דילים.</p>
+                </div>
+
+                <div class="nav">
+                  <div class="nav-tab on">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M18.6 15l.8 2.3 2.2.7-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.7z" opacity=".7"/></svg>
+                    <span>אופטימיזציה</span>
+                  </div>
+                  <div class="nav-tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-8"/></svg>
+                    <span>תובנות</span>
+                  </div>
+                  <div class="nav-tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c.8 3.8 4.6 4.8 4.6 9A5.6 5.6 0 0 1 6.8 15c-.6 3.4 1.6 7 5.2 7a5.8 5.8 0 0 0 5.8-5.8c0-4.6-4-6.4-5.8-14.2z"/></svg>
+                    <span>חם</span>
+                  </div>
+                  <div class="nav-tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .8 1.6V16h5.6v-.6c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg>
+                    <span>המלצות</span>
+                  </div>
                 </div>
               </div>
+
             </div>
             <div class="device-island"></div>
           </div>
@@ -355,137 +619,155 @@
 <script>
   (function () {
     var ID = "10-optimizer-input";
-    var D = 15;
-    var DS = 0.944206;            /* device rest scale */
-    var SW = 410, SH = 912;       /* screen box */
-    var SCX = SW / 2, SCY = SH / 2;
-
+    var D = 12;
+    /* Device rest scale — must match `.f10-rig-in`'s transform, or the pointer is
+       aimed at a control that is not where it thinks it is. This was still the
+       880/997 = 0.882648 figure from the retired device size. */
+    var DS = 0.9428;
     var g = function (id) { return document.getElementById(id); };
-    var cam = g("f10-cam"), camin = g("f10-camin");
-    var rig = g("f10-rig");
 
-    /* --- coordinate-target-zoom: measure the target's laid-out centre once --- */
-    function offsetOf(el, root) {
-      var x = 0, y = 0, n = el;
-      while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-      return { x: x + el.offsetWidth / 2 - SCX, y: y + el.offsetHeight / 2 - SCY };
-    }
-    var offPrice = g("f10-f-price").offsetHeight ? offsetOf(g("f10-f-price"), camin) : { x: 0, y: 20 };
-    var offBtn = g("f10-btn").offsetHeight ? offsetOf(g("f10-btn"), camin) : { x: 0, y: 250 };
-
-    /* Peak scale is capped: the screen-world crops 205*(1-1/S) px per side and the
-       app's line starts sit 40px in. 1.20 -> 34px crop, so nothing is ever clipped. */
-    var S1 = 1.20, S2 = 1.06;                        /* push scale, settled scale */
-    var T1x = -offPrice.x, T1y = -(offPrice.y + 40); /* T = -offset, biased so the
-                                                        header leaves cleanly */
-    var T2x = 0, T2y = 26;                           /* settle: the whole filled form */
-
-    /* the submit control's canvas position at the settled framing (phone centred) */
-    var btnX = 960 + (offBtn.x + T2x) * S2 * DS;
-    var btnY = 540 + (offBtn.y + T2y) * S2 * DS;
+    var btn = g("f10-btn");
+    /* Where the submit control sits, as an offset from the screen's centre in the
+       screen's own 440x977 box. AUTHORED, not measured: this composition is built
+       before the embedded Hebrew faces have been applied, so a live offsetTop walk
+       reads the page ~47px short and aims the pointer above the control. There is
+       no camera to compute either — `.screen-world` is untransformed, so screen
+       space maps to canvas space by the device rest scale alone. */
+    var offBtn = { x: 0, y: 110 };
+    /* phone centre after the nudge = true frame centre (960, 540) */
+    var btnX = 960 + offBtn.x * DS;
+    var btnY = 540 + offBtn.y * DS;
 
     var tl = gsap.timeline({ paused: true });
     window.__timelines = window.__timelines || {};
     window.__timelines[ID] = tl;
 
-    /* ── progress rail — the one element that runs the whole film ── */
-    tl.fromTo(g("f10-rail"), { scaleX: 0.428571 }, { scaleX: 0.476190, duration: D, ease: "none" }, 0);
+    /* ── progress rail — the one element that runs the whole film ──
+       Values are cumulative film time / 253s: this scene runs 109s → 121s. */
+    tl.fromTo(g("f10-rail"), { scaleX: 0.430830 }, { scaleX: 0.478261, duration: D, ease: "none" }, 0);
 
-    /* ── Scene 0 (0.0–2.3s) — the phone at rest, the stage panel states the beat ── */
-    tl.fromTo(g("f10-title"), { opacity: 0, x: 42 }, { opacity: 1, x: 0, duration: 0.72, ease: "power3.out" }, 0.10);
-    tl.fromTo(g("f10-body"), { opacity: 0, x: 34 }, { opacity: 1, x: 0, duration: 0.72, ease: "power3.out" }, 0.30);
-    tl.fromTo(g("f10-alt"), { opacity: 0 }, { opacity: 0.92, duration: 0.5, ease: "power2.out" }, 0.55);
-
-    /* ── Scene 1 (2.3–3.0s) — nudge-curve: the phone takes true frame centre ──
-       10 / 65 / 25 distance over 20 / 17 / 63 time; tail 3.1x the ramp-in.        */
-    tl.fromTo(rig, { x: 0 }, { x: 34, duration: 0.14, ease: "power3.in" }, 2.30);
-    tl.fromTo(rig, { x: 34 }, { x: 255, duration: 0.12, ease: "none", immediateRender: false }, 2.44);
-    tl.fromTo(rig, { x: 255 }, { x: 340, duration: 0.44, ease: "power4.out", immediateRender: false }, 2.56);
-    /* the panel clears inside the burst — the burst masks the change */
-    tl.fromTo(g("f10-text"), { opacity: 1, x: 0 }, { opacity: 0, x: 86, duration: 0.44, ease: "power2.in" }, 2.44);
-    /* the background reacts: the glow travels with the phone, the grid parallaxes */
-    tl.fromTo(g("f10-glow"), { x: 0 }, { x: 350, duration: 0.98, ease: "power3.out" }, 2.30);
-    tl.fromTo(g("f10-grid"), { x: 0 }, { x: 44, duration: 1.05, ease: "power3.out" }, 2.30);
-
-    /* ── Scene 2 (2.7–4.1s) — the store is chosen ── */
-    var ring = "0 0 0 3px hsl(182 38% 36% / 0.16)";
-    var flat = "0 0 0 0px hsl(182 38% 36% / 0)";
-    tl.fromTo(g("f10-f-store"), { boxShadow: flat, borderColor: "hsl(201 21% 89%)" },
-      { boxShadow: ring, borderColor: "hsl(182 38% 36%)", duration: 0.34, ease: "power2.out" }, 2.70);
-
-    /* discrete-text-sequence — whole-state swaps at thresholds, authored as zero-
-       duration sets so every state is correct under a seek in either direction.  */
+    /* field focus states — paint-only, matched to the app's own input styling */
+    var restBg = "hsl(195 33% 94% / 0.8)", restBd = "hsl(182 38% 36% / 0)";
+    var liveBg = "hsl(0 0% 100%)", liveBd = "hsl(182 38% 36% / 0.45)";
+    function focusOn(el, at) {
+      tl.fromTo(el, { backgroundColor: restBg, borderColor: restBd },
+        { backgroundColor: liveBg, borderColor: liveBd, duration: 0.30, ease: "power2.out" }, at);
+    }
+    function focusOff(el, at) {
+      tl.fromTo(el, { backgroundColor: liveBg, borderColor: liveBd },
+        { backgroundColor: restBg, borderColor: restBd, duration: 0.34, ease: "power2.in", immediateRender: false }, at);
+    }
+    /* discrete-text-sequence — whole-state swaps authored as zero-duration sets,
+       so every state is correct under a seek in either direction. */
     function typeAt(el, at, states) {
       states.forEach(function (s) { tl.set(el, { textContent: s[1] }, at + s[0]); });
     }
-    typeAt(g("f10-store"), 3.00, [
-      [0.00, ""], [0.10, "ר"], [0.21, "רמ"], [0.31, "רמי"],
-      [0.44, "רמי "], [0.55, "רמי ל"], [0.65, "רמי לו"], [0.78, "רמי לוי"]
+    /* caret — a deterministic square wave stepped on the timeline, never CSS */
+    function caret(el, from, beats, off) {
+      for (var i = 0; i < beats; i++) { tl.set(el, { opacity: i % 2 ? 0 : 1 }, from + i * 0.30); }
+      tl.set(el, { opacity: 0 }, off);
+    }
+
+    /* ══ RETIMED 19/08: 15s → 12s. The approach beats carry the cut — the type
+       runs are shorter and the gaps between them are gone — while the submit
+       (press-release-spring → burst) keeps its full shape, because that beat is
+       what hands the paragraph to frame 11's payoff.                          */
+
+    /* ── Scene 0 (0.0–1.9s) — the phone at rest, the stage panel states the beat ── */
+    tl.fromTo(g("f10-title"), { opacity: 0, x: 42 }, { opacity: 1, x: 0, duration: 0.66, ease: "power3.out" }, 0.08);
+    tl.fromTo(g("f10-body"), { opacity: 0, x: 34 }, { opacity: 1, x: 0, duration: 0.66, ease: "power3.out" }, 0.24);
+    tl.fromTo(g("f10-body2"), { opacity: 0, x: 34 }, { opacity: 1, x: 0, duration: 0.66, ease: "power3.out" }, 0.40);
+
+    /* ── Scene 1 (0.85–1.9s) — the store field takes focus and FOX is typed ── */
+    focusOn(g("f10-fstore"), 0.85);
+    caret(g("f10-caret"), 0.98, 4, 1.98);
+    tl.fromTo(g("f10-ph"), { opacity: 1 }, { opacity: 0, duration: 0.16, ease: "power2.in" }, 1.00);
+    typeAt(g("f10-store"), 1.02, [
+      [0.00, ""], [0.12, "F"], [0.26, "FO"], [0.42, "FOX"]
     ]);
-    tl.fromTo(g("f10-alt"), { opacity: 0.92 }, { opacity: 0.28, duration: 0.42, ease: "power2.out", immediateRender: false }, 3.62);
-    tl.fromTo(g("f10-f-store"), { boxShadow: ring, borderColor: "hsl(182 38% 36%)" },
-      { boxShadow: flat, borderColor: "hsl(201 21% 89%)", duration: 0.34, ease: "power2.in", immediateRender: false }, 4.06);
+    /* the suggestion popover opens on the second character */
+    tl.fromTo(g("f10-sug"), { opacity: 0, y: -10, scaleY: 0.94 },
+      { opacity: 1, y: 0, scaleY: 1, duration: 0.32, ease: "power3.out" }, 1.32);
+    tl.fromTo(g("f10-sug1"), { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.28, ease: "power3.out" }, 1.40);
+    tl.fromTo(g("f10-sug2"), { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.28, ease: "power3.out" }, 1.50);
 
-    /* ── camera move 1 (4.1–5.7s) — coordinate-target-zoom onto the cart-total field ──
-       outer scales, inner counter-translates; shared position, duration and ease.    */
-    tl.fromTo(cam, { scale: 1 }, { scale: S1, duration: 1.60, ease: "power3.inOut" }, 4.10);
-    tl.fromTo(camin, { x: 0, y: 0 }, { x: T1x, y: T1y, duration: 1.60, ease: "power3.inOut" }, 4.10);
+    /* ── Scene 2 (1.90–2.60s) — nudge-curve: the phone takes true frame centre ──
+       10 / 65 / 25 of the distance over 20 / 17 / 63 of the time; tail 3.1x the
+       ramp-in. A STAGE reposition of the whole device — not an in-phone camera.
+       The curve itself is untouched by the retime: it is the paragraph's one
+       sanctioned travel and it has to read at full length.                     */
+    var rig = g("f10-rig");
+    tl.fromTo(rig, { x: 0 }, { x: 34, duration: 0.14, ease: "power3.in" }, 1.90);
+    tl.fromTo(rig, { x: 34 }, { x: 255, duration: 0.12, ease: "none", immediateRender: false }, 2.04);
+    tl.fromTo(rig, { x: 255 }, { x: 340, duration: 0.44, ease: "power4.out", immediateRender: false }, 2.16);
+    /* the panel clears inside the burst of travel — the movement masks the change */
+    tl.fromTo(g("f10-text"), { opacity: 1, x: 0 }, { opacity: 0, x: 86, duration: 0.44, ease: "power2.in" }, 2.04);
+    /* the background reacts: the glow travels with the phone, the grid parallaxes */
+    tl.fromTo(g("f10-glow"), { x: 0 }, { x: 350, duration: 0.98, ease: "power3.out" }, 1.90);
+    tl.fromTo(g("f10-grid"), { x: 0 }, { x: 44, duration: 1.05, ease: "power3.out" }, 1.90);
 
-    /* ── Scene 3 (4.35–6.2s) — ₪412 types in, with a thinking pause before the last digit ── */
-    tl.fromTo(g("f10-f-price"), { boxShadow: flat, borderColor: "hsl(201 21% 89%)" },
-      { boxShadow: ring, borderColor: "hsl(182 38% 36%)", duration: 0.34, ease: "power2.out" }, 4.35);
-    typeAt(g("f10-price"), 4.60, [[0.00, ""], [0.22, "4"], [0.38, "41"], [0.94, "412"]]);
-    /* caret — a deterministic square wave stepped on the timeline, never a CSS animation */
-    for (var i = 0; i < 8; i++) { tl.set(g("f10-caret"), { opacity: i % 2 ? 0 : 1 }, 4.40 + i * 0.30); }
-    tl.set(g("f10-caret"), { opacity: 0 }, 6.78);
-    /* the entered value lands */
-    tl.fromTo(g("f10-pricewrap"), { scale: 1 }, { scale: 1.06, duration: 0.14, ease: "power2.out" }, 5.62);
-    tl.fromTo(g("f10-pricewrap"), { scale: 1.06 }, { scale: 1, duration: 0.30, ease: "power2.out", immediateRender: false }, 5.76);
+    /* ── Scene 3 (2.80–3.46s) — the suggestion is taken; the store is locked in ── */
+    tl.fromTo(g("f10-sug1"), { backgroundColor: "hsl(179 50% 88% / 0)" },
+      { backgroundColor: "hsl(179 50% 88% / 0.95)", duration: 0.20, ease: "power2.out", immediateRender: false }, 2.80);
+    tl.fromTo(g("f10-sug"), { opacity: 1, y: 0, scaleY: 1 },
+      { opacity: 0, y: -8, scaleY: 0.96, duration: 0.26, ease: "power2.in", immediateRender: false }, 3.02);
+    tl.fromTo(g("f10-confirm"), { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.36, ease: "power3.out" }, 3.08);
+    focusOff(g("f10-fstore"), 3.12);
 
-    /* ── Scene 4 (6.3–8.4s) — the max-deals selector steps to 3 ── */
-    tl.fromTo(g("f10-f-price"), { boxShadow: ring, borderColor: "hsl(182 38% 36%)" },
-      { boxShadow: flat, borderColor: "hsl(201 21% 89%)", duration: 0.30, ease: "power2.in", immediateRender: false }, 6.26);
-    tl.fromTo(g("f10-f-deals"), { boxShadow: flat, borderColor: "hsl(201 21% 89%)" },
-      { boxShadow: ring, borderColor: "hsl(182 38% 36%)", duration: 0.32, ease: "power2.out" }, 6.30);
-    tl.fromTo(g("f10-hint"), { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.42, ease: "power2.out" }, 6.42);
-    typeAt(g("f10-deals"), 6.54, [[0.00, "דיל אחד"], [0.46, "2 דילים"], [0.96, "3 דילים"]]);
-    [7.00, 7.50].forEach(function (at) {
-      tl.fromTo(g("f10-deals"), { scale: 1 }, { scale: 1.10, duration: 0.12, ease: "power2.out", immediateRender: false }, at);
-      tl.fromTo(g("f10-deals"), { scale: 1.10 }, { scale: 1, duration: 0.26, ease: "power2.out", immediateRender: false }, at + 0.12);
+    /* ── Scene 4 (3.55–5.45s) — ₪1,000 is typed, with a beat before the last digit ── */
+    focusOn(g("f10-fprice"), 3.55);
+    caret(g("f10-caret2"), 3.66, 5, 5.02);
+    tl.fromTo(g("f10-pph"), { opacity: 1 }, { opacity: 0, duration: 0.16, ease: "power2.in" }, 3.78);
+    typeAt(g("f10-price"), 3.80, [[0.00, ""], [0.18, "1"], [0.32, "10"], [0.48, "100"], [0.92, "1000"]]);
+    tl.fromTo(g("f10-pricewrap"), { scale: 1 }, { scale: 1.07, duration: 0.14, ease: "power2.out" }, 4.76);
+    tl.fromTo(g("f10-pricewrap"), { scale: 1.07 }, { scale: 1, duration: 0.30, ease: "power2.out", immediateRender: false }, 4.90);
+    focusOff(g("f10-fprice"), 5.14);
+
+    /* ── Scene 5 (5.32–7.05s) — the max-deals selector steps up to three ── */
+    focusOn(g("f10-fdeals"), 5.32);
+    typeAt(g("f10-deals"), 5.52, [[0.00, "דיל אחד"], [0.44, "2 דילים"], [0.88, "3 דילים"]]);
+    [5.96, 6.40].forEach(function (at) {
+      tl.fromTo(g("f10-deals"), { scale: 1 }, { scale: 1.11, duration: 0.12, ease: "power2.out", immediateRender: false }, at);
+      tl.fromTo(g("f10-deals"), { scale: 1.11 }, { scale: 1, duration: 0.26, ease: "power2.out", immediateRender: false }, at + 0.12);
     });
-    tl.fromTo(g("f10-f-deals"), { boxShadow: ring, borderColor: "hsl(182 38% 36%)" },
-      { boxShadow: flat, borderColor: "hsl(201 21% 89%)", duration: 0.34, ease: "power2.in", immediateRender: false }, 8.32);
+    focusOff(g("f10-fdeals"), 6.86);
 
-    /* ── camera move 2 (8.8–10.4s) — settle back so the whole filled form + control read ── */
-    tl.fromTo(cam, { scale: S1 }, { scale: S2, duration: 1.60, ease: "power3.inOut", immediateRender: false }, 8.80);
-    tl.fromTo(camin, { x: T1x, y: T1y }, { x: T2x, y: T2y, duration: 1.60, ease: "power3.inOut", immediateRender: false }, 8.80);
+    /* ── Scene 6 (7.10s) — the form is valid: the control wakes up ── */
+    /* AA gate: the pre-valid control still carries white 22px/700 label text, so
+       its resting teal sits at 0.82 alpha rather than 0.72 — the lift to full
+       --primary when the form validates still reads, and the inactive state
+       clears the 3:1 large-text floor instead of landing at 2.78:1. */
+    tl.fromTo(btn, { backgroundColor: "hsl(182 38% 36% / 0.82)" },
+      { backgroundColor: "hsl(182 38% 36%)", duration: 0.42, ease: "power2.out" }, 7.10);
+    tl.fromTo(g("f10-notice"), { opacity: 1 }, { opacity: 0.66, duration: 0.42, ease: "power2.out" }, 7.10);
 
-    /* ── Scene 5 (9.4–11.3s) — the submit: cursor glide → press-release-spring ── */
+    /* ── Scene 7 (7.85–9.60s) — the submit: cursor glide → press-release-spring ── */
     var cur = g("f10-cursor");
-    tl.fromTo(cur, { x: 250, opacity: 0 }, { x: btnX - 6, opacity: 1, duration: 1.15, ease: "power2.inOut" }, 9.40);
-    tl.fromTo(cur, { y: 1210 }, { y: btnY - 5, duration: 1.15, ease: "power3.inOut" }, 9.40);
-    tl.fromTo(cur, { scale: 1 }, { scale: 0.86, duration: 0.14, ease: "power1.in", immediateRender: false }, 10.55);
-    tl.fromTo(cur, { scale: 0.86 }, { scale: 1, duration: 0.42, ease: "back.out(1.6)", immediateRender: false }, 10.69);
+    tl.fromTo(cur, { x: btnX + 520, opacity: 0 }, { x: btnX - 6, opacity: 1, duration: 1.10, ease: "power2.inOut" }, 7.85);
+    tl.fromTo(cur, { y: 1210 }, { y: btnY - 5, duration: 1.10, ease: "power3.inOut" }, 7.85);
+    tl.fromTo(cur, { scale: 1 }, { scale: 0.86, duration: 0.14, ease: "power1.in", immediateRender: false }, 8.98);
+    tl.fromTo(cur, { scale: 0.86 }, { scale: 1, duration: 0.42, ease: "back.out(1.6)", immediateRender: false }, 9.12);
 
-    var btn = g("f10-btn");
-    tl.fromTo(btn, { scale: 1, boxShadow: "0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06)" },
-      { scale: 0.93, boxShadow: "0 1px 2px oklch(30% 0.03 240 / 0.10)", duration: 0.14, ease: "power1.in" }, 10.55);
-    tl.fromTo(btn, { scale: 0.93 },
-      { scale: 1, duration: 0.60, ease: "back.out(1.8)", immediateRender: false }, 10.69);
+    tl.fromTo(btn, { scale: 1 }, { scale: 0.93, duration: 0.14, ease: "power1.in" }, 8.98);
+    tl.fromTo(btn, { scale: 0.93 }, { scale: 1, duration: 0.60, ease: "back.out(1.8)", immediateRender: false }, 9.12);
 
-    tl.fromTo(g("f10-burst"), { scale: 1, opacity: 0 }, { scale: 4.6, opacity: 0.55, duration: 0.48, ease: "power2.out" }, 10.69);
-    tl.to(g("f10-burst"), { opacity: 0, duration: 0.52, ease: "power2.in" }, 11.14);
-    tl.fromTo(g("f10-glow2"), { opacity: 0, scale: 0.9 }, { opacity: 0.34, scale: 1.04, duration: 0.86, ease: "power2.out" }, 10.69);
+    tl.fromTo(g("f10-burst"), { scale: 1, opacity: 0 }, { scale: 4.6, opacity: 0.55, duration: 0.48, ease: "power2.out" }, 9.12);
+    tl.to(g("f10-burst"), { opacity: 0, duration: 0.52, ease: "power2.in" }, 9.60);
+    tl.fromTo(g("f10-glow2"), { opacity: 0, scale: 0.9 }, { opacity: 0.34, scale: 1.04, duration: 0.86, ease: "power2.out" }, 9.12);
 
     /* the surface answers: the control flips to its working state */
-    tl.fromTo(g("f10-lbl-a"), { opacity: 1 }, { opacity: 0, duration: 0.16, ease: "power2.in" }, 10.74);
-    tl.fromTo(g("f10-lbl-b"), { opacity: 0 }, { opacity: 1, duration: 0.24, ease: "power2.out" }, 10.86);
-    tl.fromTo([g("f10-f-store"), g("f10-f-price"), g("f10-f-deals"), g("f10-hint")],
-      { opacity: 1 }, { opacity: 0.52, duration: 0.5, ease: "power2.out", stagger: 0.04, immediateRender: false }, 10.80);
+    tl.fromTo(g("f10-lbl-a"), { opacity: 1 }, { opacity: 0, duration: 0.16, ease: "power2.in" }, 9.16);
+    tl.fromTo(g("f10-lbl-b"), { opacity: 0 }, { opacity: 1, duration: 0.24, ease: "power2.out" }, 9.28);
+    tl.fromTo([g("f10-fstore"), g("f10-confirm"), g("f10-fprice"), g("f10-fdeals")],
+      { opacity: 1 }, { opacity: 0.5, duration: 0.5, ease: "power2.out", stagger: 0.04, immediateRender: false }, 9.22);
+    tl.set(g("f10-notice"), { textContent: "משלבים דילים…" }, 9.34);
+    tl.fromTo(g("f10-notice"), { opacity: 0.66 }, { opacity: 1, duration: 0.40, ease: "power2.out", immediateRender: false }, 9.34);
 
-    /* ── Scene 6 (10.9–15.0s) — machine theater; the frame is LOCKED ── */
-    tl.fromTo(g("f10-spin"), { rotation: 0 }, { rotation: 1080, duration: 4.10, ease: "none" }, 10.90);
-    [11.40, 12.60, 13.80].forEach(function (at) {
+    /* ── Scene 8 (9.32–12.0s) — the engine runs; the frame is LOCKED.
+       The spinner ends exactly on the scene's last frame, so the cut into
+       frame 11 lands on a still device with no residual translation.        */
+    tl.fromTo(g("f10-spin"), { rotation: 0 }, { rotation: 720, duration: 2.68, ease: "none" }, 9.32);
+    [9.75, 10.45, 11.15].forEach(function (at) {
       tl.fromTo(g("f10-sheen"), { x: 0, opacity: 0 }, { x: 180, opacity: 0.9, duration: 0.30, ease: "power1.out", immediateRender: false }, at);
       tl.fromTo(g("f10-sheen"), { x: 180, opacity: 0.9 }, { x: 560, opacity: 0, duration: 0.44, ease: "power1.in", immediateRender: false }, at + 0.30);
     });

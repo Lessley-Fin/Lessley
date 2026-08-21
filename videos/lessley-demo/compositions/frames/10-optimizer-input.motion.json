@@ -1,28 +1,28 @@
 {
   "scene": "10-optimizer-input",
-  "duration_s": 15.0,
+  "duration_s": 12.0,
   "rules": [
     "nudge-curve",
     "discrete-text-sequence",
     "press-release-spring",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
     "cursor-click-ripple",
     "ambient-glow-bloom"
   ],
   "exit": {
-    "vector": "static — 0 px/s. Frame is LOCKED from t=10.40s (camera settled at screen-world scale 1.12, counter-translate held). Phone parked at true frame centre cx 960, cy 540, device scale 0.9442, x-velocity 0. Only residual motion in the final second: the in-button status spinner rotating at 264 deg/s (ends exactly at t=15.0) — no translation anywhere.",
+    "vector": "static — 0 px/s. Frame is LOCKED from t=9.60s. Phone parked at true frame centre cx 960, cy 540 (rig x=340), device rig scale 0.9428, x-velocity 0. `.screen-world` holds scale 1 / x 0 / y 0 — there is no camera. Only residual motion in the final second: the in-button status spinner rotating at 268.7 deg/s (ends exactly at t=12.0) and the last sheen sweep, both paint/transform on a stationary control — no translation of the carrier anywhere.",
     "still_moving": false
   },
   "entry": {
-    "vector": "static — 0 px/s. Opens on the whole device at rest (cx 620, cy 540), matching frame 09's hand-off; no travel until the nudge-curve at t=2.30s. First-second motion is paint-only: the stage title/body fade+slide in from x+42/+34 over 0.72s (peak ~90 px/s inward, settled by t=1.02s).",
+    "vector": "static — 0 px/s. Opens on the whole device at rest (cx 620, cy 540), matching frame 09's hand-off; no travel until the nudge-curve at t=1.90s. First-second motion is paint-only: the stage title/body fade+slide in from x+42/+34 over 0.66s (peak ~95 px/s inward, settled by t=0.90s), then the store field takes focus at 0.85s and 'FOX' types in as discrete state sets.",
     "from_rest": true
   },
   "notes": {
-    "camera_moves": 2,
-    "camera_track": "screen-world scale 1.00 -> 1.30 (push onto the cart-total field, 4.10-5.70s) -> 1.12 (settle onto the filled form + control, 8.80-10.40s), then LOCKED.",
-    "carrier": "The phone is the film's carrier. This is the film's one sanctioned reposition of the paragraph: nudge-curve x 0 -> 340px (34 / 255 / 340 at 0.14 / 0.12 / 0.44s, tail 3.1x the ramp-in) at t=2.30s, landing the device at true frame centre where it STAYS through frames 11 and 12.",
-    "first_second": "Device fully visible at t=0 (no entrance). Stage text panel fades in 0.10-1.02s; it clears again at t=2.44s inside the nudge burst.",
-    "last_second": "Locked frame. Spinner rotation is the only motion; last sheen sweep ends at 14.54s."
+    "camera_moves": 0,
+    "camera_track": "None. `.screen-world` is untransformed for the whole scene and carries no id — the in-phone camera was withdrawn on 18/08 and legibility is bought with frame real estate instead.",
+    "carrier": "The phone is the film's carrier. This is the film's one sanctioned reposition of the paragraph: nudge-curve x 0 -> 340px (34 / 255 / 340 at 0.14 / 0.12 / 0.44s, tail 3.1x the ramp-in) at t=1.90s, landing the device at true frame centre where it STAYS through frames 11 and 12. Translation only — the device never rescales.",
+    "retime": "15s -> 12s (19/08). The cut is taken out of the approach: the type runs are shorter (store 'FOX' is 3 characters, not 8) and the dead gaps between the form beats are gone. The nudge-curve keeps its full 0.70s shape and the submit keeps its full press-release-spring, because those are what hand the paragraph to frame 11.",
+    "data": "Store FOX - פוקס, cart ₪1,000, max deals 3 — the real cart the engine is run on.",
+    "first_second": "Device fully visible at t=0 (no entrance). Stage text panel fades in 0.08-0.90s; it clears again at t=2.04s inside the nudge burst.",
+    "last_second": "Locked frame. Spinner rotation (720deg over 9.32-12.00s) is the only motion; the last sheen sweep ends at 11.89s. Nothing translates, nothing scales."
   }
 }

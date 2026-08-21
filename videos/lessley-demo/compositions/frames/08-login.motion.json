@@ -1,20 +1,19 @@
 {
   "scene": "08-login",
-  "duration_s": 15.0,
+  "duration_s": 12.0,
   "rules": [
     "theme-crossfade-morph",
     "cursor-click-ripple",
-    "viewport-change",
     "waterfall-entry",
     "spring-pop-entrance"
   ],
   "entry": {
-    "vector": "up (-Y) — #f08-content y +64 → 0 over 0.62s on power3.out from t=0; |v| ≈ 310 px/s upward at frame 0, catching frame 07's rising exit",
+    "vector": "up (-Y) — #f08-content y +64 → 0 over 0.58s on power3.out from t=0; |v| ≈ 331 px/s upward at frame 0, catching frame 07's rising exit (which now leaves at ≈ 89 px/s)",
     "from_rest": false
   },
   "exit": {
-    "vector": "back (-Z) — #f08-content scale 1 → 0.90 over 1.60s on power2.in, ending at t=15.0; 0.125 scale/s ≈ 120 px/s inward at the frame edge, feeding frame 09's inverse-zoom arrival",
+    "vector": "back (-Z) — #f08-content scale 1 → 0.90 over 1.35s on power2.in, ending at t=12.0; 0.148 scale/s ≈ 142 px/s inward at the frame edge, feeding frame 09's inverse-zoom arrival",
     "still_moving": true
   },
-  "notes": "Camera pushes into the form 1.70–3.10s (screen-world scale 1 → 1.22, device 1.20) and is then LOCKED for the entire crossfade cycle, as theme-crossfade-morph requires. Four pre-styled skins share one slot geometry; the 'ברוכים השבים' anchor is rendered once above them and receives no tween after its 0.62s settle. Morph boundaries at 4.30 / 7.90 / 10.60s (MORPH_DUR 0.32s), each ignited by a cursor click + ripple 0.16s earlier; the final skin holds 4.1s (emphasis brake). The 13.40s pull-back is the seam, after the cycle has resolved."
+  "notes": "Retimed 15.0s → 12.0s. Four form skins in 12s makes this the tightest scene of the act, so the cut was taken out of cursor travel and the dead air around each click — the 0.32s MORPH itself is untouched, because the swap has to stay readable or the fixed-anchor trick stops reading. NO in-phone camera and no device scaling — .screen-world holds scale 1 / x 0 / y 0 for the whole scene (withdrawn 18/08). The screen is the real LoginPage — mascot lockup, then the 'ברוכים השבים' anchor which settles once at 0.58s and is never tweened again, then the about chip, then the card. The card rises at 1.46s and its six rows waterfall in 1.74–2.64s. Four pre-styled skins share one row geometry inside the card: password → email-request → code entry → password. Morph boundaries at 3.80 / 6.78 / 9.10s (MORPH 0.32s), each still ignited by a cursor click + ripple 0.16s earlier and each press still landing 0.04s after the cursor arrives; each new body waterfalls its own rows in. The email field takes focus at 5.24s and the six-digit code lands one digit at a time 7.16–8.13s, so no hold is idle. First second: #f08-content is still arriving (y +64 → 0 by 0.58s) while the stage title snaps up at 0.10s and the mascot lockup pops at 0.46s. Last second (11.0–12.0s): the resolved password skin sits still under the anchor and the whole frame is 0.35s into the 1.35s power2.in pull-back, receding through scale ≈ 0.993 → 0.90 and still accelerating at the cut."
 }

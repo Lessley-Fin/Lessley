@@ -1,4 +1,15 @@
 <template>
+      <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
       <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
@@ -43,6 +54,11 @@
           --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -85,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -102,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -122,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -197,58 +369,81 @@
       </style>
       <style>
         /* ── 03-signup-account — scene-specific ────────────────────────────── */
-        #root { --input: 201 21% 89%; }
+
+        /* The shared block's token list stops at --navy, but its own primitives
+           (.field, .btn-ghost, .chip, .card) reference --secondary and the navy set.
+           Declared here verbatim from lessley-frontend/src/index.css :root.
+           NOTE for the shared-block owner: these belong upstream in _shared.html. */
+        #root {
+          --secondary: 195 33% 94%;
+          --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+        }
 
         .f03-ground { position: absolute; inset: 0; background: var(--stage-bg); }
-        .f03-world { position: absolute; inset: 0; transform-origin: 32.29% 50%; }
 
         .f03-text {
           position: absolute; right: 160px; top: 330px; width: 720px; max-width: 720px;
           flex: none; gap: 24px;
         }
-        .f03-kicker, .f03-title, .f03-b1, .f03-b2, .f03-b3 { opacity: 0; will-change: transform; }
+        .f03-kicker, .f03-title, .f03-b1, .f03-b2 { opacity: 0; will-change: transform; }
         .f03-underline { display: block; height: 3px; width: 200px; margin: -4px 0 0 auto;
           background: var(--stage-accent); transform-origin: right center; }
         .f03-b2 { color: var(--stage-ink); font-weight: 600; }
 
-        /* device anchor — phone centred at (620, 540), rendered 880px tall */
-        .f03-anchor { position: absolute; left: 620px; top: 540px; width: 0; height: 0;
-          will-change: transform; }
-        .f03-anchor .device-scale { position: absolute; left: -215px; top: -466px;
-          width: 430px; height: 932px; transform: scale(0.944); transform-origin: 50% 50%; }
+        /* device anchor — the 460×997 device held at its real size, centred at (620, 540).
+           NO camera: nothing scales the device, and .screen-world holds identity. */
+        .f03-anchor { position: absolute; left: 620px; top: 540px; width: 0; height: 0; }
+        .f03-hold { position: absolute; left: -230px; top: -498px; width: 460px; height: 997px; }
 
-        /* in-phone layout — fixed heights so the camera path is deterministic */
-        .f03-main { justify-content: flex-start; gap: 16px; }
-        .f03-main .card { box-sizing: border-box; }
-        .f03-hdr { opacity: 0; will-change: transform; }
-        .f03-mark-in { font-size: 24px; font-weight: 800; }
-        .f03-hdr svg { width: 26px; height: 26px; color: hsl(var(--muted-foreground)); }
+        /* ── in-phone: the register wizard. It renders inside AuthLayout, so there
+           is no app header and no bottom nav — only the back row, the step rail and
+           the account card. Every y below is authored, never measured, so the cursor
+           targets are deterministic. Screen box is 440 × 977.
+             back    70 – 100
+             steps  122 – 176
+             card   198 – 714     field centres 336 / 414 / 492 / 570, button 656
+             foot   734 – 758                                                       */
+        .f03-wiz { position: absolute; inset: 0; box-sizing: border-box;
+          display: flex; flex-direction: column; padding: 70px 24px 30px; }
 
-        .f03-steps { height: 58px; }
+        .f03-back { flex: none; height: 30px; display: flex; align-items: center; gap: 9px;
+          font-size: 17px; font-weight: 600; color: hsl(var(--muted-foreground));
+          opacity: 0; will-change: transform; }
+        .f03-back svg { width: 18px; height: 18px; }
+
+        .f03-steps { flex: none; margin-top: 22px; }
         .f03-steps .step {
-          box-sizing: border-box; height: 58px; display: flex; align-items: center;
+          box-sizing: border-box; flex: 1 1 0; height: 54px; display: flex; align-items: center;
           justify-content: center; line-height: 1.15; padding: 6px 4px; opacity: 0;
           will-change: transform, opacity;
         }
-        .f03-title-in { height: 40px; display: flex; align-items: center; opacity: 0;
-          will-change: transform; }
 
-        .f03-card {
-          height: 369px; display: flex; flex-direction: column; gap: 14px;
-          position: relative; opacity: 0; will-change: transform;
-        }
-        .f03-card .field { box-sizing: border-box; height: 68px; padding: 20px 18px;
+        .f03-card { flex: none; margin-top: 22px; padding: 22px; display: flex;
+          flex-direction: column; box-sizing: border-box; opacity: 0; will-change: transform; }
+        .f03-ctitle { box-sizing: border-box; height: 34px; margin: 0; text-align: center;
+          font-size: 26px; font-weight: 800; line-height: 34px; opacity: 0; will-change: transform; }
+        .f03-about { box-sizing: border-box; height: 26px; margin-top: 6px; text-align: center;
+          font-size: 17px; font-weight: 600; line-height: 26px; color: hsl(var(--primary));
+          opacity: 0; will-change: transform; }
+        .f03-fields { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+        .f03-card .field { box-sizing: border-box; height: 64px; opacity: 0;
           will-change: transform; }
-        .f03-val { direction: ltr; unicode-bidi: isolate; font-weight: 700; font-size: 20px;
-          display: inline-flex; align-items: center; min-width: 160px; white-space: nowrap; }
-        .f03-caret { display: inline-block; width: 3px; height: 26px; margin-inline-start: 3px;
+        .f03-val { direction: ltr; unicode-bidi: isolate; font-weight: 700; font-size: 18px;
+          display: inline-flex; align-items: center; min-width: 150px; white-space: nowrap; }
+        .f03-caret { display: inline-block; width: 3px; height: 24px; margin-inline-start: 3px;
           background: hsl(var(--primary)); opacity: 0; }
-        .f03-btnwrap { position: relative; margin-top: 18px; height: 73px; }
-        .f03-btnwrap .btn { box-sizing: border-box; height: 73px; }
+        .f03-btnwrap { position: relative; margin-top: 18px; height: 72px; opacity: 0;
+          will-change: transform; }
+        .f03-btnwrap .btn { box-sizing: border-box; height: 72px; padding: 20px; }
         .f03-halo { position: absolute; inset: -16px; border-radius: 999px;
           background: hsl(182 38% 36% / 0.2); opacity: 0; will-change: transform, opacity; }
-        .f03-foot { margin-top: auto; text-align: center; font-size: 18px;
-          color: hsl(var(--muted-foreground)); opacity: 0; }
+        .f03-foot { flex: none; box-sizing: border-box; height: 24px; margin-top: 20px;
+          text-align: center; font-size: 17px; line-height: 24px;
+          color: hsl(var(--muted-foreground)); opacity: 0; will-change: transform; }
         .f03-foot b { color: hsl(var(--primary)); font-weight: 700; }
 
         .f03-cursor { left: 0; top: 0; width: 44px; height: 44px; opacity: 0; }
@@ -259,7 +454,7 @@
       </style>
 
       <div id="root" data-composition-id="03-signup-account" data-width="1920" data-height="1080">
-        <div id="f03-bg" class="clip bg-layer" data-start="0" data-duration="12" data-track-index="0">
+        <div id="f03-bg" class="clip bg-layer" data-start="0" data-duration="10" data-track-index="0">
           <div class="f03-ground"></div>
           <div class="bg-glow" id="f03-glow"></div>
           <div class="bg-grid" id="f03-grid"></div>
@@ -267,79 +462,81 @@
           <div class="bg-grain"></div>
         </div>
 
-        <div id="f03-scene" class="clip" data-start="0" data-duration="12" data-track-index="1"
+        <div id="f03-scene" class="clip" data-start="0" data-duration="10" data-track-index="1"
              style="position:absolute; inset:0;">
-          <div class="f03-world" id="f03-world">
-            <div class="col-text f03-text" id="f03-textcol">
-              <p class="scene-kicker f03-kicker" id="f03-kicker">שלב <span class="num">1</span> מתוך <span class="num">5</span></p>
-              <h1 class="scene-title f03-title" id="f03-title">הרשמה · חשבון</h1>
-              <i class="f03-underline" id="f03-underline"></i>
-              <p class="scene-body f03-b1" id="f03-b1">שם משתמש, אימייל וסיסמה.</p>
-              <p class="scene-body f03-b2" id="f03-b2">עדיין לא נוצר חשבון.</p>
-              <p class="scene-body f03-b3" id="f03-b3">הפרטים נשמרים בצד עד לאימות.</p>
-            </div>
+          <div class="col-text f03-text" id="f03-textcol">
+            <p class="scene-kicker f03-kicker" id="f03-kicker">שלב <span class="num">1</span> מתוך <span class="num">5</span></p>
+            <h1 class="scene-title f03-title" id="f03-title">נרשמים בדקה</h1>
+            <i class="f03-underline" id="f03-underline"></i>
+            <p class="scene-body f03-b1" id="f03-b1">שם, אימייל, סיסמה — וזהו.</p>
+            <p class="scene-body f03-b2" id="f03-b2">בשלב הזה עדיין לא נוצר חשבון.</p>
+          </div>
 
-            <div class="f03-anchor" id="f03-anchor">
-              <div class="device-scale">
-                <div class="device">
-                  <div class="device-body">
-                    <div class="device-screen">
-                      <div class="screen-world" id="f03-screenworld">
-                        <div class="app">
-                          <div class="app-header f03-hdr" id="f03-hdr">
-                            <div class="app-icon"><span class="f03-mark-in">₪</span></div>
-                            <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
-                            <div class="app-icon">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.2 2.4 3.3 5.3 3.3 8.5S14.2 18.1 12 20.5c-2.2-2.4-3.3-5.3-3.3-8.5S9.8 5.9 12 3.5z"/></svg>
+          <div class="f03-anchor" id="f03-anchor">
+            <div class="f03-hold">
+              <div class="device">
+                <div class="device-body">
+                  <div class="device-screen">
+                    <div class="screen-world">
+                      <div class="f03-wiz">
+
+                        <div class="f03-back" id="f03-back">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 5 7 7-7 7"/><path d="M5 12h14"/></svg>
+                          חזרה
+                        </div>
+
+                        <div class="steps f03-steps">
+                          <span class="step" id="f03-step1">חשבון</span>
+                          <span class="step">אימות</span>
+                          <span class="step">מועדונים</span>
+                          <span class="step">רמת התאמה</span>
+                          <span class="step">בנקאות</span>
+                        </div>
+
+                        <div class="card f03-card" id="f03-card">
+                          <h1 class="f03-ctitle" id="f03-ctitle">יצירת חשבון</h1>
+                          <div class="f03-about" id="f03-about">מה זו Lessley?</div>
+
+                          <div class="f03-fields">
+                            <div class="field" id="f03-f1">
+                              <span class="lbl">שם משתמש</span>
+                              <span class="val f03-val"><span id="f03-t1"></span><i class="f03-caret" id="f03-c1"></i></span>
+                            </div>
+                            <div class="field" id="f03-f2">
+                              <span class="lbl">אימייל</span>
+                              <span class="val f03-val"><span id="f03-t2"></span><i class="f03-caret" id="f03-c2"></i></span>
+                            </div>
+                            <div class="field" id="f03-f3">
+                              <span class="lbl">סיסמה</span>
+                              <span class="val f03-val"><span id="f03-t3"></span><i class="f03-caret" id="f03-c3"></i></span>
+                            </div>
+                            <div class="field" id="f03-f4">
+                              <span class="lbl">אימות סיסמה</span>
+                              <span class="val f03-val"><span id="f03-t4"></span><i class="f03-caret" id="f03-c4"></i></span>
                             </div>
                           </div>
 
-                          <div class="app-main f03-main">
-                            <div class="steps f03-steps">
-                              <span class="step" id="f03-step1">חשבון</span>
-                              <span class="step">אימות</span>
-                              <span class="step">מועדונים</span>
-                              <span class="step">רמת התאמה</span>
-                              <span class="step">בנקאות</span>
-                            </div>
-
-                            <h1 class="app-h1 f03-title-in" id="f03-titlein">יצירת חשבון</h1>
-
-                            <div class="card f03-card" id="f03-card">
-                              <div class="field" id="f03-f1">
-                                <span class="lbl">שם משתמש</span>
-                                <span class="val f03-val"><span id="f03-t1"></span><i class="f03-caret" id="f03-c1"></i></span>
-                              </div>
-                              <div class="field" id="f03-f2">
-                                <span class="lbl">אימייל</span>
-                                <span class="val f03-val"><span id="f03-t2"></span><i class="f03-caret" id="f03-c2"></i></span>
-                              </div>
-                              <div class="field" id="f03-f3" data-camera-target>
-                                <span class="lbl">סיסמה</span>
-                                <span class="val f03-val"><span id="f03-t3"></span><i class="f03-caret" id="f03-c3"></i></span>
-                              </div>
-                              <div class="f03-btnwrap">
-                                <i class="f03-halo" id="f03-halo"></i>
-                                <div class="btn">המשך</div>
-                              </div>
-                            </div>
-
-                            <p class="f03-foot" id="f03-foot">כבר יש לכם חשבון? <b>התחברות</b></p>
+                          <div class="f03-btnwrap" id="f03-btnwrap">
+                            <i class="f03-halo" id="f03-halo"></i>
+                            <div class="btn">המשך</div>
                           </div>
                         </div>
 
-                        <span class="f03-ripple" id="f03-r1" style="left:205px; top:340px;"></span>
-                        <span class="f03-ripple" id="f03-r2" style="left:205px; top:422px;"></span>
-                        <span class="f03-ripple" id="f03-r3" style="left:205px; top:504px;"></span>
-
-                        <svg class="cursor f03-cursor" id="f03-cursor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M1 1 L1 18.4 L5.7 14 L8.7 20.8 L11.8 19.4 L8.8 12.9 L15.2 12.7 Z"
-                                fill="#ffffff" stroke="oklch(20% 0.02 245)" stroke-width="1.15"
-                                stroke-linejoin="round"/>
-                        </svg>
+                        <p class="f03-foot" id="f03-foot">כבר יש לכם חשבון? <b>התחברות</b></p>
                       </div>
-                      <div class="device-island"></div>
+
+                      <span class="f03-ripple" id="f03-r1" style="left:130px; top:336px;"></span>
+                      <span class="f03-ripple" id="f03-r2" style="left:130px; top:414px;"></span>
+                      <span class="f03-ripple" id="f03-r3" style="left:130px; top:492px;"></span>
+                      <span class="f03-ripple" id="f03-r4" style="left:130px; top:570px;"></span>
+
+                      <svg class="cursor f03-cursor" id="f03-cursor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M1 1 L1 18.4 L5.7 14 L8.7 20.8 L11.8 19.4 L8.8 12.9 L15.2 12.7 Z"
+                              fill="#ffffff" stroke="oklch(20% 0.02 245)" stroke-width="1.15"
+                              stroke-linejoin="round"/>
+                      </svg>
                     </div>
+                    <div class="device-island"></div>
                   </div>
                 </div>
               </div>
@@ -375,10 +572,13 @@
             );
           }
 
-          var IDLE = "hsl(201 21% 89%)";
-          var LIVE = "hsl(182 38% 36%)";
-          var GHOST = "0 0 0 0px hsl(182 38% 36% / 0.16)";
-          var RING = "0 0 0 3px hsl(182 38% 36% / 0.16)";
+          // .field idle vs focused, straight off the shared primitive:
+          // idle   background hsl(var(--secondary) / 0.8), transparent border
+          // active background hsl(var(--card)),            border hsl(var(--primary) / 0.45)
+          var IDLE_BG = "rgba(235,242,245,0.8)";
+          var LIVE_BG = "rgba(255,255,255,1)";
+          var IDLE_BD = "rgba(57,124,127,0)";
+          var LIVE_BD = "rgba(57,124,127,0.45)";
 
           // discrete-text-sequence — smooth character slice (plain typing, no edits)
           // plus a deterministic sin square-wave caret on the same timeline.
@@ -392,7 +592,7 @@
               },
               at
             );
-            var span = dur + 0.7;
+            var span = dur + 0.6;
             var cycles = Math.max(1, Math.round(span / 0.62));
             var bl = { p: 0 };
             tl.fromTo(
@@ -403,12 +603,12 @@
                   caretEl.style.opacity = Math.sin(bl.p) > 0 ? "1" : "0.12";
                 }
               },
-              at - 0.20
+              at - 0.18
             );
             tl.fromTo(
               caretEl, { opacity: 0.12 },
-              { opacity: 0, duration: 0.22, ease: "none", immediateRender: false },
-              at + span - 0.20
+              { opacity: 0, duration: 0.20, ease: "none", immediateRender: false },
+              at + span - 0.18
             );
           }
 
@@ -436,123 +636,118 @@
           function activate(field, at) {
             tl.fromTo(
               field,
-              { borderColor: IDLE, boxShadow: GHOST },
-              { borderColor: LIVE, boxShadow: RING, duration: 0.26, ease: "power2.out", immediateRender: false },
+              { borderColor: IDLE_BD, backgroundColor: IDLE_BG },
+              { borderColor: LIVE_BD, backgroundColor: LIVE_BG, duration: 0.26, ease: "power2.out", immediateRender: false },
               at
             );
           }
           function deactivate(field, at) {
             tl.fromTo(
               field,
-              { borderColor: LIVE, boxShadow: RING },
-              { borderColor: IDLE, boxShadow: GHOST, duration: 0.30, ease: "power2.out", immediateRender: false },
+              { borderColor: LIVE_BD, backgroundColor: LIVE_BG },
+              { borderColor: IDLE_BD, backgroundColor: IDLE_BG, duration: 0.30, ease: "power2.out", immediateRender: false },
               at
             );
           }
 
           /* ---- persistent rail ---------------------------------------------- */
           gsap.set(el("f03-rail"), { scaleX: 0.111 });
-          tl.fromTo(el("f03-rail"), { scaleX: 0.111 }, { scaleX: 0.149, duration: 12, ease: "none" }, 0);
+          tl.fromTo(el("f03-rail"), { scaleX: 0.111 }, { scaleX: 0.149, duration: 10, ease: "none" }, 0);
 
-          gsap.set([el("f03-r1"), el("f03-r2"), el("f03-r3")], { xPercent: -50, yPercent: -50, scale: 0 });
-          gsap.set(cursor, { x: 330, y: 1010 });
+          gsap.set([el("f03-r1"), el("f03-r2"), el("f03-r3"), el("f03-r4")],
+                   { xPercent: -50, yPercent: -50, scale: 0 });
+          gsap.set(cursor, { x: 300, y: 1060 });
 
-          /* ---- Scene 1 (0.0–2.2s) — the cut lands, the wizard lights up ------ */
-          // Entry: the phone is on screen at t=0 and settles out of frame 02's forward
-          // creep — a short decelerating scale-down, mirrored against that vector.
-          tl.fromTo(el("f03-world"), { scale: 1.07 }, { scale: 1, duration: 0.62, ease: "power3.out" }, 0);
-          tl.fromTo(
-            el("f03-world"), { filter: "blur(3px)" },
-            { filter: "blur(0px)", duration: 0.38, ease: "power2.out" },
-            0
-          );
-          tl.fromTo(el("f03-glow"), { opacity: 0.5 }, { opacity: 0.86, duration: 1.4, ease: "power2.out" }, 0);
+          /* ---- 0.0–2.9s — the cut lands and the wizard builds itself --------- */
+          // No camera and no entry settle: the phone is simply there on frame 0 and
+          // the screen fills with staged reveals.
+          tl.fromTo(el("f03-glow"), { opacity: 0.5 }, { opacity: 0.86, duration: 1.2, ease: "power2.out" }, 0);
 
-          whip(el("f03-title"), 0.14, 80, 0.20);
-          tl.fromTo(el("f03-underline"), { scaleX: 0 }, { scaleX: 1, duration: 0.52, ease: "power3.out" }, 0.34);
+          whip(el("f03-title"), 0.12, 80, 0.18);
+          tl.fromTo(el("f03-underline"), { scaleX: 0 }, { scaleX: 1, duration: 0.44, ease: "power3.out" }, 0.28);
 
-          rise(el("f03-hdr"), 0.34, 0.45, 20);
+          rise(el("f03-back"), 0.18, 0.36, 18);
 
           // waterfall-entry — the five-step rail arrives as one accelerating wave
           var steps = all(".f03-steps .step");
           var F = 1 / 60;
-          var st = 0.56;
+          var st = 0.42;
           var sOff = [66, 52, 48, 46, 44];
-          var sDur = [0.18, 0.15, 0.14, 0.13, 0.13];
+          var sDur = [0.16, 0.13, 0.12, 0.11, 0.11];
           for (var s = 0; s < steps.length; s++) {
             whip(steps[s], st, sOff[s], sDur[s]);
             st = st + sDur[s] - (s < 2 ? 0 : F);
           }
-          // step 1 becomes the live step — the rail that stays lit through frame 7
+          // step 1 becomes the live step — the rail that stays lit through frame 07
           tl.fromTo(
             el("f03-step1"),
-            { backgroundColor: "hsl(198 28% 94%)", color: "hsl(208 11% 46%)", fontWeight: 400 },
+            { backgroundColor: "rgb(235,240,243)", color: "rgb(105,115,124)", fontWeight: 400 },
             {
-              backgroundColor: "hsl(182 38% 36%)", color: "hsl(182 37% 98%)", fontWeight: 700,
-              duration: 0.42, ease: "power2.out", immediateRender: false
+              backgroundColor: "rgb(57,124,127)", color: "rgb(248,253,253)", fontWeight: 700,
+              duration: 0.36, ease: "power2.out", immediateRender: false
             },
-            1.18
+            0.96
           );
-          whip(el("f03-kicker"), 1.24, 30, 0.14);
+          whip(el("f03-kicker"), 1.00, 30, 0.12);
+          whip(el("f03-b1"), 0.50, 44, 0.14);
 
-          rise(el("f03-titlein"), 1.32, 0.46, 22);
-          rise(el("f03-card"), 1.58, 0.55, 34);
-          rise(el("f03-foot"), 2.00, 0.45, 18);
-          whip(el("f03-b1"), 1.66, 44, 0.16);
+          // the account card, then its contents — content arriving, one beat at a time
+          rise(el("f03-card"), 1.18, 0.44, 34);
+          rise(el("f03-ctitle"), 1.44, 0.34, 20);
+          rise(el("f03-about"), 1.60, 0.30, 16);
+          rise(el("f03-f1"), 1.78, 0.34, 26);
+          rise(el("f03-f2"), 1.93, 0.34, 26);
+          rise(el("f03-f3"), 2.06, 0.34, 26);
+          rise(el("f03-f4"), 2.18, 0.34, 26);
+          rise(el("f03-btnwrap"), 2.36, 0.38, 24);
+          rise(el("f03-foot"), 2.54, 0.34, 16);
 
-          /* ---- camera phase 1 (1.9–3.1s) — partial travel toward the field --- */
-          // The in-phone camera pins its origin on the password field's centre
-          // (50% / 55.26% of the 410x912 screen); the unscaled y offset walks the
-          // target to the middle of the screen as the scale ramps.
-          var world = el("f03-screenworld");
-          gsap.set(world, { transformOrigin: "50% 55.263%" });
-          tl.fromTo(world, { scale: 1, y: 0 }, { scale: 1.26, y: -25, duration: 1.20, ease: "power2.inOut" }, 1.90);
+          /* ---- 2.42–8.48s — the cursor drives the four fields. The cut comes out
+             of travel and post-typing dwell, not out of the typing itself. ------ */
+          tl.fromTo(cursor, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "none" }, 2.42);
+          moveTo(300, 1060, 130, 336, 2.46, 0.54, true);
+          click(el("f03-r1"), el("f03-f1"), 3.06);
+          activate(el("f03-f1"), 3.10);
+          typeInto(el("f03-t1"), el("f03-c1"), "dor.h", 3.24, 0.72);
 
-          /* ---- Scene 2 (2.1–9.0s) — the cursor drives the form -------------- */
-          tl.fromTo(cursor, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "none" }, 2.06);
-          moveTo(330, 1010, 205, 340, 2.10, 0.78, true);
-          click(el("f03-r1"), el("f03-f1"), 2.98);
-          activate(el("f03-f1"), 3.02);
-          typeInto(el("f03-t1"), el("f03-c1"), "dor.h", 3.24, 1.10);
+          deactivate(el("f03-f1"), 4.10);
+          moveTo(130, 336, 130, 414, 4.10, 0.38, false);
+          click(el("f03-r2"), el("f03-f2"), 4.54);
+          activate(el("f03-f2"), 4.58);
+          typeInto(el("f03-t2"), el("f03-c2"), "dor@example.com", 4.72, 1.08);
 
-          deactivate(el("f03-f1"), 4.52);
-          moveTo(205, 340, 205, 422, 4.52, 0.58, false);
-          click(el("f03-r2"), el("f03-f2"), 5.18);
-          activate(el("f03-f2"), 5.22);
-          typeInto(el("f03-t2"), el("f03-c2"), "dor@example.com", 5.42, 1.58);
+          deactivate(el("f03-f2"), 5.96);
+          moveTo(130, 414, 130, 492, 5.96, 0.34, false);
+          click(el("f03-r3"), el("f03-f3"), 6.36);
+          activate(el("f03-f3"), 6.40);
+          typeInto(el("f03-t3"), el("f03-c3"), "••••••••", 6.52, 0.62);
 
-          deactivate(el("f03-f2"), 7.18);
-          moveTo(205, 422, 205, 504, 7.18, 0.52, false);
-          click(el("f03-r3"), el("f03-f3"), 7.80);
-          activate(el("f03-f3"), 7.84);
-          typeInto(el("f03-t3"), el("f03-c3"), "••••••••", 8.02, 1.10);
+          deactivate(el("f03-f3"), 7.30);
+          moveTo(130, 492, 130, 570, 7.30, 0.34, false);
+          click(el("f03-r4"), el("f03-f4"), 7.70);
+          activate(el("f03-f4"), 7.74);
+          typeInto(el("f03-t4"), el("f03-c4"), "••••••••", 7.86, 0.62);
 
-          /* ---- stage explainer — paced to the three voiceover sentences ------ */
-          whip(el("f03-b2"), 4.80, 46, 0.17);
-          whip(el("f03-b3"), 8.30, 42, 0.15);
+          /* ---- stage explainer — the locked script gives this frame two body
+             lines, so the third late beat (f03-b3) is retired with its element. --- */
+          whip(el("f03-b2"), 3.84, 46, 0.15);
 
-          /* ---- camera phase 2 (7.4–9.5s) — lock onto the camera target ------- */
-          tl.fromTo(
-            world, { scale: 1.26, y: -25 },
-            { scale: 1.60, y: -48, duration: 2.10, ease: "power2.inOut", immediateRender: false },
-            7.40
-          );
-
-          /* ---- Scene 3 (9.6–12.0s) — the payoff: the cursor rests on המשך ---- */
-          deactivate(el("f03-f3"), 9.62);
-          moveTo(205, 504, 205, 592, 9.72, 0.80, false);
+          /* ---- 8.68–10.0s — the cursor rests on המשך; nothing is submitted --- */
+          deactivate(el("f03-f4"), 8.68);
+          moveTo(130, 570, 220, 656, 8.68, 0.52, false);
           // spring-pop-entrance — the hover backdrop blooms under the primary action
           tl.fromTo(
             el("f03-halo"),
             { scale: 0.82, opacity: 0 },
-            { scale: 1, opacity: 1, duration: 0.55, ease: "power3.out", immediateRender: false },
-            10.48
+            { scale: 1, opacity: 1, duration: 0.54, ease: "power3.out", immediateRender: false },
+            9.32
           );
-          // the camera settles with a slow forward creep — a live, not frozen, hold
+          // the glow answers the finished form — a one-shot reaction, not a loop
           tl.fromTo(
-            world, { scale: 1.60 },
-            { scale: 1.665, duration: 2.50, ease: "power1.in", immediateRender: false },
-            9.50
+            el("f03-glow"),
+            { opacity: 0.86 },
+            { opacity: 0.98, duration: 0.60, ease: "power2.out", immediateRender: false },
+            9.40
           );
         })();
       </script>

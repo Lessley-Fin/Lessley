@@ -1,27 +1,27 @@
 {
   "scene": "11-optimizer-stack",
-  "duration_s": 12.0,
+  "duration_s": 10.0,
   "rules": [
     "counting-dynamic-scale",
     "spring-pop-entrance",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
     "ambient-glow-bloom"
   ],
   "exit": {
-    "vector": "static — 0 px/s. Camera came to rest at t=8.80s (screen-world scale 1.24, counter-translate at the hero/pill midpoint) and holds to 12.0. Phone locked at true frame centre cx 960, cy 540. Final second carries only the background glow settling in opacity (0.62 -> 0.50, paint-only, ends t=11.0) — no translation, no scale.",
+    "vector": "static — 0 px/s. Every transform has come to rest by t=5.07s; from 7.50s the scene is a paint-only settle. Phone locked at true frame centre cx 960, cy 540, rig scale 0.9428, `.screen-world` at scale 1 / x 0 / y 0. Final second carries only the two background glows easing in opacity (gold 0.72 -> 0.46, teal 0.60 -> 0.48, both ending t=9.60) — no translation, no scale.",
     "still_moving": false
   },
   "entry": {
-    "vector": "static — 0 px/s, and deliberately so. STILLNESS-BEFORE-CLIMAX: the first 1.40s has zero element motion; the phone is already parked at true frame centre from frame 10 and the in-screen camera opens at scale 1.12 — the same framing frame 10 exits on. Nothing translates until the camera push at t=1.40s.",
+    "vector": "static — 0 px/s, and deliberately so. STILLNESS-BEFORE-CLIMAX: the first 1.00s has zero element motion; the phone is already parked at true frame centre from frame 10 and the card is already on screen holding ₪1,000. Nothing tweens until the struck original price arrives at t=1.00s.",
     "from_rest": true
   },
   "notes": {
-    "camera_moves": 2,
-    "camera_track": "screen-world scale 1.12 (held 0-1.40s, inherited from frame 10's exit) -> 1.32 (push onto the pay figure, 1.40-2.60s) -> 1.24 (bookend ease back to a wider settle, 7.20-8.80s), then LOCKED.",
-    "carrier": "Phone unchanged from frame 10 — same centre, same device scale 0.9442, no reposition. The paragraph's one reposition was spent in frame 10.",
-    "payoff_beat": "t=2.70-4.50s: the figure counts 412 -> 317 (power3.out) while its transform scale grows 0.78 -> 1.0 on the identical ease, and the full-frame teal glow blooms opacity 0 -> 0.62 / scale 0.86 -> 1.10 on exactly that beat. --stage-gold lands ONCE at t=4.70s on the savings pill (spring-pop, power3.out) and nowhere else in the film.",
-    "first_second": "Held card fully visible at t=0 showing the cart figure; no entrance tweens fire before t=1.40s.",
-    "last_second": "Locked frame, climax dwell. Last motion is the chevron nudge ending at 10.08s."
+    "camera_moves": 0,
+    "camera_track": "None. `.screen-world` is untransformed for the whole scene — the in-phone camera was withdrawn on 18/08.",
+    "carrier": "Phone unchanged from frame 10 — same centre, same rig scale 0.9428, no reposition. The paragraph's one reposition was spent in frame 10.",
+    "payoff_beat": "t=1.70-3.40s: the figure counts 1,000 -> 700 (power3.out, driven from a tweened proxy through the film's shared thousands-separator formatter so a seek to any frame renders the right formatted number) while its transform scale grows 0.78 -> 1.0 on the identical ease, and the full-frame teal glow blooms opacity 0 -> 0.60 / scale 0.86 -> 1.10 across exactly that beat. --stage-gold lands ONCE at t=3.62s on the savings pill (spring-pop, power3.out) and nowhere else in the film — pulled tight against the count-down so the number landing and the gold landing read as one event.",
+    "retime": "12s -> 10s (19/08). The climax is protected: the count-down keeps 1.70 of its 1.80s and the gold still blooms across it. The two seconds come out of the APPROACH (stillness 1.30 -> 1.00s, the gap before the pill, the gaps in the breakdown build) and out of the closing settle, never out of the landing.",
+    "data": "FOX - פוקס, cart ₪1,000 -> pay ₪700, saved ₪300 (30%). ONE deal in the stack: Hever (חבר) — Gift Cards, כרטיס מתנה, 30% capped at ₪300, provider hever_gift_card_company. The band subtitle is optimizer.winningStack.subtitle_one interpolated: 'FOX - פוקס · דיל אחד הופעל'.",
+    "first_second": "Held card fully visible at t=0 showing the cart figure ₪1,000; no tween fires before t=1.00s.",
+    "last_second": "Locked frame, climax dwell. Paint-only glow settle ending at 9.60s; last transform came to rest at 5.07s."
   }
 }

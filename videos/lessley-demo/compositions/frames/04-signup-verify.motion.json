@@ -1,28 +1,37 @@
 {
   "scene": "04-signup-verify",
-  "duration_s": 11,
+  "duration_s": 9,
   "rules": [
     "spring-pop-entrance",
-    "svg-path-draw",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
-    "viewport-change",
+    "discrete-text-sequence",
     "press-release-spring",
     "scale-swap-transition",
-    "svg-icon-enrichment",
-    "discrete-text-sequence"
+    "svg-icon-enrichment"
   ],
+  "camera": {
+    "in_phone": "none. Withdrawn by the client on 18/08 — .screen-world holds scale 1, x 0, y 0 for the whole scene and is never tweened. The device itself is never scaled or translated either.",
+    "replacement": "the stretch the push used to own (now 5.5-9.0s) is filled by staged arrivals: the button's icon swap, the working state, the stage copy's second line, the glow lift, and the once-per-second resend tick."
+  },
+  "retime": {
+    "was_s": 11,
+    "now_s": 9,
+    "method": "hold time first, motion time last. Every entrance, press, icon-swap and copy tween keeps its original duration and ease; the 2s came out of the typing GAP (0.8s -> 0.62s between digits) and out of the two dead beats — the wait before the first digit (1.7s -> 1.55s focus, 2.6s -> 2.15s first digit) and the wait between the sixth digit and the commit (1.05s -> 0.86s). The spinner was re-rated (1000deg/2.78s -> 840deg/2.33s) so it still turns at ~1 rev/s rather than speeding up with the cut."
+  },
   "exit": {
-    "vector": "camera Z-in (+scale 0.0213/s on .screen-world, 1.32 -> 1.42 linear over 6.3-11.0s); ~2.8 canvas px/s outward flow at the code-row edge, plus ~0.8 px/s downward re-aim. Device itself locked at cx 737, cy 540.",
-    "still_moving": true
+    "vector": "the request is in flight: the button's Loader2 turns at ~1 rev/s (840 deg over 6.67-9.0s, linear) — ~82 canvas px/s tangential at the 26px glyph — while the resend counter ticks one digit per second and the rail keeps filling. Nothing translates; the phone is locked at its rest position.",
+    "still_moving": true,
+    "last_second": "8.0-9.0s: the glow lift finishes at 8.7, the spinner keeps turning, the resend counter ticks 50 -> 49 and the rail keeps filling. No element is parked and nothing new is introduced — the frame hands the next cut a surface already in motion."
   },
   "entry": {
-    "vector": "lateral wizard advance: step body slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. In-phone camera starts at rest (scale 1.0, whole device framed); Z push begins at 0.8s.",
-    "from_rest": false
+    "vector": "lateral wizard advance: the step card slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. This is the shared seam grammar of the whole signup run (03 -> 07). No camera motion of any kind at t=0.",
+    "from_rest": false,
+    "first_second": "0.0-1.0s: the card slides in, the 5-step rail flips חשבון -> .done and אימות -> current (0.15-0.60), the stage title and first body line land (0.15 / 0.35), and the five card rows begin their 0.09s-staggered arrival at 0.55. Unchanged by the retime."
   },
   "carrier": {
-    "steps": "5-step .steps row, index 1 (אימות). At t=0 it renders in the INCOMING state from frame 03 (all muted); at 0.15-0.60s חשבון flips to .done (accent) and אימות to current (primary). It then holds unchanged through the final second, so frame 05 can pick it up mid-state at its own t=0.",
-    "device": "the phone is never rebuilt: same .device, same slot, no entrance tween. Only the screen contents advance.",
-    "rail": "bottom progress rail scaleX 0.8095 -> 1.0 linear across the whole 11s (14.92% -> 18.41% of the 315s film)."
+    "steps": "5-step .steps row, index 1 (אימות). At t=0 it renders in the INCOMING state from frame 03 (all muted); at 0.15-0.60s חשבון flips to .done (accent) and אימות to current (filled teal). It then holds unchanged through the final second, so frame 05 can pick it up mid-state at its own t=0.",
+    "device": "the phone is never rebuilt: same .device (460x997, natural scale), same slot, no entrance tween. Only the screen contents advance.",
+    "screen": "AuthLayout, not MainShell — the register wizard is a guest route, so there is no app header and no bottom nav. Chrome is the back row (חזרה) plus the step rail.",
+    "rail": "bottom progress rail scaleX 0.8095 -> 1.0 linear across the whole 9s (14.92% -> 18.41% of the film). The absolute endpoints are unchanged by the retime — only the time taken to cross them — so frames 03 and 05 still hand off at the same fill.",
+    "clock": "the resend cooldown ticks one digit per second for the whole scene: 58 -> 49 over 9s (was 58 -> 47 over 11s). The rate is the invariant, not the span."
   }
 }

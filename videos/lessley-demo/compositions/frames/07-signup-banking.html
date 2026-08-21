@@ -1,4 +1,15 @@
 <template>
+      <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
       <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
@@ -44,6 +55,10 @@
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
           --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -86,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -103,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -123,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -198,142 +369,159 @@
       </style>
       <style>
         /* ── 07-signup-banking — scene-specific dress ───────────────────── */
+
+
         .f07-ground { position: absolute; inset: 0; background: var(--stage-bg); }
         .f07-content { position: absolute; inset: 0; }
         .f07-content * { box-sizing: border-box; }
 
-        .f07-phone { position: relative; width: 406px; height: 880px; flex: none; }
-        .f07-fit { position: absolute; top: 0; right: 0; width: 430px; height: 932px;
-          transform: scale(0.94419); transform-origin: 100% 0; }
-
         .f07-title-w { display: inline-block; opacity: 0; }
         .f07-p { opacity: 0; }
 
-        /* app screen — fixed block heights keep the camera target font-independent */
-        .f07-app .app-header { padding: 60px 20px 16px; }
-        .f07-app .app-main { padding: 20px 22px; gap: 16px; }
+        /* The register wizard is an AUTH screen — no app header, no bottom nav.
+           Top padding clears the Dynamic Island. */
+        .f07-app .app-main { padding: 54px 18px 0; gap: 12px; }
         .f07-app .app-main > * { flex: none; }
 
-        .f07-steps { height: 40px; align-items: stretch; }
-        .f07-steps .step { font-size: 14px; padding: 11px 1px; white-space: nowrap;
-          overflow: hidden; line-height: 1.2; }
-        .f07-steps .step.on { box-shadow: 0 2px 8px hsl(182 38% 36% / 0.30); }
+        .f07-back { display: flex; align-items: center; gap: 8px; height: 26px;
+          font-size: 15px; font-weight: 600; color: hsl(var(--muted-foreground)); opacity: 0; }
+        .f07-back svg { width: 18px; height: 18px; flex: none; }
 
-        .f07-head { height: 190px; overflow: hidden; }
-        .f07-head .app-h1 { font-size: 30px; line-height: 1.16; opacity: 0; }
-        .f07-head .app-sub { font-size: 18px; line-height: 1.35; margin-top: 8px; opacity: 0; }
+        .f07-steps { opacity: 0; }
+        .f07-steps .step { font-size: 13px; padding: 9px 1px; white-space: nowrap;
+          overflow: hidden; line-height: 1.25; }
 
-        .f07-props { height: 258px; display: flex; flex-direction: column; gap: 12px; }
-        .f07-prop { height: 78px; padding: 12px 14px; display: flex; align-items: center;
-          gap: 12px; opacity: 0; }
-        .f07-prop svg { width: 28px; height: 28px; flex: none; }
-        .f07-prop span { font-size: 20px; line-height: 1.3; }
+        /* the surface-navy value block */
+        .f07-navy { padding: 22px 20px; opacity: 0; }
+        .f07-bank { display: block; width: 32px; height: 32px; margin-bottom: 14px; opacity: 0; }
+        .f07-h1 { font-size: 21px; font-weight: 700; line-height: 1.25; margin: 0;
+          text-align: right; opacity: 0; }
+        .f07-sub { font-size: 15px; line-height: 1.35; margin: 12px 0 0; text-align: right;
+          color: hsl(var(--navy-muted)); opacity: 0; }
+        .f07-props { list-style: none; margin: 16px 0 0; padding: 0;
+          display: flex; flex-direction: column; gap: 8px; }
+        .f07-prop { display: flex; align-items: flex-start; gap: 9px; text-align: right;
+          font-size: 15px; line-height: 1.3; opacity: 0; }
+        .f07-prop svg { width: 17px; height: 17px; flex: none; margin-top: 2px; }
 
-        .f07-lock { height: 104px; padding: 14px 16px; display: flex; align-items: center;
-          gap: 14px; opacity: 0; border-radius: 24px;
-          background: hsl(var(--accent) / 0.62); border: 1px solid hsl(182 40% 62% / 0.55);
-          color: hsl(var(--accent-foreground)); }
-        .f07-lockart { position: relative; width: 62px; height: 62px; flex: none; }
-        .f07-lockart svg { position: absolute; inset: 0; width: 62px; height: 62px; }
-        .f07-lock b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
-        .f07-lock i { display: block; font-style: normal; font-size: 16px; line-height: 1.3;
-          margin-top: 4px; color: hsl(182 45% 24%); }
+        /* the action card */
+        .f07-act { padding: 18px; display: flex; flex-direction: column; gap: 11px; opacity: 0; }
+        .f07-act .btn { display: flex; align-items: center; justify-content: center; gap: 9px;
+          padding: 16px; font-size: 20px; opacity: 0; }
+        .f07-act .btn svg { width: 19px; height: 19px; flex: none; }
+        .f07-pill { background: hsl(var(--card)); color: hsl(var(--foreground)); font-weight: 600;
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-card); }
+        .f07-notice { margin: 0; font-size: 13px; line-height: 1.4; text-align: center;
+          color: hsl(var(--muted-foreground)); opacity: 0; }
 
-        .f07-cta { height: 68px; padding: 0; line-height: 68px; opacity: 0; }
-
-        .f07-hicon { width: 30px; height: 30px; }
+        /* the trust block — the scene's payload */
+        .f07-trust { display: flex; align-items: flex-start; gap: 11px; padding: 15px;
+          border-radius: 26px; border: 1px solid hsl(var(--border));
+          background: hsl(var(--secondary)); opacity: 0; }
+        .f07-trust p { margin: 0; text-align: right; font-size: 13px; line-height: 1.45;
+          color: hsl(var(--secondary-foreground)); }
+        .f07-lockart { position: relative; width: 22px; height: 22px; flex: none; margin-top: 2px; }
+        .f07-lockart svg { position: absolute; inset: 0; width: 22px; height: 22px; }
+        .f07-ringfx { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px;
+          margin: -20px 0 0 -20px; border-radius: 50%; opacity: 0;
+          border: 2px solid hsl(var(--primary) / 0.7); }
+        .f07-shield { width: 14px; height: 14px; display: inline-block; vertical-align: -2px;
+          margin-inline-start: 4px; }
       </style>
 
       <div id="root" data-composition-id="07-signup-banking" data-width="1920" data-height="1080">
 
-        <div class="bg-layer f07-ground clip" id="f07-ground" data-start="0" data-duration="15" data-track-index="0">
+        <div class="bg-layer f07-ground clip" id="f07-ground" data-start="0" data-duration="12" data-track-index="0">
           <div class="bg-glow" id="f07-glow"></div>
           <div class="bg-grid"></div>
           <div class="bg-ghost">Lessley</div>
           <div class="bg-grain"></div>
         </div>
 
-        <div class="f07-content clip" id="f07-content" data-start="0" data-duration="15" data-track-index="1">
+        <div class="f07-content clip" id="f07-content" data-start="0" data-duration="12" data-track-index="1">
           <span class="chapter">07 / 21</span>
 
           <div class="stage">
             <div class="col-text">
-              <h1 class="scene-title"><span class="f07-title-w" id="f07-t1">הרשמה</span> <span class="f07-title-w" id="f07-t2">·</span> <span class="f07-title-w" id="f07-t3">בנקאות</span> <span class="f07-title-w" id="f07-t4">פתוחה</span></h1>
-              <p class="scene-body f07-p" id="f07-p1">שלוש נקודות הערך עולות, ואז תג „לקריאה בלבד” ננעל.</p>
-              <p class="scene-body f07-p" id="f07-p2">הסצנה השקטה של המערכה — כאן נדרש אמון.</p>
+              <!-- The locked title is two words against four stagger beats, so each word
+                   is split in half. The chunks are adjacent with no whitespace between
+                   them (the only literal space is the word gap before f07-t3), so the
+                   line still reads "לקריאה בלבד" while all four beats survive. -->
+              <h1 class="scene-title"><span class="f07-title-w" id="f07-t1">לקר</span><span class="f07-title-w" id="f07-t2">יאה</span> <span class="f07-title-w" id="f07-t3">בל</span><span class="f07-title-w" id="f07-t4">בד</span></h1>
+              <p class="scene-body f07-p" id="f07-p1">Lessley קוראת איפה קניתם — ותו לא.</p>
+              <p class="scene-body f07-p" id="f07-p2">היא לא יכולה להזיז שקל אחד.</p>
             </div>
 
-            <div class="f07-phone" id="f07-phone">
-              <div class="f07-fit">
-                <div class="device">
-                  <div class="device-body">
-                    <div class="device-screen">
-                      <div class="screen-world" id="f07-world">
-                        <div class="app f07-app">
+            <div class="device" id="f07-device">
+              <div class="device-body">
+                <div class="device-screen">
+                  <!-- camera wrapper kept for structural continuity; NEVER animated -->
+                  <div class="screen-world" id="f07-world">
+                    <div class="app f07-app">
+                      <div class="app-main">
 
-                          <div class="app-header">
-                            <span class="app-icon"><svg class="f07-hicon" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M7 15l4-5 3 3 5-7"/></svg></span>
-                            <span class="brand"><b>Lessley</b><span>ניהול פיננסי אישי, מותאם עבורך</span></span>
-                            <span class="app-icon"><svg class="f07-hicon" viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-2.9 8.2-7 10-4.1-1.8-7-5.6-7-10V6z"/><path d="M9 12.2l2.2 2.2 4.2-4.6"/></svg></span>
-                          </div>
-
-                          <div class="app-main">
-                            <div class="steps f07-steps">
-                              <span class="step">חשבון</span>
-                              <span class="step">אימות</span>
-                              <span class="step">מועדונים</span>
-                              <span class="step">רמת התאמה</span>
-                              <span class="step on" id="f07-step">בנקאות</span>
-                            </div>
-
-                            <div class="f07-head">
-                              <h1 class="app-h1" id="f07-apph1">חברו בנקאות פתוחה כדי לפתוח את החיסכון האמיתי</h1>
-                              <p class="app-sub" id="f07-appsub">Lessley קוראת את העסקאות שביצעתם בעבר — לקריאה בלבד — כדי לראות איפה אתם באמת קונים.</p>
-                            </div>
-
-                            <div class="f07-props">
-                              <div class="card-inset f07-prop" id="f07-prop1">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.4 12.2l2.4 2.4 4.8-5.2"/></svg>
-                                <span>מציאת המועדונים והכרטיסים שמתאימים להוצאות האמיתיות שלכם</span>
-                              </div>
-                              <div class="card-inset f07-prop" id="f07-prop2">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.4 12.2l2.4 2.4 4.8-5.2"/></svg>
-                                <span>תפיסת חיסכון שפספסתם ברכישות שכבר ביצעתם</span>
-                              </div>
-                              <div class="card-inset f07-prop" id="f07-prop3">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.4 12.2l2.4 2.4 4.8-5.2"/></svg>
-                                <span>שילוב קופונים עם הטבות כרטיס באופן אוטומטי</span>
-                              </div>
-                            </div>
-
-                            <div class="f07-lock" id="f07-lock" data-camera-target>
-                              <span class="f07-lockart">
-                                <svg viewBox="0 0 60 60" fill="none">
-                                  <circle id="f07-ring" cx="30" cy="40" r="14" fill="none"
-                                    stroke="hsl(182 45% 30%)" stroke-width="2" opacity="0"/>
-                                  <g id="f07-shackle">
-                                    <path d="M20 30V21a10 10 0 0 1 20 0v9" fill="none"
-                                      stroke="hsl(182 45% 24%)" stroke-width="5" stroke-linecap="round"/>
-                                  </g>
-                                  <rect x="12" y="28" width="36" height="26" rx="8" fill="hsl(182 45% 24%)"/>
-                                  <circle cx="30" cy="38" r="3.4" fill="hsl(179 50% 88%)"/>
-                                  <rect x="28.6" y="39.6" width="2.8" height="7" rx="1.4" fill="hsl(179 50% 88%)"/>
-                                </svg>
-                              </span>
-                              <span>
-                                <b>גישה לקריאה בלבד</b>
-                                <i>אבטחה ברמה בנקאית · ניתנת לביטול בכל עת</i>
-                              </span>
-                            </div>
-
-                            <div class="btn f07-cta" id="f07-cta">חיבור הבנק שלי</div>
-                          </div>
-
+                        <div class="f07-back" id="f07-back">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="hsl(208 11% 46%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M13 5l7 7-7 7"/></svg>
+                          חזרה
                         </div>
+
+                        <div class="steps f07-steps" id="f07-stepsrail">
+                          <span class="step">חשבון</span>
+                          <span class="step">אימות</span>
+                          <span class="step">מועדונים</span>
+                          <span class="step">רמת התאמה</span>
+                          <span class="step on" id="f07-step">בנקאות</span>
+                        </div>
+
+                        <div class="hero f07-navy" id="f07-navy">
+                          <svg class="f07-bank" id="f07-bank" viewBox="0 0 24 24" fill="none" stroke="hsl(203 36% 96%)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l9 6H3z"/></svg>
+                          <h1 class="f07-h1" id="f07-apph1">חברו בנקאות פתוחה כדי לפתוח את החיסכון האמיתי</h1>
+                          <p class="f07-sub" id="f07-appsub">Lessley קוראת את העסקאות שביצעתם בעבר — לקריאה בלבד — כדי לראות איפה אתם באמת קונים.</p>
+                          <ul class="f07-props">
+                            <li class="f07-prop" id="f07-prop1">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v18"/><path d="M14 9h4a1 1 0 0 1 1 1v12"/><path d="M9 7h2"/><path d="M9 11h2"/><path d="M9 15h2"/><path d="M3 22h18"/></svg>
+                              מציאת המועדונים והכרטיסים שמתאימים להוצאות האמיתיות שלכם
+                            </li>
+                            <li class="f07-prop" id="f07-prop2">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
+                              תפיסת חיסכון שפספסתם ברכישות שכבר ביצעתם
+                            </li>
+                            <li class="f07-prop" id="f07-prop3">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="hsl(203 13% 67%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7z"/><path d="M18.6 15.4l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+                              שילוב קופונים עם הטבות כרטיס באופן אוטומטי
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div class="card f07-act" id="f07-act">
+                          <div class="btn" id="f07-cta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="hsl(182 37% 98%)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l9 6H3z"/></svg>
+                            חיבור הבנק שלי
+                          </div>
+                          <div class="btn f07-pill" id="f07-skip">דילוג לעת עתה</div>
+                          <p class="f07-notice" id="f07-notice">אפשר לדלג על זה — אך התובנות וההמלצות יישארו מוגבלות עד לחיבור בנק או כרטיס. אפשר לחבר מאוחר יותר דרך ההגדרות.</p>
+                        </div>
+
+                        <div class="f07-trust" id="f07-trust" data-camera-target>
+                          <span class="f07-lockart">
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <g id="f07-shackle">
+                                <path d="M7.6 11V7.6a4.4 4.4 0 0 1 8.8 0V11" fill="none"
+                                  stroke="hsl(182 38% 36%)" stroke-width="2" stroke-linecap="round"/>
+                              </g>
+                              <rect x="4.6" y="10.6" width="14.8" height="10.4" rx="3" fill="hsl(182 38% 36%)"/>
+                              <circle cx="12" cy="14.6" r="1.5" fill="hsl(179 50% 88%)"/>
+                              <rect x="11.3" y="15.4" width="1.4" height="3.4" rx="0.7" fill="hsl(179 50% 88%)"/>
+                            </svg>
+                            <span class="f07-ringfx" id="f07-ring"></span>
+                          </span>
+                          <p>המידע שלכם משמש לעיבוד פנימי באופן אנונימי — להפעלת תובנות, פרסומות ושיווק. הוא לעולם לא דלף או נמכר לצד שלישי.<svg class="f07-shield" viewBox="0 0 24 24" fill="none" stroke="hsl(182 38% 36%)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-2.9 8.2-7 10-4.1-1.8-7-5.6-7-10V6z"/><path d="M9 12.2l2.2 2.2 4.2-4.6"/></svg></p>
+                        </div>
+
                       </div>
-                      <div class="device-island"></div>
                     </div>
                   </div>
+                  <div class="device-island"></div>
                 </div>
               </div>
             </div>
@@ -348,23 +536,8 @@
           var F = 1 / 60;
           var tl = gsap.timeline({ paused: true });
 
-          /* ── in-phone camera: .screen-world is the lens ────────────────── */
-          var world = document.getElementById("f07-world");
-          var lock = document.getElementById("f07-lock");
-
-          function camPose(target, S) {
-            var W = world.offsetWidth, H = world.offsetHeight;
-            var ox = 0, oy = 0, n = target;
-            while (n && n !== world) { ox += n.offsetLeft; oy += n.offsetTop; n = n.offsetParent; }
-            var cx = ox + target.offsetWidth / 2, cy = oy + target.offsetHeight / 2;
-            var tx = -(cx - W / 2) * S, ty = -(cy - H / 2) * S;
-            /* clamp so the screen-world never uncovers the device screen */
-            var mx = (S - 1) * W / 2, my = (S - 1) * H / 2;
-            if (tx > mx) tx = mx; if (tx < -mx) tx = -mx;
-            if (ty > my) ty = my; if (ty < -my) ty = -my;
-            return { x: tx, y: ty, scale: S };
-          }
-          var LOCK_POSE = camPose(lock, 1.28);
+          /* NO in-phone camera. .screen-world holds scale 1 / x 0 / y 0 for the
+             whole scene, and the device is never scaled. Withdrawn 18/08. */
 
           /* ── Scene 1 (0.0–1.4s) — the stage title arrives (waterfall-entry) */
           var t = 0.10;
@@ -381,57 +554,73 @@
           tl.to("#f07-t4", { y: 0, duration: 0.16, ease: "power4.out" }, t);
 
           tl.fromTo("#f07-p1", { opacity: 0, y: 22 },
-            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 0.86);
+            { opacity: 1, y: 0, duration: 0.50, ease: "power3.out" }, 0.80);
           tl.fromTo("#f07-p2", { opacity: 0, y: 22 },
-            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 1.14);
+            { opacity: 1, y: 0, duration: 0.50, ease: "power3.out" }, 1.04);
 
-          /* the banking step confirms itself on screen */
+          /* ── the wizard chrome settles, the banking step confirms itself ─── */
+          tl.fromTo("#f07-back", { opacity: 0, x: 18 },
+            { opacity: 1, x: 0, duration: 0.40, ease: "power3.out" }, 0.44);
+          tl.fromTo("#f07-stepsrail", { opacity: 0, y: 18 },
+            { opacity: 1, y: 0, duration: 0.44, ease: "power3.out" }, 0.56);
           tl.fromTo("#f07-step", { scale: 0.86 },
-            { scale: 1, duration: 0.42, ease: "power3.out" }, 0.62);
+            { scale: 1, duration: 0.40, ease: "power3.out" }, 0.74);
 
-          /* ── Scene 2 (1.3–3.1s) — the screen states the ask ─────────────── */
+          /* ── Scene 2 (1.1–2.6s) — the screen states the ask ─────────────── */
+          tl.fromTo("#f07-navy", { opacity: 0, y: 34 },
+            { opacity: 1, y: 0, duration: 0.56, ease: "power3.out" }, 1.14);
+          tl.fromTo("#f07-bank", { opacity: 0, y: 14 },
+            { opacity: 1, y: 0, duration: 0.40, ease: "power3.out" }, 1.40);
           tl.fromTo("#f07-apph1", { opacity: 0, y: 26 },
-            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 1.32);
+            { opacity: 1, y: 0, duration: 0.56, ease: "power3.out" }, 1.58);
           tl.fromTo("#f07-appsub", { opacity: 0, y: 20 },
-            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 2.24);
+            { opacity: 1, y: 0, duration: 0.56, ease: "power3.out" }, 2.06);
 
-          /* ── Scene 3 (3.2–7.0s) — three value points rise (waterfall) ───── */
+          /* ── Scene 3 (2.9–4.6s) — three value points rise (waterfall) ─────
+             The 12s cut takes the HOLD between the props (0.64s → 0.42s), not
+             their travel: every rise keeps its original duration and ease, so
+             the act's quiet beat still reads unhurried. */
           var props = [
-            { id: "#f07-prop1", at: 3.30, dy: 62, d: 0.34 },
-            { id: "#f07-prop2", at: 4.58, dy: 54, d: 0.32 },
-            { id: "#f07-prop3", at: 5.76, dy: 48, d: 0.30 }
+            { id: "#f07-prop1", at: 2.86, dy: 44, d: 0.34 },
+            { id: "#f07-prop2", at: 3.62, dy: 38, d: 0.32 },
+            { id: "#f07-prop3", at: 4.34, dy: 34, d: 0.30 }
           ];
           for (var i = 0; i < props.length; i++) {
             tl.set(props[i].id, { opacity: 1, y: props[i].dy }, props[i].at);
             tl.to(props[i].id, { y: 0, duration: props[i].d, ease: "power4.out" }, props[i].at);
           }
 
-          /* ── Scene 4 (7.0–9.2s) — the ONE restrained move: push to the tag */
-          tl.to("#f07-phone", { scale: 1.22, duration: 2.05, ease: "power2.inOut" }, 7.05);
-          tl.fromTo("#f07-world",
-            { x: 0, y: 0, scale: 1 },
-            { x: LOCK_POSE.x, y: LOCK_POSE.y, scale: LOCK_POSE.scale,
-              duration: 2.05, ease: "power2.inOut" }, 7.05);
+          /* ── Scene 4 (5.2–7.0s) — the action card arrives, staged ───────── */
+          tl.fromTo("#f07-act", { opacity: 0, y: 40 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 5.20);
+          tl.set("#f07-cta", { opacity: 1, y: 30 }, 5.60);
+          tl.to("#f07-cta", { y: 0, duration: 0.30, ease: "power4.out" }, 5.60);
+          tl.set("#f07-skip", { opacity: 1, y: 24 }, 6.14);
+          tl.to("#f07-skip", { y: 0, duration: 0.26, ease: "power4.out" }, 6.14);
+          tl.fromTo("#f07-notice", { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 6.62);
 
-          tl.set("#f07-lock", { opacity: 1, y: 46 }, 7.22);
-          tl.to("#f07-lock", { y: 0, duration: 0.52, ease: "power3.out" }, 7.22);
-          tl.fromTo("#f07-cta", { opacity: 0, y: 30 },
-            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 8.62);
-
-          /* ── Scene 5 (9.3–11.4s) — the tag locks (svg-icon-enrichment) ──── */
-          tl.fromTo("#f07-shackle", { y: -11 },
-            { y: 0, duration: 0.44, ease: "power4.out" }, 9.34);
-          tl.fromTo("#f07-ring", { attr: { r: 12 }, opacity: 0.75 },
-            { attr: { r: 26 }, opacity: 0, duration: 0.86, ease: "power2.out" }, 9.46);
-          tl.fromTo("#f07-lock",
+          /* ── Scene 5 (7.3–8.9s) — the read-only promise, and it LOCKS ──── */
+          tl.fromTo("#f07-trust", { opacity: 0, y: 34 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 7.30);
+          tl.fromTo("#f07-shackle", { y: -6 },
+            { y: 0, duration: 0.42, ease: "power4.out" }, 7.78);
+          tl.fromTo("#f07-ring", { opacity: 0.85, scale: 0.3 },
+            { opacity: 0, scale: 2.4, duration: 0.86, ease: "power2.out",
+              immediateRender: false }, 7.88);
+          tl.fromTo("#f07-trust",
             { boxShadow: "0 0 0 0px hsl(182 38% 36% / 0.0)" },
-            { boxShadow: "0 0 0 4px hsl(182 38% 36% / 0.22)", duration: 0.7, ease: "power2.out" }, 9.44);
+            { boxShadow: "0 0 0 4px hsl(182 38% 36% / 0.22)", duration: 0.7,
+              ease: "power2.out", immediateRender: false }, 7.86);
           /* the glow answers the trust beat — decoratives react, never idle */
           tl.fromTo("#f07-glow", { opacity: 0.78 },
-            { opacity: 1, duration: 1.1, ease: "power2.out" }, 9.40);
+            { opacity: 1, duration: 1.1, ease: "power2.out" }, 7.82);
 
-          /* ── Scene 6 (11.4–15.0s) — the allocated stillness, then the rise */
-          tl.to("#f07-content", { y: -102, duration: 2.7, ease: "power2.in" }, 12.30);
+          /* ── Scene 6 (8.9–12.0s) — allocated stillness, then the rise ────
+             The lock settles at 8.92, the frame is held still to 9.70, and the
+             rise is the last 2.30s — power2.in, so the first half of it still
+             reads as stillness. Ends exactly at the 12.0s cut. */
+          tl.to("#f07-content", { y: -102, duration: 2.30, ease: "power2.in" }, 9.70);
 
           window.__timelines = window.__timelines || {};
           window.__timelines["07-signup-banking"] = tl;

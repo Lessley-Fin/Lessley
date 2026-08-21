@@ -1,27 +1,39 @@
 {
   "scene": "05-signup-clubs",
-  "duration_s": 16,
+  "duration_s": 13,
   "rules": [
     "cursor-click-ripple",
     "counting-dynamic-scale",
     "spring-pop-entrance",
     "center-outward-expansion",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
-    "viewport-change"
+    "press-release-spring",
+    "svg-icon-enrichment"
   ],
+  "camera": {
+    "in_phone": "none. Withdrawn by the client on 18/08 — .screen-world holds scale 1, x 0, y 0 for the whole scene and is never tweened. The device itself is never scaled or translated either.",
+    "replacement": "the two stretches the pushes used to own (0.75-2.6s and 8.8-13s) are filled by staged arrivals: the ten club chips land one by one on a 0.05s stagger, then the commit press, the stage copy's second line, and the cursor's exit glide."
+  },
+  "retime": {
+    "was_s": 16,
+    "now_s": 13,
+    "method": "hold time first, motion time last — with one exception forced by content. The chip cloud grew from 6 invented clubs to the 10 real ones, so the entrance stagger tightened (0.075s -> 0.05s per chip) while each chip keeps its own 0.42s arrival; the reveal is a faster sweep, not a faster pop. The four picks moved from 2.6s apart to 1.8s apart, taken entirely out of the dead air between a landed check and the next glide (was ~1.1s, now ~0.2s); the glide shortened 0.8s -> 0.7s over shorter cloud distances so the cursor still settles before every press. Press, ripple, chip fill, check and counter tweens are all untouched. The exit keeps its 1.6s so the seam velocity frame 06 inherits is identical."
+  },
   "exit": {
-    "vector": "camera Z-in (+scale 0.0276/s on .screen-world, 1.02 -> 1.10 linear over 13.1-16.0s); ~4.8 canvas px/s outward flow at the form edge. Cursor parked and still, device locked at cx 737, cy 540.",
-    "still_moving": true
+    "vector": "the cursor clears the frame: from the המשך button (screen ~200, 640) to the bottom-left park (-80, 1030) over 11.4-13.0s on power2.in — terminal ~600 canvas px/s down-and-left, still accelerating at the cut. Frame 06 re-enters the same actor from the same corner. The device is locked at its rest position; the rail keeps filling.",
+    "still_moving": true,
+    "last_second": "12.0-13.0s: nothing new arrives. The four selected chips hold their mint .on state, the counter holds נבחרו 4, and the only motion is the cursor accelerating off the bottom-left corner plus the rail's linear fill — a moving surface handed to the cut."
   },
   "entry": {
-    "vector": "lateral wizard advance: step body slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. In-phone camera starts at rest (scale 1.0); Z push to the club wall begins at 0.9s.",
-    "from_rest": false
+    "vector": "lateral wizard advance: the step card slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. This is the shared seam grammar of the whole signup run (03 -> 07). No camera motion of any kind at t=0.",
+    "from_rest": false,
+    "first_second": "0.0-1.0s: the card slides in, the 5-step rail flips אימות -> .done and מועדונים -> current (0.15-0.60), the stage title and first body line land (0.15 / 0.35), the head row with the counter arrives at 0.55, and the ten-chip cloud starts its 0.05s-staggered sweep at 0.75. The cursor is still parked off-frame at (-80, 1030), inherited from frame 04's corner."
   },
   "carrier": {
-    "steps": "5-step .steps row, index 2 (מועדונים). At t=0 it renders in frame 04's landed state (חשבון done, אימות current); at 0.15-0.60s אימות flips to .done and מועדונים to current. Holds through the final second for frame 06 to inherit.",
-    "device": "the phone is never rebuilt: same .device, same slot, no entrance tween.",
-    "rail": "scaleX 0.7838 -> 1.0 linear across the whole 16s (18.41% -> 23.49%).",
-    "data": "the four clubs picked here (רמי לוי, שופרסל, סופר-פארם, Be) are the film's canonical four; counter lands on 4."
+    "steps": "5-step .steps row, index 2 (מועדונים). At t=0 it renders in frame 04's landed state (חשבון done, אימות current); at 0.15-0.60s אימות flips to .done and מועדונים to current (filled teal). Holds through the final second for frame 06 to inherit.",
+    "device": "the phone is never rebuilt: same .device (460x997, natural scale), same slot, no entrance tween.",
+    "screen": "AuthLayout, not MainShell — the register wizard is a guest route, so there is no app header and no bottom nav. Chrome is the back row (חזרה) plus the step rail.",
+    "rail": "scaleX 0.7838 -> 1.0 linear across the whole 13s (18.41% -> 23.49%). The absolute endpoints are unchanged by the retime — only the time taken to cross them.",
+    "layout": "the selection surface is a WRAPPING CHIP CLOUD (.v5-grid as flex-wrap over .pchip), not a column grid. The ten real club names are long and mix Latin with Hebrew, so each chip sizes to its own name and the row breaks where it runs out of width. The .v5-ck check slot is present in the DOM from t=0 on the four chips that get picked, so switching it on cannot reflow the cloud mid-scene.",
+    "data": "all ten clubs of the `lessley.clubs` collection are on screen: Mastercard Israel, Isracard TopCash, Hever (חבר) — Gift Cards, Hever (חבר) — טעמים, PaisPlus, PaisPlus — Food Chains Cash Card, PaisPlus — Networks Cash Card, HOT Israel, Behatsdaa, Swish (נפשונית). Card-type clubs carry the credit-card glyph, voucher-type clubs the ticket glyph, both inline SVG. The four picked at 2.6 / 4.4 / 6.2 / 8.0s — Mastercard Israel, Isracard TopCash, Hever (חבר) — Gift Cards, PaisPlus — are the film's canonical four; the head chip's counter lands on נבחרו 4."
   }
 }

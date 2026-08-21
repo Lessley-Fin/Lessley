@@ -1,5 +1,16 @@
 <template>
-<style id="lessley-shared">
+  <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
+      <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
           src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
@@ -44,6 +55,10 @@
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
           --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -86,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -103,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -123,449 +138,864 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
           filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
       </style>
-<style>
-  /* ── 13-deal-finder — scene-specific ─────────────────────────────── */
-  .dl-ground { position: absolute; inset: 0; background: var(--stage-bg); }
-  .dl-chrome { position: absolute; inset: 0; pointer-events: none; }
 
-  .dl-app-main { flex: 1; overflow: hidden; padding: 20px 22px; }
-  .dl-scroller { display: flex; flex-direction: column; gap: 16px; will-change: transform; }
+  <style>
+    /* ── 13-deal-finder — scene styles ─────────────────────────────────
+       No local token backfills: --secondary / --navy-foreground /
+       --navy-muted / --gradient-navy all ship in the shared block now.  */
 
-  .dl-tabs { position: relative; display: flex; gap: 6px; }
-  .dl-tab { flex: 1; position: relative; z-index: 2; text-align: center; border-radius: 999px;
-    padding: 13px 6px; font-size: 19px; font-weight: 600; color: hsl(var(--muted-foreground)); }
-  .dl-tab-hl { position: absolute; top: 0; right: 0; width: 180px; height: 52px; border-radius: 999px;
-    background: hsl(var(--accent)); z-index: 1; }
+    .dl-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+    /* The pointer is driven in screen coordinates, so pin it to the screen origin. */
+    .dl-scene .cursor { left: 0; top: 0; }
+    .dl-scene  { position: absolute; inset: 0; }
+    .dl-chrome { position: absolute; inset: 0; }
 
-  .dl-filters { display: flex; flex-direction: column; gap: 8px; padding: 16px; }
-  .dl-field { display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    border: 1px solid hsl(var(--border)); border-radius: 16px; background: hsl(var(--card));
-    padding: 11px 16px; font-size: 19px; }
-  .dl-field .lbl { color: hsl(var(--muted-foreground)); }
-  .dl-field .val { font-weight: 700; }
-  .dl-btn { margin-top: 4px; text-align: center; border-radius: 999px; padding: 13px;
-    font-size: 21px; font-weight: 700; background: hsl(var(--primary)); color: hsl(182 37% 98%);
-    box-shadow: var(--shadow-card); }
+    .dl-scene .col-text {
+      position: absolute; right: 96px; top: 0; bottom: 0; width: 748px; max-width: none;
+      flex: none; display: flex; flex-direction: column; justify-content: center; gap: 22px;
+    }
+    .dl-rule { width: 224px; height: 3px; background: hsl(203 36% 96% / 0.16); margin: 2px 0 4px; }
+    .dl-rule > i { display: block; height: 100%; background: var(--stage-accent);
+      transform-origin: right center; }
 
-  .dl-results { position: relative; will-change: transform; }
-  .dl-prompt { position: absolute; top: 0; left: 0; right: 0; padding: 26px 8px; font-size: 19px;
-    line-height: 1.4; text-align: center; color: hsl(var(--muted-foreground)); }
-  .dl-card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-    background: hsl(var(--card)); box-shadow: var(--shadow-card); overflow: hidden; }
-  .dl-head { position: relative; z-index: 2; background: hsl(var(--card));
-    padding: 18px 30px; display: flex; flex-direction: column; gap: 8px;
-    height: 100px; box-sizing: border-box; }
-  .dl-head-row { display: flex; align-items: center; gap: 7px; }
-  .dl-store { font-size: 21px; font-weight: 700; }
-  .dl-mini { border-radius: 999px; padding: 4px 11px; font-size: 14px; font-weight: 600;
-    background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
-  .dl-mini.is-type { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-  .dl-title { font-size: 24px; font-weight: 800; }
+    /* The carrier: iPhone at cx 620 / cy 540, held 940px tall (frame.md).
+       460 x 997 device, so scale = 940 / 997. Never transformed by the timeline. */
+    .dl-rig   { position: absolute; left: 390px; top: 41.5px; width: 460px; height: 997px; }
+    .dl-scale { width: 460px; height: 997px; transform: scale(0.9428); transform-origin: 50% 50%; }
 
-  .dl-mask { height: 270px; overflow: hidden; }
-  .dl-sheet { height: 270px; box-sizing: border-box; padding: 0 30px 18px;
-    border-top: 1px solid hsl(var(--border) / 0.8); background: hsl(var(--card));
-    display: flex; flex-direction: column; gap: 8px; will-change: transform; }
-  .dl-sec { margin-top: 13px; font-size: 15px; font-weight: 800; letter-spacing: 0.05em;
-    color: hsl(var(--muted-foreground)); }
-  .dl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
-    font-size: 19px; }
-  .dl-row .k { color: hsl(var(--muted-foreground)); }
-  .dl-row .v { font-weight: 700; }
-  .dl-coupon { margin-top: 6px; display: flex; align-items: center; gap: 12px;
-    border: 2px dashed hsl(182 38% 36% / 0.55); background: hsl(179 50% 88% / 0.4);
-    border-radius: 16px; padding: 11px 14px; }
-  .dl-code { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: 0.06em;
-    color: hsl(var(--accent-foreground)); direction: ltr; text-align: left;
-    transform-origin: left center; }
-  .dl-copy { font-size: 17px; font-weight: 700; color: hsl(var(--primary)); }
+    /* ── in-phone: the optimizer page, חיפוש דילים tab ────────────────── */
+    .dl-main   { padding: 18px 18px 0; }
+    .dl-scroll { flex: none; display: flex; flex-direction: column; gap: 14px;
+      will-change: transform; }
 
-  .dl-below { will-change: transform; padding-top: 12px; }
-  .dl-below .dl-head { height: auto; }
+    .dl-filters { display: flex; flex-direction: column; gap: 10px; }
+    .dl-field { padding: 14px 16px; font-size: 17px; }
+    .dl-field .lbl { display: flex; align-items: center; gap: 9px; }
+    .dl-field .lbl svg { width: 18px; height: 18px; flex: none; }
+    .dl-catlabel { font-size: 14px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: hsl(var(--muted-foreground)); margin: 4px 0 0; }
+    .dl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dl-chips .pchip { padding: 9px 14px; font-size: 15px;
+      color: hsl(var(--muted-foreground)); }
+    .dl-chips .pchip svg { width: 14px; height: 14px; }
+    .dl-btn { padding: 16px; font-size: 20px; display: flex; align-items: center;
+      justify-content: center; gap: 10px; margin-top: 2px; }
+    .dl-btn svg { width: 19px; height: 19px; }
 
-  .dl-rip { position: absolute; width: 78px; height: 78px; border-radius: 50%;
-    border: 3px solid hsl(var(--primary)); pointer-events: none; }
-</style>
+    /* The empty-state prompt is taken out of flow so that dismissing it leaves
+       no hole above the results — the app swaps them in the same slot. */
+    .dl-resultsbox { position: relative; }
+    .dl-prompt { position: absolute; top: 0; right: 0; left: 0;
+      border-radius: 26px; background: hsl(var(--card)); box-shadow: var(--shadow-card);
+      padding: 24px 20px; margin: 0; text-align: center; font-size: 17px; line-height: 1.4;
+      color: hsl(var(--muted-foreground)); }
+    .dl-results { display: flex; flex-direction: column; gap: 12px; }
+    /* The app renders the product picture contained on white at 30% — a scraped
+       store logo, not a decorative illustration. */
+    .dl-scene .deal-art { height: 92px; }
+    .dl-scene .deal-art svg { width: 72px; height: 72px; opacity: 0.32; }
+    .dl-chipico { width: 16px; height: 16px; display: block; }
+    /* Club names are the real `clubs` collection strings and mix Latin with
+       Hebrew ("Hever (חבר) — Gift Cards"). Left in an RTL run the bidi
+       algorithm reorders the segments, so each chip is its own LTR island. */
+    .dl-club { direction: ltr; unicode-bidi: isolate; }
 
-<div id="root" data-composition-id="13-deal-finder" data-width="1920" data-height="1080">
+    /* — the deal detail dialog (shadcn Dialog, max-w 340) — */
+    .dl-scrim { position: absolute; inset: 0; background: oklch(15% 0.02 245); z-index: 14; }
+    .dl-dialog { position: absolute; z-index: 15; left: 34px; right: 34px; top: 126px;
+      border-radius: 26px; background: hsl(var(--card)); box-shadow: var(--shadow-float);
+      padding: 22px 20px; text-align: right; }
+    .dl-dlg-head { display: flex; align-items: center; gap: 10px; }
+    .dl-dlg-head svg { width: 30px; height: 30px; flex: none; opacity: 0.72; }
+    .dl-dlg-store { font-size: 21px; font-weight: 800; line-height: 1.2; }
+    .dl-dlg-cat { font-size: 15px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+    .dl-dlg-title { font-size: 18px; font-weight: 700; line-height: 1.35; margin-top: 14px; }
+    .dl-dlg-chips { display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: flex-start; gap: 8px; margin-top: 12px; }
+    .dl-dlg-chips .chip { padding: 6px 12px; font-size: 14px; }
+    .dl-dlg-chips .chip.is-pct { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+      font-weight: 700; }
+    .dl-sec { font-size: 13px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: hsl(var(--muted-foreground)); margin-top: 16px; }
+    .dl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+      font-size: 17px; padding: 3px 0; }
+    .dl-row .k { color: hsl(var(--muted-foreground)); }
+    .dl-row .v { font-weight: 700; }
+    .dl-coupon { display: flex; align-items: center; gap: 12px; margin-top: 14px;
+      border: 1px dashed hsl(var(--border)); border-radius: 16px; padding: 11px 14px;
+      background: hsl(var(--secondary)); }
+    .dl-code { flex: 1; font-size: 19px; font-weight: 700; letter-spacing: 0.08em;
+      direction: ltr; text-align: left; transform-origin: left center; }
+    .dl-copy { flex: none; color: hsl(var(--primary)); display: flex; }
+    .dl-copy svg { width: 18px; height: 18px; }
+    .dl-fine { font-size: 14px; line-height: 1.5; color: hsl(var(--muted-foreground));
+      margin-top: 6px; }
+    /* The dialog's own footer — the app's DialogFooter: a primary CTA and the
+       store link. Both are real UI; they also close the dead space that made
+       the sheet read half-built while its body was still arriving. */
+    .dl-foot { margin-top: 16px; display: flex; flex-direction: column; align-items: center;
+      gap: 10px; }
+    .dl-getdeal { width: 100%; box-sizing: border-box; padding: 15px; font-size: 20px; }
+    .dl-visit { display: inline-flex; align-items: center; gap: 7px; font-size: 15px;
+      font-weight: 600; color: hsl(var(--primary)); }
+    .dl-visit svg { width: 15px; height: 15px; flex: none; }
+  </style>
 
-  <div class="clip dl-ground" id="dl-ground" data-start="0" data-duration="17" data-track-index="0"></div>
+  <div id="root" data-composition-id="13-deal-finder" data-width="1920" data-height="1080">
 
-  <div class="clip bg-layer" id="dl-bg" data-start="0" data-duration="17" data-track-index="1">
-    <div class="bg-glow" id="dl-glow"></div>
-    <div class="bg-grid"></div>
-    <div class="bg-ghost">Lessley</div>
-    <div class="bg-grain"></div>
-  </div>
+    <div class="clip dl-ground" id="dl-ground" data-start="0" data-duration="14" data-track-index="0"></div>
 
-  <div class="clip stage" id="dl-stage" data-start="0" data-duration="17" data-track-index="2">
-    <div class="col-text">
-      <h1 class="scene-title" id="dl-h1">חיפוש דילים</h1>
-      <p class="scene-body" id="dl-p1">מסננים נבחרים, תוצאות נשפכות, כרטיס נפתח לתנאים המלאים.</p>
-      <p class="scene-body" id="dl-p2">קוד הקופון מועתק בלחיצה.</p>
+    <div class="clip bg-layer" id="dl-bg" data-start="0" data-duration="14" data-track-index="1">
+      <div class="bg-glow" id="dl-glow"></div>
+      <div class="bg-grid"></div>
+      <div class="bg-ghost">Lessley</div>
+      <div class="bg-grain"></div>
     </div>
 
-    <div class="device" data-layout-allow-overflow>
-      <div class="device-body">
-        <div class="device-screen">
-          <div class="device-island"></div>
-          <div class="screen-world" id="dl-world">
-            <div class="app">
-              <div class="app-header">
-                <div class="app-icon">L</div>
-                <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
-                <div class="app-avatar">D</div>
-              </div>
+    <div class="clip dl-scene" id="dl-stage" data-start="0" data-duration="14" data-track-index="2">
 
-              <div class="dl-app-main">
-                <div class="dl-scroller" id="dl-scroll">
+      <div class="col-text">
+        <h1 class="scene-title" id="dl-h1">כל הדילים במקום אחד</h1>
+        <div class="dl-rule"><i id="dl-rule-fill"></i></div>
+        <p class="scene-body" id="dl-p1">מסננים לפי חנות, קטגוריה או חיפוש חופשי.</p>
+        <p class="scene-body" id="dl-p2">וקוד הקופון מועתק בלחיצה.</p>
+      </div>
 
-                  <div class="dl-tabs" id="dl-tabs">
-                    <div class="dl-tab-hl" id="dl-hl"></div>
-                    <span class="dl-tab" id="dl-tab-opt">אופטימיזציה</span>
-                    <span class="dl-tab" id="dl-tab-find">חיפוש דילים</span>
-                  </div>
+      <div class="dl-rig">
+        <div class="dl-scale">
+          <div class="device" data-layout-allow-overflow>
+            <div class="device-body">
+              <div class="device-screen">
+                <div class="screen-world">
+                  <div class="app">
 
-                  <div class="card dl-filters" id="dl-filters">
-                    <div class="dl-field" id="dl-f-store">
-                      <span class="lbl">חנות (לא חובה)</span>
-                      <span class="val" id="dl-v-store">סופר-פארם</span>
-                    </div>
-                    <div class="dl-field" id="dl-f-cat">
-                      <span class="lbl">קטגוריות</span>
-                      <span class="val" id="dl-v-cat">בית מרקחת</span>
-                    </div>
-                    <div class="dl-field" id="dl-f-q">
-                      <span class="lbl">חיפוש דיל (לא חובה)</span>
-                      <span class="val"></span>
-                    </div>
-                    <div class="dl-btn" id="dl-search">חיפוש דילים</div>
-                  </div>
-
-                  <div class="dl-resultsbox">
-                  <p class="dl-prompt" id="dl-prompt">השתמשו במסננים למעלה כדי לחפש דילים בכל מועדוני הנאמנות שלכם.</p>
-                  <div class="dl-results" id="dl-results">
-                    <div class="dl-card" data-camera-target id="dl-card">
-                      <div class="dl-head" id="dl-head">
-                        <div class="dl-head-row">
-                          <span class="dl-store">סופר-פארם</span>
-                          <span class="dl-mini is-type">קופון</span>
-                          <span class="dl-mini">אונליין</span>
-                          <span class="dl-mini">בחנות</span>
-                        </div>
-                        <div class="dl-title"><span class="num">20%</span> הנחה</div>
+                    <div class="app-header">
+                      <div class="brand">
+                        <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                        <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
                       </div>
-                      <div class="dl-mask" id="dl-mask" data-layout-allow-overflow>
-                        <div class="dl-sheet" id="dl-sheet">
-                          <div class="dl-sec" id="dl-sec">תנאי ההטבה</div>
-                          <div class="dl-row" id="dl-t1"><span class="k">רכישת מינימום</span><span class="v num">₪100</span></div>
-                          <div class="dl-row" id="dl-t2"><span class="k">הנחה מרבית</span><span class="v num">₪60</span></div>
-                          <div class="dl-row" id="dl-t3"><span class="k">שימושים בחודש</span><span class="v num">2</span></div>
-                          <div class="dl-row" id="dl-t4"><span class="k">מימוש ב</span><span class="v">אונליין, בחנות</span></div>
-                          <div class="dl-coupon" id="dl-coupon">
-                            <span class="dl-code" id="dl-code">SAVE20</span>
-                            <span class="dl-copy" id="dl-copy">העתקה</span>
+                      <div class="app-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M18 8.4a6 6 0 1 0-12 0c0 6.6-2.7 7.6-2.7 7.6h17.4S18 15 18 8.4"></path>
+                          <path d="M13.6 20.2a2 2 0 0 1-3.2 0"></path>
+                        </svg>
+                      </div>
+                      <div class="app-avatar">D</div>
+                    </div>
+
+                    <div class="app-main dl-main">
+                      <div class="dl-scroll" id="dl-scroll" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+
+                        <div>
+                          <h1 class="app-h1">חיפוש דילים</h1>
+                          <p class="app-sub">חיפוש דילים חיים בכל מועדוני הנאמנות שלכם</p>
+                        </div>
+
+                        <div class="tabs">
+                          <span>אופטימיזציה</span>
+                          <span class="on">חיפוש דילים</span>
+                        </div>
+
+                        <div class="card dl-filters">
+                          <div class="field dl-field" id="dl-f-store">
+                            <span class="lbl">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2 21 21"></path>
+                              </svg>חנות (לא חובה)
+                            </span>
+                            <span class="val" id="dl-v-store">FOX - פוקס</span>
                           </div>
-                          <div class="dl-sec" id="dl-fine">תנאים והגבלות</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="dl-below" id="dl-below">
-                      <div class="dl-card">
-                        <div class="dl-head">
-                          <div class="dl-head-row">
-                            <span class="dl-store">סופר-פארם</span>
-                            <span class="dl-mini is-type">החזר כספי</span>
+                          <div class="field dl-field" id="dl-f-deal">
+                            <span class="lbl">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2 21 21"></path>
+                              </svg>חיפוש דיל (לא חובה)
+                            </span>
                           </div>
-                          <div class="dl-title"><span class="num">4%</span> החזר כספי</div>
+
+                          <p class="dl-catlabel">קטגוריות</p>
+                          <div class="field dl-field" id="dl-f-cat">
+                            <span class="lbl">סינון <span class="num">46</span>&nbsp;קטגוריות</span>
+                          </div>
+
+                          <div class="dl-chips">
+                            <span class="pchip" id="dl-chip-1">
+                              <svg class="dl-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4.5 12.5 9.5 17.5 19.5 6.5"></path>
+                              </svg>ביגוד ואביזרים
+                            </span>
+                            <span class="pchip" id="dl-chip-2">
+                              <svg class="dl-check" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4.5 12.5 9.5 17.5 19.5 6.5"></path>
+                              </svg>ילדים
+                            </span>
+                            <span class="pchip">מכולת</span>
+                            <span class="pchip">אלקטרוניקה</span>
+                            <span class="pchip">מסעדות</span>
+                          </div>
+
+                          <div class="btn dl-btn" id="dl-search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                              <circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2 21 21"></path>
+                            </svg>חיפוש דילים
+                          </div>
+                        </div>
+
+                        <div class="dl-resultsbox">
+                        <p class="dl-prompt" id="dl-prompt">השתמשו במסננים למעלה כדי לחפש דילים בכל מועדוני הנאמנות שלכם.</p>
+
+                        <div class="dl-results" id="dl-results">
+
+                          <div class="deal" id="dl-d1">
+                            <span class="deal-pct" id="dl-pct1"><span class="num">30%</span>&nbsp;הנחה</span>
+                            <span class="deal-rank" id="dl-rank1"><span class="num">1</span></span>
+                            <div class="deal-art" id="dl-art1">
+                              <svg viewBox="0 0 64 64" aria-hidden="true">
+                                <path d="M24 10 12 16l4 10 6-2.5V52a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V23.5l6 2.5 4-10-12-6z"
+                                      fill="hsl(210 20% 96%)" stroke="hsl(210 14% 74%)" stroke-width="2" stroke-linejoin="round"></path>
+                                <path d="M24 10a8 8 0 0 0 16 0" fill="none" stroke="hsl(210 14% 74%)"
+                                      stroke-width="2" stroke-linecap="round"></path>
+                              </svg>
+                            </div>
+                            <div class="deal-store" id="dl-store1">FOX - פוקס</div>
+                            <div class="deal-cat" id="dl-cat1">ביגוד ואביזרים</div>
+                            <div class="deal-title" id="dl-dt1">אופנה ואביזרים לכל המשפחה</div>
+                            <div class="deal-meta">
+                              <span class="chip dl-club" id="dl-club1">Hever (חבר) — Gift Cards</span>
+                              <span class="chip chip-muted" id="dl-date1">
+                                <svg class="dl-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                                  <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                                  <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                                </svg>
+                                <span class="num">08/08/2026</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="deal" id="dl-d2">
+                            <span class="deal-pct" id="dl-pct2"><span class="num">25%</span>&nbsp;הנחה</span>
+                            <span class="deal-rank" id="dl-rank2"><span class="num">2</span></span>
+                            <div class="deal-art" id="dl-art2">
+                              <svg viewBox="0 0 64 64" aria-hidden="true">
+                                <path d="M24 10 12 16l4 10 6-2.5V52a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V23.5l6 2.5 4-10-12-6z"
+                                      fill="hsl(210 20% 96%)" stroke="hsl(210 14% 74%)" stroke-width="2" stroke-linejoin="round"></path>
+                                <path d="M24 10a8 8 0 0 0 16 0" fill="none" stroke="hsl(210 14% 74%)"
+                                      stroke-width="2" stroke-linecap="round"></path>
+                              </svg>
+                            </div>
+                            <div class="deal-store" id="dl-store2">FOX - פוקס</div>
+                            <div class="deal-cat" id="dl-cat2">ביגוד ואביזרים</div>
+                            <div class="deal-title" id="dl-dt2">כולל כפל מבצעים והנחות</div>
+                            <div class="deal-meta">
+                              <span class="chip dl-club" id="dl-club2">PaisPlus — Networks Cash Card</span>
+                              <span class="chip chip-muted" id="dl-date2">
+                                <svg class="dl-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                                  <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                                  <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                                </svg>
+                                <span class="num">08/08/2026</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="deal" id="dl-d3">
+                            <span class="deal-pct" id="dl-pct3">רק&nbsp;<span class="num">₪154.00</span></span>
+                            <span class="deal-rank" id="dl-rank3"><span class="num">3</span></span>
+                            <div class="deal-art" id="dl-art3">
+                              <svg viewBox="0 0 64 64" aria-hidden="true">
+                                <path d="M24 10 12 16l4 10 6-2.5V52a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V23.5l6 2.5 4-10-12-6z"
+                                      fill="hsl(210 20% 96%)" stroke="hsl(210 14% 74%)" stroke-width="2" stroke-linejoin="round"></path>
+                                <path d="M24 10a8 8 0 0 0 16 0" fill="none" stroke="hsl(210 14% 74%)"
+                                      stroke-width="2" stroke-linecap="round"></path>
+                              </svg>
+                            </div>
+                            <div class="deal-store" id="dl-store3">FOX - פוקס</div>
+                            <div class="deal-cat" id="dl-cat3">ביגוד ואביזרים</div>
+                            <div class="deal-title" id="dl-dt3">תו קניה <bdi>FOX</bdi></div>
+                            <div class="deal-meta">
+                              <span class="chip dl-club" id="dl-club3">HOT Israel</span>
+                              <span class="chip chip-muted" id="dl-date3">
+                                <svg class="dl-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                                  <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                                  <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                                </svg>
+                                <span class="num">08/08/2026</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="deal" id="dl-d4">
+                            <span class="deal-pct" id="dl-pct4"><span class="num">3%</span>&nbsp;הנחה</span>
+                            <span class="deal-rank" id="dl-rank4"><span class="num">4</span></span>
+                            <div class="deal-art" id="dl-art4">
+                              <svg viewBox="0 0 64 64" aria-hidden="true">
+                                <path d="M24 10 12 16l4 10 6-2.5V52a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V23.5l6 2.5 4-10-12-6z"
+                                      fill="hsl(210 20% 96%)" stroke="hsl(210 14% 74%)" stroke-width="2" stroke-linejoin="round"></path>
+                                <path d="M24 10a8 8 0 0 0 16 0" fill="none" stroke="hsl(210 14% 74%)"
+                                      stroke-width="2" stroke-linecap="round"></path>
+                              </svg>
+                            </div>
+                            <div class="deal-store" id="dl-store4">FOX - פוקס</div>
+                            <div class="deal-cat" id="dl-cat4">ביגוד ואביזרים</div>
+                            <div class="deal-title" id="dl-dt4"><span class="num">3%</span>&nbsp;קאשבק באתר <bdi>FOX | פוקס</bdi></div>
+                            <div class="deal-meta">
+                              <span class="chip dl-club" id="dl-club4">Isracard TopCash</span>
+                              <span class="chip chip-muted" id="dl-date4">
+                                <svg class="dl-chipico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                                  <rect x="3.5" y="5" width="17" height="16" rx="3"></rect>
+                                  <path d="M3.5 10h17M8 3v4M16 3v4"></path>
+                                </svg>
+                                <span class="num">08/08/2026</span>
+                              </span>
+                            </div>
+                          </div>
+
+                        
+                        </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  </div>
 
+                    <div class="nav">
+                      <span class="nav-tab on">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 3.2 13.7 8.3 18.8 10 13.7 11.7 12 16.8 10.3 11.7 5.2 10 10.3 8.3Z"></path>
+                          <path d="M18.5 15.5 19.3 17.7 21.5 18.5 19.3 19.3 18.5 21.5 17.7 19.3 15.5 18.5 17.7 17.7Z"></path>
+                        </svg>אופטימיזציה</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M3 3v16.5a1.5 1.5 0 0 0 1.5 1.5H21"></path>
+                          <path d="M8 17v-5M13 17V8M18 17v-3"></path>
+                        </svg>תובנות</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M8.6 14.4A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.6 2.4Z"></path>
+                        </svg>חם</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.9 5.9 0 0 0 18 7.6 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                          <path d="M9.5 18h5M10.5 21.5h3"></path>
+                        </svg>המלצות</span>
+                    </div>
+
+                    <div class="dl-scrim" id="dl-scrim" data-layout-allow-occlusion></div>
+                    <div class="dl-dialog" id="dl-dialog" data-layout-allow-occlusion>
+                      <div class="dl-dlg-head" id="dl-dlg-head">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                          <path d="M24 10 12 16l4 10 6-2.5V52a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V23.5l6 2.5 4-10-12-6z"
+                                fill="hsl(210 20% 96%)" stroke="hsl(210 14% 74%)" stroke-width="2" stroke-linejoin="round"></path>
+                          <path d="M24 10a8 8 0 0 0 16 0" fill="none" stroke="hsl(210 14% 74%)"
+                                stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                        <div>
+                          <div class="dl-dlg-store">FOX - פוקס</div>
+                          <div class="dl-dlg-cat">ביגוד ואביזרים</div>
+                        </div>
+                      </div>
+                      <div class="dl-dlg-title" id="dl-dlg-title">אופנה ואביזרים לכל המשפחה</div>
+                      <div class="dl-dlg-chips">
+                        <span class="chip is-pct" id="dl-dlg-c1"><span class="num">30%</span>&nbsp;הנחה</span>
+                        <span class="chip dl-club" id="dl-dlg-c2">Hever (חבר) — Gift Cards</span>
+                        <span class="chip" id="dl-dlg-c3">כרטיס מתנה</span>
+                        <span class="chip" id="dl-dlg-c4">נאסף <span class="num">08/08/2026</span></span>
+                      </div>
+                      <div class="dl-sec" id="dl-sec">תנאי ההטבה</div>
+                      <div class="dl-row" id="dl-t1"><span class="k">הנחה מרבית</span><span class="v num">₪300.00</span></div>
+                      <div class="dl-row" id="dl-t2"><span class="k">נדרשת חברות</span><span class="v">כן</span></div>
+                      <div class="dl-sec" id="dl-fine-t">תנאים והגבלות</div>
+                      <p class="dl-fine" id="dl-fine-b">לא כולל הנחת מועדון ומבצעים בלעדיים לחברי מועדון של הרשת. אין כפל הטבות לעובדים/בני משפחה. ניתן לטעון כרטיס &quot;חבר&quot; הנטען ולקבל <span class="num">30%</span>&nbsp;הנחה על טעינת <span class="num">₪1,000</span> ראשונים, <span class="num">25%</span>&nbsp;הנחה על <span class="num">₪1,000</span> הבאים ו-<span class="num">20%</span>&nbsp;הנחה על <span class="num">₪1,000</span> נוספים (עד <span class="num">₪3,000</span> בסה&quot;כ), לשימוש ברשת FOX - פוקס.</p>
+                      <div class="dl-coupon" id="dl-coupon">
+                        <span class="dl-code" id="dl-code">SAVE20</span>
+                        <span class="dl-copy" id="dl-copy">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="9" y="9" width="11.5" height="11.5" rx="2.5"></rect>
+                            <path d="M15 6.5A2.5 2.5 0 0 0 12.5 4h-6A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15"></path>
+                          </svg>
+                        </span>
+                      </div>
+                      <div class="dl-foot">
+                        <span class="btn dl-getdeal" id="dl-get">קבלת הדיל</span>
+                        <span class="dl-visit" id="dl-visit">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14 4h6v6M20 4l-8.5 8.5"></path>
+                            <path d="M18 14.5V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H10"></path>
+                          </svg>כניסה לחנות
+                        </span>
+                      </div>
+                    </div>
+
+                    <svg class="cursor" id="dl-cursor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 2 L4 20.6 L9.1 15.5 L12.3 22.4 L15.6 20.9 L12.4 14.2 L19.4 14.1 Z"
+                            fill="#ffffff" stroke="hsl(209 37% 15%)" stroke-width="1.3" stroke-linejoin="round"></path>
+                    </svg>
+
+                  </div>
                 </div>
+                <div class="device-island"></div>
               </div>
             </div>
-
-            <div class="dl-rip" id="dl-rip1"></div>
-            <div class="dl-rip" id="dl-rip2"></div>
-            <div class="dl-rip" id="dl-rip3"></div>
-            <div class="dl-rip" id="dl-rip4"></div>
-            <div class="dl-rip" id="dl-rip5"></div>
-
-            <svg class="cursor" id="dl-cursor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 2 L4 20.6 L9.1 15.5 L12.3 22.4 L15.6 20.9 L12.4 14.2 L19.4 14.1 Z"
-                fill="#ffffff" stroke="hsl(209 37% 15%)" stroke-width="1.3" stroke-linejoin="round" />
-            </svg>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="clip dl-chrome" id="dl-chrome-layer" data-start="0" data-duration="14" data-track-index="3">
+      <span class="chapter" id="dl-chapter">13 / 21</span>
+      <div class="rail"><i id="dl-rail" style="width:100%"></i></div>
+    </div>
   </div>
 
-  <div class="clip dl-chrome" id="dl-chrome-layer" data-start="0" data-duration="17" data-track-index="3">
-    <span class="chapter">13 / 21</span>
-    <div class="rail"><i id="dl-rail"></i></div>
-  </div>
-</div>
+  <script>
+    (function () {
+      var ID = "13-deal-finder";
+      var root = document.querySelector('[data-composition-id="' + ID + '"]') || document;
+      function q(s) { return root.querySelector(s); }
 
-<script>
-  (function () {
-    var ID = "13-deal-finder";
-    var root = document.querySelector('[data-composition-id="' + ID + '"]');
-    var q = function (s) { return root.querySelector(s); };
-    var world = q("#dl-world");
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      window.__timelines[ID] = tl;
 
-    var SW = 410, SH = 912, CX = SW / 2, CY = SH / 2;
-    var SCROLL = -120;          // scroller offset once the deal card is opened
-    var BODY_H = 270;           // MUST equal the .dl-mask CSS height
-    var TIP_X = 7.7, TIP_Y = 3.8;
-    var BORDER = "rgb(220,229,233)", RING = "rgb(57,127,127)";
+      /* ── NO in-phone camera ────────────────────────────────────────────
+         `.screen-world` holds scale 1 / x 0 / y 0 and `.device` is never
+         transformed by the timeline (frame.md § Fidelity outranks
+         everything, revised 18/08). Legibility is bought with frame real
+         estate; every tween below moves CONTENT.                          */
 
-    // One-time layout read walked up to the screen-world; authored fallback if unlaid-out.
-    function pt(el, fbx, fby, dy) {
-      var x = 0, y = 0, n = el;
-      while (n && n !== world) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-      if (!el || !el.offsetWidth) return { x: fbx, y: fby + (dy || 0) };
-      return { x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 + (dy || 0) };
-    }
-    // Clamped so the screen-world always covers the screen — a 366px card in a
-    // 410px screen only allows (k-1)/2 of travel before the ground shows through.
-    function cam(p, k) {
-      var mx = (k - 1) * SW / 2, my = (k - 1) * SH / 2;
-      var x = -k * (p.x - CX), y = -k * (p.y - CY);
-      return {
-        scale: k,
-        x: Math.max(-mx, Math.min(mx, x)),
-        y: Math.max(-my, Math.min(my, y))
-      };
-    }
-    function st(s, extra) {
-      var o = { scale: s.scale, x: s.x, y: s.y };
-      for (var key in extra) { o[key] = extra[key]; }
-      return o;
-    }
+      var F = 1 / 60;
+      var BORDER = "rgb(221,229,233)";
+      var TEAL   = "rgb(57,124,127)";
+      var MINT   = "rgb(209,240,239)";
+      var WHITE  = "rgb(255,255,255)";
+      var INK    = "rgb(104,118,130)";
+      var DEEP   = "rgb(12,77,79)";
 
-    var pTabs   = pt(q("#dl-tabs"),    205, 178, 0);
-    var pFilt   = pt(q("#dl-filters"), 205, 300, 0);
-    var pCard   = pt(q("#dl-card"),    205, 692, SCROLL);
-    var pCoupon = pt(q("#dl-coupon"),  205, 790, SCROLL);
-    var pStore  = pt(q("#dl-f-store"), 205, 250, 0);
-    var pCat    = pt(q("#dl-f-cat"),   205, 306, 0);
-    var pQ      = pt(q("#dl-f-q"),     205, 362, 0);
-    var pBtn    = pt(q("#dl-search"),  205, 424, 0);
-    var pHead   = pt(q("#dl-head"),    205, 542, SCROLL);
-    var pCopy   = pt(q("#dl-copy"),     70, 790, SCROLL);
+      // waterfall-entry: BINARY opacity, then a y whip on power4.out
+      function whip(sel, off, dur, at) {
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, at);
+        tl.fromTo(sel, { y: off }, { y: 0, duration: dur, ease: "power4.out" }, at);
+      }
+      // spring-pop-entrance: long-tail settle, no overshoot
+      function pop(sel, from, dur, at) {
+        tl.fromTo(sel, { scale: from, opacity: 0 },
+          { scale: 1, opacity: 1, duration: dur, ease: "power3.out" }, at);
+      }
+      // RTL clip wipe — reveals from the right edge leftward
+      function wipe(sel, dur, at) {
+        tl.fromTo(sel, { clipPath: "inset(0px 0px 0px 100%)", opacity: 1 },
+          { clipPath: "inset(0px 0px 0px 0%)", duration: dur, ease: "power2.out" }, at);
+      }
+      // press: the pointer dips, the target answers
+      function press(at, sel, down) {
+        tl.fromTo(sel, { scale: 1 },
+          { scale: down, duration: 0.08, ease: "power2.in", immediateRender: false }, at);
+        tl.fromTo(sel, { scale: down },
+          { scale: 1, duration: 0.1, ease: "power2.out", immediateRender: false }, at + 0.08);
+      }
 
-    var tl = gsap.timeline({ paused: true });
+      /* ── cursor geometry — measured once, authored fallbacks ───────────
+         This is pointer targeting, not a camera: nothing here feeds a
+         zoom. `.cursor` is positioned inside `.app`, so offsets are walked
+         up to that element.                                              */
+      var appEl = q(".app");
+      var TIP_X = 7.7, TIP_Y = 3.8;
+      function pt(sel, fbx, fby) {
+        var el = q(sel), x = 0, y = 0, n = el, guard = 0;
+        while (n && n !== appEl && guard < 24) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; guard++; }
+        if (n !== appEl || !el.offsetWidth) { return { x: fbx, y: fby }; }
+        return { x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 };
+      }
+      var pStore  = pt("#dl-f-store", 220, 300);
+      var pChip1  = pt("#dl-chip-1",  330, 470);
+      var pChip2  = pt("#dl-chip-2",  240, 470);
+      var pSearch = pt("#dl-search",  220, 560);
+      var pCard   = pt("#dl-d1",      220, 894);   // read after the list scroll below
+      var pCopy   = pt("#dl-copy",     63, 640);
 
-    /* ── chrome: the film-long progress rail keeps advancing ─────── */
-    tl.fromTo("#dl-rail", { scaleX: 0.5556 }, { scaleX: 0.6095, duration: 17, ease: "none" }, 0);
+      // The results list is scrolled under the viewport, so the card's on-screen
+      // point is its laid-out point plus the authored scroll offset. Four real FOX
+      // deals now fill the list, so the second stop sits deeper than it used to.
+      var SCROLL_A = -300, SCROLL_B = -560;
+      var pCardOn = { x: pCard.x, y: pCard.y + SCROLL_B };
+      var pCopyOn = { x: pCopy.x, y: pCopy.y };
 
-    /* ── stage copy — waterfall entry under the opening words ────── */
-    tl.fromTo(["#dl-h1", "#dl-p1", "#dl-p2"],
-      { opacity: 0, y: 34 },
-      { opacity: 1, y: 0, duration: 0.66, ease: "power3.out", stagger: 0.12 }, 0.12);
+      function moveTo(from, to, at, dur, ease) {
+        tl.fromTo("#dl-cursor", { x: from.x - TIP_X, y: from.y - TIP_Y },
+          { x: to.x - TIP_X, y: to.y - TIP_Y, duration: dur, ease: ease, immediateRender: false }, at);
+      }
 
-    /* ── in-phone camera: the chase through the interaction beats ── */
-    // `e` is the ease of the leg ENDING at that stop.
-    var pCouponLow = { x: 205, y: pCoupon.y + 30 };
-    var CAM = [
-      { t: 0.00,  s: { scale: 1.06, x: 0, y: 22 }, e: "none" },
-      { t: 1.85,  s: { scale: 1.12, x: 0, y: 6 },  e: "power1.out" },
-      { t: 3.45,  s: cam(pFilt, 1.19),             e: "power2.inOut" },
-      { t: 7.10,  s: cam(pFilt, 1.21),             e: "none" },
-      { t: 9.00,  s: cam(pCard, 1.26),             e: "power2.inOut" },
-      { t: 13.40, s: cam(pCard, 1.27),             e: "none" },
-      { t: 15.60, s: cam(pCard, 1.28),             e: "none" },
-      { t: 17.00, s: cam(pCouponLow, 1.30),        e: "power2.in" }
-    ];
-    gsap.set(world, st(CAM[0].s));
-    for (var i = 1; i < CAM.length; i++) {
-      tl.fromTo(world, st(CAM[i - 1].s),
-        st(CAM[i].s, {
-          duration: CAM[i].t - CAM[i - 1].t, ease: CAM[i].e, immediateRender: false
-        }), CAM[i - 1].t);
-    }
+      gsap.set("#dl-cursor", { x: -70, y: 1010 });
+      gsap.set("#dl-scrim", { opacity: 0 });
+      gsap.set("#dl-dialog", { opacity: 0 });
 
-    /* ── cursor path (app coordinates — it rides the camera) ─────── */
-    var CUR = [
-      { t: 0.00,  d: 0.00, p: { x: -90, y: 1010 }, e: "none" },
-      { t: 0.55,  d: 0.72, p: pTabs,  e: "power2.inOut" },
-      { t: 3.45,  d: 0.46, p: pStore, e: "power3.out" },
-      { t: 4.60,  d: 0.40, p: pCat,   e: "power3.out" },
-      { t: 5.55,  d: 0.38, p: pQ,     e: "power3.out" },
-      { t: 6.25,  d: 0.42, p: pBtn,   e: "power3.out" },
-      { t: 7.15,  d: 0.48, p: pHead,  e: "power2.inOut" },
-      { t: 13.20, d: 0.62, p: pCopy,  e: "power2.inOut" }
-    ];
-    gsap.set("#dl-cursor", { x: CUR[0].p.x, y: CUR[0].p.y, scale: 1 });
-    for (var c = 1; c < CUR.length; c++) {
-      var prev = CUR[c - 1];
-      var from = (c === 1)
-        ? { x: prev.p.x, y: prev.p.y }
-        : { x: prev.p.x - TIP_X, y: prev.p.y - TIP_Y };
-      tl.fromTo("#dl-cursor", from, {
-        x: CUR[c].p.x - TIP_X, y: CUR[c].p.y - TIP_Y,
-        duration: CUR[c].d, ease: CUR[c].e, immediateRender: false
-      }, CUR[c].t);
-    }
+      /* ── chrome: the film-long rail advances 12/21 → 13/21 ───────────── */
+      tl.fromTo("#dl-rail", { scaleX: 0.571429 }, { scaleX: 0.619048, duration: 14, ease: "none" }, 0);
 
-    // press depression (explicit down/up, no yoyo) + the ripple burst
-    function press(at, sel, down) {
-      tl.fromTo(sel, { scale: 1 },
-        { scale: down, duration: 0.08, ease: "power2.in", immediateRender: false }, at);
-      tl.fromTo(sel, { scale: down },
-        { scale: 1, duration: 0.1, ease: "power2.out", immediateRender: false }, at + 0.08);
-    }
-    function click(at, ripple, target, p) {
-      press(at, "#dl-cursor", 0.84);
-      if (target) { press(at, target, 0.955); }
-      gsap.set(ripple, { left: p.x, top: p.y, xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
-      tl.fromTo(ripple, { scale: 0, opacity: 0.85 },
-        { scale: 3.4, opacity: 0, duration: 0.72, ease: "power2.out" }, at + 0.03);
-    }
+      /* ── Beat 1 (0.0–1.2s) — the scene enters mid-move ────────────────
+         The pointer is already travelling at t=0, so the cut from frame 12
+         lands on continuing motion rather than a dead frame.              */
+      tl.fromTo("#dl-cursor", { x: -70 - TIP_X, y: 1010 - TIP_Y },
+        { x: pStore.x - TIP_X, y: pStore.y - TIP_Y, duration: 0.86, ease: "power2.out" }, 0);
 
-    /* ── Scene 1 (0.0–3.4) — the tab is taken, results pour in ───── */
-    gsap.set("#dl-hl", { x: 0 });
-    click(1.32, "#dl-rip1", "#dl-tab-find", pTabs);
-    tl.fromTo("#dl-hl", { x: 0 }, { x: -186, duration: 0.42, ease: "power3.out" }, 1.36);
-    tl.fromTo("#dl-tab-opt", { color: "rgb(21,60,58)" },
-      { color: "rgb(106,120,130)", duration: 0.34, ease: "power2.out" }, 1.36);
-    tl.fromTo("#dl-tab-find", { color: "rgb(106,120,130)" },
-      { color: "rgb(21,60,58)", duration: 0.34, ease: "power2.out" }, 1.36);
+      whip("#dl-h1", 80, 0.18, 0.10);
+      tl.fromTo("#dl-rule-fill", { scaleX: 0 },
+        { scaleX: 1, duration: 0.46, ease: "power3.out" }, 0.10 + 0.18 + 2 * F);
+      whip("#dl-p1", 46, 0.16, 0.38);
+      tl.fromTo("#dl-chapter", { opacity: 0 }, { opacity: 1, duration: 0.36, ease: "power1.out" }, 0.18);
 
-    tl.fromTo("#dl-prompt", { opacity: 1 },
-      { opacity: 0, duration: 0.3, ease: "power2.in", immediateRender: false }, 1.66);
-    tl.fromTo("#dl-results", { opacity: 0, y: 40 },
-      { opacity: 1, y: 0, duration: 0.62, ease: "power3.out" }, 1.84);
-    tl.fromTo(["#dl-card", "#dl-below"], { opacity: 0 },
-      { opacity: 1, duration: 0.4, ease: "power2.out", stagger: 0.14 }, 1.9);
+      // the store filter is taken — FOX - פוקס, the film's running example
+      var CLICK_STORE = 0.92;
+      press(CLICK_STORE, "#dl-cursor", 0.84);
+      tl.fromTo("#dl-f-store", { borderColor: "rgba(57,124,127,0)", backgroundColor: "rgba(235,242,245,0.8)" },
+        { borderColor: "rgba(57,124,127,0.45)", backgroundColor: WHITE, duration: 0.28, ease: "power2.out" }, CLICK_STORE);
+      tl.fromTo("#dl-v-store", { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.32, ease: "power3.out" }, CLICK_STORE + 0.08);
 
-    /* ── Scene 2 (3.4–7.2) — three filters, then the search ─────── */
-    click(3.98, "#dl-rip2", "#dl-f-store", pStore);
-    tl.fromTo("#dl-f-store", { borderColor: BORDER, boxShadow: "0 0 0 0px rgba(57,127,127,0)" },
-      { borderColor: RING, boxShadow: "0 0 0 3px rgba(57,127,127,0.16)", duration: 0.28, ease: "power2.out" }, 3.98);
-    tl.fromTo("#dl-v-store", { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.34, ease: "power3.out" }, 4.06);
+      /* ── Beat 2 (1.3–2.9s) — two category chips are selected ─────────── */
+      moveTo(pStore, pChip1, 1.30, 0.42, "power2.inOut");
+      var CLICK_C1 = 1.84;
+      press(CLICK_C1, "#dl-cursor", 0.84);
+      press(CLICK_C1, "#dl-chip-1", 0.94);
+      tl.fromTo("#dl-chip-1", { backgroundColor: WHITE, borderColor: BORDER, color: INK },
+        { backgroundColor: MINT, borderColor: "rgba(57,124,127,0.5)", color: DEEP, duration: 0.26, ease: "power2.out" }, CLICK_C1 + 0.04);
+      tl.fromTo("#dl-chip-1 .dl-check", { opacity: 0, scale: 0.4 },
+        { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" }, CLICK_C1 + 0.08);
 
-    click(5.06, "#dl-rip3", "#dl-f-cat", pCat);
-    tl.fromTo("#dl-f-cat", { borderColor: BORDER, boxShadow: "0 0 0 0px rgba(57,127,127,0)" },
-      { borderColor: RING, boxShadow: "0 0 0 3px rgba(57,127,127,0.16)", duration: 0.28, ease: "power2.out" }, 5.06);
-    tl.fromTo("#dl-v-cat", { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.34, ease: "power3.out" }, 5.14);
+      moveTo(pChip1, pChip2, 2.14, 0.36, "power2.inOut");
+      var CLICK_C2 = 2.58;
+      press(CLICK_C2, "#dl-cursor", 0.84);
+      press(CLICK_C2, "#dl-chip-2", 0.94);
+      tl.fromTo("#dl-chip-2", { backgroundColor: WHITE, borderColor: BORDER, color: INK },
+        { backgroundColor: MINT, borderColor: "rgba(57,124,127,0.5)", color: DEEP, duration: 0.26, ease: "power2.out" }, CLICK_C2 + 0.04);
+      tl.fromTo("#dl-chip-2 .dl-check", { opacity: 0, scale: 0.4 },
+        { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" }, CLICK_C2 + 0.08);
 
-    tl.fromTo("#dl-f-q", { borderColor: BORDER },
-      { borderColor: RING, duration: 0.26, ease: "power2.out" }, 5.98);
+      /* ── Beat 3 (2.9–3.5s) — the search is run ───────────────────────── */
+      moveTo(pChip2, pSearch, 2.88, 0.40, "power2.inOut");
+      var CLICK_GO = 3.34;
+      press(CLICK_GO, "#dl-cursor", 0.82);
+      press(CLICK_GO, "#dl-search", 0.965);
+      tl.fromTo("#dl-prompt", { opacity: 1 },
+        { opacity: 0, duration: 0.22, ease: "power2.in", immediateRender: false }, CLICK_GO + 0.05);
+      // the page follows its own results down — an in-app scroll, not a camera
+      tl.fromTo("#dl-scroll", { y: 0 },
+        { y: SCROLL_A, duration: 0.62, ease: "power2.inOut" }, CLICK_GO + 0.10);
 
-    click(6.72, "#dl-rip4", "#dl-search", pBtn);
-    tl.fromTo("#dl-results", { opacity: 1 },
-      { opacity: 0.3, duration: 0.16, ease: "power2.in", immediateRender: false }, 6.78);
-    tl.fromTo("#dl-results", { opacity: 0.3, y: 22 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, 6.94);
+      // the hand withdraws while the results pour in — it never hovers idly
+      var pRest = { x: 62, y: 930 };
+      moveTo(pSearch, pRest, 3.66, 0.54, "power2.inOut");
 
-    /* ── Scene 3 (7.2–13.4) — the card opens to the full terms ──── */
-    click(7.68, "#dl-rip5", "#dl-head", pHead);
-    // anchored-layout-expand: sheet + pushed content ride ONE tween off the head's edge
-    tl.fromTo(["#dl-sheet", "#dl-below"], { y: -BODY_H },
-      { y: 0, duration: 0.52, ease: "power3.out" }, 7.74);
-    tl.fromTo("#dl-scroll", { y: 0 }, { y: SCROLL, duration: 0.62, ease: "power3.out" }, 7.74);
-    tl.fromTo("#dl-sec", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 7.98);
+      /* ── Beat 4 (3.5–5.1s) — deal card 1 assembles, part by part ──────
+         Card 1 is the film's running example: the real Hever gift-card deal
+         on FOX - פוקס, 30% capped at ₪300.                                */
+      whip("#dl-d1", 46, 0.16, 3.52);
+      pop("#dl-art1", 0.82, 0.42, 3.68);
+      pop("#dl-rank1", 0.4, 0.36, 3.84);
+      pop("#dl-pct1", 0.4, 0.38, 3.96);
+      wipe("#dl-store1", 0.36, 4.12);
+      wipe("#dl-cat1", 0.32, 4.28);
+      wipe("#dl-dt1", 0.46, 4.46);
+      pop("#dl-club1", 0.5, 0.36, 4.80);
+      pop("#dl-date1", 0.5, 0.36, 4.94);
 
-    tl.fromTo("#dl-t1", { opacity: 0, x: 22 }, { opacity: 1, x: 0, duration: 0.42, ease: "power3.out" }, 8.40);
-    tl.fromTo("#dl-t2", { opacity: 0, x: 22 }, { opacity: 1, x: 0, duration: 0.42, ease: "power3.out" }, 9.10);
-    tl.fromTo("#dl-t3", { opacity: 0, x: 22 }, { opacity: 1, x: 0, duration: 0.42, ease: "power3.out" }, 9.80);
-    tl.fromTo("#dl-t4", { opacity: 0, x: 22 }, { opacity: 1, x: 0, duration: 0.42, ease: "power3.out" }, 10.50);
-    tl.fromTo("#dl-fine", { opacity: 0 }, { opacity: 1, duration: 0.36, ease: "power2.out" }, 11.30);
-    tl.fromTo("#dl-coupon", { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.44, ease: "power3.out" }, 11.85);
+      whip("#dl-p2", 46, 0.16, 4.40);
 
-    /* ── Scene 4 (13.4–17) — one press copies the code ──────────── */
-    press(14.00, "#dl-cursor", 0.82);
-    press(14.00, "#dl-copy", 0.9);
-    tl.fromTo("#dl-coupon",
-      { backgroundColor: "rgba(190,238,236,0.4)", borderColor: "rgba(57,127,127,0.55)" },
-      { backgroundColor: "rgba(190,238,236,0.95)", borderColor: "rgb(57,127,127)", duration: 0.22, ease: "power2.out" }, 14.03);
-    tl.fromTo("#dl-code", { scale: 1 }, { scale: 1.07, duration: 0.5, ease: "power3.out" }, 14.08);
-    tl.fromTo("#dl-glow", { opacity: 0.85 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, 14.03);
+      /* ── Beat 5 (5.1–6.6s) — the list keeps pouring ──────────────────
+         Three more real FOX deals — PaisPlus Networks, HOT and TopCash —
+         arrive whole so the screen reads as a populated results list, not
+         a two-card stub with white beneath it.                            */
+      tl.fromTo("#dl-scroll", { y: SCROLL_A },
+        { y: SCROLL_B, duration: 0.66, ease: "power2.inOut", immediateRender: false }, 5.06);
+      whip("#dl-d2", 44, 0.16, 5.12);
+      pop("#dl-pct2", 0.45, 0.36, 5.24);
+      whip("#dl-d3", 44, 0.16, 5.58);
+      pop("#dl-pct3", 0.45, 0.36, 5.70);
+      whip("#dl-d4", 44, 0.16, 6.04);
+      pop("#dl-pct4", 0.45, 0.36, 6.16);
 
-    window.__timelines = window.__timelines || {};
-    window.__timelines[ID] = tl;
-  })();
-</script>
+      /* ── Beat 6 (6.5–7.3s) — the card is opened ──────────────────────── */
+      moveTo(pRest, pCardOn, 6.52, 0.62, "power2.inOut");
+      var OPEN = 7.20;
+      press(OPEN, "#dl-cursor", 0.84);
+      press(OPEN, "#dl-d1", 0.985);
+      tl.fromTo("#dl-scrim", { opacity: 0 },
+        { opacity: 0.28, duration: 0.38, ease: "power2.out" }, OPEN + 0.06);
+      tl.fromTo("#dl-dialog", { opacity: 0, scale: 0.93, y: 26 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.50, ease: "power3.out" }, OPEN + 0.08);
+
+      /* ── Beat 7 (7.7–10.6s) — the deal-terms sheet reads out ─────────
+         Brisk, so the sheet is fully populated well before the climax
+         instead of holding a half-empty white box.                       */
+      wipe("#dl-dlg-head", 0.32, 7.70);
+      wipe("#dl-dlg-title", 0.36, 7.92);
+      pop("#dl-dlg-c1", 0.5, 0.26, 8.16);
+      pop("#dl-dlg-c2", 0.5, 0.26, 8.23);
+      pop("#dl-dlg-c3", 0.5, 0.26, 8.30);
+      pop("#dl-dlg-c4", 0.5, 0.26, 8.37);
+      wipe("#dl-sec", 0.24, 8.50);
+      wipe("#dl-t1", 0.28, 8.66);
+      wipe("#dl-t2", 0.28, 8.86);
+      wipe("#dl-fine-t", 0.24, 9.08);
+      wipe("#dl-fine-b", 0.78, 9.26);
+      tl.fromTo("#dl-coupon", { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 9.92);
+      pop("#dl-get", 0.92, 0.38, 10.16);
+      tl.fromTo("#dl-visit", { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.34, ease: "power3.out" }, 10.38);
+
+      /* ── Beat 8 (11.1–13.5s) — one press copies the code ────────────── */
+      moveTo(pCardOn, pCopyOn, 11.06, 0.72, "power2.inOut");
+      var COPY = 12.30;
+      press(COPY, "#dl-cursor", 0.82);
+      press(COPY, "#dl-copy", 0.88);
+      tl.fromTo("#dl-coupon",
+        { backgroundColor: "rgb(235,242,245)", borderColor: BORDER },
+        { backgroundColor: MINT, borderColor: TEAL, duration: 0.24, ease: "power2.out", immediateRender: false }, COPY + 0.03);
+      tl.fromTo("#dl-code", { scale: 1 },
+        { scale: 1.06, duration: 0.5, ease: "power3.out", immediateRender: false }, COPY + 0.06);
+      // the stage glow answers the beat — it reacts, it never idles
+      tl.fromTo("#dl-glow", { opacity: 0.86, scale: 0.97 },
+        { opacity: 1, scale: 1, duration: 1.1, ease: "power2.out" }, COPY + 0.04);
+    })();
+  </script>
 </template>

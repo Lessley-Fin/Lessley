@@ -1,6 +1,6 @@
 {
   "scene": "02-problem",
-  "duration_s": 20.0,
+  "duration_s": 16.0,
   "rules": [
     "depth-scatter-assemble",
     "counting-dynamic-scale",
@@ -9,16 +9,18 @@
     "center-outward-expansion"
   ],
   "blueprint": "overwhelm-surround",
-  "camera_target": ".f02-counter (the frozen ₪0 ledger card; canvas centre 510, 681 = 26.5625% / 63.0556%)",
+  "camera_target": "none — this scene has no phone and, as of 18/08, no camera of any kind. The two nested camera wrappers (.f02-cam-entry / .f02-cam-target) are collapsed into one inert .f02-layer that is never transformed. The `data-camera-target` attribute left on .f02-counter is inert and is never animated.",
   "entry": {
-    "vector": "Z− deceleration, caught MID-PUSH from 01. .f02-cam-entry starts at scale 1.16 about 32.29% / 50% (the seam's phone centre) and settles to 1.00 over 1.30s on power4.out — the mirror of 01's power3.in exit. Instantaneous inward edge velocity at t=0 ≈ 1150 px/s, decaying to ~0 by 1.30s. A 5px→0px blur over the first 0.55s carries the velocity read.",
-    "from_rest": false
+    "vector": "From rest on a cut. The 1.16→1.00 scale settle and the 5px→0px blur clear are withdrawn; the scene opens with content arriving instead — the title 'הכאב' whips up at 0.08s and the first ledger chip starts its depth-scatter assembly at 0.28s.",
+    "from_rest": true
   },
   "exit": {
-    "vector": "Outward + Z-forward, still accelerating. From 15.70s the 12 ledger chips run center-outward-expansion to 1.55× their radius (power2.out) and the 6 radial pills to 1.85×; from 17.60s .f02-cam-target creeps 1.00→1.10 about the counter on power2.in (≈0.13 scale/s at t=20, ≈125 px/s at the canvas edge) while the two halves of the broken ₪0 keep parting (±24px over 18.20–20.00s on power1.in, ≈27 px/s each at the last frame). Net read: a bright empty centre opening toward camera.",
+    "vector": "Outward, in-plane, still moving. The counter recedes into the opened space through the final frame: opacity 1→0.42 and figstack scale 1→0.86 both run 14.05–16.00s on power2.in, and the two halves of the broken ₪0 keep parting (±24px over 14.35–16.00s on power1.in, ≈29 px/s each at the last frame — an accelerating ease that is at maximum velocity exactly when the cut lands). The teal bloom holds the opened centre. No camera moves; only elements travel.",
     "still_moving": true
   },
-  "first_second": "0.00–1.00s — arrives already in motion: the whole world is at 1.16 scale with a 5px blur and decelerates hard. The title 'הכאב' whips up at 0.10s, its accent underline sweeps at 0.30s, body line 1 at 0.52s, and the first ledger chip begins its depth-scatter assembly at 0.35s. Never at rest in this second.",
-  "last_second": "19.00–20.00s — no reveals, no exits. The chips and pills are still drifting outward on long power2.out tails, the camera is creeping forward on power2.in, the broken counter halves are still separating, and the teal bloom holds the opened centre. Frame 03 (transition_in: cut) lands the phone into exactly that hole.",
-  "seam_note": "Camera is deliberately STATIC through the accumulation and close-in (10.0–13.6s) per the overwhelm-surround contract — the crowd closes on the subject, the lens does not push. The only camera moves are the entry settle (0.0–1.3s) and the post-break forward creep (17.6–20.0s). Hold on the crowded state runs 13.6–15.4s: deliberate stillness before the counter breaks at 15.40s."
+  "first_second": "0.00–1.00s — a plain cut in, at rest on frame 0. The title 'הכאב' whips up at 0.08s, its accent underline sweeps at 0.24s, body line 1 at 0.42s, and the first ledger chip begins its depth-scatter assembly at 0.28s. The world is never scaled or blurred.",
+  "last_second": "15.00–16.00s — no reveals, no exits, no camera. The chips and pills have settled at their outward positions, but the counter is still receding (opacity and figstack scale both land exactly on 16.00s) and the two broken counter halves are still separating on an accelerating power1.in. The teal bloom holds the opened centre. Frame 03 (transition_in: cut) lands the phone into exactly that hole.",
+  "retime_note": "RETIMED 19/08 — 20s → 16s (−20%) for the tightened cut. Positions and durations were scaled ×0.8 and then hand-tuned. The cut was taken from HOLD, not from the climax: the stillness before the break drops 1.80s → 1.19s (10.91–12.10s), while the break itself keeps 3.90s of its original 4.60s — ratio 0.85, deliberately over proportional, because the ₪0 splitting is the scene's whole argument. The frozen-counter count-up also held over (2.40s → 2.10s, not 1.92s) so 142 עסקאות / ₪5,630 stay legible as they resolve. Chip and pill scatter/expansion travel distances are unchanged; only their arrival cadence tightened.",
+  "seam_note": "REVISED 18/08 — every camera tween in this scene is deleted: the entry settle and the post-break forward creep. The overwhelm-surround contract is unchanged and is now literal — the crowd closes on the subject and the lens never moves at all. The counter breaks at 12.10s. Because 01-open no longer exits on a push, the storyboard's `transition_in` should be stamped as a cut.",
+  "data_note": "The six brand chips in the crowd are now real clubs read from the `clubs` collection — Isracard TopCash, PaisPlus, HOT Israel, Behatsdaa, Swish (נפשונית), Mastercard Israel — replacing the invented Visa / Mastercard / retail-chain placeholders. The Swish chip carries dir=\"ltr\" so the Latin/Hebrew mix cannot be reordered by the bidi algorithm. The generic clutter chips (קופון · קבלה · הטבה · ×3 נקודות) are unchanged."
 }

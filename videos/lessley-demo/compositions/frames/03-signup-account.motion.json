@@ -1,25 +1,26 @@
 {
   "scene": "03-signup-account",
-  "duration_s": 12.0,
+  "duration_s": 10.0,
   "rules": [
     "discrete-text-sequence",
     "cursor-click-ripple",
     "waterfall-entry",
     "spring-pop-entrance",
-    "coordinate-target-zoom",
-    "multi-phase-camera"
+    "staged-reveal-cascade"
   ],
   "blueprint": "cursor-ui-demo",
-  "camera_target": "#f03-f3 — the סיסמה field (screen-space centre 50% / 55.263% of the 410×932 device screen)",
+  "camera_target": "none — the in-phone camera is withdrawn (frame.md, revised 18/08). .screen-world holds scale 1 / x 0 / y 0 and the device is never scaled or translated.",
   "entry": {
-    "vector": "Z− deceleration on a hard CUT. The phone is fully on screen at t=0 with .f03-world at scale 1.07 and a 3px blur, settling to 1.00 over 0.62s on power3.out (blur clears in 0.38s). Inward edge velocity at t=0 ≈ 330 px/s, decaying to ~0 by 0.62s — enough to catch 02's forward creep without reading as a second push.",
-    "from_rest": false
+    "vector": "From rest on a hard CUT. The phone is fully on screen and static at t=0 — the 1.07→1.00 settle and 3px blur clear are deleted. The frame fills with staged reveals instead: the back row rises at 0.18s, the five-step rail begins its waterfall at 0.42s, the stage title whips up at 0.12s.",
+    "from_rest": true
   },
   "exit": {
-    "vector": "Z+ into the screen, slow and near-settled. From 9.50s the in-phone camera creeps .screen-world 1.60→1.665 on power1.in (≈0.052 scale/s at t=12, ≈20 px/s at the phone-screen edge). The cursor has come to REST on the המשך button at 10.52s and does not click — the account is not created in this scene. Effectively a held frame with a live forward vector.",
-    "still_moving": true
+    "vector": "At rest. The cursor comes to REST on the המשך button at 9.20s and does not click — the account is not created in this scene. Its teal hover halo blooms 9.32–9.86s and the background glow answers 9.40–10.00s; both are one-shot power-out resolves that decay to ~0 px/s. Nothing is travelling at the final frame.",
+    "still_moving": false
   },
-  "first_second": "0.00–1.00s — the phone is the hero and is visible on frame 0. The world settles out of its 1.07 scale (0.00–0.62s), the stage title 'הרשמה · חשבון' whips up at 0.14s with an underline sweep at 0.34s, the app header rises at 0.34s, and the five-step signup rail begins its waterfall arrival at 0.56s.",
-  "last_second": "11.00–12.00s — held. The cursor is parked on the primary action, its teal hover halo has already bloomed (10.48–11.03s), and only the slow in-phone camera creep is running. No exits: the next frame owns the departure.",
-  "seam_note": "The five-step progress rail lights at 1.18s and stays lit (it must persist through frame 07). The camera runs two phases into the camera target — partial travel 1.00→1.26 (1.90–3.10s) so the whole step rail stays legible during the first typing beat, then lock 1.26→1.60 (7.40–9.50s) onto the password field for the 'no account yet' beat."
+  "first_second": "0.00–1.00s — the phone is the hero and is fully rendered on frame 0, at rest. The stage title 'הרשמה · חשבון' whips up at 0.12s with an underline sweep at 0.28s, the in-phone back row rises at 0.18s, the five-step signup rail begins its waterfall arrival at 0.42s, body line 1 whips at 0.50s and step 1 lights teal at 0.96s.",
+  "last_second": "9.00–10.00s — the אימות סיסמה caret fades out (8.90–9.10s), the cursor completes its move and parks on the primary action at 9.20s, its teal hover halo blooms (9.32–9.86s) and the stage glow lifts 0.86→0.98 (9.40–10.00s). No exits and no camera: the next frame owns the departure.",
+  "retime_note": "RETIMED 19/08 — 12s → 10s (−16.7%) for the tightened cut. The typing is the scene's content, so it did not take the full cut: 'dor.h' 0.90s → 0.72s and 'dor@example.com' 1.25s → 1.08s (both above proportional) so a viewer can still read the characters arrive; only the two masked-password runs, read as texture rather than as text, took the full 0.73s → 0.62s. The time came out of cursor travel (0.62/0.45/0.40/0.40/0.60s → 0.54/0.38/0.34/0.34/0.52s), out of the ~0.20s dwell after each field finishes typing, and out of the card's staged-reveal cascade (1.42–3.44s → 1.18–2.88s). Content fills the scene to 10.00s.",
+  "seam_note": "REVISED 18/08 — both camera phases are deleted, together with the closing forward creep. The time they owned is carried by content: the account card's contents arrive one beat at a time (1.18–2.88s) and a fourth field, אימות סיסמה, is typed at 7.86–8.48s — the real register form has four inputs. The five-step progress rail lights at 0.96s and stays lit (it must persist through frame 07). 02-problem exits still travelling outward, so this scene's entry is a plain cut that lands the phone into the opened hole.",
+  "data_note": "No club or category figures appear in this scene — the step rail's מועדונים label is a wizard step name, not a club count, and is unchanged. Stage copy, composition ids, track structure and the shared style block are untouched."
 }

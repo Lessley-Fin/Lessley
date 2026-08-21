@@ -1,6 +1,6 @@
 ---
 format: 1920x1080
-duration: 315s
+duration: 253s
 message: "Lessley תופסת עבורכם את החיסכון שכבר הרווחתם — אוטומטית, בכל רכישה"
 arc: הבטחה → הכאב → ההצטרפות → הכלים → ההוכחה → הביטחון → הסגירה
 audience: "מציגים את המוצר — בעלי עניין, שופטים, לקוחות פוטנציאליים"
@@ -10,7 +10,7 @@ mode: collaborative
 ## Frame 1 — ההבטחה
 
 - scene: הלוגו נבנה על רקע נייבי, האייפון נכנס מלמטה ונוחת — הנשא של כל הסרט
-- duration: 15s
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: logo-assemble-lockup
@@ -24,8 +24,8 @@ mode: collaborative
 ## Frame 2 — הכאב
 
 - scene: כרטיסי אשראי, קבלות ולוגואים של מועדונים נערמים סביב הצופה עד לחנק; המונה "₪0 נחסך" קפוא במרכז
-- duration: 20s
-- transition_in: zoom-through
+- duration: 16s
+- transition_in: cut
 - status: built
 - blueprint: overwhelm-surround
 - rules: depth-scatter-assemble, counting-dynamic-scale
@@ -38,7 +38,7 @@ mode: collaborative
 ## Frame 3 — הרשמה · חשבון
 
 - scene: מסך יצירת החשבון; סמן נוגע בכל שדה והטקסט נכתב תו-תו
-- duration: 12s
+- duration: 10s
 - transition_in: cut
 - status: built
 - blueprint: cursor-ui-demo
@@ -52,7 +52,7 @@ mode: collaborative
 ## Frame 4 — הרשמה · אימות אימייל
 
 - scene: מסך "בדקו את תיבת הדואר"; שש ספרות נוחתות בתאים אחת-אחת, הטיימר סופר לאחור
-- duration: 11s
+- duration: 9s
 - transition_in: cut
 - status: built
 - blueprint: device-surface-showcase
@@ -65,7 +65,7 @@ mode: collaborative
 ## Frame 5 — הרשמה · בחירת מועדונים
 
 - scene: רשת לוגואים של מועדונים; ארבעה נבחרים בזה אחר זה, המונה "נבחר" עולה
-- duration: 16s
+- duration: 13s
 - transition_in: cut
 - status: built
 - blueprint: grid-card-assemble
@@ -79,7 +79,7 @@ mode: collaborative
 ## Frame 6 — הרשמה · רמת התאמה
 
 - scene: שלוש האפשרויות; הבחירה זזה בין רחב/בינוני/מחמיר ותצוגה מקדימה של הדילים מסתננת בזמן אמת
-- duration: 16s
+- duration: 13s
 - transition_in: cut
 - status: built
 - blueprint: panel-edit-live-sync
@@ -93,7 +93,7 @@ mode: collaborative
 ## Frame 7 — הרשמה · בנקאות פתוחה
 
 - scene: מסך החיבור; שלוש נקודות הערך עולות, ואז תג "לקריאה בלבד" ננעל על מנעול
-- duration: 15s
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: titlecard-reveal
@@ -107,7 +107,7 @@ mode: collaborative
 ## Frame 8 — התחברות
 
 - scene: מסך ההתחברות; מעבר בין "סיסמה" ל"קוד באימייל", ורמז למסלול איפוס הסיסמה
-- duration: 15s
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: cursor-ui-demo
@@ -121,7 +121,7 @@ mode: collaborative
 ## Frame 9 — מפת האפליקציה
 
 - scene: הטלפון נסוג, ארבעת המסכים הראשיים נפרשים כתחנות; מצלמה עוברת ביניהן וחוזרת לטלפון
-- duration: 15s
+- duration: 12s
 - transition_in: inverse-zoom
 - status: built
 - blueprint: spatial-pan-stations
@@ -134,8 +134,8 @@ mode: collaborative
 
 ## Frame 10 — אופטימיזציה · הקלט
 
-- scene: בחירת חנות, הקלדת ₪412, בורר מקסימום דילים; לחיצה על "מציאת המחירים הטובים ביותר" ומצב עיבוד
-- duration: 15s
+- scene: בחירת חנות, הקלדת ₪1,000, בורר מקסימום דילים; לחיצה על "מציאת המחירים הטובים ביותר" ומצב עיבוד
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: prompt-type-submit-generate
@@ -148,8 +148,8 @@ mode: collaborative
 
 ## Frame 11 — אופטימיזציה · השילוב המנצח
 
-- scene: כרטיס "השילוב הטוב ביותר"; ₪412 יורד ל-₪317 בספירה חיה, תג החיסכון קופץ בזהב
-- duration: 12s
+- scene: כרטיס "השילוב הטוב ביותר"; ₪1,000 יורד ל-₪700 בספירה חיה, תג החיסכון קופץ בזהב
+- duration: 10s
 - transition_in: cut
 - status: built
 - blueprint: dataviz-countup
@@ -162,8 +162,8 @@ mode: collaborative
 
 ## Frame 12 — אופטימיזציה · איך זה מצטבר
 
-- scene: האקורדיון "איך זה מצטבר" נפתח; שלבי החישוב יורדים אחד-אחד עם היתרה שמתעדכנת
-- duration: 13s
+- scene: האקורדיון "איך זה מצטבר" נפתח; השלב היחיד נקרא שורה-שורה והיתרה מתעדכנת
+- duration: 10s
 - transition_in: cut
 - status: built
 - blueprint: transcript-scroll-artifact-reveal
@@ -171,13 +171,12 @@ mode: collaborative
 - voiceover: "ופה השקיפות המלאה: 'איך זה מצטבר' פורס את החישוב צעד-צעד — איזו הנחה חלה על מה, כמה נשאר לתשלום אחרי כל שלב, ומאיזה מועדון או כרטיס כל הטבה הגיעה. מתחת — 'אפשרויות נוספות' עם השילובים המדורגים הבאים."
 - src: compositions/frames/12-optimizer-steps.html
 
-השקיפות היא הטיעון. `coordinate-target-zoom` מקרב לאזור השלבים כדי שהמספרים יהיו
-קריאים — הפעם היחידה שנכנסים לתוך המסך.
+השקיפות היא הטיעון. אין מצלמה ואין זום — המספרים קריאים כי המכשיר גדול בפריים.
 
 ## Frame 13 — חיפוש דילים
 
 - scene: מסננים נבחרים, תוצאות נשפכות לרשימה, כרטיס נפתח לתנאי ההטבה וקוד הקופון מועתק
-- duration: 17s
+- duration: 14s
 - transition_in: cut
 - status: built
 - blueprint: cursor-ui-demo
@@ -188,7 +187,7 @@ mode: collaborative
 ## Frame 14 — תובנות · כמה נחסך
 
 - scene: כותרת "הכסף שלכם, מפוענח", בורר התקופה, וה-hero של סכום החיסכון בספירה
-- duration: 13s
+- duration: 10s
 - transition_in: cut
 - status: built
 - blueprint: dataviz-countup
@@ -199,7 +198,7 @@ mode: collaborative
 ## Frame 15 — תובנות · חמש השקופיות
 
 - scene: הקרוסלה מוחלקת דרך סקירה → קטגוריות → חנויות → עסקאות → חשבונות, כל אחת עם הגרף שלה
-- duration: 20s
+- duration: 16s
 - transition_in: cut
 - status: built
 - blueprint: grid-card-assemble
@@ -207,13 +206,13 @@ mode: collaborative
 - voiceover: "מתחת — צלילה לעומק בחמש שקופיות: סקירה כללית משווה את התקופה הזו לקודמת. קטגוריות מראה לאן הכסף באמת הולך. חנויות מובילות — עשר החנויות שאתם קונים בהן הכי הרבה. עסקאות — התנועות האחרונות. וחשבונות — פילוח לפי כל כרטיס מקושר."
 - src: compositions/frames/15-insights-slides.html
 
-הסצנה הצפופה ביותר: 5 שקופיות ב-20 שניות = 4 שניות לכל אחת. ההחלקה עצמה היא הקצב,
+הסצנה הצפופה ביותר: 5 שקופיות ב-16 שניות = כ-3 שניות לכל אחת. ההחלקה עצמה היא הקצב,
 וכל שקופית נכנסת כשהגרף שלה כבר בתנועה — לא נבנה מאפס.
 
 ## Frame 16 — חם
 
 - scene: רשימת הדילים המומלצים נשפכת פנימה; תג "אצור, לא טרנדי" עולה בצד
-- duration: 12s
+- duration: 10s
 - transition_in: cut
 - status: built
 - blueprint: grid-card-assemble
@@ -223,19 +222,19 @@ mode: collaborative
 
 ## Frame 17 — המלצות · התאמות מובילות
 
-- scene: מועדונים מדורגים; טבעת ציון ההתאמה נמשכת ותג "7/10 חנויות תואמות" נוחת
-- duration: 15s
+- scene: מועדונים מדורגים; טבעת ציון ההתאמה נמשכת ותג ‑10/35 חנויות תואמות’ נוחת
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: dataviz-countup
 - rules: svg-path-draw, stat-bars-and-fills
-- voiceover: "מסך ההמלצות מחושב מתשעים הימים האחרונים שלכם. התאמות מועדונים מובילות — מועדונים שאתם עדיין לא חברים בהם, מדורגים לפי חפיפת חנויות. אם המועדון מכסה שבע מתוך עשר החנויות שאתם קונים בהן — הוא יופיע בראש."
+- voiceover: "מסך ההמלצות מחושב מתשעים הימים האחרונים שלכם. התאמות מועדונים מובילות — מועדונים שאתם עדיין לא חברים בהם, מדורגים לפי חפיפת חנויות. מאסטרקארד ישראל מכסה עשר מתוך שלושים וחמש החנויות שאתם קונים בהן — ולכן הוא בראש."
 - src: compositions/frames/17-recs-matches.html
 
 ## Frame 18 — המלצות · חיסכון שפוספס והחנויות שלך
 
 - scene: שני הטאבים הנותרים; רכישת עבר עם ההנחה שלא נוצלה, ואז תגי הוודאות מדויקת/חזקה/דומה
-- duration: 18s
+- duration: 14s
 - transition_in: cut
 - status: built
 - blueprint: comparison-split
@@ -249,7 +248,7 @@ mode: collaborative
 ## Frame 19 — התראות
 
 - scene: toast צץ בזמן אמת מעל המסך הנוכחי, ואז הפיד נפתח מסודר לפי תגים
-- duration: 15s
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: agent-progress-theater
@@ -262,7 +261,7 @@ mode: collaborative
 ## Frame 20 — הגדרות
 
 - scene: תפריט ההגדרות; מעבר להעדפות ואז למסך הבנקאות עם הכרטיסים המחוברים
-- duration: 15s
+- duration: 12s
 - transition_in: cut
 - status: built
 - blueprint: cursor-ui-demo
@@ -273,7 +272,7 @@ mode: collaborative
 ## Frame 21 — הסגירה
 
 - scene: הטלפון נסוג למרכז, שלוש הבטחות האבטחה נוחתות, הלוגו נועל את הפריים
-- duration: 15s
+- duration: 12s
 - transition_in: inverse-zoom
 - status: built
 - blueprint: logo-assemble-lockup

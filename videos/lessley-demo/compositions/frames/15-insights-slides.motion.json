@@ -1,0 +1,29 @@
+{
+  "scene": "15-insights-slides",
+  "duration_s": 16,
+  "rules": [
+    "waterfall-entry",
+    "scale-swap-transition",
+    "spring-pop-entrance",
+    "directional-wipe",
+    "svg-icon-enrichment"
+  ],
+  "entry": {
+    "vector": "0 px/s of camera travel — there is no in-phone camera in this film. .screen-world holds scale 1 / x 0 / y 0 for the whole scene and .device is never transformed. The scene opens with its chart already running: both spending bars are mid-growth at t=0 (scaleY 0.34 → 1 over 0.00-1.25s and 0.00-1.38s, power3.out), so the cut from frame 14 lands on motion, not on a chart building from zero.",
+    "from_rest": false
+  },
+  "exit": {
+    "vector": "0 px/s — the layout is static from 15.45s. The last account row lands at 14.36s and the stage glow's answering bloom resolves at 15.45s; the final 0.55s is a locked hold on slide 5. Frame 16 opens on the same still, un-zoomed screen geometry.",
+    "still_moving": false
+  },
+  "camera_target": "none. No data-camera-target attribute survives in this scene; nothing zooms.",
+  "notes": {
+    "first_second": "Device + the תובנות page held at its deep-dive scroll position at t=0: the clipped tail of the stats grid under the header, the section's own border rule, the צלילה לעומק head, its .period track (30 ימים as a filled navy pill), the carousel showing slide 1 (סקירת הוצאות) and the pagination row — prev arrow, five dots with dot 1 already the teal pill, next arrow. Motion in second one: the red previous-period bar and the green current-period bar growing from 0.00s, the slide title wiping at 0.12s and its subtitle at 0.28s, plus the stage title whip at 0.10s.",
+    "last_second": "Locked hold. Last element motion is the third account row at 13.92-14.36s; the stage glow's reaction runs 14.40-15.45s and then nothing moves. 15.45-16.00s is a still frame on הוצאות לפי חשבונות.",
+    "carousel": "Five slides on ONE track in 16s — 3.2s a slide, the tightest pacing in the film. RTL means the next slide sits to the LEFT, so #is-track travels +x by STEP=416px per swipe at 3.05 / 6.10 / 9.15 / 12.20s (0.52s, power2.inOut). The track is the app's own control moving inside a clipped .is-view — it is not a camera. Each pagination dot cross-fades its grey circle out while its teal pill scales 0.25 → 1 on the same beat.",
+    "charts_enter_in_motion": "Every slide arrives with its content already travelling: the donut starts its sweep at 3.30s and lands 0.27s BEFORE the slide finishes arriving (rotate -58 → 0, scale 0.72 → 1, 1.15s); the store list's first row rises at 6.38s, the first transaction row at 9.43s and the first account row at 12.48s — each ~0.24s ahead of its slide's arrival. Every slide is fully formed for 0.6-0.9s before its swipe leaves, so the pace reads brisk rather than blurred.",
+    "screen_fill": ".is-scroll carries a static margin-top of -105px — the page's own scroll position, never animated. It parks the clipped tail of the stats grid under the header so the screen reads as one continuous scrolling page: stats tail, the section's border rule, the deep-dive head, the period track, a 456px slide and the pagination row sitting just above the nav. Slides 3 and 4 now carry five rows each (the app's own list limit is ten), so no slide but the accounts slide has dead space — that one is honestly short because the demo user has exactly three linked accounts.",
+    "real_data": "The donut is the real split of the ₪5,630 period: ביגוד ואביזרים ₪2,140 (38%), מכולת ₪1,410, מסעדות ₪1,180, אלקטרוניקה ₪900 — four slices summing to the period total. The ranked stores and the recent transactions are all names from the real stores collection (FOX - פוקס, GUESS, NIKE, שוק פרייס, בורגר ראנץ, KSP); each Latin-named row is its own LTR island so the bidi algorithm cannot reorder it.",
+    "no_gold": "Zero --stage-gold in this scene, and the donut deliberately stops at four categories so the warning-gold chart-5 slice never appears — the payoff colour was spent in frame 14."
+  }
+}

@@ -1,28 +1,29 @@
 {
   "scene": "18-recs-missed",
-  "duration_s": 18,
+  "duration_s": 14,
   "rules": [
     "split-tilt-cards",
     "waterfall-entry",
     "spring-pop-entrance",
     "counting-dynamic-scale",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
+    "rtl-clip-wipe",
     "ambient-glow-bloom"
   ],
-  "notes": {
-    "first_second": "Device + screen on-frame at t=0, carried unchanged from frame 17. The in-phone camera opens at scale 1.05 and settles to 1.00 by 0.55s (power3.out) — enters mid-push, matching frame 17's exit direction (+Z). Stage title whips in three fragments at 0.15s / 0.36s / 0.53s; the tab rail staggers in from 0.62s. Neither tab panel has arrived by 1.0s.",
-    "last_second": "Camera is in a linear (ease:none) creep from scale 1.48 to 1.53 running 17.30s → 18.00s, so it is STILL MOVING on the final frame. The last authored reveal (the certainty pips) completes at 17.32s; the last second is a moving hold framed on the three certainty bands.",
-    "signature": "comparison-split, not a sequence: the two equal-weight tab panels arrive from OPPOSITE wings with mirrored book-open rotateY — חיסכון שפוספס from the right (x +250, rotateY +24° → 0) at 1.60s, מבצעים בחנויות שלך from the left (x −250, rotateY −24° → 0) at 9.30s. The scene's last and clearest beat is the certainty trio (מדויקת / חזקה / דומה) arriving as one waterfall-entry cascade at 14.60s / 14.82s / 14.99s with binary opacity and shrinking gaps.",
-    "gold": "The single --stage-gold spend is the ₪340 missed-savings payoff: the in-phone figure uses the app's own warning pairing (pill-save) for AA, and the stage gold glow blooms to 0.62 at 4.45s then settles to 0.30 — the glow reacts to the payoff, it never idles."
-  },
-  "camera_target": "#ms-bands (the three certainty bands)",
-  "exit": {
-    "vector": "push-in (+Z) at ~61 px/s of screen-edge expansion (scale 1.48→1.53, linear)",
-    "still_moving": true
-  },
+  "camera_target": "none. There is no in-phone camera in this film. `.screen-world` holds scale 1 / x 0 / y 0 for the whole scene, the .device wrapper and its `scale(0.9428)` rig sizing are static CSS and are never tweened, and no data-camera-target attribute remains in the scene.",
   "entry": {
-    "vector": "push-in (+Z) at ~230 px/s of screen-edge contraction (scale 1.05→1.00, power3.out over 0.55s)",
+    "vector": "0 px/s of camera travel — nothing zooms, pans or scales. The device is on-frame and unchanged from frame 17, which also exits camera-free, so the carrier is handed across at rest. The scene opens mid-BUILD: header 0.04-0.50s, bottom nav 0.08-0.58s, the tab rail's three options staggering from 0.60s, stage title fragments at 0.12s / 0.32s / 0.47s. Neither tab panel has arrived by 1.0s.",
     "from_rest": false
+  },
+  "exit": {
+    "vector": "0 px/s. The active certainty band's navy fill resolves at 13.73s and nothing enters, exits or moves for the final 0.27s. Frame 19 opens on a populated, un-zoomed screen at the same geometry, so the seam is a content cut, not a velocity match.",
+    "still_moving": false
+  },
+  "notes": {
+    "first_second": "Device + screen on-frame at t=0, carried unchanged from frame 17 and never transformed. The recommendations tab rail assembles over an otherwise empty app-main; neither slide panel is on screen at 1.0s.",
+    "last_second": "Static. The certainty trio lands 12.60-13.11s and the active band fills navy 13.25-13.73s; 13.73-14.00s is deliberate stillness.",
+    "signature": "comparison-split, not a sequence: the two equal-weight tab panels arrive from OPPOSITE wings with mirrored book-open rotateY — חיסכון שפוספס from the right (x +250, rotateY +24° -> 0) at 1.20s, מבצעים בחנויות שלך from the left (x −250, rotateY −24° -> 0) at 4.20s, both over 0.85s on power3.out against a 1400px perspective on .app-main. Tab B now answers the ₪340 almost on its heels, so the screen carries both panels from the fifth second rather than the seventh. The scene's last and clearest beat is the certainty trio (מדויקת / דומה / חזקה) arriving as one waterfall-entry cascade with shrinking gaps at 12.60s / 12.81s / 12.96s, dropping into the filter track that was left deliberately EMPTY at 5.84s, after a beat of stillness from 12.06s.",
+    "gold": "The single --stage-gold spend is the ₪340 missed-savings payoff at FOX - פוקס (קטגוריית ביגוד ואביזרים): the in-phone figure stays on the app's own foreground ink (no in-screen gold), and the stage gold glow blooms to 0.62 at 3.80s then settles to 0.30 by 5.75s — the glow reacts to the payoff, it never idles.",
+    "staged_reveals": "Where the camera used to own time, content does: tab A's spend card reads out 1.58-4.28s with the ₪340 counted rather than announced (3.00-3.85s), tab B's slide head + period selector 4.56-5.64s, the reserved certainty track at 5.84s, the band card and the matched-store card 6.20-12.06s (store, purchase count, payment method, then BOTH matched shops beneath), the stage's certainty line at 11.20s, stillness, then the trio. No idle loop, no breathe, no float.",
+    "content": "The band card is fuller: FOX - פוקס carries two real matches under `2 חנויות תואמות` — the Hever (חבר) — Gift Cards giftcard deal at 30% capped ₪300, and the PaisPlus — Networks Cash Card giftcard deal at 25% capped ₪285. Both read fully on screen; the column below the certainty chips is tightened just enough that the fold falls after the second match, not through it."
   }
 }

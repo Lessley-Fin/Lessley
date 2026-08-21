@@ -1,4 +1,15 @@
 <template>
+      <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
       <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
@@ -43,6 +54,11 @@
           --accent: 179 50% 88%;       --accent-foreground: 182 73% 18%;
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
+          --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -85,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -102,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -122,74 +138,230 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
@@ -197,24 +369,52 @@
       </style>
       <style>
         /* ── 01-open — scene-specific ──────────────────────────────────────── */
-        #root { --input: 201 21% 89%; }
+
+        /* The shared block's token list stops at --navy, but its own primitives
+           (.hero, .nav, .period.on, .field, .chip) reference --navy-foreground,
+           --navy-muted, --secondary and --gradient-navy. Declared here verbatim
+           from lessley-frontend/src/index.css :root so the app UI is not unstyled.
+           NOTE for the shared-block owner: these belong upstream in _shared.html. */
+        #root {
+          --secondary: 195 33% 94%;
+          --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+          --gradient-teal: linear-gradient(135deg, oklch(58% 0.075 196), oklch(50% 0.065 205));
+        }
+
+        /* RTL correction. The shared block's `order` / `justify-content` values were
+           authored against an LTR axis; under the app's real RTL direction they mirror
+           the header and the stat label. frame.md § The real UI is explicit: logo +
+           wordmark at the RIGHT, bell then avatar at the LEFT; stat icon + label top-RIGHT.
+           Corrected here rather than by editing the shared source. */
+        .app-header .brand { order: 1; margin-inline-start: 0; margin-inline-end: auto; }
+        .app-header .app-icon { order: 2; }
+        .app-header .app-avatar { order: 3; }
+        .stat-lbl { justify-content: flex-start; }
 
         .f01-ground { position: absolute; inset: 0; background: var(--stage-bg); }
 
-        .f01-world { position: absolute; inset: 0; transform-origin: 32.29% 50%; }
-
         /* stage text column — right edge at 1760 per the layout diagram */
+        /* top 366 → 358: the 86px mascot box is 20px taller than the 66px tile it
+           replaced, so the block is raised by half that to stay optically centred. */
         .f01-text {
-          position: absolute; right: 160px; top: 366px; width: 720px; max-width: 720px;
+          position: absolute; right: 160px; top: 358px; width: 720px; max-width: 720px;
           flex: none; gap: 26px;
         }
-        .f01-lockup { display: flex; align-items: center; gap: 20px; }
+        .f01-lockup { display: flex; align-items: center; gap: 18px; }
+        /* The real mascot replaces the hand-drawn ₪ tile. logo-WITH-name is deliberately
+           NOT used on the stage: its wordmark is dark-navy artwork drawn for the app's
+           light login page, and on --stage-bg it drops below AA. Plating it white would
+           put a second bright object on a stage whose whole idea is that the phone is
+           the only lit thing — so the stage keeps the mascot beside the film's own
+           "Lessley" wordmark. (Frame 21 can use the full lockup: it sits on a white
+           card INSIDE the phone.) The SVG carries ~24% of its own vertical padding, so
+           an 86px box renders a mascot the same optical height as the 66px tile. */
         .f01-mark {
-          width: 66px; height: 66px; flex: none; border-radius: 20px;
-          display: grid; place-items: center;
-          background: var(--stage-accent-deep); color: var(--stage-ink);
-          font-size: 34px; font-weight: 800; line-height: 1;
-          box-shadow: 0 10px 30px oklch(14% 0.02 245 / 0.55);
+          width: 86px; height: 86px; flex: none; display: block;
+          filter: drop-shadow(0 10px 26px oklch(14% 0.02 245 / 0.55));
           will-change: transform;
         }
         .f01-wordmark { direction: ltr; display: inline-flex; font-size: 48px; font-weight: 800;
@@ -224,36 +424,50 @@
         .f01-underline { display: block; height: 3px; width: 190px; margin: -6px 0 0 auto;
           background: var(--stage-accent); transform-origin: right center; }
 
-        /* device anchor — phone centred at (620, 540), rendered 880px tall */
+        /* device anchor — the 460×997 device held at its real size, centred at (620, 540).
+           NO camera: nothing scales the device, and .screen-world is never touched. */
         .f01-anchor { position: absolute; left: 620px; top: 540px; width: 0; height: 0;
           will-change: transform; }
-        .f01-anchor .device-scale { position: absolute; left: -215px; top: -466px;
-          width: 430px; height: 932px; transform: scale(0.944); transform-origin: 50% 50%; }
+        .f01-hold { position: absolute; left: -230px; top: -498px; width: 460px; height: 997px; }
 
-        /* in-phone layout — fixed heights so the camera path is deterministic */
-        .f01-main { justify-content: center; gap: 22px; }
-        .f01-main .card, .f01-main .card-inset { box-sizing: border-box; }
+        /* ── in-phone: the insights page, at the app's real proportions ───── */
         .f01-hdr { opacity: 0; will-change: transform; }
-        .f01-brandcard { height: 190px; display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 12px; opacity: 0;
-          will-change: transform; }
-        .f01-bm { font-size: 46px; font-weight: 800; letter-spacing: -0.015em; line-height: 1;
-          direction: ltr; }
-        .f01-bs { font-size: 21px; color: hsl(var(--muted-foreground)); }
-        .f01-herocard { height: 220px; display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 10px; opacity: 0;
-          will-change: transform; }
-        .f01-fig { will-change: transform; }
-        .f01-inforow { height: 64px; display: flex; align-items: center; justify-content: center;
-          gap: 10px; font-size: 20px; color: hsl(var(--muted-foreground)); opacity: 0;
-          will-change: transform; }
-        .f01-nav { height: 96px; box-sizing: border-box; opacity: 0; will-change: transform; }
-        .f01-nav .nav-tab svg { width: 24px; height: 24px; }
-        .f01-mark-in { font-size: 24px; font-weight: 800; }
+        #f01-bell { position: relative; }
+        .f01-bell-dot {
+          position: absolute; left: 6px; top: 6px; width: 10px; height: 10px;
+          border-radius: 50%; background: hsl(var(--warning));
+          box-shadow: 0 0 0 2px hsl(var(--card)); opacity: 0; will-change: transform;
+        }
+
+        .f01-main { justify-content: flex-start; }
+        .f01-h1, .f01-sub { opacity: 0; will-change: transform; }
+        .f01-period { opacity: 0; will-change: transform; }
+        .f01-period > span { opacity: 0; will-change: transform; }
+
+        .f01-hero { opacity: 0; will-change: transform; }
+        .f01-fig { display: inline-block; transform-origin: 100% 50%; will-change: transform; }
+        .f01-herosub { opacity: 0; will-change: transform; }
+
+        .f01-s1, .f01-s2 { opacity: 0; will-change: transform; }
+        .stat-lbl svg { width: 16px; height: 16px; flex: none; }
+
+        .f01-deep { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+        .f01-div { display: block; height: 1px; background: hsl(var(--border) / 0.9);
+          transform-origin: right center; }
+        .f01-h2 { font-size: 24px; font-weight: 800; margin: 6px 0 0; text-align: right;
+          opacity: 0; will-change: transform; }
+        .f01-dsub { font-size: 16px; margin: 0; text-align: right;
+          color: hsl(var(--muted-foreground)); opacity: 0; will-change: transform; }
+        .f01-dots { display: flex; justify-content: center; gap: 7px; margin-top: 6px; }
+        .f01-dots > i { display: block; height: 7px; width: 7px; border-radius: 999px;
+          background: hsl(var(--border)); opacity: 0; will-change: transform; }
+        .f01-dots > i.on { width: 28px; background: hsl(var(--primary)); }
+
+        .f01-nav { opacity: 0; will-change: transform; }
       </style>
 
       <div id="root" data-composition-id="01-open" data-width="1920" data-height="1080">
-        <div id="f01-bg" class="clip bg-layer" data-start="0" data-duration="15" data-track-index="0">
+        <div id="f01-bg" class="clip bg-layer" data-start="0" data-duration="12" data-track-index="0">
           <div class="f01-ground"></div>
           <div class="bg-glow" id="f01-glow"></div>
           <div class="bg-grid" id="f01-grid"></div>
@@ -261,73 +475,114 @@
           <div class="bg-grain"></div>
         </div>
 
-        <div id="f01-scene" class="clip" data-start="0" data-duration="15" data-track-index="1"
+        <div id="f01-scene" class="clip" data-start="0" data-duration="12" data-track-index="1"
              style="position:absolute; inset:0;">
-          <div class="f01-world" id="f01-world">
-            <div class="col-text f01-text" id="f01-textcol">
-              <div class="f01-lockup">
-                <span class="f01-mark" id="f01-mark">₪</span>
-                <span class="f01-wordmark" id="f01-wordmark"><i>L</i><i>e</i><i>s</i><i>s</i><i>l</i><i>e</i><i>y</i></span>
-              </div>
-              <h1 class="scene-title f01-title" id="f01-title">ההבטחה</h1>
-              <i class="f01-underline" id="f01-underline"></i>
-              <p class="scene-body f01-b1" id="f01-b1">ההנחות כבר מגיעות לכם.</p>
-              <p class="scene-body f01-b2" id="f01-b2">Lessley פשוט תופסת אותן.</p>
+          <div class="col-text f01-text" id="f01-textcol">
+            <div class="f01-lockup">
+              <!-- the real mascot the app header imports (MainShell.tsx), not a drawing -->
+              <img class="f01-mark" id="f01-mark" src="assets/logo-without-name.svg" alt="">
+              <span class="f01-wordmark" id="f01-wordmark"><i>L</i><i>e</i><i>s</i><i>s</i><i>l</i><i>e</i><i>y</i></span>
             </div>
+            <h1 class="scene-title f01-title" id="f01-title">החיסכון כבר שלכם</h1>
+            <i class="f01-underline" id="f01-underline"></i>
+            <p class="scene-body f01-b1" id="f01-b1">ההנחות האלה מגיעות לכם ממילא.</p>
+            <p class="scene-body f01-b2" id="f01-b2">Lessley רק דואגת שלא תפספסו אותן.</p>
+          </div>
 
-            <div class="f01-anchor" id="f01-anchor">
-              <div class="device-scale">
-                <div class="device">
-                  <div class="device-body">
-                    <div class="device-screen">
-                      <div class="screen-world" id="f01-screenworld">
-                        <div class="app">
-                          <div class="app-header f01-hdr" id="f01-hdr">
-                            <div class="app-icon"><span class="f01-mark-in">₪</span></div>
-                            <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
-                            <div class="app-avatar">D</div>
-                          </div>
+          <div class="f01-anchor" id="f01-anchor">
+            <div class="f01-hold">
+              <div class="device">
+                <div class="device-body">
+                  <div class="device-screen">
+                    <div class="screen-world">
+                      <div class="app">
 
-                          <div class="app-main f01-main">
-                            <div class="card f01-brandcard" id="f01-brandcard" data-camera-target>
-                              <span class="f01-bm">Lessley</span>
-                              <span class="f01-bs">טייס אוטומטי פיננסי</span>
-                            </div>
-
-                            <div class="card f01-herocard" id="f01-herocard">
-                              <div class="hero-figure num f01-fig" id="f01-fig">₪<span id="f01-count">0</span></div>
-                              <div class="hero-label">נחסך עם Lessley</div>
-                            </div>
-
-                            <div class="card-inset f01-inforow" id="f01-inforow">
-                              <span><span class="num">4</span> מועדונים</span>
-                              <span>·</span>
-                              <span><span class="num">3</span> חשבונות מקושרים</span>
+                        <div class="app-header f01-hdr" id="f01-hdr">
+                          <div class="brand">
+                            <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                            <div class="brand-text">
+                              <b>Lessley</b>
+                              <span>טייס אוטומטי פיננסי</span>
                             </div>
                           </div>
+                          <div class="app-icon" id="f01-bell">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+                            <i class="f01-bell-dot" id="f01-belldot"></i>
+                          </div>
+                          <div class="app-avatar">D</div>
+                        </div>
 
-                          <div class="nav f01-nav" id="f01-nav">
-                            <div class="nav-tab on">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.2v2.4M12 18.4v2.4M3.2 12h2.4M18.4 12h2.4M6 6l1.7 1.7M16.3 16.3L18 18M18 6l-1.7 1.7M7.7 16.3L6 18"/></svg>
-                              <span>אופטימיזציה</span>
+                        <div class="app-main f01-main">
+                          <div>
+                            <h1 class="app-h1 f01-h1" id="f01-h1">הכסף שלכם, מפוענח</h1>
+                            <p class="app-sub f01-sub" id="f01-sub"><span class="num">30</span> הימים האחרונים · <span class="num">3</span> חשבונות מקושרים</p>
+                          </div>
+
+                          <div class="period f01-period" id="f01-period">
+                            <span><span class="num">7</span> ימים</span>
+                            <span class="on"><span class="num">30</span> ימים</span>
+                            <span><span class="num">90</span> ימים</span>
+                            <span>שנה</span>
+                          </div>
+
+                          <div class="hero f01-hero" id="f01-hero">
+                            <div class="hero-help">?</div>
+                            <div class="hero-cap">נחסך עם Lessley</div>
+                            <div class="hero-figure"><span class="num f01-fig" id="f01-fig">₪<span id="f01-count">0</span></span></div>
+                            <div class="hero-sub f01-herosub" id="f01-herosub"><span class="num">30</span> הימים האחרונים · <span class="num">10</span> מועדונים</div>
+                          </div>
+
+                          <div class="stat-row">
+                            <div class="stat f01-s1" id="f01-s1">
+                              <div class="stat-lbl">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>
+                                עסקאות
+                              </div>
+                              <div class="stat-val"><span class="num">142</span></div>
+                              <div class="stat-cap"><span class="num">30</span> הימים האחרונים</div>
                             </div>
-                            <div class="nav-tab">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19v-7M12 19V5M19 19v-5"/></svg>
-                              <span>תובנות</span>
+                            <div class="stat f01-s2" id="f01-s2">
+                              <div class="stat-lbl">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+                                סכום כולל
+                              </div>
+                              <div class="stat-val"><span class="num">₪5,630</span></div>
+                              <div class="stat-cap">כל הכרטיסים המקושרים</div>
                             </div>
-                            <div class="nav-tab">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4c0 3-2.6 3.9-2.6 6.6 0 1.3.9 2.3 1.9 2.3-.3-2.4 1.4-3.9 1.4-3.9s.4 1.4 1.4 2.6c1 1.2 1.6 2.2 1.6 3.6a5.7 5.7 0 1 1-11.4 0"/><path d="M4.3 14.6C4.3 9.4 12 8.2 12 3.4"/></svg>
-                              <span>חם</span>
-                            </div>
-                            <div class="nav-tab">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
-                              <span>המלצות</span>
+                          </div>
+
+                          <div class="f01-deep">
+                            <i class="f01-div" id="f01-div"></i>
+                            <h2 class="f01-h2" id="f01-h2">צלילה לעומק</h2>
+                            <p class="f01-dsub" id="f01-dsub">החליקו כדי לראות פרטים עבור <span class="num">30</span> הימים האחרונים.</p>
+                            <div class="f01-dots" id="f01-dots">
+                              <i class="on"></i><i></i><i></i><i></i><i></i>
                             </div>
                           </div>
                         </div>
+
+                        <div class="nav f01-nav" id="f01-nav">
+                          <div class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+                            <span>אופטימיזציה</span>
+                          </div>
+                          <div class="nav-tab on">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                            <span>תובנות</span>
+                          </div>
+                          <div class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                            <span>חם</span>
+                          </div>
+                          <div class="nav-tab">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+                            <span>המלצות</span>
+                          </div>
+                        </div>
+
                       </div>
-                      <div class="device-island"></div>
                     </div>
+                    <div class="device-island"></div>
                   </div>
                 </div>
               </div>
@@ -380,21 +635,21 @@
 
           /* ---- persistent edge anchor: the progress rail --------------------- */
           gsap.set(el("f01-rail"), { scaleX: 0 });
-          tl.fromTo(el("f01-rail"), { scaleX: 0 }, { scaleX: 0.048, duration: 15, ease: "none" }, 0);
+          tl.fromTo(el("f01-rail"), { scaleX: 0 }, { scaleX: 0.048, duration: 12, ease: "none" }, 0);
 
-          /* ---- Scene 1 (0.0–2.3s) — the mark ignites, the lockup assembles --- */
-          tl.fromTo(el("f01-glow"), { opacity: 0.32 }, { opacity: 0.55, duration: 1.2, ease: "power2.out" }, 0);
+          /* ---- 0.0–1.7s — the mark ignites, the lockup assembles ------------- */
+          tl.fromTo(el("f01-glow"), { opacity: 0.32 }, { opacity: 0.55, duration: 0.96, ease: "power2.out" }, 0);
 
-          // spring-pop-entrance — the hero mark lands by t = 0.6s
-          pop(el("f01-mark"), 0.05, 0.46, 0);
+          // spring-pop-entrance — the real mascot lands by t = 0.41s
+          pop(el("f01-mark"), 0.04, 0.37, 0);
 
           // waterfall-entry — the wordmark cascades letter by letter, gaps shrinking,
           // the final letter split off as the heaviest, longest-travelling beat.
           var F = 1 / 60;
           var letters = all(".f01-wordmark i");
-          var lt = 0.62;
+          var lt = 0.50;
           var lOff = [70, 48, 44, 44, 42, 40, 74];
-          var lDur = [0.18, 0.15, 0.14, 0.14, 0.13, 0.13, 0.17];
+          var lDur = [0.15, 0.13, 0.12, 0.12, 0.11, 0.11, 0.14];
           var lGap = [2 * F, -F, -F, -F, -2 * F, -2 * F, 0];
           for (var i = 0; i < letters.length; i++) {
             whip(letters[i], lt, lOff[i], lDur[i]);
@@ -402,65 +657,84 @@
           }
 
           // title — the cascade's anchor beat, then the accent underline sweeps beneath it
-          whip(el("f01-title"), 1.30, 80, 0.20);
-          tl.fromTo(el("f01-underline"), { scaleX: 0 }, { scaleX: 1, duration: 0.52, ease: "power3.out" }, 1.48);
-          whip(el("f01-b1"), 1.74, 46, 0.16);
-          whip(el("f01-b2"), 1.96, 42, 0.15);
+          whip(el("f01-title"), 1.04, 80, 0.18);
+          tl.fromTo(el("f01-underline"), { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: "power3.out" }, 1.18);
+          whip(el("f01-b1"), 1.39, 46, 0.14);
+          whip(el("f01-b2"), 1.57, 42, 0.13);
 
-          /* ---- Scene 2 (2.3–3.6s) — the carrier is born --------------------- */
-          // the phone rises from below and lands; the background reacts to the landing
-          tl.fromTo(
-            el("f01-anchor"),
-            { y: 1180, scale: 1.05 },
-            { y: 0, scale: 1, duration: 1.05, ease: "power3.out" },
-            2.30
-          );
-          tl.fromTo(el("f01-glow"), { opacity: 0.55 }, { opacity: 0.9, duration: 0.9, ease: "power2.out", immediateRender: false }, 2.55);
-          tl.fromTo(el("f01-grid"), { y: -18 }, { y: 0, duration: 0.75, ease: "power2.out" }, 3.05);
+          /* ---- 1.84–2.76s — the carrier is born ----------------------------- */
+          // The phone rises from below and lands. This is an ENTRANCE, not a camera:
+          // it translates only — the device is never scaled and .screen-world holds
+          // identity for the whole film (frame.md § Fidelity outranks everything).
+          // The landing keeps a near-full 0.92s: it is the beat the whole film hangs on.
+          tl.fromTo(el("f01-anchor"), { y: 1180 }, { y: 0, duration: 0.92, ease: "power3.out" }, 1.84);
+          tl.fromTo(el("f01-glow"), { opacity: 0.55 }, { opacity: 0.9, duration: 0.72, ease: "power2.out", immediateRender: false }, 2.04);
+          tl.fromTo(el("f01-grid"), { y: -18 }, { y: 0, duration: 0.60, ease: "power2.out" }, 2.44);
 
-          /* ---- Scene 3 (3.4–8.0s) — the screen fills, on the voiceover cues -- */
-          rise(el("f01-hdr"), 3.40, 0.52, 22);
-          pop(el("f01-brandcard"), 3.94, 0.60, 0.88);
-          rise(el("f01-herocard"), 4.62, 0.60, 30);
+          /* ---- 2.76–5.06s — the app shell, then the page head and the period - */
+          rise(el("f01-hdr"), 2.76, 0.42, 22);
+          rise(el("f01-h1"), 3.24, 0.40, 24);
+          rise(el("f01-sub"), 3.41, 0.36, 18);
 
-          // counting-dynamic-scale — value + transform scale share position, duration and ease
+          rise(el("f01-period"), 3.88, 0.38, 22);
+          // waterfall-entry — the four range options land right-to-left, gaps shrinking
+          var pills = all("#f01-period > span");
+          var pt = 4.00;
+          var pOff = [40, 36, 34, 32];
+          var pDur = [0.14, 0.12, 0.11, 0.11];
+          for (var p = 0; p < pills.length; p++) {
+            whip(pills[p], pt, pOff[p], pDur[p]);
+            pt = pt + pDur[p] - (p < 1 ? 0 : F);
+          }
+
+          rise(el("f01-nav"), 4.56, 0.50, 46);
+
+          /* ---- 5.06–8.40s — the savings payoff ------------------------------ */
+          rise(el("f01-hero"), 5.06, 0.48, 30);
+
+          // counting-dynamic-scale — value + transform scale share position, duration and ease.
+          // Deliberately held OVER the 20% cut (2.80s → 2.50s, not 2.24s): ₪1,284 has to be
+          // legible as it resolves, so the time comes out of the holds around it instead.
           var countEl = el("f01-count");
           var cState = { v: 0 };
           tl.fromTo(
             cState,
             { v: 0 },
             {
-              v: 1284, duration: 2.2, ease: "power3.out",
+              v: 1284, duration: 2.50, ease: "power3.out",
               onUpdate: function () { countEl.textContent = group(cState.v); }
             },
-            5.10
+            5.50
           );
-          tl.fromTo(el("f01-fig"), { scale: 0.62 }, { scale: 1, duration: 2.2, ease: "power3.out" }, 5.10);
-
-          rise(el("f01-inforow"), 6.85, 0.50, 20);
-          rise(el("f01-nav"), 7.35, 0.60, 46);
+          tl.fromTo(el("f01-fig"), { scale: 0.62 }, { scale: 1, duration: 2.50, ease: "power3.out" }, 5.50);
+          whip(el("f01-herosub"), 7.78, 40, 0.14);
 
           // the glow answers the payoff landing — reaction, never idle breathing
-          tl.fromTo(el("f01-glow"), { scale: 1, opacity: 0.9 }, { scale: 1.14, opacity: 1, duration: 0.40, ease: "power2.out", immediateRender: false }, 8.10);
-          tl.fromTo(el("f01-glow"), { scale: 1.14, opacity: 1 }, { scale: 1.02, opacity: 0.86, duration: 0.95, ease: "power2.out", immediateRender: false }, 8.52);
+          tl.fromTo(el("f01-glow"), { scale: 1, opacity: 0.9 }, { scale: 1.14, opacity: 1, duration: 0.34, ease: "power2.out", immediateRender: false }, 8.06);
+          tl.fromTo(el("f01-glow"), { scale: 1.14, opacity: 1 }, { scale: 1.02, opacity: 0.86, duration: 0.80, ease: "power2.out", immediateRender: false }, 8.40);
 
-          /* ---- Scene 4 (8.6–12.2s) — the camera travels into the lockup ------ */
-          // The in-phone camera: transform-origin pinned on the brand card's centre
-          // (50% / 32.18% of the 410x912 screen), so the scale pins the target and the
-          // unscaled y offset walks it to the middle of the screen.
-          var world = el("f01-screenworld");
-          gsap.set(world, { transformOrigin: "50% 32.18%" });
-          tl.fromTo(world, { scale: 1, y: 0 }, { scale: 1.55, y: 162, duration: 3.60, ease: "power2.inOut" }, 8.60);
+          /* ---- 8.22–9.56s — the context stats, then the unread badge --------- */
+          rise(el("f01-s1"), 8.22, 0.44, 26);
+          rise(el("f01-s2"), 8.50, 0.44, 26);
+          pop(el("f01-belldot"), 9.26, 0.30, 0);
 
-          /* ---- Scene 5 (12.2–15.0s) — the Z-forward push into the screen ----- */
-          // Exit vector for the seam: accelerating (power3.in), still moving at the last frame.
-          tl.to(world, { scale: 2.90, duration: 2.80, ease: "power3.in" }, 12.20);
-          tl.fromTo(el("f01-world"), { scale: 1 }, { scale: 1.30, duration: 2.80, ease: "power3.in" }, 12.20);
+          /* ---- 9.82–11.48s — the deep-dive section arrives ------------------- */
+          tl.fromTo(el("f01-div"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, 9.82);
+          whip(el("f01-h2"), 10.04, 34, 0.16);
+          whip(el("f01-dsub"), 10.30, 26, 0.14);
+
+          var dots = all("#f01-dots > i");
+          for (var d = 0; d < dots.length; d++) {
+            pop(dots[d], 10.72 + d * 0.12, 0.28, 0.2);
+          }
+
+          /* ---- 11.48–12.0s — the glow settles onto the finished screen ------- */
+          // A one-shot resolve, not a loop: the scene hands frame 02 a still frame.
           tl.fromTo(
-            el("f01-textcol"),
-            { filter: "blur(0px)" },
-            { filter: "blur(7px)", duration: 2.80, ease: "power3.in" },
-            12.20
+            el("f01-glow"),
+            { scale: 1.02, opacity: 0.86 },
+            { scale: 1, opacity: 0.72, duration: 0.52, ease: "power2.out", immediateRender: false },
+            11.48
           );
         })();
       </script>

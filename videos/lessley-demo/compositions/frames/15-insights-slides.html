@@ -1,5 +1,16 @@
 <template>
-<style id="lessley-shared">
+  <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
+      <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
           src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
@@ -44,6 +55,10 @@
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
           --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -86,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -103,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -123,482 +138,862 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
           filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
       </style>
-<style>
-  /* ── 15-insights-slides — scene-specific ─────────────────────────── */
-  .is-ground { position: absolute; inset: 0; background: var(--stage-bg); }
-  .is-chrome { position: absolute; inset: 0; pointer-events: none; }
 
-  .is-dots { flex: none; display: flex; justify-content: center; gap: 9px; height: 24px;
-    align-items: center; }
-  .is-d { display: block; width: 36px; height: 9px; border-radius: 5px;
-    background: hsl(var(--border)); transform-origin: center center; }
+  <style>
+    /* ── 15-insights-slides — scene styles ─────────────────────────────
+       No local token backfills: --secondary / --navy-foreground /
+       --navy-muted / --gradient-navy all ship in the shared block now.  */
 
-  .is-window { flex: none; position: relative; height: 440px; overflow: hidden; }
-  .is-track { position: absolute; top: 0; right: 0; display: flex; flex-direction: row;
-    gap: 14px; will-change: transform; }
-  .is-slide { flex: none; width: 366px; height: 440px; box-sizing: border-box;
-    border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9); background: hsl(var(--card));
-    box-shadow: var(--shadow-card); padding: 26px; display: flex; flex-direction: column; gap: 14px; }
-  .nav-tab { font-size: 14px; padding: 12px 2px; }
-  .is-t { font-size: 25px; font-weight: 800; margin: 0; }
-  .is-s { font-size: 17px; color: hsl(var(--muted-foreground)); margin: 3px 0 0; }
-  .is-body { flex: 1; min-height: 0; }
+    .is-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+    .is-scene  { position: absolute; inset: 0; }
+    .is-chrome { position: absolute; inset: 0; }
 
-  /* slide 1 — period comparison bars */
-  .is-bars { display: flex; align-items: flex-end; justify-content: center; gap: 34px; height: 268px; }
-  .is-barcol { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-  .is-bar { width: 104px; border-radius: 14px 14px 6px 6px; transform-origin: bottom center;
-    display: flex; align-items: center; justify-content: center; }
-  .is-bar-prev { background: hsl(var(--muted)); }
-  .is-bar-cur { background: hsl(var(--primary)); color: hsl(182 37% 98%);
-    font-size: 20px; font-weight: 800; }
-  .is-barlbl { font-size: 18px; color: hsl(var(--muted-foreground)); }
+    .is-scene .col-text {
+      position: absolute; right: 96px; top: 0; bottom: 0; width: 748px; max-width: none;
+      flex: none; display: flex; flex-direction: column; justify-content: center; gap: 22px;
+    }
+    .is-rule { width: 224px; height: 3px; background: hsl(203 36% 96% / 0.16); margin: 2px 0 4px; }
+    .is-rule > i { display: block; height: 100%; background: var(--stage-accent);
+      transform-origin: right center; }
 
-  /* slide 2 — top category donut */
-  .is-cat { display: flex; align-items: center; gap: 20px; height: 268px; }
-  .is-donutwrap { position: relative; width: 180px; height: 180px; flex: none; }
-  .is-donutmid { position: absolute; inset: 0; display: grid; place-items: center;
-    font-size: 34px; font-weight: 800; }
-  .is-catname { display: flex; align-items: center; gap: 10px; font-size: 25px; font-weight: 700; }
-  .is-catamt { margin-top: 10px; font-size: 34px; font-weight: 800; }
-  .is-dot { width: 15px; height: 15px; border-radius: 50%; background: hsl(var(--primary)); flex: none; }
+    /* The carrier: iPhone at cx 620 / cy 540, held 940px tall (frame.md).
+       460 x 997 device, so scale = 940 / 997. Never transformed by the timeline. */
+    .is-rig   { position: absolute; left: 390px; top: 41.5px; width: 460px; height: 997px; }
+    .is-scale { width: 460px; height: 997px; transform: scale(0.9428); transform-origin: 50% 50%; }
 
-  /* slides 3 + 5 — ranked rows with fills */
-  .is-rows { display: flex; flex-direction: column; gap: 16px; }
-  .is-row { display: flex; flex-direction: column; gap: 8px; }
-  .is-rowtop { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 700; }
-  .is-rank { color: hsl(var(--muted-foreground)); font-weight: 800; }
-  .is-track-bar { height: 13px; border-radius: 7px; background: hsl(var(--muted)); overflow: hidden; }
-  .is-fill { display: block; width: 100%; height: 100%; border-radius: 7px;
-    background: hsl(var(--primary)); transform-origin: right center; }
-  .is-chip { width: 32px; height: 22px; border-radius: 6px; flex: none;
-    background: hsl(var(--accent)); border: 1px solid hsl(182 38% 36% / 0.4); }
+    /* ── in-phone: תובנות, scrolled to the deep-dive section ─────────────
+       The negative offset is the page's own scroll position carried in from
+       frame 14 — a static layout offset, never animated. It parks the tail of
+       the stats grid under the header so the screen reads as a page mid-scroll
+       rather than a section floating on white.                            */
+    .is-scroll { flex: none; display: flex; flex-direction: column; gap: 14px;
+      margin-top: -105px; }
+    /* The app's own section rule: border-t border-border/70 pt-5. */
+    .is-deep { display: flex; flex-direction: column; gap: 12px;
+      border-top: 1px solid hsl(var(--border) / 0.7); padding-top: 20px; }
+    .is-scene .stat-lbl svg { width: 17px; height: 17px; flex: none; }
+    .is-h2 { font-size: 26px; font-weight: 800; line-height: 1.2; margin: 0; }
+    .is-sub { font-size: 16px; }
 
-  /* slide 4 — recent transactions */
-  .is-txlist { position: relative; height: 300px; overflow: hidden; }
-  .is-txstack { display: flex; flex-direction: column; gap: 12px; }
-  .is-tx { display: flex; align-items: center; justify-content: space-between; gap: 14px;
-    border-radius: 20px; background: hsl(var(--muted) / 0.6); padding: 18px 20px; height: 118px;
-    box-sizing: border-box; }
-  .is-txname { font-size: 22px; font-weight: 700; }
-  .is-txcat { font-size: 18px; color: hsl(var(--muted-foreground)); margin-top: 4px; }
-  .is-txamt { font-size: 23px; font-weight: 800; }
-  .is-txfade { position: absolute; left: 0; right: 0; bottom: 0; height: 58px;
-    background: linear-gradient(to top, hsl(var(--card)), hsl(var(--card) / 0)); }
+    .is-view { overflow: hidden; padding: 8px 0; margin: -8px 0; }
+    .is-track { display: flex; gap: 12px; will-change: transform; }
+    .is-slide { width: 404px; height: 456px; flex: none; box-sizing: border-box;
+      display: flex; flex-direction: column; gap: 14px; }
+    .is-slide-t { font-size: 19px; font-weight: 700; line-height: 1.2; }
+    .is-slide-s { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 3px; }
+    .is-body { flex: 1; min-height: 0; }
 
-  /* the fixed stats row under the carousel */
-  .is-stats { flex: none; display: flex; gap: 14px; }
-  .is-stat { flex: 1; border-radius: 24px; background: hsl(var(--card)); box-shadow: var(--shadow-card);
-    border: 1px solid hsl(0 0% 100% / 0.9); padding: 16px 22px; }
-  .is-statk { font-size: 15px; font-weight: 800; letter-spacing: 0.06em;
-    color: hsl(var(--muted-foreground)); }
-  .is-statv { font-size: 27px; font-weight: 800; margin-top: 4px; }
-  .is-statm { font-size: 15px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
-</style>
+    /* — slide 1: this period against the last — */
+    .is-bars { display: flex; align-items: flex-end; justify-content: center; gap: 14px;
+      height: 300px; }
+    .is-bar { position: relative; flex: 1; max-width: 120px; }
+    .is-bar > i { position: absolute; inset: 0; border-radius: 8px;
+      transform-origin: 50% 100%; }
+    .is-bar > b { position: absolute; inset: 0; display: grid; place-items: center;
+      font-size: 15px; font-weight: 700; color: hsl(0 0% 100%); }
+    .is-legend { display: flex; justify-content: center; gap: 18px; margin-top: 14px;
+      font-size: 13px; color: hsl(var(--muted-foreground)); }
+    .is-legend > span { display: inline-flex; align-items: center; gap: 7px; }
+    .is-legend i { width: 10px; height: 10px; border-radius: 50%; display: block; }
 
-<div id="root" data-composition-id="15-insights-slides" data-width="1920" data-height="1080">
+    /* — slide 2: the category donut — */
+    /* The slide is far taller than it is wide, so the ring sits above its own
+       legend instead of beside it — side by side the 404px card cannot hold
+       "ביגוד ואביזרים" and its ₪ figure on one line without truncating both. */
+    .is-donut-row { display: flex; flex-direction: column; gap: 16px; }
+    .is-donut { width: 198px; height: 198px; flex: none; align-self: center;
+      transform-origin: 50% 50%; }
+    .is-cats { flex: none; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+    .is-cat { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 17px; }
+    .is-cat .k { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .is-cat .k i { width: 10px; height: 10px; border-radius: 50%; flex: none; display: block; }
+    .is-cat .k svg { width: 18px; height: 18px; flex: none; }
+    .is-cat .v { font-weight: 700; }
 
-  <div class="clip is-ground" id="is-ground" data-start="0" data-duration="20" data-track-index="0"></div>
+    /* — slides 3–5: the ranked lists — */
+    .is-list { display: flex; flex-direction: column; gap: 8px; }
+    .is-row { display: flex; align-items: center; gap: 12px; border-radius: 18px;
+      background: hsl(var(--secondary)); padding: 13px 14px; text-align: right; }
+    .is-row-ic { width: 34px; height: 34px; border-radius: 50%; flex: none;
+      display: grid; place-items: center; background: hsl(var(--card)); }
+    .is-row-ic svg { width: 19px; height: 19px; }
+    .is-row-tx { flex: 1; min-width: 0; }
+    .is-row-tx > b { display: block; font-size: 16px; font-weight: 700; line-height: 1.25; }
+    .is-row-tx > span { display: block; font-size: 13px; color: hsl(var(--muted-foreground)); }
+    .is-row-v { flex: none; font-size: 16px; font-weight: 700; }
+    .is-card-ic { width: 20px; height: 20px; flex: none; color: hsl(var(--primary)); }
 
-  <div class="clip bg-layer" id="is-bg" data-start="0" data-duration="20" data-track-index="1">
-    <div class="bg-glow"></div>
-    <div class="bg-grid"></div>
-    <div class="bg-ghost">Lessley</div>
-    <div class="bg-grain"></div>
-  </div>
+    /* — pagination dots: 5 slots, active = a teal pill — */
+    .is-dots { display: flex; justify-content: center; align-items: center; gap: 12px;
+      margin-top: 4px; }
+    .is-dotrow { display: flex; align-items: center; gap: 6px; }
+    .is-arrow { width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid;
+      place-items: center; background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+      color: hsl(var(--foreground)); box-shadow: var(--shadow-card); }
+    .is-arrow svg { width: 16px; height: 16px; }
+    /* Real store rows carry Latin names; keep each one its own LTR island so the
+       bidi algorithm cannot reorder "FOX - פוקס" inside an RTL run. */
+    .is-ltr { direction: ltr; unicode-bidi: isolate; }
+    .is-dot { position: relative; width: 24px; height: 6px; }
+    .is-dot > .off { position: absolute; top: 0; left: 9px; width: 6px; height: 6px;
+      border-radius: 999px; background: hsl(var(--border)); }
+    .is-dot > .on { position: absolute; inset: 0; border-radius: 999px;
+      background: hsl(var(--primary)); transform-origin: 50% 50%; }
+  </style>
 
-  <div class="clip stage" id="is-stage" data-start="0" data-duration="20" data-track-index="2">
-    <div class="col-text">
-      <h1 class="scene-title" id="is-h1">תובנות · חמש השקופיות</h1>
-      <p class="scene-body" id="is-p1">חמש שקופיות של צלילה לעומק.</p>
-      <p class="scene-body" id="is-p2">לאן הכסף הולך, ובאילו חנויות.</p>
+  <div id="root" data-composition-id="15-insights-slides" data-width="1920" data-height="1080">
+
+    <div class="clip is-ground" id="is-ground" data-start="0" data-duration="16" data-track-index="0"></div>
+
+    <div class="clip bg-layer" id="is-bg" data-start="0" data-duration="16" data-track-index="1">
+      <div class="bg-glow" id="is-glow"></div>
+      <div class="bg-grid"></div>
+      <div class="bg-ghost">Lessley</div>
+      <div class="bg-grain"></div>
     </div>
 
-    <div class="device" data-layout-allow-overflow>
-      <div class="device-body">
-        <div class="device-screen">
-          <div class="device-island"></div>
-          <div class="screen-world" id="is-world">
-            <div class="app">
-              <div class="app-header">
-                <div class="app-icon">L</div>
-                <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
-                <div class="app-avatar">D</div>
-              </div>
+    <div class="clip is-scene" id="is-stage" data-start="0" data-duration="16" data-track-index="2">
 
-              <div class="app-main">
-                <div class="is-dots">
-                  <i class="is-d" id="is-d0"></i>
-                  <i class="is-d" id="is-d1"></i>
-                  <i class="is-d" id="is-d2"></i>
-                  <i class="is-d" id="is-d3"></i>
-                  <i class="is-d" id="is-d4"></i>
-                </div>
+      <div class="col-text">
+        <h1 class="scene-title" id="is-h1">לאן הכסף הולך</h1>
+        <div class="is-rule"><i id="is-rule-fill"></i></div>
+        <p class="scene-body" id="is-p1">לפי קטגוריה, חנות, כרטיס ותקופה.</p>
+        <p class="scene-body" id="is-p2">חמש שקופיות, תמונה אחת שלמה.</p>
+      </div>
 
-                <div class="is-window" data-camera-target id="is-window">
-                  <div class="is-track" id="is-track" data-layout-allow-overflow>
+      <div class="is-rig">
+        <div class="is-scale">
+          <div class="device" data-layout-allow-overflow>
+            <div class="device-body">
+              <div class="device-screen">
+                <div class="screen-world">
+                  <div class="app">
 
-                    <!-- 1 · סקירה כללית -->
-                    <div class="is-slide">
-                      <div>
-                        <p class="is-t">סקירת הוצאות</p>
-                        <p class="is-s">התקופה הזו לעומת הקודמת</p>
+                    <div class="app-header">
+                      <div class="brand">
+                        <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                        <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
                       </div>
-                      <div class="is-body">
-                        <div class="is-bars">
-                          <div class="is-barcol">
-                            <div class="is-bar is-bar-prev" id="s1-prev" style="height:172px"></div>
-                            <span class="is-barlbl">קודם</span>
-                          </div>
-                          <div class="is-barcol">
-                            <div class="is-bar is-bar-cur" id="s1-cur" style="height:252px"><span class="num">₪5,630</span></div>
-                            <span class="is-barlbl">נוכחי</span>
-                          </div>
-                        </div>
+                      <div class="app-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M18 8.4a6 6 0 1 0-12 0c0 6.6-2.7 7.6-2.7 7.6h17.4S18 15 18 8.4"></path>
+                          <path d="M13.6 20.2a2 2 0 0 1-3.2 0"></path>
+                        </svg>
                       </div>
+                      <div class="app-avatar">D</div>
                     </div>
 
-                    <!-- 2 · קטגוריות -->
-                    <div class="is-slide">
-                      <div>
-                        <p class="is-t">קטגוריה מובילה</p>
-                        <p class="is-s">לאן הכסף הולך</p>
-                      </div>
-                      <div class="is-body">
-                        <div class="is-cat">
-                          <div class="is-donutwrap">
-                            <svg viewBox="0 0 120 120" width="180" height="180" aria-hidden="true">
-                              <circle cx="60" cy="60" r="45" fill="none"
-                                stroke="hsl(198 28% 90%)" stroke-width="17" />
-                              <circle id="s2-ring" cx="60" cy="60" r="45" fill="none"
-                                stroke="hsl(182 38% 36%)" stroke-width="17" stroke-linecap="round"
-                                transform="rotate(-90 60 60)" />
-                            </svg>
-                            <div class="is-donutmid"><span class="num" id="s2-pct">38%</span></div>
+                    <div class="app-main">
+                      <div class="is-scroll" data-layout-allow-overflow data-layout-allow-occlusion>
+
+                        <!-- the tail of the stats grid, carried over from frame 14: the page
+                             is one scrolling screen and the deep dive sits under it -->
+                        <div class="stat-row" data-layout-allow-overlap data-layout-allow-occlusion>
+                          <div class="stat" data-layout-allow-overlap data-layout-allow-occlusion>
+                            <div class="stat-lbl" data-layout-allow-overlap data-layout-allow-occlusion>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 3.5v17l2.4-1.6 2.4 1.6 2.4-1.6 2.4 1.6 2.4-1.6 2 1.3V3.5Z"></path>
+                                <path d="M8.5 8h7M8.5 12h7"></path>
+                              </svg>עסקאות
+                            </div>
+                            <div class="stat-val"><span class="num">142</span></div>
+                            <div class="stat-cap"><span class="num">30</span>&nbsp;הימים האחרונים</div>
                           </div>
+                          <div class="stat" data-layout-allow-overlap data-layout-allow-occlusion>
+                            <div class="stat-lbl" data-layout-allow-overlap data-layout-allow-occlusion>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h11.5v3"></path>
+                                <path d="M3.5 7.5v10A2.5 2.5 0 0 0 6 20h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 19 8H3.5Z"></path>
+                                <path d="M16.8 14h.01"></path>
+                              </svg>סכום כולל
+                            </div>
+                            <div class="stat-val"><span class="num">₪5,630</span></div>
+                            <div class="stat-cap">כל הכרטיסים המקושרים</div>
+                          </div>
+                        </div>
+
+                        <div class="is-deep">
                           <div>
-                            <div class="is-catname"><i class="is-dot"></i><span>מכולת</span></div>
-                            <div class="is-catamt num">₪2,140</div>
+                            <h2 class="is-h2" id="is-deep-t">צלילה לעומק</h2>
+                            <p class="app-sub is-sub" id="is-deep-s">החליקו כדי לראות פרטים עבור <span class="num">30</span>&nbsp;הימים האחרונים.</p>
+                          </div>
+
+                          <div class="period" id="is-period">
+                            <span><span class="num">7</span>&nbsp;ימים</span>
+                            <span class="on"><span class="num">30</span>&nbsp;ימים</span>
+                            <span><span class="num">90</span>&nbsp;ימים</span>
+                            <span>שנה</span>
+                          </div>
+
+                          <div class="is-view" data-layout-allow-overflow>
+                            <div class="is-track" id="is-track" data-layout-allow-overlap data-layout-allow-occlusion>
+
+                              <!-- 1 · סקירת הוצאות -->
+                              <div class="card is-slide" id="is-s1">
+                                <div>
+                                  <div class="is-slide-t" id="is-s1-t">סקירת הוצאות</div>
+                                  <div class="is-slide-s" id="is-s1-s">התקופה הזו לעומת הקודמת</div>
+                                </div>
+                                <div class="is-body">
+                                  <div class="is-bars">
+                                    <div class="is-bar" style="height:300px">
+                                      <i id="is-bar-p" style="background:hsl(354 75% 50%)"></i>
+                                      <b id="is-barv-p"><span class="num">₪6,180.00</span></b>
+                                    </div>
+                                    <div class="is-bar" style="height:273px">
+                                      <i id="is-bar-c" style="background:hsl(150 60% 45%)"></i>
+                                      <b id="is-barv-c"><span class="num">₪5,630.00</span></b>
+                                    </div>
+                                  </div>
+                                  <div class="is-legend">
+                                    <span id="is-lg-p"><i style="background:hsl(354 75% 50%)"></i><span class="num">9 ביוני – 8 ביולי</span></span>
+                                    <span id="is-lg-c"><i style="background:hsl(150 60% 45%)"></i><span class="num">9 ביולי – 8 באוג׳</span></span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- 2 · קטגוריה מובילה — ביגוד ואביזרים leads at 38% of ₪5,630 -->
+                              <div class="card is-slide" id="is-s2">
+                                <div>
+                                  <div class="is-slide-t" id="is-s2-t">קטגוריה מובילה</div>
+                                  <div class="is-slide-s" id="is-s2-s">לאן הכסף הולך</div>
+                                </div>
+                                <div class="is-body">
+                                  <div class="is-donut-row">
+                                    <svg class="is-donut" id="is-donut" viewBox="0 0 120 120" aria-hidden="true">
+                                      <g transform="rotate(-90 60 60)" fill="none" stroke-width="24">
+                                        <circle cx="60" cy="60" r="46" stroke="hsl(182 38% 36%)"
+                                                stroke-dasharray="106.22 289.03" stroke-dashoffset="0"></circle>
+                                        <circle cx="60" cy="60" r="46" stroke="hsl(180 40% 48%)"
+                                                stroke-dasharray="69.98 289.03" stroke-dashoffset="-108.62"></circle>
+                                        <circle cx="60" cy="60" r="46" stroke="hsl(176 38% 64%)"
+                                                stroke-dasharray="58.57 289.03" stroke-dashoffset="-181.00"></circle>
+                                        <circle cx="60" cy="60" r="46" stroke="hsl(205 31% 32%)"
+                                                stroke-dasharray="44.67 289.03" stroke-dashoffset="-241.97"></circle>
+                                      </g>
+                                    </svg>
+                                    <div class="is-cats">
+                                      <div class="is-cat" id="is-c1">
+                                        <span class="k"><i style="background:hsl(182 38% 36%)"></i>
+                                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M9 3.2 4.4 5.6l1.5 3.9 2.4-1.1v10.9a1 1 0 0 0 1 1h5.4a1 1 0 0 0 1-1V8.4l2.4 1.1 1.5-3.9L15 3.2z"
+                                                  fill="hsl(210 20% 90%)" stroke="hsl(210 12% 42%)" stroke-width="1.6"
+                                                  stroke-linejoin="round"></path>
+                                            <path d="M9 3.2a3 3 0 0 0 6 0" fill="none" stroke="hsl(210 12% 42%)"
+                                                  stroke-width="1.6" stroke-linecap="round"></path>
+                                          </svg>ביגוד ואביזרים</span>
+                                        <span class="v num">₪2,140.00</span>
+                                      </div>
+                                      <div class="is-cat" id="is-c2">
+                                        <span class="k"><i style="background:hsl(180 40% 48%)"></i>
+                                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M2.5 4.5h3l2.8 10.2h10.3l2.4-7.1H7" fill="none" stroke="hsl(210 12% 42%)"
+                                                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            <circle cx="10" cy="19" r="1.7" fill="hsl(210 16% 32%)"></circle>
+                                            <circle cx="17" cy="19" r="1.7" fill="hsl(210 16% 32%)"></circle>
+                                          </svg>מכולת</span>
+                                        <span class="v num">₪1,410.00</span>
+                                      </div>
+                                      <div class="is-cat" id="is-c3">
+                                        <span class="k"><i style="background:hsl(176 38% 64%)"></i>
+                                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M6 2.5v8a2.5 2.5 0 0 0 5 0v-8M8.5 2.5v8M8.5 13v8.5" fill="none"
+                                                  stroke="hsl(210 12% 42%)" stroke-width="1.8" stroke-linecap="round"></path>
+                                            <path d="M17 2.5c-1.7 1.2-2.5 3-2.5 5.2 0 1.8.9 2.8 2.5 3v10.8" fill="none"
+                                                  stroke="hsl(210 12% 42%)" stroke-width="1.8" stroke-linecap="round"></path>
+                                          </svg>מסעדות</span>
+                                        <span class="v num">₪1,180.00</span>
+                                      </div>
+                                      <div class="is-cat" id="is-c4">
+                                        <span class="k"><i style="background:hsl(205 31% 32%)"></i>
+                                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M9 2.5v5M15 2.5v5" fill="none" stroke="hsl(210 12% 42%)"
+                                                  stroke-width="1.8" stroke-linecap="round"></path>
+                                            <path d="M6.5 7.5h11v4a5.5 5.5 0 0 1-5.5 5.5A5.5 5.5 0 0 1 6.5 11.5Z"
+                                                  fill="hsl(210 20% 90%)" stroke="hsl(210 12% 42%)" stroke-width="1.8"
+                                                  stroke-linejoin="round"></path>
+                                            <path d="M12 17v4.5" fill="none" stroke="hsl(210 12% 42%)"
+                                                  stroke-width="1.8" stroke-linecap="round"></path>
+                                          </svg>אלקטרוניקה</span>
+                                        <span class="v num">₪900.00</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- 3 · חנויות מובילות — real stores, clothing-led -->
+                              <div class="card is-slide" id="is-s3">
+                                <div>
+                                  <div class="is-slide-t" id="is-s3-t">חנויות מובילות</div>
+                                  <div class="is-slide-s" id="is-s3-s">גללו כדי לראות את כל העשר</div>
+                                </div>
+                                <div class="is-body">
+                                  <div class="is-list">
+                                    <div class="is-row" id="is-st1">
+                                      <span class="is-row-ic">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                          <path d="M9 3.2 4.4 5.6l1.5 3.9 2.4-1.1v10.9a1 1 0 0 0 1 1h5.4a1 1 0 0 0 1-1V8.4l2.4 1.1 1.5-3.9L15 3.2z"
+                                                fill="hsl(210 20% 90%)" stroke="hsl(210 12% 42%)" stroke-width="1.6"
+                                                stroke-linejoin="round"></path>
+                                          <path d="M9 3.2a3 3 0 0 0 6 0" fill="none" stroke="hsl(210 12% 42%)"
+                                                stroke-width="1.6" stroke-linecap="round"></path>
+                                          </svg>
+                                      </span>
+                                      <span class="is-row-tx"><b><span class="num">1.</span>&nbsp;<span class="is-ltr">FOX - פוקס</span></b><span><span class="num">12</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪1,420.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-st2">
+                                      <span class="is-row-ic">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                          <path d="M9 3.2 4.4 5.6l1.5 3.9 2.4-1.1v10.9a1 1 0 0 0 1 1h5.4a1 1 0 0 0 1-1V8.4l2.4 1.1 1.5-3.9L15 3.2z"
+                                                fill="hsl(210 20% 90%)" stroke="hsl(210 12% 42%)" stroke-width="1.6"
+                                                stroke-linejoin="round"></path>
+                                          <path d="M9 3.2a3 3 0 0 0 6 0" fill="none" stroke="hsl(210 12% 42%)"
+                                                stroke-width="1.6" stroke-linecap="round"></path>
+                                          </svg>
+                                      </span>
+                                      <span class="is-row-tx"><b><span class="num">2.</span>&nbsp;<span class="is-ltr">GUESS</span></b><span><span class="num">7</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪720.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-st3">
+                                      <span class="is-row-ic">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                          <path d="M9 3.2 4.4 5.6l1.5 3.9 2.4-1.1v10.9a1 1 0 0 0 1 1h5.4a1 1 0 0 0 1-1V8.4l2.4 1.1 1.5-3.9L15 3.2z"
+                                                fill="hsl(210 20% 90%)" stroke="hsl(210 12% 42%)" stroke-width="1.6"
+                                                stroke-linejoin="round"></path>
+                                          <path d="M9 3.2a3 3 0 0 0 6 0" fill="none" stroke="hsl(210 12% 42%)"
+                                                stroke-width="1.6" stroke-linecap="round"></path>
+                                          </svg>
+                                      </span>
+                                      <span class="is-row-tx"><b><span class="num">3.</span>&nbsp;<span class="is-ltr">NIKE</span></b><span><span class="num">6</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪615.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-st4">
+                                      <span class="is-row-ic">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                          <path d="M2.5 4.5h3l2.8 10.2h10.3l2.4-7.1H7" fill="none" stroke="hsl(210 12% 42%)"
+                                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                          <circle cx="10" cy="19" r="1.7" fill="hsl(210 16% 32%)"></circle>
+                                          <circle cx="17" cy="19" r="1.7" fill="hsl(210 16% 32%)"></circle>
+                                          </svg>
+                                      </span>
+                                      <span class="is-row-tx"><b><span class="num">4.</span>&nbsp;<span class="">שוק פרייס</span></b><span><span class="num">9</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪430.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-st5">
+                                      <span class="is-row-ic">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                          <path d="M9 2.5v5M15 2.5v5" fill="none" stroke="hsl(210 12% 42%)"
+                                                stroke-width="1.8" stroke-linecap="round"></path>
+                                          <path d="M6.5 7.5h11v4a5.5 5.5 0 0 1-5.5 5.5A5.5 5.5 0 0 1 6.5 11.5Z"
+                                                fill="hsl(210 20% 90%)" stroke="hsl(210 12% 42%)" stroke-width="1.8"
+                                                stroke-linejoin="round"></path>
+                                          <path d="M12 17v4.5" fill="none" stroke="hsl(210 12% 42%)"
+                                                stroke-width="1.8" stroke-linecap="round"></path>
+                                          </svg>
+                                      </span>
+                                      <span class="is-row-tx"><b><span class="num">5.</span>&nbsp;<span class="is-ltr">KSP</span></b><span><span class="num">4</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪380.00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- 4 · עסקאות אחרונות -->
+                              <div class="card is-slide" id="is-s4">
+                                <div>
+                                  <div class="is-slide-t" id="is-s4-t">עסקאות אחרונות</div>
+                                  <div class="is-slide-s" id="is-s4-s">התנועות האחרונות</div>
+                                </div>
+                                <div class="is-body">
+                                  <div class="is-list">
+                                    <div class="is-row" id="is-tx1">
+                                      <span class="is-row-tx"><b><span class="is-ltr">FOX - פוקס</span></b><span><span class="num">07/08/2026</span> · ביגוד ואביזרים</span></span>
+                                      <span class="is-row-v num">−₪284.50</span>
+                                    </div>
+                                    <div class="is-row" id="is-tx2">
+                                      <span class="is-row-tx"><b>שוק פרייס</b><span><span class="num">06/08/2026</span> · מכולת</span></span>
+                                      <span class="is-row-v num">−₪212.40</span>
+                                    </div>
+                                    <div class="is-row" id="is-tx3">
+                                      <span class="is-row-tx"><b>בורגר ראנץ</b><span><span class="num">06/08/2026</span> · מסעדות</span></span>
+                                      <span class="is-row-v num">−₪38.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-tx4">
+                                      <span class="is-row-tx"><b><span class="is-ltr">NIKE</span></b><span><span class="num">05/08/2026</span> · ביגוד ואביזרים</span></span>
+                                      <span class="is-row-v num">−₪128.90</span>
+                                    </div>
+                                    <div class="is-row" id="is-tx5">
+                                      <span class="is-row-tx"><b><span class="is-ltr">KSP</span></b><span><span class="num">04/08/2026</span> · אלקטרוניקה</span></span>
+                                      <span class="is-row-v num">−₪899.00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- 5 · הוצאות לפי חשבונות -->
+                              <div class="card is-slide" id="is-s5">
+                                <div>
+                                  <div class="is-slide-t" id="is-s5-t">הוצאות לפי חשבונות</div>
+                                  <div class="is-slide-s" id="is-s5-s">בנקאות פתוחה מחוברת</div>
+                                </div>
+                                <div class="is-body">
+                                  <div class="is-list">
+                                    <div class="is-row" id="is-ac1">
+                                      <svg class="is-card-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                           stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="2.5" y="5" width="19" height="14" rx="3"></rect><path d="M2.5 10h19"></path>
+                                      </svg>
+                                      <span class="is-row-tx"><b class="num">•••• 4821</b><span><span class="num">61</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪2,410.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-ac2">
+                                      <svg class="is-card-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                           stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="2.5" y="5" width="19" height="14" rx="3"></rect><path d="M2.5 10h19"></path>
+                                      </svg>
+                                      <span class="is-row-tx"><b class="num">•••• 7390</b><span><span class="num">48</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪1,930.00</span>
+                                    </div>
+                                    <div class="is-row" id="is-ac3">
+                                      <svg class="is-card-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                           stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="2.5" y="5" width="19" height="14" rx="3"></rect><path d="M2.5 10h19"></path>
+                                      </svg>
+                                      <span class="is-row-tx"><b class="num">•••• 1265</b><span><span class="num">33</span>&nbsp;עסקאות</span></span>
+                                      <span class="is-row-v num">₪1,290.00</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                            </div>
+                          </div>
+
+                          <div class="is-dots">
+                            <span class="is-arrow">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M9.5 5.5 16 12l-6.5 6.5"></path>
+                              </svg>
+                            </span>
+                            <span class="is-dotrow">
+                              <span class="is-dot"><i class="off" id="is-doff1"></i><i class="on" id="is-don1"></i></span>
+                              <span class="is-dot"><i class="off" id="is-doff2"></i><i class="on" id="is-don2"></i></span>
+                              <span class="is-dot"><i class="off" id="is-doff3"></i><i class="on" id="is-don3"></i></span>
+                              <span class="is-dot"><i class="off" id="is-doff4"></i><i class="on" id="is-don4"></i></span>
+                              <span class="is-dot"><i class="off" id="is-doff5"></i><i class="on" id="is-don5"></i></span>
+                            </span>
+                            <span class="is-arrow">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14.5 5.5 8 12l6.5 6.5"></path>
+                              </svg>
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <!-- 3 · חנויות מובילות -->
-                    <div class="is-slide">
-                      <div>
-                        <p class="is-t">חנויות מובילות</p>
-                        <p class="is-s">גללו כדי לראות את כל העשר</p>
-                      </div>
-                      <div class="is-body">
-                        <div class="is-rows">
-                          <div class="is-row s3-row">
-                            <div class="is-rowtop"><span class="is-rank num">1</span><span>רמי לוי</span></div>
-                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
-                          </div>
-                          <div class="is-row s3-row">
-                            <div class="is-rowtop"><span class="is-rank num">2</span><span>שופרסל</span></div>
-                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
-                          </div>
-                          <div class="is-row s3-row">
-                            <div class="is-rowtop"><span class="is-rank num">3</span><span>סופר-פארם</span></div>
-                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
-                          </div>
-                          <div class="is-row s3-row">
-                            <div class="is-rowtop"><span class="is-rank num">4</span><span>Be</span></div>
-                            <div class="is-track-bar"><i class="is-fill s3-fill"></i></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 4 · עסקאות -->
-                    <div class="is-slide">
-                      <div>
-                        <p class="is-t">עסקאות אחרונות</p>
-                        <p class="is-s">התנועות האחרונות</p>
-                      </div>
-                      <div class="is-body">
-                        <div class="is-txlist">
-                          <div class="is-txstack">
-                            <div class="is-tx s4-tx">
-                              <div>
-                                <div class="is-txname">רמי לוי</div>
-                                <div class="is-txcat">מכולת</div>
-                              </div>
-                              <span class="is-txamt num">−₪412</span>
-                            </div>
-                            <div class="is-tx s4-tx">
-                              <div>
-                                <div class="is-txname">רמי לוי</div>
-                                <div class="is-txcat">מכולת</div>
-                              </div>
-                              <span class="is-txamt num">−₪340</span>
-                            </div>
-                            <div class="is-tx s4-tx">
-                              <div>
-                                <div class="is-txname">שופרסל</div>
-                                <div class="is-txcat">מכולת</div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="is-txfade"></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 5 · חשבונות -->
-                    <div class="is-slide">
-                      <div>
-                        <p class="is-t">הוצאות לפי חשבונות</p>
-                        <p class="is-s">בנקאות פתוחה מחוברת</p>
-                      </div>
-                      <div class="is-body">
-                        <div class="is-rows">
-                          <div class="is-row s5-row">
-                            <div class="is-rowtop"><i class="is-chip"></i><span class="num">•••• 1042</span></div>
-                            <div class="is-track-bar"><i class="is-fill s5-fill"></i></div>
-                          </div>
-                          <div class="is-row s5-row">
-                            <div class="is-rowtop"><i class="is-chip"></i><span class="num">•••• 7788</span></div>
-                            <div class="is-track-bar"><i class="is-fill s5-fill"></i></div>
-                          </div>
-                          <div class="is-row s5-row">
-                            <div class="is-rowtop"><i class="is-chip"></i><span class="num">•••• 3915</span></div>
-                            <div class="is-track-bar"><i class="is-fill s5-fill"></i></div>
-                          </div>
-                        </div>
-                      </div>
+                    <div class="nav">
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 3.2 13.7 8.3 18.8 10 13.7 11.7 12 16.8 10.3 11.7 5.2 10 10.3 8.3Z"></path>
+                          <path d="M18.5 15.5 19.3 17.7 21.5 18.5 19.3 19.3 18.5 21.5 17.7 19.3 15.5 18.5 17.7 17.7Z"></path>
+                        </svg>אופטימיזציה</span>
+                      <span class="nav-tab on">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M3 3v16.5a1.5 1.5 0 0 0 1.5 1.5H21"></path>
+                          <path d="M8 17v-5M13 17V8M18 17v-3"></path>
+                        </svg>תובנות</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M8.6 14.4A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.6 2.4Z"></path>
+                        </svg>חם</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.9 5.9 0 0 0 18 7.6 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                          <path d="M9.5 18h5M10.5 21.5h3"></path>
+                        </svg>המלצות</span>
                     </div>
 
                   </div>
                 </div>
-
-                <div class="is-stats" id="is-stats">
-                  <div class="is-stat">
-                    <div class="is-statk">עסקאות</div>
-                    <div class="is-statv num">142</div>
-                    <div class="is-statm"><span class="num">30</span> הימים האחרונים</div>
-                  </div>
-                  <div class="is-stat">
-                    <div class="is-statk">סכום כולל</div>
-                    <div class="is-statv num">₪5,630</div>
-                    <div class="is-statm">כל הכרטיסים המקושרים</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="nav">
-                <span class="nav-tab">אופטימיזציה</span>
-                <span class="nav-tab on">תובנות</span>
-                <span class="nav-tab">חם</span>
-                <span class="nav-tab">המלצות</span>
+                <div class="device-island"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="clip is-chrome" id="is-chrome-layer" data-start="0" data-duration="16" data-track-index="3">
+      <span class="chapter" id="is-chapter">15 / 21</span>
+      <div class="rail"><i id="is-rail" style="width:100%"></i></div>
+    </div>
   </div>
 
-  <div class="clip is-chrome" id="is-chrome-layer" data-start="0" data-duration="20" data-track-index="3">
-    <span class="chapter">15 / 21</span>
-    <div class="rail"><i id="is-rail"></i></div>
-  </div>
-</div>
+  <script>
+    (function () {
+      var ID = "15-insights-slides";
+      var root = document.querySelector('[data-composition-id="' + ID + '"]') || document;
 
-<script>
-  (function () {
-    var ID = "15-insights-slides";
-    var root = document.querySelector('[data-composition-id="' + ID + '"]');
-    var q = function (s) { return root.querySelector(s); };
-    var qa = function (s) { return root.querySelectorAll(s); };
-    var world = q("#is-world");
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      window.__timelines[ID] = tl;
 
-    var SW = 410, SH = 912;
-    var STEP = 380;                     // slide width 366 + 14 gap
-    var IR = { immediateRender: false };
-    var MUTED = "rgb(220,229,233)", PRIMARY = "rgb(57,127,127)";
+      /* ── NO in-phone camera ────────────────────────────────────────────
+         `.screen-world` holds scale 1 / x 0 / y 0 and `.device` is never
+         transformed by the timeline (frame.md § Fidelity outranks
+         everything, revised 18/08). The carousel is the app's own control:
+         the TRACK moves, the frame does not.                              */
 
-    function st(s, extra) {
-      var o = { scale: s.scale, x: s.x, y: s.y };
-      for (var key in extra) { o[key] = extra[key]; }
-      return o;
-    }
+      function whip(sel, off, dur, at) {
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, at);
+        tl.fromTo(sel, { y: off }, { y: 0, duration: dur, ease: "power4.out" }, at);
+      }
+      function rise(sel, dy, dur, at) {
+        tl.fromTo(sel, { opacity: 0, y: dy },
+          { opacity: 1, y: 0, duration: dur, ease: "power3.out" }, at);
+      }
+      function pop(sel, from, dur, at) {
+        tl.fromTo(sel, { scale: from, opacity: 0 },
+          { scale: 1, opacity: 1, duration: dur, ease: "power3.out" }, at);
+      }
+      function wipe(sel, dur, at) {
+        tl.fromTo(sel, { clipPath: "inset(0px 0px 0px 100%)", opacity: 1 },
+          { clipPath: "inset(0px 0px 0px 0%)", duration: dur, ease: "power2.out" }, at);
+      }
 
-    var tl = gsap.timeline({ paused: true });
+      /* ── chrome: the film-long rail advances 14/21 → 15/21 ───────────── */
+      tl.fromTo("#is-rail", { scaleX: 0.666667 }, { scaleX: 0.714286, duration: 16, ease: "none" }, 0);
+      tl.fromTo("#is-chapter", { opacity: 0 }, { opacity: 1, duration: 0.36, ease: "power1.out" }, 0.18);
 
-    /* ── chrome ──────────────────────────────────────────────────── */
-    tl.fromTo("#is-rail", { scaleX: 0.6508 }, { scaleX: 0.7143, duration: 20, ease: "none" }, 0);
+      /* ── stage copy ───────────────────────────────────────────────────── */
+      whip("#is-h1", 80, 0.18, 0.10);
+      tl.fromTo("#is-rule-fill", { scaleX: 0 },
+        { scaleX: 1, duration: 0.46, ease: "power3.out" }, 0.30);
+      whip("#is-p1", 46, 0.16, 0.46);
+      whip("#is-p2", 46, 0.16, 1.80);
 
-    /* ── stage copy ──────────────────────────────────────────────── */
-    tl.fromTo(["#is-h1", "#is-p1", "#is-p2"],
-      { opacity: 0, y: 34 },
-      { opacity: 1, y: 0, duration: 0.66, ease: "power3.out", stagger: 0.12 }, 0.12);
+      /* ── the carousel — five slides, one track ────────────────────────
+         RTL: the next slide sits to the LEFT, so the track travels +x.
+         STEP = slide width 404 + gap 12. Sixteen seconds over five slides is
+         3.2s each, so the swipe is shortened and every slide's chart is
+         already running before its card finishes arriving.                */
+      var STEP = 416;
+      var GO = [3.05, 6.10, 9.15, 12.20];   // the four swipes
+      var SWIPE = 0.52;
+      for (var i = 0; i < GO.length; i++) {
+        tl.fromTo("#is-track", { x: i * STEP },
+          { x: (i + 1) * STEP, duration: SWIPE, ease: "power2.inOut", immediateRender: (i === 0) }, GO[i]);
+      }
 
-    /* ── camera: inherits the previous scene's pan, then holds so the
-          SWIPE is the motion, and leans in again for the hand-off ─── */
-    var CAM = [
-      { t: 0.00,  s: { scale: 1.18, x: 0, y: -8 },  e: "none" },
-      { t: 1.30,  s: { scale: 1.22, x: 0, y: -42 }, e: "power1.out" },
-      { t: 17.60, s: { scale: 1.22, x: 0, y: -46 }, e: "none" },
-      { t: 20.00, s: { scale: 1.24, x: 0, y: -54 }, e: "power2.in" }
-    ];
-    gsap.set(world, st(CAM[0].s));
-    for (var i = 1; i < CAM.length; i++) {
-      tl.fromTo(world, st(CAM[i - 1].s),
-        st(CAM[i].s, {
-          duration: CAM[i].t - CAM[i - 1].t, ease: CAM[i].e, immediateRender: false
-        }), CAM[i - 1].t);
-    }
+      /* pagination dots — the active slot's teal pill grows, the grey dot leaves */
+      gsap.set(["#is-don1"], { scaleX: 1, opacity: 1 });
+      gsap.set(["#is-doff1"], { opacity: 0 });
+      gsap.set(["#is-don2", "#is-don3", "#is-don4", "#is-don5"], { scaleX: 0.25, opacity: 0 });
+      gsap.set(["#is-doff2", "#is-doff3", "#is-doff4", "#is-doff5"], { opacity: 1 });
+      for (var d = 0; d < GO.length; d++) {
+        var at = GO[d] + 0.05;
+        tl.fromTo("#is-don" + (d + 1), { scaleX: 1, opacity: 1 },
+          { scaleX: 0.25, opacity: 0, duration: 0.30, ease: "power2.inOut", immediateRender: false }, at);
+        tl.fromTo("#is-doff" + (d + 1), { opacity: 0 },
+          { opacity: 1, duration: 0.30, ease: "power2.inOut", immediateRender: false }, at);
+        tl.fromTo("#is-don" + (d + 2), { scaleX: 0.25, opacity: 0 },
+          { scaleX: 1, opacity: 1, duration: 0.30, ease: "power2.inOut", immediateRender: false }, at);
+        tl.fromTo("#is-doff" + (d + 2), { opacity: 1 },
+          { opacity: 0, duration: 0.30, ease: "power2.inOut", immediateRender: false }, at);
+      }
 
-    /* ── the carousel: four nudge-curve swipes, one per narrated slide ─
-          10% ramp-in (power3.in) → 65% linear burst → 25% power4.out tail.  */
-    var SWIPE = [3.90, 7.80, 11.70, 15.60];
-    gsap.set("#is-track", { x: 0 });
-    for (var s = 0; s < SWIPE.length; s++) {
-      var t0 = SWIPE[s], base = s * STEP;
-      tl.fromTo("#is-track", { x: base },
-        { x: base + STEP * 0.10, duration: 0.12, ease: "power3.in", immediateRender: false }, t0);
-      tl.fromTo("#is-track", { x: base + STEP * 0.10 },
-        { x: base + STEP * 0.75, duration: 0.11, ease: "none", immediateRender: false }, t0 + 0.12);
-      tl.fromTo("#is-track", { x: base + STEP * 0.75 },
-        { x: base + STEP, duration: 0.37, ease: "power4.out", immediateRender: false }, t0 + 0.23);
-    }
+      /* ── Slide 1 (0.0–3.05s) — this period against the last ───────────
+         The bars are ALREADY growing at t=0: the cut from frame 14 lands on
+         a chart in motion, not on a chart building from zero.             */
+      tl.fromTo("#is-bar-p", { scaleY: 0.34 }, { scaleY: 1, duration: 1.25, ease: "power3.out" }, 0);
+      tl.fromTo("#is-bar-c", { scaleY: 0.34 }, { scaleY: 1, duration: 1.38, ease: "power3.out" }, 0);
+      wipe("#is-s1-t", 0.36, 0.12);
+      wipe("#is-s1-s", 0.36, 0.28);
+      pop("#is-barv-p", 0.8, 0.36, 1.18);
+      pop("#is-barv-c", 0.8, 0.36, 1.44);
+      rise("#is-lg-p", 14, 0.36, 1.95);
+      rise("#is-lg-c", 14, 0.36, 2.15);
 
-    /* ── the dot indicator steps with each swipe ─────────────────── */
-    gsap.set(".is-d", { scaleX: 0.25, backgroundColor: MUTED });
-    gsap.set("#is-d0", { scaleX: 1, backgroundColor: PRIMARY });
-    for (var d = 0; d < SWIPE.length; d++) {
-      tl.fromTo("#is-d" + d, { scaleX: 1, backgroundColor: PRIMARY },
-        { scaleX: 0.25, backgroundColor: MUTED, duration: 0.3, ease: "power2.out", immediateRender: false },
-        SWIPE[d] + 0.14);
-      tl.fromTo("#is-d" + (d + 1), { scaleX: 0.25, backgroundColor: MUTED },
-        { scaleX: 1, backgroundColor: PRIMARY, duration: 0.3, ease: "power2.out", immediateRender: false },
-        SWIPE[d] + 0.14);
-    }
+      /* ── Slide 2 (3.57–6.10s) — the category donut ────────────────────
+         ביגוד ואביזרים leads at ₪2,140 of ₪5,630. The donut is mid-sweep
+         before the slide lands at 3.57s.                                  */
+      tl.fromTo("#is-donut", { rotate: -58, scale: 0.72, opacity: 0 },
+        { rotate: 0, scale: 1, opacity: 1, duration: 1.15, ease: "power3.out" }, 3.30);
+      wipe("#is-s2-t", 0.34, 3.64);
+      wipe("#is-s2-s", 0.34, 3.78);
+      rise("#is-c1", 16, 0.38, 4.02);
+      rise("#is-c2", 16, 0.38, 4.40);
+      rise("#is-c3", 16, 0.38, 4.78);
+      rise("#is-c4", 16, 0.38, 5.16);
 
-    /* ── each slide's chart is ALREADY MOVING as the slide arrives ─
-          (fired mid-burst, so no slide reads as a card built from zero) */
-    var C1 = 0.15, C2 = SWIPE[0] + 0.15, C3 = SWIPE[1] + 0.15,
-        C4 = SWIPE[2] + 0.15, C5 = SWIPE[3] + 0.15;
+      /* ── Slide 3 (6.62–9.15s) — the ranked stores ─────────────────────
+         Real stores: FOX - פוקס leads the clothing spend. The first row is
+         already travelling before the slide arrives.                      */
+      rise("#is-st1", 26, 0.42, 6.38);
+      wipe("#is-s3-t", 0.34, 6.72);
+      wipe("#is-s3-s", 0.34, 6.86);
+      rise("#is-st2", 26, 0.42, 7.04);
+      rise("#is-st3", 26, 0.42, 7.42);
+      rise("#is-st4", 26, 0.42, 7.80);
+      rise("#is-st5", 26, 0.42, 8.18);
 
-    // 1 · period comparison — growth bars, scaleY from the baseline
-    tl.fromTo(["#s1-prev", "#s1-cur"], { scaleY: 0 },
-      { scaleY: 1, duration: 0.85, ease: "power3.out", stagger: 0.1 }, C1);
-    tl.fromTo(".is-barlbl", { opacity: 0, y: 12 },
-      { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, C1 + 0.35);
+      /* ── Slide 4 (9.67–12.20s) — the recent transactions ──────────────── */
+      rise("#is-tx1", 24, 0.40, 9.43);
+      wipe("#is-s4-t", 0.34, 9.76);
+      wipe("#is-s4-s", 0.34, 9.90);
+      rise("#is-tx2", 24, 0.40, 10.06);
+      rise("#is-tx3", 24, 0.40, 10.42);
+      rise("#is-tx4", 24, 0.40, 10.78);
+      rise("#is-tx5", 24, 0.40, 11.14);
 
-    // 2 · top category — measured ring draw + the legend under it
-    var ring = q("#s2-ring");
-    var LEN = (ring && ring.getTotalLength) ? ring.getTotalLength() : 282.74;
-    ring.style.strokeDasharray = LEN;
-    tl.fromTo(ring, { strokeDashoffset: LEN },
-      { strokeDashoffset: LEN * (1 - 0.38), duration: 1.05, ease: "power2.out" }, C2);
-    tl.fromTo(["#s2-pct", ".is-catname", ".is-catamt"], { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.46, ease: "power3.out", stagger: 0.09 }, C2 + 0.1);
+      /* ── Slide 5 (12.72–16.0s) — the linked accounts ──────────────────── */
+      rise("#is-ac1", 24, 0.44, 12.48);
+      wipe("#is-s5-t", 0.34, 12.82);
+      wipe("#is-s5-s", 0.34, 12.96);
+      rise("#is-ac2", 24, 0.44, 13.30);
+      rise("#is-ac3", 24, 0.44, 13.92);
 
-    // 3 · top stores — rows cascade, fills run right-to-left
-    tl.fromTo(".s3-row", { opacity: 0, x: 26 },
-      { opacity: 1, x: 0, duration: 0.42, ease: "power3.out", stagger: 0.08 }, C3);
-    var S3 = [1, 0.78, 0.6, 0.44], f3 = qa(".s3-fill");
-    for (var a = 0; a < f3.length; a++) {
-      tl.fromTo(f3[a], { scaleX: 0 },
-        { scaleX: S3[a], duration: 0.9, ease: "power3.out" }, C3 + a * 0.08);
-    }
-
-    // 4 · recent transactions — the list pours in past the fold
-    tl.fromTo(".s4-tx", { opacity: 0, y: 30 },
-      { opacity: 1, y: 0, duration: 0.46, ease: "power3.out", stagger: 0.11 }, C4);
-
-    // 5 · accounts — the per-card split fills
-    tl.fromTo(".s5-row", { opacity: 0, x: 26 },
-      { opacity: 1, x: 0, duration: 0.42, ease: "power3.out", stagger: 0.09 }, C5);
-    var S5 = [1, 0.72, 0.5], f5 = qa(".s5-fill");
-    for (var b = 0; b < f5.length; b++) {
-      tl.fromTo(f5[b], { scaleX: 0 },
-        { scaleX: S5[b], duration: 0.9, ease: "power3.out" }, C5 + b * 0.09);
-    }
-
-    /* ── the fixed stats row resolves once, under the whole carousel ── */
-    tl.fromTo(".is-stat", { opacity: 0, y: 24 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.1 }, 0.55);
-
-    window.__timelines = window.__timelines || {};
-    window.__timelines[ID] = tl;
-  })();
-</script>
+      // the stage glow answers the close of the deep dive — reaction, not idle
+      tl.fromTo("#is-glow", { scale: 0.97, opacity: 0.86 },
+        { scale: 1.06, opacity: 1, duration: 1.05, ease: "power2.out" }, 14.40);
+    })();
+  </script>
 </template>

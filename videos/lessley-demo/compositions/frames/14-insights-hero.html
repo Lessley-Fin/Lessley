@@ -1,5 +1,16 @@
 <template>
-<style id="lessley-shared">
+  <style id="lessley-shared"> element below VERBATIM as its
+  first style element, then adds its own scene-specific <style> after it. Sub-compositions
+  are transport-cloned from <template>, so styles cannot be linked or imported — inlining
+  is the only render-safe path, and this file is the single authoring source.
+
+  Design truth: ../../frame.md. Token values are copied from the real app
+  (lessley-frontend/src/index.css) and must not be re-tinted.
+-->
+<html lang="he" dir="rtl">
+  <body>
+    <template>
+      <style id="lessley-shared">
         /* ── Hebrew faces, self-embedded (assets/fonts/fonts.css is the generator's output) ── */
         @font-face { font-family: "Heebo"; font-style: normal; font-weight: 400; font-display: block;
           src: url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");
@@ -44,6 +55,10 @@
           --success: 150 60% 45%;      --warning: 33 86% 61%;
           --border: 201 21% 89%;       --navy: 208 34% 17%;
           --input: 201 21% 89%;        --ring: 182 38% 36%;
+          --secondary: 195 33% 94%;    --secondary-foreground: 209 28% 20%;
+          --navy-foreground: 203 36% 96%;
+          --navy-muted: 203 13% 67%;
+          --gradient-navy: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
           --shadow-card: 0 1px 2px oklch(30% 0.03 240 / 0.04), 0 8px 24px oklch(30% 0.03 240 / 0.06);
           --shadow-float: 0 8px 32px oklch(25% 0.03 240 / 0.18);
 
@@ -86,7 +101,7 @@
           background-size: 3px 3px; }
 
         .stage { position: absolute; inset: 0; display: flex; align-items: center;
-          gap: 72px; padding: 96px; }
+          gap: 56px; padding: 42px 80px; }
         .col-text { flex: 1; display: flex; flex-direction: column; gap: 26px;
           text-align: right; max-width: 800px; }
         .scene-title { font-family: "Frank Ruhl Libre", serif; font-size: 76px; font-weight: 700;
@@ -103,7 +118,7 @@
           transform-origin: right center; }
 
         /* ── the device — the film's carrier ─────────────────────────────── */
-        .device { position: relative; width: 430px; height: 932px; flex: none; }
+        .device { position: relative; width: 460px; height: 997px; flex: none; }
         .device-body {
           position: absolute; inset: 0; border-radius: 62px; padding: 10px; box-sizing: border-box;
           background: oklch(28% 0.010 250);
@@ -123,402 +138,579 @@
         }
         /* The screen's own camera wrapper: scenes push into a card by transforming this. */
         .screen-world { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* ══ app UI primitives ══════════════════════════════════════════════
+           Reproduced from screenshots of the running app (frame.md § The real UI).
+           Sizes are the app's REAL sizes — the device is held large in frame
+           instead of magnified, and there is NO in-phone camera. Do not scale
+           these up "for legibility"; that decision was withdrawn on 18/08.     */
 
-        /* ── app UI primitives — real tokens, 1.5x logical scale ─────────── */
         .app { position: absolute; inset: 0; display: flex; flex-direction: column;
-          padding: 0; font-size: 22px; }
-        .app-header { display: flex; align-items: center; gap: 14px;
-          padding: 62px 22px 16px; border-bottom: 1px solid hsl(var(--border) / 0.7);
-          background: hsl(var(--card) / 0.8); }
-        .app-header .brand { flex: 1; min-width: 0; }
-        .app-header .brand b { display: block; font-size: 23px; font-weight: 800; line-height: 1.1; }
-        .app-header .brand span { display: block; font-size: 17px; color: hsl(var(--muted-foreground)); }
-        .app-icon { width: 54px; height: 54px; border-radius: 50%; flex: none;
+          font-size: 15px; }
+
+        /* — header — */
+        .app-header { display: flex; align-items: center; gap: 12px; flex: none;
+          padding: 58px 18px 14px; background: hsl(var(--card));
+          border-bottom: 1px solid hsl(var(--border) / 0.7); }
+        .app-header .brand { display: flex; align-items: center; gap: 10px; order: 1;
+          margin-inline-end: auto; }
+        .app-header .brand-text { text-align: right; }
+        .app-header .brand-text b { display: block; font-size: 23px; font-weight: 800;
+          line-height: 1.05; letter-spacing: -0.01em; }
+        .app-header .brand-text span { display: block; font-size: 15px;
+          color: hsl(var(--muted-foreground)); }
+        .app-logo { width: 46px; height: 46px; flex: none; }
+        .app-icon { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 2;
           display: grid; place-items: center; border: 1px solid hsl(var(--border));
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); font-size: 22px; }
-        .app-avatar { width: 54px; height: 54px; border-radius: 50%; flex: none;
-          display: grid; place-items: center; font-weight: 800; font-size: 22px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .app-icon svg { width: 21px; height: 21px; }
+        .app-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; order: 3;
+          display: grid; place-items: center; font-weight: 700; font-size: 19px;
           background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-        .app-main { flex: 1; overflow: hidden; padding: 20px 22px; display: flex;
-          flex-direction: column; gap: 16px; }
+
+        .app-main { flex: 1; min-height: 0; overflow: hidden;
+          padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+
+        /* — page head — */
         .app-h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0; }
-        .app-sub { font-size: 20px; line-height: 1.35; color: hsl(var(--muted-foreground)); margin: 0; }
+        .app-sub { font-size: 18px; line-height: 1.35; margin: 0;
+          color: hsl(var(--muted-foreground)); }
 
-        .card { border-radius: 26px; border: 1px solid hsl(0 0% 100% / 0.9);
-          background: hsl(var(--card)); box-shadow: var(--shadow-card); padding: 22px; }
-        .card-inset { border-radius: 20px; border: 1px solid hsl(var(--border) / 0.6);
-          background: hsl(var(--muted) / 0.55); padding: 16px; }
+        /* — period selector: white track, ACTIVE = filled navy — */
+        .period { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .period > span { flex: 1; text-align: center; border-radius: 999px; padding: 12px 4px;
+          font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .period > span.on { background: hsl(var(--navy)); color: hsl(var(--navy-foreground));
+          font-weight: 700; }
 
-        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          border: 1px solid hsl(var(--input)); border-radius: 20px; background: hsl(var(--card));
-          padding: 20px 22px; font-size: 22px; }
-        .field .lbl { color: hsl(var(--muted-foreground)); }
-        .field .val { font-weight: 700; }
-        .field.is-active { border-color: hsl(var(--ring, var(--primary)));
-          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.16); }
+        /* — savings hero: dark navy card — */
+        .hero { position: relative; border-radius: 26px; padding: 26px 22px;
+          background: var(--gradient-navy); color: hsl(var(--navy-foreground)); }
+        .hero-cap { font-size: 14px; font-weight: 700; letter-spacing: 0.10em;
+          text-transform: uppercase; color: hsl(var(--navy-muted)); text-align: right; }
+        .hero-figure { font-size: 58px; font-weight: 800; line-height: 1.05;
+          letter-spacing: -0.02em; text-align: right; margin-top: 18px; }
+        .hero-sub { font-size: 15px; color: hsl(var(--navy-muted)); text-align: right;
+          margin-top: 8px; }
+        .hero-help { position: absolute; top: 22px; left: 22px; width: 40px; height: 40px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(0 0% 100% / 0.10);
+          color: hsl(var(--navy-foreground)); }
 
-        .btn { display: block; text-align: center; border-radius: 999px; padding: 22px;
-          font-size: 24px; font-weight: 700; background: hsl(var(--primary));
-          color: hsl(182 37% 98%); box-shadow: var(--shadow-card); }
-        .btn-ghost { background: transparent; color: hsl(var(--primary)); box-shadow: none; }
+        /* — stat cards — */
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { border-radius: 22px; padding: 18px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); text-align: right; }
+        .stat-lbl { display: flex; align-items: center; gap: 7px;
+          font-size: 15px; font-weight: 700; color: hsl(var(--muted-foreground)); }
+        .stat-val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+        .stat-cap { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 
-        .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-          padding: 8px 16px; font-size: 18px; font-weight: 700; }
-        .pill-save { background: hsl(var(--warning) / 0.18); color: hsl(29 75% 22%); }
-        .pill-ok { background: hsl(var(--success) / 0.16); color: hsl(150 60% 22%); }
+        /* — cards — */
+        .card { border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; }
+        .card-inset { border-radius: 20px; background: hsl(var(--secondary) / 0.7);
+          padding: 16px; }
 
-        .tabs { display: flex; gap: 6px; }
-        .tab { flex: 1; text-align: center; border-radius: 999px; padding: 13px 6px;
-          font-size: 19px; color: hsl(var(--muted-foreground)); }
-        .tab.on { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); font-weight: 700; }
+        /* — deal card: discount pill LEFT, rank badge RIGHT — */
+        .deal { position: relative; border-radius: 26px; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); padding: 20px; text-align: right; }
+        .deal-pct { position: absolute; top: 16px; left: 16px; border-radius: 999px;
+          padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .deal-rank { position: absolute; top: 16px; right: 16px; width: 42px; height: 42px;
+          border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+          font-weight: 700; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .deal-art { height: 108px; display: grid; place-items: center; margin: 12px 0 6px; }
+        .deal-art svg { width: 76px; height: 76px; }
+        .deal-store { font-size: 20px; font-weight: 700; }
+        .deal-cat { font-size: 15px; color: hsl(var(--muted-foreground)); }
+        .deal-title { font-size: 20px; font-weight: 700; margin-top: 10px; line-height: 1.3; }
+        /* flex-start, not flex-end: under direction:rtl the row's start edge IS the
+           right edge, so flex-end would pack the chips left of a right-aligned card. */
+        .deal-meta { display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+          margin-top: 12px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+          padding: 8px 14px; font-size: 15px; background: hsl(var(--secondary));
+          color: hsl(var(--secondary-foreground)); }
+        .chip-muted { background: transparent; color: hsl(var(--muted-foreground)); }
 
-        .steps { display: flex; gap: 6px; }
-        .step { flex: 1; text-align: center; font-size: 16px; padding: 10px 2px;
-          border-radius: 999px; color: hsl(var(--muted-foreground));
-          background: hsl(var(--muted)); }
+        /* — tabs: white track, ACTIVE = filled teal — */
+        .tabs { display: flex; gap: 4px; padding: 6px; border-radius: 999px;
+          background: hsl(var(--card)); box-shadow: var(--shadow-card); }
+        .tabs > span { flex: 1; text-align: center; border-radius: 999px; padding: 14px 4px;
+          font-size: 18px; color: hsl(var(--foreground)); }
+        .tabs > span.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
+
+        /* — signup step rail — */
+        .steps { display: flex; gap: 5px; }
+        .step { flex: 1; text-align: center; font-size: 14px; padding: 9px 2px;
+          border-radius: 999px; background: hsl(var(--muted));
+          color: hsl(var(--muted-foreground)); }
         .step.on { background: hsl(var(--primary)); color: hsl(182 37% 98%); font-weight: 700; }
 
-        .nav { margin: 0 22px 34px; display: flex; align-items: center; justify-content: space-between;
-          border-radius: 999px; padding: 10px; background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
+        /* — form — */
+        .field { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          border-radius: 18px; background: hsl(var(--secondary) / 0.8);
+          border: 1px solid transparent; padding: 18px 20px; font-size: 18px; }
+        .field .lbl { color: hsl(var(--muted-foreground)); }
+        .field .val { font-weight: 700; }
+        .field.is-active { border-color: hsl(var(--primary) / 0.45);
+          background: hsl(var(--card)); }
+
+        .btn { display: block; text-align: center; border-radius: 999px; padding: 20px;
+          font-size: 22px; font-weight: 700; background: hsl(var(--primary));
+          color: hsl(182 37% 98%); }
+        .btn-soft { background: hsl(var(--primary) / 0.55); }
+        .btn-ghost { background: transparent; color: hsl(var(--primary)); }
+
+        /* — winning stack: teal band + white body — */
+        .stack { border-radius: 26px; overflow: hidden; background: hsl(var(--card));
+          box-shadow: var(--shadow-card); }
+        .stack-band { display: flex; align-items: center; gap: 14px; padding: 20px;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); text-align: right; }
+        .stack-band .trophy { width: 46px; height: 46px; border-radius: 50%; flex: none;
+          display: grid; place-items: center; background: hsl(0 0% 100% / 0.16); }
+        .stack-band b { display: block; font-size: 21px; font-weight: 700; }
+        .stack-band span { display: block; font-size: 15px; opacity: 0.85; }
+        .stack-body { padding: 24px 20px; text-align: center; }
+        .stack-lbl { font-size: 17px; color: hsl(var(--muted-foreground)); }
+        .stack-pay { font-size: 52px; font-weight: 800; color: hsl(var(--primary));
+          line-height: 1.05; margin: 6px 0 12px; }
+        .stack-save { display: inline-flex; align-items: center; gap: 12px; }
+        .pill-save { border-radius: 999px; padding: 9px 16px; font-size: 17px; font-weight: 700;
+          background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+        .was { font-size: 17px; color: hsl(var(--muted-foreground));
+          text-decoration: line-through; }
+
+        /* — one stack step — */
+        .sstep { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .sstep-top { display: flex; align-items: flex-start; gap: 12px; }
+        .sstep-n { width: 40px; height: 40px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--primary)); color: hsl(182 37% 98%); }
+        .sstep-id { flex: 1; order: 2; }
+        .sstep-id b { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; }
+        .sstep-off { order: 3; text-align: left; }
+        .sstep-off .pct { border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .sstep-off .amt { display: block; margin-top: 7px; font-size: 17px; font-weight: 700;
+          color: hsl(var(--primary)); }
+        .sstep-rows { margin-top: 14px; padding-top: 14px;
+          border-top: 1px solid hsl(var(--border) / 0.8); }
+        .sstep-rows > div { display: flex; justify-content: space-between; gap: 12px;
+          font-size: 17px; padding: 3px 0; }
+        .sstep-rows .k { color: hsl(var(--muted-foreground)); }
+        .sstep-rows .v { font-weight: 700; }
+        .sstep-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+        .sstep-btns > span { border-radius: 999px; padding: 10px 18px; font-size: 16px;
+          background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+          display: inline-flex; align-items: center; gap: 8px; }
+
+        /* — club match row: mint card + right-filling progress track — */
+        .club { border-radius: 22px; background: hsl(var(--secondary) / 0.75); padding: 18px;
+          text-align: right; }
+        .club-top { display: flex; align-items: center; gap: 12px; }
+        .club-n { width: 42px; height: 42px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; font-size: 18px; font-weight: 700;
+          background: hsl(var(--card)); }
+        .club-id { flex: 1; order: 2; }
+        .club-id b { display: block; font-size: 20px; font-weight: 700; }
+        .club-id span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .club-pct { order: 3; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+          font-weight: 700; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .club-track { height: 12px; border-radius: 999px; background: hsl(var(--card));
+          margin-top: 14px; overflow: hidden; display: flex; justify-content: flex-start; }
+        .club-fill { height: 100%; border-radius: 999px; background: hsl(var(--primary));
+          transform-origin: right center; }
+
+        /* — settings rows — */
+        .srow { display: flex; align-items: center; gap: 14px; padding: 18px 4px;
+          text-align: right; }
+        .srow-ic { width: 46px; height: 46px; border-radius: 50%; flex: none; order: 1;
+          display: grid; place-items: center; background: hsl(var(--accent));
+          color: hsl(var(--accent-foreground)); }
+        .srow-ic svg { width: 21px; height: 21px; }
+        .srow-tx { flex: 1; order: 2; }
+        .srow-tx b { display: block; font-size: 20px; font-weight: 700; }
+        .srow-tx span { display: block; font-size: 16px; color: hsl(var(--muted-foreground)); }
+        .srow-ch { order: 3; color: hsl(var(--muted-foreground)); }
+
+        /* — preference chips — */
+        .pchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
+          padding: 12px 18px; font-size: 17px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); }
+        .pchip.on { background: hsl(var(--accent)); border-color: hsl(var(--primary) / 0.5);
+          color: hsl(var(--accent-foreground)); }
+
+        /* — bottom nav: navy bar, ACTIVE = teal pill — */
+        .nav { flex: none; margin: 12px 16px 28px; display: flex; align-items: center;
+          border-radius: 999px; padding: 9px; background: var(--gradient-navy);
           box-shadow: var(--shadow-float); }
         .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-          border-radius: 999px; padding: 12px 4px; font-size: 16px; font-weight: 500;
-          color: hsl(203 13% 67%); }
-        .nav-tab.on { background: hsl(179 50% 88%); color: hsl(182 73% 18%); box-shadow: var(--shadow-card); }
+          border-radius: 999px; padding: 12px 4px; font-size: 13px; font-weight: 500;
+          color: hsl(var(--navy-muted)); }
+        .nav-tab svg { width: 22px; height: 22px; }
+        .nav-tab.on { background: hsl(var(--primary)); color: hsl(182 37% 98%);
+          font-weight: 700; }
 
-        .hero-figure { font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .hero-label { font-size: 20px; color: hsl(var(--muted-foreground)); }
-
-        .toast { border-radius: 24px; padding: 20px 22px; background: hsl(var(--card));
-          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float); font-size: 20px; }
+        .toast { border-radius: 22px; padding: 18px 20px; background: hsl(var(--card));
+          border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-float);
+          font-size: 18px; text-align: right; }
 
         /* Oversized macOS-style pointer for cursor-led scenes. */
         .cursor { position: absolute; width: 46px; height: 46px; z-index: 20;
           filter: drop-shadow(0 4px 10px oklch(15% 0.02 245 / 0.45)); pointer-events: none; }
       </style>
-<style>
-  /* ── 14-insights-hero — scene-specific ───────────────────────────── */
-  .ih-ground { position: absolute; inset: 0; background: var(--stage-bg); }
-  .ih-chrome { position: absolute; inset: 0; pointer-events: none; }
 
-  .ih-tabs { position: relative; display: flex; gap: 6px; padding-inline: 12px; }
-  #ih-title { font-size: 30px; padding-inline: 20px; }
-  .nav-tab { font-size: 14px; padding: 12px 2px; }
-  .ih-tab { flex: 1; position: relative; z-index: 2; text-align: center; border-radius: 999px;
-    padding: 13px 4px; font-size: 19px; font-weight: 600; color: hsl(var(--muted-foreground)); }
-  .ih-tab-hl { position: absolute; top: 0; right: 12px; width: 81px; height: 52px; border-radius: 999px;
-    background: hsl(var(--accent)); z-index: 1; }
+  <style>
+    /* ── 14-insights-hero — scene styles ───────────────────────────────
+       No local token backfills: --secondary / --navy-foreground /
+       --navy-muted / --gradient-navy all ship in the shared block now.  */
 
-  .ih-hero { position: relative; overflow: hidden; border-radius: 30px; padding: 24px 26px;
-    background: linear-gradient(150deg, oklch(31% 0.036 246), oklch(24% 0.03 240));
-    box-shadow: var(--shadow-card); color: hsl(203 36% 96%); }
-  .ih-bloom { position: absolute; width: 460px; height: 460px; border-radius: 50%;
-    left: -90px; top: -230px; pointer-events: none;
-    background: radial-gradient(circle, hsl(182 38% 46% / 0.55), transparent 62%); }
-  .ih-hero-top { position: relative; display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; }
-  .ih-hero-label { font-size: 16px; font-weight: 800; letter-spacing: 0.09em;
-    color: hsl(203 13% 67%); }
-  .ih-info { width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid;
-    place-items: center; background: hsl(203 36% 96% / 0.1); }
-  .ih-figrow { position: relative; margin-top: 16px; height: 78px; display: flex;
-    align-items: center; }
-  .ih-fig { display: inline-block; transform-origin: right center; font-size: 74px;
-    font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: hsl(33 86% 61%); }
-  .ih-skel { position: absolute; right: 0; top: 14px; width: 246px; height: 50px;
-    border-radius: 14px; background: hsl(203 36% 96% / 0.13); }
-  .ih-subrow { position: relative; margin-top: 12px; height: 26px; }
-  .ih-sub { position: absolute; inset: 0; font-size: 20px; color: hsl(203 13% 67%); }
-  .ih-subskel { position: absolute; right: 0; top: 5px; width: 178px; height: 16px;
-    border-radius: 8px; background: hsl(203 36% 96% / 0.11); }
+    .ih-ground { position: absolute; inset: 0; background: var(--stage-bg); }
+    .ih-scene  { position: absolute; inset: 0; }
+    .ih-chrome { position: absolute; inset: 0; }
+    /* The pointer is driven in screen coordinates, so pin it to the screen origin. */
+    .ih-scene .cursor { left: 0; top: 0; }
 
-  .ih-accounts { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    border-radius: 22px; border: 1px solid hsl(var(--border) / 0.7); background: hsl(var(--card));
-    box-shadow: var(--shadow-card); padding: 18px 20px; font-size: 20px;
-    color: hsl(var(--muted-foreground)); }
-  .ih-cards { display: flex; gap: 7px; }
-  .ih-cardchip { width: 30px; height: 20px; border-radius: 5px; background: hsl(var(--accent));
-    border: 1px solid hsl(182 38% 36% / 0.35); }
+    .ih-scene .col-text {
+      position: absolute; right: 96px; top: 0; bottom: 0; width: 748px; max-width: none;
+      flex: none; display: flex; flex-direction: column; justify-content: center; gap: 22px;
+    }
+    /* The film's single gold spend for this scene — the savings payoff.
+       Gold is a spend, not a colour in the rotation: it appears once. */
+    .ih-rule { width: 224px; height: 3px; background: hsl(203 36% 96% / 0.16); margin: 2px 0 4px; }
+    .ih-rule > i { display: block; height: 100%; background: var(--stage-gold);
+      transform-origin: right center; }
 
-  .ih-sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 292px; z-index: 8;
-    box-sizing: border-box; border-radius: 34px 34px 0 0; padding: 18px 40px 26px;
-    background: hsl(var(--card)); box-shadow: var(--shadow-float); }
-  .ih-grab { width: 68px; height: 6px; border-radius: 3px; margin: 0 auto 18px;
-    background: hsl(var(--border)); }
-  .ih-sheet-title { font-size: 26px; font-weight: 800; margin: 0 0 12px; }
-  .ih-sheet-body { font-size: 20px; line-height: 1.5; color: hsl(var(--muted-foreground)); margin: 0; }
-  .ih-scrim { position: absolute; inset: 0; z-index: 7; background: oklch(15% 0.02 245); }
+    /* The carrier: iPhone at cx 620 / cy 540, held 940px tall (frame.md).
+       460 x 997 device, so scale = 940 / 997. Never transformed by the timeline. */
+    .ih-rig   { position: absolute; left: 390px; top: 41.5px; width: 460px; height: 997px; }
+    .ih-scale { width: 460px; height: 997px; transform: scale(0.9428); transform-origin: 50% 50%; }
 
-  .ih-rip { position: absolute; width: 78px; height: 78px; border-radius: 50%;
-    border: 3px solid hsl(var(--primary)); pointer-events: none; }
-</style>
+    /* ── in-phone: תובנות · the savings hero ──────────────────────────── */
+    .ih-stack { flex: none; display: flex; flex-direction: column; gap: 14px; }
+    .ih-figwrap { display: inline-block; transform-origin: right center; }
+    .ih-stat-ic { width: 17px; height: 17px; flex: none; }
 
-<div id="root" data-composition-id="14-insights-hero" data-width="1920" data-height="1080">
+    /* The page does not end under the stat cards — the deep-dive section
+       starts right below them and runs off the bottom of the screen. It is
+       static page chrome, like the header and the nav: present from frame 1,
+       clipped by .app-main, and it makes the cut to frame 15 read as the same
+       page scrolled on rather than a new screen. */
+    .ih-deep { display: flex; flex-direction: column; gap: 12px;
+      border-top: 1px solid hsl(var(--border) / 0.7); padding-top: 20px; }
+    .ih-h2 { font-size: 26px; font-weight: 800; line-height: 1.2; margin: 0; }
+    .ih-sub { font-size: 16px; }
+    .ih-peek { flex: none; }
+    .ih-slide-t { font-size: 19px; font-weight: 700; line-height: 1.2; }
+    .ih-slide-s { font-size: 14px; color: hsl(var(--muted-foreground)); margin-top: 3px; }
 
-  <div class="clip ih-ground" id="ih-ground" data-start="0" data-duration="13" data-track-index="0"></div>
+    /* — the hero's own info dialog (shadcn Dialog, max-w 340) — */
+    .ih-scrim { position: absolute; inset: 0; background: oklch(15% 0.02 245); z-index: 14; }
+    .ih-dialog { position: absolute; z-index: 15; left: 40px; right: 40px; top: 330px;
+      border-radius: 26px; background: hsl(var(--card)); box-shadow: var(--shadow-float);
+      padding: 24px 22px; text-align: right; }
+    .ih-dlg-t { display: block; font-size: 22px; font-weight: 800; line-height: 1.25; }
+    .ih-dlg-b { display: block; font-size: 17px; line-height: 1.45;
+      color: hsl(var(--muted-foreground)); margin-top: 12px; }
+  </style>
 
-  <div class="clip bg-layer" id="ih-bg" data-start="0" data-duration="13" data-track-index="1">
-    <div class="bg-glow" id="ih-glow"></div>
-    <div class="bg-grid"></div>
-    <div class="bg-ghost">Lessley</div>
-    <div class="bg-grain"></div>
-  </div>
+  <div id="root" data-composition-id="14-insights-hero" data-width="1920" data-height="1080">
 
-  <div class="clip stage" id="ih-stage" data-start="0" data-duration="13" data-track-index="2">
-    <div class="col-text">
-      <h1 class="scene-title" id="ih-h1">תובנות · כמה נחסך</h1>
-      <p class="scene-body" id="ih-p1">סכום החיסכון עולה בספירה חיה.</p>
-      <p class="scene-body" id="ih-p2">לא אומדן — חיסכון שקשור לעסקאות שקרו.</p>
+    <div class="clip ih-ground" id="ih-ground" data-start="0" data-duration="10" data-track-index="0"></div>
+
+    <div class="clip bg-layer" id="ih-bg" data-start="0" data-duration="10" data-track-index="1">
+      <div class="bg-glow" id="ih-glow"></div>
+      <div class="bg-grid"></div>
+      <div class="bg-ghost">Lessley</div>
+      <div class="bg-grain"></div>
     </div>
 
-    <div class="device" data-layout-allow-overflow>
-      <div class="device-body">
-        <div class="device-screen">
-          <div class="device-island"></div>
-          <div class="screen-world" id="ih-world">
-            <div class="app">
-              <div class="app-header">
-                <div class="app-icon">L</div>
-                <div class="brand"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
-                <div class="app-avatar">D</div>
-              </div>
+    <div class="clip ih-scene" id="ih-stage" data-start="0" data-duration="10" data-track-index="2">
 
-              <div class="app-main">
-                <h2 class="app-h1" id="ih-title">הכסף שלכם, מפוענח</h2>
+      <div class="col-text">
+        <h1 class="scene-title" id="ih-h1">כמה כבר חסכתם</h1>
+        <div class="ih-rule"><i id="ih-rule-fill"></i></div>
+        <p class="scene-body" id="ih-p1">לא תחזית ולא הערכה.</p>
+        <p class="scene-body" id="ih-p2">כסף שנחסך על קניות שבאמת ביצעתם.</p>
+      </div>
 
-                <div class="ih-tabs" id="ih-tabs">
-                  <div class="ih-tab-hl" id="ih-hl"></div>
-                  <span class="ih-tab" id="ih-tab-7">7 ימים</span>
-                  <span class="ih-tab" id="ih-tab-30">30 ימים</span>
-                  <span class="ih-tab" id="ih-tab-90">90 ימים</span>
-                  <span class="ih-tab" id="ih-tab-365">שנה</span>
-                </div>
+      <div class="ih-rig">
+        <div class="ih-scale">
+          <div class="device" data-layout-allow-overflow>
+            <div class="device-body">
+              <div class="device-screen">
+                <div class="screen-world">
+                  <div class="app">
 
-                <div class="ih-hero" data-camera-target id="ih-hero">
-                  <div class="ih-bloom" id="ih-bloom"></div>
-                  <div class="ih-hero-top">
-                    <span class="ih-hero-label">נחסך עם Lessley</span>
-                    <span class="ih-info" id="ih-info">
-                      <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9.2" fill="none" stroke="hsl(203 36% 96%)" stroke-width="1.8" />
-                        <circle cx="12" cy="7.6" r="1.25" fill="hsl(203 36% 96%)" />
-                        <rect x="10.9" y="10.6" width="2.2" height="7" rx="1.1" fill="hsl(203 36% 96%)" />
-                      </svg>
-                    </span>
+                    <div class="app-header">
+                      <div class="brand">
+                        <img class="app-logo" src="assets/logo-without-name.svg" alt="">
+                        <div class="brand-text"><b>Lessley</b><span>טייס אוטומטי פיננסי</span></div>
+                      </div>
+                      <div class="app-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M18 8.4a6 6 0 1 0-12 0c0 6.6-2.7 7.6-2.7 7.6h17.4S18 15 18 8.4"></path>
+                          <path d="M13.6 20.2a2 2 0 0 1-3.2 0"></path>
+                        </svg>
+                      </div>
+                      <div class="app-avatar">D</div>
+                    </div>
+
+                    <div class="app-main">
+                      <!-- the page body sits under the modal once the ? dialog opens -->
+                      <div class="ih-stack" data-layout-allow-occlusion>
+
+                        <div>
+                          <h1 class="app-h1" id="ih-apph1">הכסף שלכם, מפוענח</h1>
+                          <p class="app-sub" id="ih-appsub"><span class="num">30</span>&nbsp;הימים האחרונים · <span class="num">3</span>&nbsp;חשבונות מקושרים</p>
+                        </div>
+
+                        <div class="period" id="ih-period">
+                          <span><span class="num">7</span>&nbsp;ימים</span>
+                          <span class="on"><span class="num">30</span>&nbsp;ימים</span>
+                          <span><span class="num">90</span>&nbsp;ימים</span>
+                          <span>שנה</span>
+                        </div>
+
+                        <div class="hero" id="ih-hero">
+                          <div class="hero-cap" id="ih-cap">נחסך עם Lessley</div>
+                          <div class="hero-help" id="ih-help">?</div>
+                          <div class="hero-figure">
+                            <span class="ih-figwrap" id="ih-figwrap"><span class="num">₪<span id="ih-count">0</span></span></span>
+                          </div>
+                          <div class="hero-sub" id="ih-herosub"><span class="num">30</span>&nbsp;הימים האחרונים · <span class="num">10</span>&nbsp;מועדונים</div>
+                        </div>
+
+                        <div class="stat-row">
+                          <div class="stat" id="ih-stat1">
+                            <div class="stat-lbl">
+                              <svg class="ih-stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 3.5v17l2.4-1.6 2.4 1.6 2.4-1.6 2.4 1.6 2.4-1.6 2 1.3V3.5Z"></path>
+                                <path d="M8.5 8h7M8.5 12h7"></path>
+                              </svg>עסקאות
+                            </div>
+                            <div class="stat-val"><span class="num" id="ih-tx">0</span></div>
+                            <div class="stat-cap"><span class="num">30</span>&nbsp;הימים האחרונים</div>
+                          </div>
+                          <div class="stat" id="ih-stat2">
+                            <div class="stat-lbl">
+                              <svg class="ih-stat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h11.5v3"></path>
+                                <path d="M3.5 7.5v10A2.5 2.5 0 0 0 6 20h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 19 8H3.5Z"></path>
+                                <path d="M16.8 14h.01"></path>
+                              </svg>סכום כולל
+                            </div>
+                            <div class="stat-val"><span class="num">₪<span id="ih-spend">0</span></span></div>
+                            <div class="stat-cap">כל הכרטיסים המקושרים</div>
+                          </div>
+                        </div>
+
+                        <div class="ih-deep" data-layout-allow-overflow>
+                          <div>
+                            <h2 class="ih-h2">צלילה לעומק</h2>
+                            <p class="app-sub ih-sub">החליקו כדי לראות פרטים עבור <span class="num">30</span>&nbsp;הימים האחרונים.</p>
+                          </div>
+
+                          <div class="period">
+                            <span><span class="num">7</span>&nbsp;ימים</span>
+                            <span class="on"><span class="num">30</span>&nbsp;ימים</span>
+                            <span><span class="num">90</span>&nbsp;ימים</span>
+                            <span>שנה</span>
+                          </div>
+
+                          <div class="card ih-peek">
+                            <div class="ih-slide-t">סקירת הוצאות</div>
+                            <div class="ih-slide-s">התקופה הזו לעומת הקודמת</div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div class="nav">
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 3.2 13.7 8.3 18.8 10 13.7 11.7 12 16.8 10.3 11.7 5.2 10 10.3 8.3Z"></path>
+                          <path d="M18.5 15.5 19.3 17.7 21.5 18.5 19.3 19.3 18.5 21.5 17.7 19.3 15.5 18.5 17.7 17.7Z"></path>
+                        </svg>אופטימיזציה</span>
+                      <span class="nav-tab on">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M3 3v16.5a1.5 1.5 0 0 0 1.5 1.5H21"></path>
+                          <path d="M8 17v-5M13 17V8M18 17v-3"></path>
+                        </svg>תובנות</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M8.6 14.4A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.6 2.4Z"></path>
+                        </svg>חם</span>
+                      <span class="nav-tab">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.9 5.9 0 0 0 18 7.6 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                          <path d="M9.5 18h5M10.5 21.5h3"></path>
+                        </svg>המלצות</span>
+                    </div>
+
+                    <div class="ih-scrim" id="ih-scrim" data-layout-allow-occlusion></div>
+                    <div class="ih-dialog" id="ih-dialog" data-layout-allow-occlusion>
+                      <span class="ih-dlg-t" id="ih-dlg-t">איך זה מחושב</span>
+                      <span class="ih-dlg-b" id="ih-dlg-a">הסכום משקף הנחות מועדונים וכרטיסים שהותאמו לרכישות שביצעתם בתקופה זו</span>
+                      <span class="ih-dlg-b" id="ih-dlg-b">— לא הערכה, אלא חיסכון שקשור לעסקאות שכבר קרו.</span>
+                    </div>
+
+                    <svg class="cursor" id="ih-cursor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 2 L4 20.6 L9.1 15.5 L12.3 22.4 L15.6 20.9 L12.4 14.2 L19.4 14.1 Z"
+                            fill="#ffffff" stroke="hsl(209 37% 15%)" stroke-width="1.3" stroke-linejoin="round"></path>
+                    </svg>
+
                   </div>
-                  <div class="ih-figrow">
-                    <div class="ih-skel" id="ih-skel"></div>
-                    <span class="num ih-fig" id="ih-fig">₪0</span>
-                  </div>
-                  <div class="ih-subrow">
-                    <div class="ih-subskel" id="ih-subskel"></div>
-                    <span class="ih-sub" id="ih-sub"><span class="num">30</span> הימים האחרונים · <span class="num">4</span> מועדונים</span>
-                  </div>
                 </div>
-
-                <div class="ih-accounts" id="ih-accounts">
-                  <span><span class="num">3</span> חשבונות מקושרים</span>
-                  <span class="ih-cards">
-                    <i class="ih-cardchip"></i><i class="ih-cardchip"></i><i class="ih-cardchip"></i>
-                  </span>
-                </div>
-              </div>
-
-              <div class="nav">
-                <span class="nav-tab">אופטימיזציה</span>
-                <span class="nav-tab on">תובנות</span>
-                <span class="nav-tab">חם</span>
-                <span class="nav-tab">המלצות</span>
+                <div class="device-island"></div>
               </div>
             </div>
-
-            <div class="ih-scrim" id="ih-scrim"></div>
-            <div class="ih-sheet" id="ih-sheet">
-              <div class="ih-grab"></div>
-              <p class="ih-sheet-title" id="ih-sheet-title">איך זה מחושב</p>
-              <p class="ih-sheet-body" id="ih-sheet-body">הסכום משקף הנחות מועדונים וכרטיסים שהותאמו לרכישות שביצעתם בתקופה זו — לא הערכה, אלא חיסכון שקשור לעסקאות שכבר קרו.</p>
-            </div>
-
-            <div class="ih-rip" id="ih-rip1"></div>
-            <div class="ih-rip" id="ih-rip2"></div>
-
-            <svg class="cursor" id="ih-cursor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 2 L4 20.6 L9.1 15.5 L12.3 22.4 L15.6 20.9 L12.4 14.2 L19.4 14.1 Z"
-                fill="#ffffff" stroke="hsl(209 37% 15%)" stroke-width="1.3" stroke-linejoin="round" />
-            </svg>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="clip ih-chrome" id="ih-chrome-layer" data-start="0" data-duration="10" data-track-index="3">
+      <span class="chapter" id="ih-chapter">14 / 21</span>
+      <div class="rail"><i id="ih-rail" style="width:100%"></i></div>
+    </div>
   </div>
 
-  <div class="clip ih-chrome" id="ih-chrome-layer" data-start="0" data-duration="13" data-track-index="3">
-    <span class="chapter">14 / 21</span>
-    <div class="rail"><i id="ih-rail"></i></div>
-  </div>
-</div>
+  <script>
+    (function () {
+      var ID = "14-insights-hero";
+      var root = document.querySelector('[data-composition-id="' + ID + '"]') || document;
+      function q(s) { return root.querySelector(s); }
 
-<script>
-  (function () {
-    var ID = "14-insights-hero";
-    var root = document.querySelector('[data-composition-id="' + ID + '"]');
-    var q = function (s) { return root.querySelector(s); };
-    var world = q("#ih-world");
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      window.__timelines[ID] = tl;
 
-    var SW = 410, SH = 912, CX = SW / 2, CY = SH / 2;
-    var TIP_X = 7.7, TIP_Y = 3.8;
+      /* ── NO in-phone camera ────────────────────────────────────────────
+         `.screen-world` holds scale 1 / x 0 / y 0 and `.device` is never
+         transformed by the timeline (frame.md § Fidelity outranks
+         everything, revised 18/08). The savings hero is read at the app's
+         real proportions; every tween below moves CONTENT.               */
 
-    function pt(el, fbx, fby) {
-      var x = 0, y = 0, n = el;
-      while (n && n !== world) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
-      if (!el || !el.offsetWidth) return { x: fbx, y: fby };
-      return { x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 };
-    }
-    // Clamped so the screen-world always covers the screen — a full-width card in
-    // a 410px screen only allows (k-1)/2 of camera travel before the ground shows.
-    function cam(p, k) {
-      var mx = (k - 1) * SW / 2, my = (k - 1) * SH / 2;
-      var x = -k * (p.x - CX), y = -k * (p.y - CY);
-      return {
-        scale: k,
-        x: Math.max(-mx, Math.min(mx, x)),
-        y: Math.max(-my, Math.min(my, y))
-      };
-    }
-    function st(s, extra) {
-      var o = { scale: s.scale, x: s.x, y: s.y };
-      for (var key in extra) { o[key] = extra[key]; }
-      return o;
-    }
+      var F = 1 / 60;
 
-    var pTabs = pt(q("#ih-tabs"), 205, 233);
-    var pTab30 = pt(q("#ih-tab-30"), 226, 233);
-    var pHero = pt(q("#ih-hero"), 205, 373);
-    var pInfo = pt(q("#ih-info"), 43, 306);
-    var pWide = { x: 205, y: 592 };
-    var pWideLow = { x: 205, y: 622 };
+      function whip(sel, off, dur, at) {
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, at);
+        tl.fromTo(sel, { y: off }, { y: 0, duration: dur, ease: "power4.out" }, at);
+      }
+      function pop(sel, from, dur, at) {
+        tl.fromTo(sel, { scale: from, opacity: 0 },
+          { scale: 1, opacity: 1, duration: dur, ease: "power3.out" }, at);
+      }
+      function wipe(sel, dur, at) {
+        tl.fromTo(sel, { clipPath: "inset(0px 0px 0px 100%)", opacity: 1 },
+          { clipPath: "inset(0px 0px 0px 0%)", duration: dur, ease: "power2.out" }, at);
+      }
+      function press(at, sel, down) {
+        tl.fromTo(sel, { scale: 1 },
+          { scale: down, duration: 0.08, ease: "power2.in", immediateRender: false }, at);
+        tl.fromTo(sel, { scale: down },
+          { scale: 1, duration: 0.1, ease: "power2.out", immediateRender: false }, at + 0.08);
+      }
+      function group(v) {
+        return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
 
-    var tl = gsap.timeline({ paused: true });
+      /* ── pointer targeting (not a camera — nothing here feeds a zoom) ── */
+      var appEl = q(".app");
+      var TIP_X = 7.7, TIP_Y = 3.8;
+      function pt(sel, fbx, fby) {
+        var el = q(sel), x = 0, y = 0, n = el, guard = 0;
+        while (n && n !== appEl && guard < 24) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; guard++; }
+        if (n !== appEl || !el.offsetWidth) { return { x: fbx, y: fby }; }
+        return { x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 };
+      }
+      var pHelp = pt("#ih-help", 60, 300);
 
-    /* ── chrome ──────────────────────────────────────────────────── */
-    tl.fromTo("#ih-rail", { scaleX: 0.6095 }, { scaleX: 0.6508, duration: 13, ease: "none" }, 0);
+      gsap.set("#ih-cursor", { x: -70, y: 1010 });
+      gsap.set("#ih-scrim", { opacity: 0 });
+      gsap.set("#ih-dialog", { opacity: 0 });
 
-    /* ── stage copy ──────────────────────────────────────────────── */
-    tl.fromTo(["#ih-h1", "#ih-p1", "#ih-p2"],
-      { opacity: 0, y: 34 },
-      { opacity: 1, y: 0, duration: 0.66, ease: "power3.out", stagger: 0.12 }, 0.12);
+      /* ── chrome: the film-long rail advances 13/21 → 14/21 ───────────── */
+      tl.fromTo("#ih-rail", { scaleX: 0.619048 }, { scaleX: 0.666667, duration: 10, ease: "none" }, 0);
 
-    /* ── camera: traverse to the hero metric, settle wider on the sheet ── */
-    // `e` is the ease of the leg ENDING at that stop. The frame INHERITS the
-    // previous scene's upward pan — it opens already travelling, not from rest.
-    var CAM = [
-      { t: 0.00,  s: { scale: 1.14, x: 0, y: 52 }, e: "none" },
-      { t: 1.55,  s: { scale: 1.15, x: 0, y: 16 }, e: "power1.out" },
-      { t: 3.00,  s: { scale: 1.16, x: 0, y: 12 }, e: "none" },
-      { t: 4.70,  s: cam(pHero, 1.24),             e: "power2.inOut" },
-      { t: 7.30,  s: cam(pHero, 1.26),             e: "none" },
-      { t: 9.10,  s: cam(pWide, 1.12),             e: "power2.inOut" },
-      { t: 11.20, s: cam(pWide, 1.13),             e: "none" },
-      { t: 13.00, s: cam(pWideLow, 1.20),          e: "power2.in" }
-    ];
-    gsap.set(world, st(CAM[0].s));
-    for (var i = 1; i < CAM.length; i++) {
-      tl.fromTo(world, st(CAM[i - 1].s),
-        st(CAM[i].s, {
-          duration: CAM[i].t - CAM[i - 1].t, ease: CAM[i].e, immediateRender: false
-        }), CAM[i - 1].t);
-    }
+      /* ── Beat 1 (0.0–1.0s) — the hero card is already arriving at t=0 ──
+         The cut from frame 13 lands mid-travel, not on a dead frame.      */
+      whip("#ih-hero", 56, 0.22, 0);
+      wipe("#ih-cap", 0.38, 0.28);
+      pop("#ih-help", 0.5, 0.40, 0.42);
 
-    /* ── cursor: the hand that performs the two gestures ─────────── */
-    var CUR = [
-      { t: 0.00, d: 0.00, p: { x: 470, y: 1000 }, e: "none" },
-      { t: 0.45, d: 0.82, p: pTab30, e: "power2.inOut" },
-      { t: 6.30, d: 0.80, p: pInfo,  e: "power2.inOut" }
-    ];
-    gsap.set("#ih-cursor", { x: CUR[0].p.x, y: CUR[0].p.y, scale: 1 });
-    for (var c = 1; c < CUR.length; c++) {
-      var prev = CUR[c - 1];
-      var from = (c === 1)
-        ? { x: prev.p.x, y: prev.p.y }
-        : { x: prev.p.x - TIP_X, y: prev.p.y - TIP_Y };
-      tl.fromTo("#ih-cursor", from, {
-        x: CUR[c].p.x - TIP_X, y: CUR[c].p.y - TIP_Y,
-        duration: CUR[c].d, ease: CUR[c].e, immediateRender: false
-      }, CUR[c].t);
-    }
-    function press(at, sel, down) {
-      tl.fromTo(sel, { scale: 1 },
-        { scale: down, duration: 0.08, ease: "power2.in", immediateRender: false }, at);
-      tl.fromTo(sel, { scale: down },
-        { scale: 1, duration: 0.1, ease: "power2.out", immediateRender: false }, at + 0.08);
-    }
-    function ripple(at, sel, p) {
-      gsap.set(sel, { left: p.x, top: p.y, xPercent: -50, yPercent: -50, scale: 0, opacity: 0 });
-      tl.fromTo(sel, { scale: 0, opacity: 0.85 },
-        { scale: 3.4, opacity: 0, duration: 0.72, ease: "power2.out" }, at);
-    }
+      whip("#ih-h1", 80, 0.18, 0.12);
+      tl.fromTo("#ih-chapter", { opacity: 0 }, { opacity: 1, duration: 0.36, ease: "power1.out" }, 0.18);
+      whip("#ih-p1", 46, 0.16, 0.52);
 
-    /* ── the page begins un-resolved: skeletons where the data goes ── */
-    gsap.set("#ih-hl", { x: 0 });
-    gsap.set("#ih-scrim", { opacity: 0 });
-    gsap.set("#ih-sheet", { y: 300 });
+      /* ── Beat 2 (1.0–3.6s) — the payoff counts up ─────────────────────
+         counting-dynamic-scale: the value and its visual weight share one
+         position, duration and ease. The figure stays WHITE — gold is
+         spent once, on the stage rule, when the number lands.            */
+      var countEl = q("#ih-count");
+      var cState = { v: 0 };
+      tl.fromTo(cState, { v: 0 },
+        { v: 1284, duration: 2.15, ease: "power3.out",
+          onUpdate: function () { countEl.textContent = group(cState.v); } }, 1.02);
+      tl.fromTo("#ih-figwrap", { scale: 0.62 },
+        { scale: 1, duration: 2.15, ease: "power3.out" }, 1.02);
 
-    /* ── EDIT BEAT 1 (control-target-sync) — the period is picked ─── */
-    var EDIT1 = 1.74, PICK_DUR = 2.05, PICK_EASE = "power3.out";
-    tl.addLabel("edit1", EDIT1);
-    press(EDIT1, "#ih-cursor", 0.84);
-    press(EDIT1, "#ih-tab-30", 0.955);
-    ripple(EDIT1 + 0.03, "#ih-rip1", pTab30);
+      // the one gold element in the scene — it fills as the figure settles
+      tl.fromTo("#ih-rule-fill", { scaleX: 0 },
+        { scaleX: 1, duration: 0.54, ease: "power3.out" }, 2.94);
+      // the glow answers the landing — reaction, never idle breathing
+      tl.fromTo("#ih-glow", { scale: 1, opacity: 0.88 },
+        { scale: 1.13, opacity: 1, duration: 0.38, ease: "power2.out", immediateRender: false }, 3.04);
+      tl.fromTo("#ih-glow", { scale: 1.13, opacity: 1 },
+        { scale: 1.02, opacity: 0.9, duration: 0.82, ease: "power2.out", immediateRender: false }, 3.42);
 
-    // control side — the selection snaps onto 30 ימים
-    tl.fromTo("#ih-hl", { x: 0 }, { x: -87, duration: 0.34, ease: "power3.out" }, "edit1");
-    tl.fromTo("#ih-tab-7", { color: "rgb(21,60,58)" },
-      { color: "rgb(106,120,130)", duration: 0.3, ease: "power2.out" }, "edit1");
-    tl.fromTo("#ih-tab-30", { color: "rgb(106,120,130)" },
-      { color: "rgb(21,60,58)", duration: 0.3, ease: "power2.out" }, "edit1");
+      // the sub-line names the real reach: ten clubs, the whole clubs collection
+      whip("#ih-herosub", 40, 0.16, 3.30);
+      whip("#ih-p2", 46, 0.16, 3.58);
 
-    // bound side — the readout converts instantly, the figure counts on the same label
-    tl.fromTo("#ih-subskel", { opacity: 1 }, { opacity: 0, duration: 0.1, ease: "none" }, "edit1");
-    tl.fromTo("#ih-sub", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "none" }, "edit1");
-    tl.fromTo("#ih-skel", { opacity: 1 }, { opacity: 0, duration: 0.16, ease: "none" }, "edit1");
+      /* ── Beat 3 (3.9–5.6s) — the two stat cards fill in ───────────────── */
+      whip("#ih-stat1", 44, 0.16, 3.92);
+      var sState = { tx: 0, sp: 0 };
+      tl.fromTo(sState, { tx: 0 },
+        { tx: 142, duration: 1.00, ease: "power3.out",
+          onUpdate: function () { q("#ih-tx").textContent = group(sState.tx); } }, 4.06);
 
-    // counting-dynamic-scale — value + transform scale share duration AND ease
-    var fig = q("#ih-fig");
-    var state = { v: 0 };
-    tl.fromTo(state, { v: 0 }, {
-      v: 1284, duration: PICK_DUR, ease: PICK_EASE,
-      onUpdate: function () { fig.textContent = "₪" + Math.round(state.v).toLocaleString("en-US"); }
-    }, "edit1");
-    tl.fromTo("#ih-fig", { scale: 0.52, opacity: 0 },
-      { scale: 1, opacity: 1, duration: PICK_DUR, ease: PICK_EASE }, "edit1");
-    // the bloom answers the payoff as the count peaks
-    tl.fromTo("#ih-bloom", { opacity: 0.15, scale: 0.72 },
-      { opacity: 1, scale: 1, duration: 1.5, ease: "power2.out" }, EDIT1 + 0.55);
+      whip("#ih-stat2", 44, 0.16, 4.42);
+      tl.fromTo(sState, { sp: 0 },
+        { sp: 5630, duration: 1.08, ease: "power3.out",
+          onUpdate: function () { q("#ih-spend").textContent = group(sState.sp); } }, 4.56);
 
-    /* ── the linked accounts resolve under the landed figure ─────── */
-    tl.fromTo("#ih-accounts", { opacity: 0, y: 22 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 2.90);
-    tl.fromTo(".ih-cardchip", { opacity: 0, scale: 0.5 },
-      { opacity: 1, scale: 1, duration: 0.42, ease: "back.out(1.6)", stagger: 0.1 }, 3.20);
+      /* ── Beat 4 (5.6–9.3s) — "לא אומדן" is answered by the app itself ─
+         The pointer opens the hero's own info dialog; the copy under it is
+         he.json's insights.savingsHero.infoDialog, verbatim.              */
+      tl.fromTo("#ih-cursor", { x: -70 - TIP_X, y: 1010 - TIP_Y },
+        { x: pHelp.x - TIP_X, y: pHelp.y - TIP_Y, duration: 0.86, ease: "power2.inOut" }, 5.62);
 
-    /* ── BEAT 2 — the info sheet answers "is this an estimate?" ──── */
-    var EDIT2 = 7.30;
-    press(EDIT2, "#ih-cursor", 0.84);
-    press(EDIT2, "#ih-info", 0.9);
-    ripple(EDIT2 + 0.03, "#ih-rip2", pInfo);
+      var CLICK = 6.62;
+      press(CLICK, "#ih-cursor", 0.84);
+      press(CLICK, "#ih-help", 0.88);
 
-    tl.fromTo("#ih-scrim", { opacity: 0 }, { opacity: 0.2, duration: 0.5, ease: "power2.out" }, EDIT2 + 0.1);
-    tl.fromTo("#ih-sheet", { y: 300 }, { y: 0, duration: 0.62, ease: "back.out(1.05)" }, EDIT2 + 0.1);
-    tl.fromTo("#ih-sheet-title", { opacity: 0, y: 18 },
-      { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, EDIT2 + 0.42);
-    tl.fromTo("#ih-sheet-body", { opacity: 0, y: 22 },
-      { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, EDIT2 + 0.62);
+      tl.fromTo("#ih-scrim", { opacity: 0 },
+        { opacity: 0.28, duration: 0.40, ease: "power2.out" }, CLICK + 0.06);
+      tl.fromTo("#ih-dialog", { opacity: 0, scale: 0.92, y: 26 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.52, ease: "power3.out" }, CLICK + 0.08);
 
-    /* ── the stage glow lifts once on the savings payoff ─────────── */
-    tl.fromTo("#ih-glow", { opacity: 0.72 }, { opacity: 1, duration: 1.6, ease: "power2.out" }, EDIT1 + 0.4);
-
-    window.__timelines = window.__timelines || {};
-    window.__timelines[ID] = tl;
-  })();
-</script>
+      wipe("#ih-dlg-t", 0.40, 7.20);
+      wipe("#ih-dlg-a", 0.72, 7.66);
+      wipe("#ih-dlg-b", 0.68, 8.62);
+    })();
+  </script>
 </template>

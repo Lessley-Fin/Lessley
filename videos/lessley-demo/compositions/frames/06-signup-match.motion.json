@@ -1,6 +1,6 @@
 {
   "scene": "06-signup-match",
-  "duration_s": 16,
+  "duration_s": 13,
   "rules": [
     "control-target-sync",
     "stat-bars-and-fills",
@@ -8,22 +8,32 @@
     "counting-dynamic-scale",
     "cursor-click-ripple",
     "spring-pop-entrance",
-    "coordinate-target-zoom",
-    "multi-phase-camera",
-    "viewport-change"
+    "center-outward-expansion"
   ],
+  "camera": {
+    "in_phone": "none. Withdrawn by the client on 18/08 — .screen-world holds scale 1, x 0, y 0 for the whole scene and is never tweened. The device itself is never scaled or translated either.",
+    "replacement": "the stretches the pushes used to own (0.85-2.4s and 11.3-13s) are filled by staged arrivals: the three options and the bound preview land on a stagger, each edit beat redraws an 18-dot deal strip one dot at a time across the same 0.9s scrub, and the tail carries the stage copy's second line, the glow lift and the cursor's exit."
+  },
+  "retime": {
+    "was_s": 16,
+    "now_s": 13,
+    "method": "hold time only — no gesture was shortened. The cursor glide stays 1.0s, the control-target scrub stays 0.9s with ease power2.inOut, the dot redraw keeps its 0.32s per dot, and every entrance tween keeps its duration. The 3s came out of the dead air between beats: the edit labels moved from 2.6 / 6.8 / 10.6 / 13.8 to 2.4 / 5.6 / 8.6 / 11.3, cutting the wait between one landed state and the next glide from ~1.9s to ~0.65-1.15s. The entrance's trailing arrivals were nudged in by ~0.15s (prev 0.95 -> 0.85, btn 1.15 -> 1.02, on-load selection 1.25 -> 1.10) so the first glide does not start on top of a still-settling card."
+  },
   "exit": {
-    "vector": "camera Z-in, accelerating: scale 1.13 -> 1.19 on power1.in over 12.5-16.0s, terminal rate ~0.0343/s => ~5.9 canvas px/s outward flow at the couple's edge. Device locked at cx 737, cy 540; the landed בינוני selection holds.",
-    "still_moving": true
+    "vector": "the cursor clears the frame: from the בינוני option (screen ~200, 500) to the bottom-left park (-80, 1030) over 12.1-13.0s on power2.in — terminal ~1300 canvas px/s down-and-left, still accelerating at the cut. Same 0.9s over the same distance as before the retime, so frame 07 inherits the same velocity. The landed בינוני selection and the 12-deal preview hold; the device is locked at its rest position and the rail keeps filling.",
+    "still_moving": true,
+    "last_second": "12.0-13.0s: the fourth edit has landed on בינוני (50%, 12 deals). Nothing new arrives — the glow lift finishes at 12.9 and the only travel is the cursor accelerating off the bottom-left corner, plus the rail's linear fill."
   },
   "entry": {
-    "vector": "lateral wizard advance: step body slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.55s => ~237 canvas px/s at t=0. In-phone camera starts at rest (scale 1.0); Z push onto the couple begins at 0.9s.",
-    "from_rest": false
+    "vector": "lateral wizard advance: the step card slides +x (screen-right, RTL-forward) from -46px on power3.out over 0.5s => ~261 canvas px/s at t=0. This is the shared seam grammar of the whole signup run (03 -> 07). No camera motion of any kind at t=0.",
+    "from_rest": false,
+    "first_second": "0.0-1.0s: the card slides in, the 5-step rail flips מועדונים -> .done and רמת התאמה -> current (0.15-0.60), the stage title and first body line land (0.15 / 0.35), the heading arrives at 0.42, the three options sweep in on a 0.07s stagger from 0.56, and the bound preview lands at 0.85. The cursor is still parked off-frame at (-80, 1030), inherited from frame 05's corner."
   },
   "carrier": {
-    "steps": "5-step .steps row, index 3 (רמת התאמה). At t=0 it renders in frame 05's landed state (חשבון + אימות done, מועדונים current); at 0.15-0.60s מועדונים flips to .done and רמת התאמה to current. Holds through the final second for frame 07 to inherit.",
-    "device": "the phone is never rebuilt: same .device, same slot, no entrance tween.",
-    "rail": "scaleX 0.8222 -> 1.0 linear across the whole 16s (23.49% -> 28.57%).",
-    "sync": "four edit beats at labels edit1..edit4 (2.6 / 6.8 / 10.6 / 13.8s). Option highlight, deal count (12/18/12/6/12), fill scaleX (0.50/0.75/0.50/0.25/0.50) and the explain copy all move at the SAME label with duration 0.9s and ease power2.inOut. Lands on בינוני (50%) — the demo user's level."
+    "steps": "5-step .steps row, index 3 (רמת התאמה). At t=0 it renders in frame 05's landed state (חשבון + אימות done, מועדונים current); at 0.15-0.60s מועדונים flips to .done and רמת התאמה to current (filled teal). Holds through the final second for frame 07 to inherit.",
+    "device": "the phone is never rebuilt: same .device (460x997, natural scale), same slot, no entrance tween.",
+    "screen": "AuthLayout, not MainShell — the register wizard is a guest route, so there is no app header and no bottom nav. Chrome is the back row (חזרה) plus the step rail.",
+    "rail": "scaleX 0.8222 -> 1.0 linear across the whole 13s (23.49% -> 28.57%). The absolute endpoints are unchanged by the retime — only the time taken to cross them.",
+    "sync": "four edit beats at labels edit1..edit4 (2.4 / 5.6 / 8.6 / 11.3s). Option highlight, deal count (12/18/12/6/12), the 18-dot deal strip, fill scaleX (0.50/0.75/0.50/0.25/0.50) and the explain copy all move at the SAME label with duration 0.9s and ease power2.inOut — unchanged by the retime. Lands on בינוני (50%) — the demo user's level."
   }
 }
