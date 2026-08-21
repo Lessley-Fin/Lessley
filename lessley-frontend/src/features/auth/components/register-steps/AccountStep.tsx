@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { ROUTES } from "@/lib/routes"
 import type { RegisterValues } from "../../schemas"
 
@@ -73,7 +74,7 @@ export function AccountStep({ form, isLoading = false, serverError, onContinue }
           <FormItem className="space-y-1.5">
             <FormLabel>{t("auth.register.account.password")}</FormLabel>
             <FormControl>
-              <Input {...field} type="password" autoComplete="new-password" className="h-12 rounded-2xl" />
+              <PasswordInput {...field} autoComplete="new-password" className="h-12 rounded-2xl" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -86,7 +87,7 @@ export function AccountStep({ form, isLoading = false, serverError, onContinue }
           <FormItem className="space-y-1.5">
             <FormLabel>{t("auth.register.account.verifyPassword")}</FormLabel>
             <FormControl>
-              <Input {...field} type="password" autoComplete="new-password" className="h-12 rounded-2xl" />
+              <PasswordInput {...field} autoComplete="new-password" className="h-12 rounded-2xl" />
             </FormControl>
             <FormMessage />
           </FormItem>

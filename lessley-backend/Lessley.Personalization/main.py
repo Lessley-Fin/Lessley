@@ -15,12 +15,12 @@ from logging.handlers import QueueHandler, QueueListener
 import queue
 import logging_loki
 from services.di_container import DIContainer
+from config.constants import LIMITS
 from config.settings import settings
 from config.structured_logging import StructuredFormatter, ContextInjectingFilter
 from routers import open_finance_controller
 from routers import mcc_controller
 from routers import insights_controller
-from routers import recommendation_controller
 from database.db_client import init_db, close_db
 from middleware.log_context_middleware import UnifiedContextMiddleware, request_id_var, username_var
 from middleware.edge_auth_middleware import EdgeAuthMiddleware, dev_bypass_active
@@ -93,24 +93,58 @@ logging.getLogger("uvicorn.access").disabled = True
 logger = logging.getLogger(__name__)
 
 
+def _field(data: dict, *names):
+    """Read a field whichever casing the publisher used.
+
+    The Gateway publishes these commands as raw JSON, so whether a property arrives as
+    "UserId", "userId" or "user_id" depends on serializer configuration on the far side of
+    the bus. Reading every spelling keeps a change over there from degrading into a silent
+    fallback — which for a window size means calculating the wrong period and saying nothing.
+    """
+    for name in names:
+        value = data.get(name)
+        if value is not None:
+            return value
+    return None
+
+
 async def _handle_gateway_command(routing_key: str, data: dict) -> None:
     """Dispatch an incoming Gateway command to the matching service method."""
-    user_id = data.get("UserId") or data.get("userId") or data.get("user_id")
-    club_id = data.get("ClubId") or data.get("clubId") or data.get("club_id")
+    user_id = _field(data, "UserId", "userId", "user_id")
 
-    if routing_key == "Gateway.calculate_missed_savings":
-        time_filter = data.get("TimeFilter", True)
-        days = data.get("Days") or 7
+    if routing_key == "Gateway.calculate_user_categories":
+        days = _field(data, "Days", "days") or LIMITS.DAYS
         service = DIContainer.get_insights_service()
-        await service.calculate_missed_savings_async(
-            user_id,
-            time_filter=time_filter,
-            days=days,
-            use_mock=False,
-        )
-    elif routing_key == "Gateway.calculate_matching_clubs":
-        service = DIContainer.get_recommendation_service()
-        await service.calculate_matching_clubs(user_id)
+        categories = await service.calculate_user_categories_async(user_id, time_filter=True, days=days)
+
+        # The command path is the only thing that writes tags. The same calculation served
+        # over HTTP publishes nothing, so a client reading its own insights can never move
+        # the stored profile out from under the Gateway.
+        tags = service.extract_mcc_tags(categories)
+
+        if tags:
+            await DIContainer.get_publisher_service().publish_user_tag_assigned(user_id, tags)
+            return
+
+        # An empty result is ambiguous and must not clear anything on its own. Open Finance
+        # answers with [] both for a user who has no bank linked and for one whose data it
+        # simply cannot produce right now — the two are indistinguishable from here. That was
+        # tolerable while only a user's own actions triggered a recalculation; the weekly sweep
+        # asks for every user at once, so one bad Monday would unsubscribe the entire user base
+        # from every notification group, silently and with nothing in the logs looking wrong.
+        #
+        # Retaining a stale tag costs one irrelevant notification. Clearing wrongly costs all
+        # of them. Genuinely disconnecting a bank should clear tags through an explicit unlink
+        # signal, not through an absence we inferred.
+        existing = await DIContainer.get_user_repository().get_user_tags(user_id)
+        if existing:
+            logger.warning(
+                "Calculation returned no categories for a user who has tags — leaving them in place",
+                extra={
+                    "reason": "Ambiguous empty result",
+                    "extra_data": {"user_id": user_id, "existing_tag_count": len(existing)},
+                },
+            )
     else:
         logger.warning("Unhandled Gateway command routing key: %s", routing_key)
 
@@ -147,6 +181,28 @@ async def process_gateway_command(message: aio_pika.abc.AbstractIncomingMessage)
                 extra={"reason": "Command handler failure", "extra_data": {"routing_key": routing_key}},
             )
             raise
+
+
+async def refresh_reference_data() -> None:
+    """Background task: rebuild the clubs/stores/deals cache so newly scraped deals appear.
+
+    The cache is read thousands of times per calculation and must never wait on Mongo, so it
+    is rebuilt on a timer rather than revalidated per request. A failed rebuild is logged and
+    the loop continues — ``load_async`` only publishes a complete snapshot, so the previous
+    one keeps serving rather than the service falling back to empty reference data.
+    """
+    repository = DIContainer.get_reference_data_repository()
+
+    while True:
+        await asyncio.sleep(settings.ReferenceData_RefreshSeconds)
+        try:
+            await repository.load_async(force=True)
+        except Exception as e:
+            logger.error(
+                f"Reference data refresh failed, keeping the previous snapshot: {e}",
+                exc_info=e,
+                extra={"reason": "Scheduled refresh failure", "extra_data": {}},
+            )
 
 
 async def consume_gateway_commands() -> None:
@@ -186,11 +242,17 @@ async def lifespan(app: FastAPI):
     if settings.RabbitMQ_Enabled:
         consumer_task = asyncio.create_task(consume_gateway_commands())
 
+    refresh_task: asyncio.Task | None = None
+    if settings.ReferenceData_RefreshSeconds > 0:
+        refresh_task = asyncio.create_task(refresh_reference_data())
+
     yield
 
     # Shutdown
     if consumer_task is not None:
         consumer_task.cancel()
+    if refresh_task is not None:
+        refresh_task.cancel()
     if publisher_service is not None:
         await publisher_service.close()
 
@@ -368,4 +430,3 @@ if dev_bypass_active():
 app.include_router(mcc_controller.router)
 app.include_router(open_finance_controller.router)
 app.include_router(insights_controller.router)
-app.include_router(recommendation_controller.router)

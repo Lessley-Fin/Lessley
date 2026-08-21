@@ -15,6 +15,7 @@ public class RegistrationService : IRegistrationService
     private readonly IVerificationCodeService _codes;
     private readonly IEmailSender _email;
     private readonly IAuthSessionService _sessions;
+    private readonly IPersonalizationService _personalization;
     private readonly VerificationConfig _config;
     private readonly ILogger<RegistrationService> _logger;
 
@@ -24,16 +25,18 @@ public class RegistrationService : IRegistrationService
         IVerificationCodeService codes,
         IEmailSender email,
         IAuthSessionService sessions,
+        IPersonalizationService personalization,
         IOptions<VerificationConfig> config,
         ILogger<RegistrationService> logger)
     {
-        _userManager = userManager;
-        _pending     = pending;
-        _codes       = codes;
-        _email       = email;
-        _sessions    = sessions;
-        _config      = config.Value;
-        _logger      = logger;
+        _userManager     = userManager;
+        _pending         = pending;
+        _codes           = codes;
+        _email           = email;
+        _sessions        = sessions;
+        _personalization = personalization;
+        _config          = config.Value;
+        _logger          = logger;
     }
 
     public async Task<AuthOperationResult> StartAsync(StartRegistrationDto dto, CancellationToken ct = default)
@@ -235,6 +238,11 @@ public class RegistrationService : IRegistrationService
         await _pending.DeleteAsync(registration, ct);
 
         _logger.LogInformation("Registration completed for {UserName}.", user.UserName);
+
+        // Open Finance identifies people by email, so an account created here may already have
+        // a linked bank and a full transaction history behind it. Ask for categories now rather
+        // than leaving the profile untagged until the user happens to open their settings.
+        await _personalization.TriggerCalculateUserCategoriesAsync(user.Email!, ct: ct);
 
         return AuthOperationResult.WithSession(await _sessions.IssueAsync(user, ct));
     }

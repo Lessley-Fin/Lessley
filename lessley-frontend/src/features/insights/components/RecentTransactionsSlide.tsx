@@ -4,6 +4,7 @@ import { CarouselSlideCard } from "@/components/shared/CarouselSlideCard"
 import { INSIGHTS_DEFAULTS, formatCategoryLabel } from "@/lib/constants"
 import { formatAmount, formatDate } from "@/lib/formatters"
 import type { PersonalizationTransaction } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface RecentTransactionsSlideProps {
   transactions: PersonalizationTransaction[]
@@ -27,7 +28,17 @@ export function RecentTransactionsSlide({ transactions }: RecentTransactionsSlid
         {recent.map((tx, i) => {
           const description =
             tx.merchantName || tx.description?.description || tx.description?.fixedText || t("insights.recentTransactionsSlide.transaction")
-          const amount = tx.amount?.chargedAmount?.amount ?? tx.amount?.originalAmount?.amount
+          const charged = tx.amount?.chargedAmount?.amount
+          const amount = charged ?? tx.amount?.originalAmount?.amount
+          // The feed signs its amounts: a purchase is negative, a refund or credit positive.
+          // formatAmount renders that sign itself, so the magnitude goes in and the sign is
+          // shown once, here — prefixing the signed value printed every purchase as "−-₪86.00".
+          const isRefund = typeof amount === "number" && amount > 0
+          // A settled row the card was never billed for: a voucher, gift card or waived fee.
+          // It is still a purchase and still belongs in the list, but nothing was deducted, so
+          // it must not carry a minus. Mirrors TransactionAmountService.was_never_charged.
+          const wasNeverCharged =
+            tx.status === "BOOKED" && (charged === null || charged === undefined || charged === 0) && !isRefund
           const date = tx.date?.transactionDate || tx.date?.bookingDate || tx.date?.valueDate || tx.createdAt || ""
           const category = tx.category?.main
             ? t(`categories.${tx.category.main}`, { defaultValue: formatCategoryLabel(tx.category.main) })
@@ -41,7 +52,17 @@ export function RecentTransactionsSlide({ transactions }: RecentTransactionsSlid
                   {category ? ` · ${category}` : ""}
                 </p>
               </div>
-              <span className="text-sm font-bold">−{formatAmount(amount)}</span>
+              <span
+                className={cn(
+                  "text-sm font-bold",
+                  isRefund && "text-emerald-600",
+                  wasNeverCharged && "text-muted-foreground",
+                )}
+              >
+                {typeof amount !== "number"
+                  ? formatAmount(amount)
+                  : `${wasNeverCharged ? "" : isRefund ? "+" : "−"}${formatAmount(Math.abs(amount))}`}
+              </span>
             </li>
           )
         })}

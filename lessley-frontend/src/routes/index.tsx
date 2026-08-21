@@ -41,6 +41,11 @@ const SettingsPage = lazy(() =>
     default: m.SettingsPage,
   })),
 )
+const QAPage = lazy(() =>
+  import("@/features/settings/QAPage").then((m) => ({
+    default: m.QAPage,
+  })),
+)
 const RecommendationsPage = lazy(() =>
   import("@/features/recommendations/RecommendationsPage").then((m) => ({
     default: m.RecommendationsPage,
@@ -164,6 +169,14 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<SuspenseFallback />}>
                 <SettingsPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "qa",
+            element: (
+              <Suspense fallback={<SuspenseFallback />}>
+                <QAPage />
               </Suspense>
             ),
           },

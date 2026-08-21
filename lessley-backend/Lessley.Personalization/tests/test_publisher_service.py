@@ -17,8 +17,7 @@ async def test_publish_before_initialize_raises():
 async def test_initialize_is_idempotent():
     svc = PublisherService()
     with patch("services.publisher_service.RabbitMQBase.connect", new=AsyncMock(return_value=MagicMock())), \
-         patch("services.publisher_service.RabbitMQUserPublisher", return_value=MagicMock()), \
-         patch("services.publisher_service.RabbitMQTagPublisher", return_value=MagicMock()):
+         patch("services.publisher_service.RabbitMQUserPublisher", return_value=MagicMock()):
         await svc.initialize()
         first = svc._user_publisher
         await svc.initialize()
@@ -29,10 +28,16 @@ async def test_publish_delegates_to_underlying_publisher():
     svc = PublisherService()
     svc._initialized = True
     svc._user_publisher = AsyncMock()
-    svc._tag_publisher = AsyncMock()
 
     await svc.publish_user_tag_assigned("user@test.com", ["GROCERIES", "RESTAURANT"])
     svc._user_publisher.publish_user_tag_assigned.assert_awaited_once_with("user@test.com", ["GROCERIES", "RESTAURANT"])
 
-    await svc.publish_group_notification("GROCERIES", "Deal!", "deal-1")
-    svc._tag_publisher.publish_group_notification.assert_awaited_once_with("GROCERIES", "Deal!", "deal-1")
+
+def test_only_the_tag_assignment_is_published():
+    """
+    The deal-broadcast and recommendation-result publishers were removed along with the
+    consumers waiting on them. Anything new added here means another service is being told
+    something, which is worth noticing in review.
+    """
+    published = {name for name in dir(PublisherService) if name.startswith("publish")}
+    assert published == {"publish_user_tag_assigned"}

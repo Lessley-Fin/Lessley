@@ -1,19 +1,16 @@
-import { Percent, RefreshCw, Sparkles, Store } from "lucide-react"
+import { Percent, Sparkles, Store } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { InfoDialog } from "@/components/shared/InfoDialog"
-import { Button } from "@/components/ui/button"
 import { emojiForClub } from "@/lib/constants"
 import { formatFitPercent } from "@/lib/formatters"
 import type { ClubRecommendation } from "@/lib/types"
 
 interface TopClubMatchesSlideProps {
   clubs: ClubRecommendation[]
-  onRecalculate: () => void
-  isPending: boolean
 }
 
-export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClubMatchesSlideProps) {
+export function TopClubMatchesSlide({ clubs }: TopClubMatchesSlideProps) {
   const { t } = useTranslation()
   const INFO_HIGHLIGHTS = [
     {
@@ -43,16 +40,6 @@ export function TopClubMatchesSlide({ clubs, onRecalculate, isPending }: TopClub
           subtitle={t("recommendations.topClubMatchesSlide.infoDialog.subtitle")}
           highlights={INFO_HIGHLIGHTS}
         />
-        <Button
-          type="button"
-          variant="pill"
-          size="icon"
-          aria-label={t("recommendations.topClubMatchesSlide.recalculateAria")}
-          onClick={onRecalculate}
-          disabled={isPending}
-        >
-          <RefreshCw className={isPending ? "animate-spin" : ""} aria-hidden />
-        </Button>
       </div>
       {clubs.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("recommendations.topClubMatchesSlide.empty")}</p>

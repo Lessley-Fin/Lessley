@@ -13,6 +13,8 @@
     "previousSlide": "Previous slide",
     "nextSlide": "Next slide",
     "continue": "Continue",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "submit": "Submit",
     "confirm": "Confirm",
     "edit": "Edit",
@@ -86,6 +88,7 @@
     "optimizer": "Optimizer",
     "recommend": "Recommend",
     "notifications": "Notifications",
+    "qa": "Questions & answers",
     "profileAndSettings": "Profile and settings"
   },
   "auth": {
@@ -276,7 +279,8 @@
       "categories": "Categories",
       "topStores": "Top stores",
       "transactions": "Transactions",
-      "accounts": "Accounts"
+      "accounts": "Accounts",
+      "mix": "Mix"
     },
     "accountsSlide": {
       "title": "Spending by accounts",
@@ -312,7 +316,12 @@
     "statsGrid": {
       "transactions": "Transactions",
       "totalAmount": "Total amount",
-      "allLinkedCards": "All linked cards"
+      "allLinkedCards": "All linked cards",
+      "breakdownSeparator": " · ",
+      "abroad": "{{count}} abroad",
+      "installments": "{{count}} in payments",
+      "refunded": "{{count}} refunded",
+      "vouchers": "{{count}} on vouchers"
     },
     "topCategorySlide": {
       "title": "Top category",
@@ -332,6 +341,39 @@
     },
     "common": {
       "transactionsCount": "{{count}} transactions"
+    },
+    "transactionMixSlide": {
+      "title": "Transaction mix",
+      "subtitle": "What your {{period}} was actually made of.",
+      "empty": "No transactions in this period.",
+      "count": "{{count}} transaction",
+      "count_other": "{{count}} transactions",
+      "markupFees": "{{amount}} of it went on conversion fees",
+      "plans": "Payments on {{count}} plan",
+      "plans_other": "Payments on {{count}} plans",
+      "savedNote": "Money you kept"
+    },
+    "transactionKinds": {
+      "ordinary": {
+        "label": "Everyday",
+        "note": "Charged in shekels, exactly as the shop asked"
+      },
+      "foreign": {
+        "label": "Abroad",
+        "note": "Billed in another currency and converted"
+      },
+      "installment": {
+        "label": "In payments",
+        "note": "Spread over a plan instead of paid at once"
+      },
+      "refund": {
+        "label": "Came back",
+        "note": "Refunds and credits returned to your card"
+      },
+      "voucher": {
+        "label": "Cost nothing",
+        "note": "A voucher, gift card or waived fee covered it"
+      }
     }
   },
   "recommendations": {
@@ -341,26 +383,12 @@
       "notConnectedTitle": "Connect to get recommendations",
       "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
       "tabTopMatches": "Top matches",
-      "tabMissedSavings": "Missed savings",
       "tabMissedShops": "Your shops"
-    },
-    "missedSavingsSlide": {
-      "title": "Missed savings",
-      "subtitle": "Purchases that had a better home",
-      "recalculateAria": "Recalculate missed savings",
-      "empty": "No missed savings found yet. Once your spending is analyzed, we'll show you where you could have saved.",
-      "storesCount": "{{count}} stores",
-      "infoDialog": {
-        "ariaLabel": "What counts as a missed saving?",
-        "title": "What's a missed saving?",
-        "body": "These are past purchases at stores where a club or card discount existed but wasn't applied — so you can see where switching stores or cards next time could save you money."
-      }
     },
     "topClubMatchesSlide": {
       "title": "Top club matches",
       "subtitle": "Ranked by store overlap with your spend",
-      "recalculateAria": "Recalculate matches",
-      "empty": "We need more transaction history to analyze club fit. Try recalculating or connect more accounts.",
+      "empty": "We need more transaction history to analyze club fit. Connect more accounts to improve it.",
       "storesMatch": "{{hit}}/{{total}} stores match",
       "infoDialog": {
         "ariaLabel": "What is a fit score?",
@@ -484,17 +512,6 @@
       "rankedFrom_one": "Ranked from 1 deal at {{store}}",
       "rankedFrom_other": "Ranked from {{count}} deals at {{store}}"
     },
-    "engineInfoDialog": {
-      "ariaLabel": "How the engine works",
-      "title": "What you'll get",
-      "subtitle": "How the engine works",
-      "highlight1Title": "Stacked savings",
-      "highlight1Desc": "Combine a store coupon with the right card benefit in one step.",
-      "highlight2Title": "Exact product match",
-      "highlight2Desc": "We price the item you actually want, not a lookalike.",
-      "highlight3Title": "Ephemeral coupons",
-      "highlight3Desc": "Scraped from retailers and forums minutes after they appear."
-    },
     "winningStack": {
       "title": "Best stack",
       "subtitle_one": "{{store}} · 1 deal applied",
@@ -535,7 +552,8 @@
       "tabRole": "Role",
       "tabTags": "Tags",
       "tabNotifyUser": "Notify user",
-      "tabBroadcast": "Broadcast"
+      "tabBroadcast": "Notify group",
+      "tabBroadcastAll": "Notify all"
     },
     "common": {
       "userEmail": "User email",
@@ -563,6 +581,13 @@
       "success": "Notification broadcast",
       "broadcasting": "Broadcasting...",
       "broadcastToGroup": "Broadcast to group"
+    },
+    "notifyAll": {
+      "heading": "Broadcast notification to all users",
+      "failed": "Failed to broadcast notification.",
+      "success": "Notification broadcast to everyone",
+      "broadcasting": "Broadcasting...",
+      "broadcastToAll": "Notify all users"
     },
     "notifyUser": {
       "heading": "Send notification to user",
@@ -695,6 +720,8 @@
       "bankingTitle": "Open banking",
       "bankingDesc": "Connected cards",
       "languageTitle": "Language",
+      "qaTitle": "Questions & answers",
+      "qaDesc": "How Lessley works",
       "logoutTitle": "Log out",
       "logoutDesc": "End this session",
       "adminConsoleTitle": "Admin console",
@@ -735,6 +762,21 @@
     },
     "language": {
       "title": "Change language"
+    },
+    "qa": {
+      "title": "Questions & answers",
+      "q1": "What does Lessley do?",
+      "a1": "Lessley links your connected cards to loyalty clubs and flags purchases where you're missing out on cashback, points or discounts — so you don't have to track it yourself.",
+      "q2": "Is it safe to connect my bank?",
+      "a2": "Yes. Bank access is read-only and can be revoked at any time from the Open banking screen.",
+      "q3": "What is \"match level\"?",
+      "a3": "Match level controls how confident Lessley must be before it suggests a club match — a stricter level means fewer but more accurate matches.",
+      "q4": "What do muted categories do?",
+      "a4": "Muting a category or tag hides its purchases from matches and notifications, without deleting any data.",
+      "q5": "Will signing out delete my data?",
+      "a5": "No. Signing out only ends your session — your clubs, preferences and connected cards stay exactly as they are.",
+      "q6": "Can I change the app language?",
+      "a6": "Yes, open Settings → Language and pick your preferred language at any time."
     }
   },
   "menu": {

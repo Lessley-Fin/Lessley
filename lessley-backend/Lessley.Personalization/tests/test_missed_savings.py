@@ -53,7 +53,9 @@ def _tx(tx_id="t1", merchant="קפה קפה", category_code="5812", charged=100.
         merchantName=merchant,
         merchantAddress=MerchantAddress(townName=town) if town else None,
         category=TransactionCategory(sub=sub),
-        amount=TransactionAmount(chargedAmount=AmountDetail(amount=charged)),
+        # `charged` reads as "spent this much", but the feed signs a purchase negative and a
+        # refund positive — and the insights now rely on that sign to tell the two apart.
+        amount=TransactionAmount(chargedAmount=AmountDetail(amount=-abs(charged), currency="ILS")),
     )
 
 
@@ -263,14 +265,15 @@ def test_shops_without_a_deal_are_never_offered():
 
 
 def test_a_shop_outside_the_users_clubs_is_dropped():
+    """The deal exists, but a user who is not in the club cannot use it."""
     repo = _world(
         [_store("s1", "סטימצקי")],
         clubs={"c1": _club("c1", ["s1"]), "c2": _club("c2", [])},
     )
     service = _service(repo)
 
-    assert service.missed_savings([_tx(merchant="סטימצקי")], user_club_ids=["c1"])[0].had_discount
-    assert not service.missed_savings([_tx(merchant="סטימצקי")], user_club_ids=["c2"])[0].had_discount
+    assert service.missed_savings_by_store([_tx(merchant="סטימצקי")], user_club_ids=["c1"])
+    assert service.missed_savings_by_store([_tx(merchant="סטימצקי")], user_club_ids=["c2"]) == []
 
 
 def _distinct_names(count):
@@ -334,23 +337,24 @@ def test_purchases_without_an_id_are_skipped():
     repo = _world([_store("s1", "סטימצקי")])
     service = _service(repo)
 
-    insights = service.missed_savings(
+    shops = service.missed_savings_by_store(
         [_tx(tx_id=None), _tx(tx_id="t3", merchant="סטימצקי")], user_club_ids=["c1"]
     )
-    assert [i.transaction_id for i in insights] == ["t3"]
-
-
-def test_no_transactions_returns_nothing():
-    service = _service(_world([_store("s1", "סטימצקי")]))
-    assert service.missed_savings([], user_club_ids=["c1"]) == []
+    assert [purchase.transaction_id for purchase in shops[0].purchases] == ["t3"]
 
 
 def test_falls_back_to_the_original_amount_when_nothing_was_charged():
     service = _service(_world([_store("s1", "סטימצקי")]))
     transaction = _tx(merchant="סטימצקי")
-    transaction.amount = TransactionAmount(originalAmount=AmountDetail(amount=42.5))
+    # How a not-yet-billed row really arrives: the charged node is there with its currency,
+    # only the amount is blank.
+    transaction.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-42.5, currency="ILS"),
+        chargedAmount=AmountDetail(amount=None, currency="ILS"),
+    )
 
-    assert service.missed_savings([transaction], user_club_ids=["c1"])[0].amount == 42.5
+    shops = service.missed_savings_by_store([transaction], user_club_ids=["c1"])
+    assert shops[0].covered_amount == 42.5
 
 
 # ── Gathered by shop instead of by purchase ───────────────────────────────────

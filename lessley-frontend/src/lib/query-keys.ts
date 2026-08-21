@@ -16,6 +16,7 @@ export const queryKeys = {
     spendingByDay: (days: number) => [...queryKeys.insights.all, "spending-by-day", days] as const,
     spendingPeriodComparison: (days: number) =>
       [...queryKeys.insights.all, "spending-period-comparison", days] as const,
+    spendingTotal: (days: number) => [...queryKeys.insights.all, "spending-total", days] as const,
     spendingSaved: (days: number) => [...queryKeys.insights.all, "spending-saved", days] as const,
     spendingSavedByAccount: (days: number) =>
       [...queryKeys.insights.all, "spending-saved-by-account", days] as const,

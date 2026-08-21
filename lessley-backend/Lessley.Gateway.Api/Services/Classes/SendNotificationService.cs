@@ -93,69 +93,33 @@ public class SendNotificationService : ISendNotificationService
         await PublishDispatchedEventAsync("group:" + groupTag, "group", userEmails.Count, sentAt, ct);
     }
 
-    public async Task SendDealNotificationAsync(string dealId, string message, string[] categories, CancellationToken ct = default)
-    {
-        var sentAt = DateTime.UtcNow;
-
-        var userEmails = await _userManager.Users
-            .Where(u => u.Tags != null &&
-                        u.Tags.Any(t => categories.Contains(t)) &&
-                        (u.MutedTags == null || !categories.All(c => u.MutedTags.Contains(c))))
-            .Select(u => u.Email!)
-            .Distinct()
-            .ToListAsync(ct);
-
-        var payload       = new { timestamp = sentAt, message, dealId, categories, type = "deal" };
-        var notifications = new List<Notification>(userEmails.Count);
-
-        foreach (var email in userEmails)
-        {
-            var connections = _connectionManager.GetConnections(email).ToList();
-            foreach (var conn in connections)
-                await _hubContext.Clients.Client(conn).SendAsync("DealGroupNotification", payload, ct);
-
-            notifications.Add(new Notification
-            {
-                UserId     = email,
-                Message    = message,
-                DealId     = dealId,
-                Categories = categories.ToList(),
-                Type       = "deal",
-                SentAt     = sentAt,
-            });
-        }
-
-        if (notifications.Count > 0)
-            await _notificationRepository.SaveManyAsync(notifications, ct);
-
-        _logger.LogInformation(
-            "DealNotification sent for deal '{DealId}' — {Count} recipients across categories: {Categories}",
-            dealId, userEmails.Count, string.Join(", ", categories));
-        await PublishDispatchedEventAsync("deal:" + dealId, "deal", userEmails.Count, sentAt, ct);
-    }
-
-    public async Task<int> SendCalcNotificationAsync(string userId, string calcType, string message, string? data = null, CancellationToken ct = default)
+    public async Task<int> SendToAllAsync(string message, CancellationToken ct = default)
     {
         var sentAt  = DateTime.UtcNow;
-        var payload = new { timestamp = sentAt, message, calcType, type = "calc" };
+        var payload = new { timestamp = sentAt, message, type = "all" };
 
-        var connections = _connectionManager.GetConnections(userId).ToList();
-        foreach (var connectionId in connections)
-            await _hubContext.Clients.Client(connectionId).SendAsync("CalcNotification", payload, ct);
+        await _hubContext.Clients.All.SendAsync("SystemBroadcastNotification", payload, ct);
 
-        await _notificationRepository.SaveAsync(new Notification
+        var userEmails = await _userManager.Users
+            .Select(u => u.Email!)
+            .ToListAsync(ct);
+
+        if (userEmails.Count > 0)
         {
-            UserId   = userId,
-            Message  = message,
-            Type     = "calc",
-            CalcType = calcType,
-            Data     = data,
-            SentAt   = sentAt,
-        }, ct);
+            var notifications = userEmails.Select(email => new Notification
+            {
+                UserId  = email,
+                Message = message,
+                Type    = "all",
+                SentAt  = sentAt,
+            });
+            await _notificationRepository.SaveManyAsync(notifications, ct);
+        }
 
-        _logger.LogInformation("CalcNotification ({CalcType}) stored for user {UserId} ({Count} live connections)", calcType, userId, connections.Count);
-        await PublishDispatchedEventAsync("calc:" + calcType + ":" + userId, "calc", connections.Count, sentAt, ct);
-        return connections.Count;
+        _logger.LogInformation(
+            "SystemBroadcastNotification sent to all users — {Count} notification(s) created", userEmails.Count);
+        await PublishDispatchedEventAsync("all", "all", userEmails.Count, sentAt, ct);
+        return userEmails.Count;
     }
 
     private async Task PublishDispatchedEventAsync(string notificationId, string type, int recipientCount, DateTime sentAt, CancellationToken ct)

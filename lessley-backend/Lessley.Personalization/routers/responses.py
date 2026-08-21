@@ -45,21 +45,6 @@ class ClubRecommendationResponseSchema(BaseModel):
     recommendations: list[ClubRecommendationSchema]
 
 
-class MissedStoreSchema(BaseModel):
-    """Schema for a store with alternative discount."""
-
-    store_id: str = Field(..., description="The store ID")
-    store_name: str = Field(..., description="The store name")
-
-
-class MissedStoreDiscountSchema(BaseModel):
-    """Schema for alternative stores with active discounts for a given club."""
-
-    club_id: str = Field(..., description="The club ID offering the discount")
-    missed_store: list[MissedStoreSchema] = Field(..., description="List of stores with active discounts in this club")
-    store_count: int = Field(..., description="Total count of stores with discounts in this club")
-
-
 class MissedShopPurchaseSchema(BaseModel):
     """One purchase a shop's deal could have applied to."""
 
@@ -101,19 +86,4 @@ class MissedShopSchema(BaseModel):
     covered_amount: float = Field(..., description="Total spend across those purchases")
     purchases: list[MissedShopPurchaseSchema] = Field(
         default_factory=list, description="The purchases themselves"
-    )
-
-
-class TransactionInsightSchema(BaseModel):
-    """Schema for a single transaction's missed savings insight."""
-
-    transaction_id: str = Field(..., description="Unique transaction identifier")
-    had_discount: bool = Field(..., description="Whether the transaction's store had an active deal")
-    store_name: str = Field(..., description="The name of the store where the transaction occurred")
-    mcc_code: str = Field(..., description="The category name of the store where the transaction occurred")
-    mcc_description: str = Field(..., description="The description of the MCC code")
-    amount: float = Field(..., description="The amount of the transaction")
-    missed_store_discont: list[MissedStoreDiscountSchema] = Field(
-        default_factory=list,
-        description="List of alternative stores grouped by club where better deals were available",
     )

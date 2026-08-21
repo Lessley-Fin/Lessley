@@ -238,15 +238,6 @@ namespace Lessley.Gateway.Api.Extensions
             {
                 // ── Consumers: Personalization → Gateway ───────────────────────
                 x.AddConsumer<UserTagAssignedEventConsumer>();
-                x.AddConsumer<DealUserNotificationConsumer>();
-                x.AddConsumer<DealTagNotificationConsumer>();
-
-                // ── Consumers: Personalization calc results → Gateway ──────────
-                x.AddConsumer<MissedSavingsCalculatedEventConsumer>();
-                x.AddConsumer<MatchingClubsCalculatedEventConsumer>();
-
-                // ── Consumer: deal broadcast (consolidated, task 8) ────────────
-                x.AddConsumer<DealNotificationConsumer>();
 
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
@@ -259,8 +250,7 @@ namespace Lessley.Gateway.Api.Extensions
                     cfg.UseRawJsonSerializer(RawSerializerOptions.AddTransportHeaders);
 
                     // ── Publish topology for Gateway→Personalization recommendation commands ─
-                    ConfigureCommandPublish<CalculateMissedSavingsCommand>(cfg, "Gateway.calculate_missed_savings");
-                    ConfigureCommandPublish<CalculateMatchingClubsCommand>(cfg, "Gateway.calculate_matching_clubs");
+                    ConfigureCommandPublish<CalculateUserCategoriesCommand>(cfg, "Gateway.calculate_user_categories");
 
                     // NotificationDispatchedEvent — published by Gateway, consumed by E2E tests
                     ConfigureCommandPublish<NotificationDispatchedEvent>(cfg, "Gateway.notification_dispatched");
@@ -276,76 +266,12 @@ namespace Lessley.Gateway.Api.Extensions
                             b.RoutingKey   = "Personalize.user_tag_assigned";
                         });
                         e.UseRawJsonDeserializer();
+                        // The consumer throws when the write is rejected, which is almost always
+                        // Identity's concurrency stamp losing to a settings save. Re-reading the
+                        // user resolves it, so short spaced retries are worth more here than a
+                        // trip to the error queue.
+                        e.UseMessageRetry(r => r.Intervals(200, 1000, 5000));
                         e.ConfigureConsumer<UserTagAssignedEventConsumer>(ctx);
-                    });
-
-                    // ── Receive: direct user notifications from Personalization ─
-                    cfg.ReceiveEndpoint("gateway.deal_user_notification", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.deal_user_notification";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<DealUserNotificationConsumer>(ctx);
-                    });
-
-                    // ── Receive: group (tag) notifications from Personalization ─
-                    cfg.ReceiveEndpoint("gateway.deal_group_notification", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.deal_group_notification";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<DealTagNotificationConsumer>(ctx);
-                    });
-
-                    // ── Receive: consolidated deal notification (task 8) ───────
-                    cfg.ReceiveEndpoint("gateway.deal_notification", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.deal_notification";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<DealNotificationConsumer>(ctx);
-                    });
-
-                    // ── Receive: recommendation result events ────────────────────
-                    cfg.ReceiveEndpoint("gateway.missed_savings_calculated", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.missed_savings_calculated";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<MissedSavingsCalculatedEventConsumer>(ctx);
-                    });
-
-                    cfg.ReceiveEndpoint("gateway.matching_clubs_calculated", e =>
-                    {
-                        e.ConfigureConsumeTopology = false;
-                        e.Bind("lessley_events", b =>
-                        {
-                            b.ExchangeType = "topic";
-                            b.Durable      = true;
-                            b.RoutingKey   = "Personalize.matching_clubs_calculated";
-                        });
-                        e.UseRawJsonDeserializer();
-                        e.ConfigureConsumer<MatchingClubsCalculatedEventConsumer>(ctx);
                     });
                 });
             });
