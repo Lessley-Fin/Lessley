@@ -65,7 +65,6 @@ export function RankedOptions({ results, deals, store }: RankedOptionsProps) {
                 <StackSteps
                   steps={result.per_step}
                   deals={deals}
-                  cartTotal={result.starting_price}
                   store={store}
                 />
               </div>
