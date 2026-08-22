@@ -7,9 +7,20 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 })
 
-// Matches the Gateway's actual RegisterDto constraint (MinimumLength = 8) — no extra
-// complexity rule is enforced server-side, so the client shouldn't invent one either.
-export const passwordSchema = z.string().min(8, "Must be at least 8 characters")
+// Length comes from the Gateway's RegisterDto ([StringLength(128, MinimumLength = 8)]);
+// the character classes come from ASP.NET Identity's default PasswordOptions, which the
+// Gateway never overrides — so UserManager.CreateAsync rejects a password missing any of
+// them. Checking them here turns a generic server-side "registration failed" into a
+// specific message on the field. The Unicode classes mirror Identity's own char.IsUpper /
+// IsLower / IsDigit / !IsLetterOrDigit tests, so a Hebrew-only password fails in the same
+// way on both sides.
+export const passwordSchema = z
+  .string()
+  .min(8, "Must be at least 8 characters")
+  .regex(/\p{Lu}/u, "Must include an uppercase letter")
+  .regex(/\p{Ll}/u, "Must include a lowercase letter")
+  .regex(/\p{Nd}/u, "Must include a number")
+  .regex(/[^\p{L}\p{N}]/u, "Must include a special character (for example !, ? or #)")
 
 export const registerSchema = z
   .object({

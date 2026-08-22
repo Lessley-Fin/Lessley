@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, ArrowRight, CreditCard, Store, Ticket } from "lucide-react"
+import { ArrowLeft, ArrowRight, BadgePercent, CreditCard, Ticket, TicketPercent } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { CarouselDots } from "@/components/shared/CarouselDots"
@@ -16,14 +16,19 @@ import type { MissedShop, StoreMatchBand } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 /**
- * Shops running a deal the user's own spending could have covered.
+ * Money the user spent at full price while a deal they were entitled to was running.
+ *
+ * The subject is the loss, not the match: every card names what they paid, how many deals were
+ * live at the time, and which of their clubs would have covered it. The copy says that outright
+ * — an insight the user has to decode is an insight they scroll past.
  *
  * One card per confidence band, because the three do not mean the same thing and must not be
  * read as though they did. An EXACT or STRONG shop is the one the user walked into, so "you
- * missed a coupon here" is simply true. A SIMILAR shop only shares a word naming a line of
+ * paid full price here" is simply true. A SIMILAR shop only shares a word naming a line of
  * business — 'קפה ברלין' against 'קפה קפה' — so it is somewhere *like* theirs, and saying
- * they shopped there would be false. Separating them is what stops the weaker claim
- * borrowing the stronger one's credibility.
+ * they shopped there would be false: that band is worded as a tip for next time, never as a
+ * discount they lost. Separating them is what stops the weaker claim borrowing the stronger
+ * one's credibility.
  */
 
 const BANDS: StoreMatchBand[] = ["EXACT", "SIMILAR", "STRONG"]
@@ -38,6 +43,8 @@ interface MerchantGroup {
   merchantName: string
   totalAmount: number
   transactionCount: number
+  /** Deals live across every matched shop — the size of what went unclaimed. */
+  dealCount: number
   /** The accounts these purchases were charged to — the card the user actually paid with. */
   accountIds: string[]
   shops: MissedShop[]
@@ -72,13 +79,17 @@ function groupByMerchant(shops: MissedShop[]): MerchantGroup[] {
     }
   }
 
-  return Array.from(groups, ([merchantName, group]) => ({
-    merchantName,
-    totalAmount: group.totalAmount,
-    transactionCount: group.transactionIds.size,
-    accountIds: Array.from(group.accountIds),
-    shops: Array.from(group.shops.values()),
-  }))
+  return Array.from(groups, ([merchantName, group]) => {
+    const shops = Array.from(group.shops.values())
+    return {
+      merchantName,
+      totalAmount: group.totalAmount,
+      transactionCount: group.transactionIds.size,
+      dealCount: shops.reduce((sum, shop) => sum + shop.deal_count, 0),
+      accountIds: Array.from(group.accountIds),
+      shops,
+    }
+  })
 }
 
 interface MissedShopsSlideProps {
@@ -123,7 +134,11 @@ export function MissedShopsSlide({ shops, isLoading, days, onDaysChange }: Misse
     return grouped
   }, [byBand])
 
-  const totalMerchantCount = BANDS.reduce((sum, key) => sum + merchantsByBand[key].length, 0)
+  // Grouped over *all* shops rather than summed across the per-band groups: one merchant can
+  // match an EXACT shop and a SIMILAR one at once, and adding the bands up would count that
+  // merchant — and its spend — twice in the one number the user reads first.
+  const allMerchants = useMemo(() => groupByMerchant(shops), [shops])
+  const totalSpent = allMerchants.reduce((sum, merchant) => sum + merchant.totalAmount, 0)
 
   // Fall through to a band that actually has something, so changing the period never leaves
   // the user staring at an empty tab. Derived rather than corrected after the fact — the
@@ -135,19 +150,39 @@ export function MissedShopsSlide({ shops, isLoading, days, onDaysChange }: Misse
       <div className="flex flex-col gap-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
         <div className="flex items-start gap-3">
           <span className="flex size-10 items-center justify-center rounded-full bg-accent">
-            <Store className="size-4 text-accent-foreground" aria-hidden />
+            <BadgePercent className="size-4 text-accent-foreground" aria-hidden />
           </span>
           <div className="flex-1">
             <p className="font-bold">{t("recommendations.missedShopsSlide.title")}</p>
             <p className="text-xs text-muted-foreground">
-              {t("recommendations.missedShopsSlide.subtitle", { count: totalMerchantCount })}
+              {t("recommendations.missedShopsSlide.subtitle", {
+                count: allMerchants.length,
+                amount: formatAmount(totalSpent),
+              })}
             </p>
           </div>
           <InfoDialog
             ariaLabel={t("recommendations.missedShopsSlide.infoDialog.ariaLabel")}
             title={t("recommendations.missedShopsSlide.infoDialog.title")}
           >
-            <p className="text-sm text-muted-foreground">{t("recommendations.missedShopsSlide.infoDialog.body")}</p>
+            <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+              <p>{t("recommendations.missedShopsSlide.infoDialog.intro")}</p>
+              {/* The bands are spelled out under the same labels the tabs use, so the
+                  explanation and the thing explained are recognisably the same words. */}
+              <p>
+                <span className="font-semibold text-foreground">
+                  {t("recommendations.missedShopsSlide.band.EXACT.label")} ·{" "}
+                  {t("recommendations.missedShopsSlide.band.STRONG.label")}
+                </span>{" "}
+                — {t("recommendations.missedShopsSlide.infoDialog.exact")}
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">
+                  {t("recommendations.missedShopsSlide.band.SIMILAR.label")}
+                </span>{" "}
+                — {t("recommendations.missedShopsSlide.infoDialog.similar")}
+              </p>
+            </div>
           </InfoDialog>
         </div>
 
@@ -236,7 +271,7 @@ function BandCard({
         <CarouselContent>
           {merchants.map((merchant) => (
             <CarouselItem key={merchant.merchantName}>
-              <TransactionCard merchant={merchant} accountNames={accountNames} clubNames={clubNames} />
+              <TransactionCard band={band} merchant={merchant} accountNames={accountNames} clubNames={clubNames} />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -274,10 +309,11 @@ function BandCard({
 }
 
 function TransactionCard({
+  band,
   merchant,
   accountNames,
   clubNames,
-}: { merchant: MerchantGroup } & NamesByIdProps) {
+}: { band: StoreMatchBand; merchant: MerchantGroup } & NamesByIdProps) {
   const { t } = useTranslation()
 
   // Where the money came from. An unknown id still gets shown rather than dropped — a card
@@ -285,7 +321,7 @@ function TransactionCard({
   const sources = merchant.accountIds.map((id) => accountNames.get(id) ?? id)
 
   return (
-    <div className="flex h-72 flex-col gap-3 rounded-2xl bg-secondary p-4">
+    <div className="flex h-80 flex-col gap-3 rounded-2xl bg-secondary p-4">
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-lg">
           {emojiForStore(merchant.merchantName)}
@@ -314,9 +350,18 @@ function TransactionCard({
         </div>
       </div>
 
+      {/* The loss, stated once and in the band's own terms — full price paid for EXACT and
+          STRONG, a heads-up for next time for SIMILAR, where the user never shopped. */}
+      <p className={cn("flex items-start gap-2 rounded-xl px-3 py-2 text-[11px] font-medium", BAND_TONE[band])}>
+        <TicketPercent className="mt-px size-3.5 shrink-0" aria-hidden />
+        <span className="min-w-0">
+          {t(`recommendations.missedShopsSlide.band.${band}.callout`, { count: merchant.dealCount })}
+        </span>
+      </p>
+
       <div className="flex min-h-0 flex-1 flex-col gap-1">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          {t("recommendations.missedShopsSlide.matchingShopsHeading", { count: merchant.shops.length })}
+          {t(`recommendations.missedShopsSlide.band.${band}.shopsHeading`)}
         </p>
         <ul className="no-scrollbar min-h-0 flex-1 space-y-1.5 overflow-y-auto">
           {merchant.shops.map((shop) => {

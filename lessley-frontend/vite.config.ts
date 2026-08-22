@@ -75,6 +75,16 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 5000,
     },
+    // woff2 must never be inlined as a data: URI. Vite inlines assets under 4 KB by
+    // default, which swallowed the small cyrillic-ext subset straight into the CSS — and
+    // the CSP in lessley-cd/Caddyfile declares no font-src, so it falls back to
+    // `default-src 'self'`, which does not permit data:. An inlined subset would be
+    // blocked at render time and would file a CSP report on every page view. Emitting
+    // every font as a real file under /assets keeps them same-origin, and allowed.
+    build: {
+      assetsInlineLimit: (filePath: string) =>
+        filePath.endsWith('.woff2') ? false : undefined,
+    },
     test: {
       globals: true,
       environment: 'jsdom',

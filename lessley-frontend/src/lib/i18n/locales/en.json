@@ -108,6 +108,7 @@
       "sendSignInCode": "Email me a code",
       "codeSendFailed": "Could not send a sign-in code."
     },
+    "passwordRequirements": "At least 8 characters, including an uppercase letter, a lowercase letter, a number and a special character (for example !, ? or #).",
     "forgotPassword": {
       "backToSignIn": "Back to sign in",
       "resetPassword": "Reset password",
@@ -383,7 +384,7 @@
       "notConnectedTitle": "Connect to get recommendations",
       "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
       "tabTopMatches": "Top matches",
-      "tabMissedShops": "Your shops"
+      "tabMissedShops": "Missed discounts"
     },
     "topClubMatchesSlide": {
       "title": "Top club matches",
@@ -401,36 +402,45 @@
       }
     },
     "missedShopsSlide": {
-      "title": "Deals at shops you use",
-      "subtitle": "{{count}} store you shopped at had a matching deal",
-      "subtitle_other": "{{count}} stores you shopped at had matching deals",
-      "loading": "Looking for deals at your shops…",
-      "empty": "No shops with deals matched your spending in this period.",
-      "spentLabel": "Total spent",
+      "title": "Discounts you missed",
+      "subtitle": "{{amount}} spent at {{count}} shop that matched a deal from your clubs",
+      "subtitle_other": "{{amount}} spent across {{count}} shops that matched deals from your clubs",
+      "loading": "Checking which of your purchases had a discount waiting…",
+      "empty": "Nothing missed this period — none of your purchases matched a club deal.",
+      "spentLabel": "You paid",
       "purchaseCount": "{{count}} purchase",
       "purchaseCount_other": "{{count}} purchases",
       "paidWith": "Paid with {{sources}}",
-      "missedClub": "Through {{clubs}}",
-      "matchingShopsHeading": "{{count}} matching shop",
-      "matchingShopsHeading_other": "{{count}} matching shops",
+      "missedClub": "Yours through {{clubs}}",
       "band": {
         "EXACT": {
-          "label": "Exact",
-          "hint": "The same shop, by name"
-        },
-        "SIMILAR": {
-          "label": "Similar",
-          "hint": "Sells the same sort of thing"
+          "label": "Your shop",
+          "hint": "The same shop you paid at, matched by name.",
+          "callout": "{{count}} deal was live at this shop while you paid full price.",
+          "callout_other": "{{count}} deals were live at this shop while you paid full price.",
+          "shopsHeading": "What you could have claimed"
         },
         "STRONG": {
-          "label": "Strong",
-          "hint": "Almost certainly your shop"
+          "label": "Probably yours",
+          "hint": "Almost certainly the shop you paid at.",
+          "callout": "{{count}} deal was running at what is almost certainly your shop.",
+          "callout_other": "{{count}} deals were running at what is almost certainly your shop.",
+          "shopsHeading": "What you could have claimed"
+        },
+        "SIMILAR": {
+          "label": "Similar shops",
+          "hint": "Not your shop — somewhere that sells the same sort of thing.",
+          "callout": "{{count}} deal is running at shops like this one — worth a look before your next visit.",
+          "callout_other": "{{count}} deals are running at shops like this one — worth a look before your next visit.",
+          "shopsHeading": "Deals at similar shops"
         }
       },
       "infoDialog": {
-        "ariaLabel": "About shop matching",
-        "title": "How these shops were found",
-        "body": "We match the shop names on your card statement against shops running deals. An exact or strong match is the shop you actually used. A similar match only shares a word describing the trade — a coffee place matching another coffee place — so it is somewhere like yours, not the same shop."
+        "ariaLabel": "About missed discounts",
+        "title": "Why you are seeing this",
+        "intro": "Your clubs run deals at specific shops. We compare the shop names on your card statement against the shops running those deals, so we can tell you when you paid full price somewhere your membership would have given you a discount.",
+        "exact": "the shop you actually paid at, so the discount really was yours to claim.",
+        "similar": "only the kind of business matches — one coffee place against another. Take it as a tip for next time, not a discount you lost."
       }
     }
   },
@@ -454,6 +464,7 @@
       "categoriesLabel": "Categories",
       "filterCategoriesPlaceholder": "Filter {{count}} categories",
       "searchDeals": "Search deals",
+      "needsFilter": "Add a store, deal text, or category to search.",
       "promptSearch": "Use the filters above to search deals across your loyalty clubs.",
       "searching": "Searching deals…",
       "noMatches": "No deals match those filters yet 🔍",

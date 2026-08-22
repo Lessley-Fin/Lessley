@@ -8,6 +8,7 @@ import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -76,6 +77,10 @@ export function AccountStep({ form, isLoading = false, serverError, onContinue }
             <FormControl>
               <PasswordInput {...field} autoComplete="new-password" className="h-12 rounded-2xl" />
             </FormControl>
+            {/* State the character classes up front. They are the Gateway's own Identity
+                rules, and a password that misses one otherwise only fails after Continue
+                has already gone to the server. */}
+            <FormDescription>{t("auth.passwordRequirements")}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
