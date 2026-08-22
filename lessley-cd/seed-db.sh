@@ -2,9 +2,9 @@
 #
 # Seed the Lessley MongoDB with the reference collections.
 #
-# Imports users, mccs, clubs, stores and deals from a directory of <collection>.json
-# files (JSON arrays), streaming each one into mongoimport inside the running
-# mongodb container. See README.md → Seeding MongoDB for the data layout.
+# Imports users, mccs, clubs, stores, store_aliases and deals from a directory of
+# <collection>.json files (JSON arrays), streaming each one into mongoimport inside
+# the running mongodb container. See README.md → Seeding MongoDB for the data layout.
 #
 # Defaults for the credentials and database name are read from ./.env (DB_USER,
 # DB_PASS, DB_NAME) when it exists, so on a configured checkout this is just:
@@ -18,7 +18,8 @@
 #   -f, --path DIR          Directory holding <collection>.json
 #                                                 (default: ../lessley-deals/data/seed)
 #   -c, --container NAME    Mongo container name  (default: mongodb)
-#       --collections LIST  Comma-separated subset (default: users,mccs,clubs,stores,deals)
+#       --collections LIST  Comma-separated subset
+#                                                 (default: every collection above)
 #       --drop              Drop each collection before importing (destructive)
 #       --insert            Plain inserts instead of upserts (fails on existing keys)
 #       --env-file FILE     Read defaults from FILE  (default: ./.env)
@@ -36,7 +37,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # Import order matters only for readability; each import is independent.
 # The upsert key differs for users: ASP.NET Identity writes the account id as _id,
 # while the scraping pipeline's exports keep the business key in id.
-COLLECTION_ORDER=(users mccs clubs stores deals)
+# store_aliases follows stores because every alias row points at one by store_id.
+COLLECTION_ORDER=(users mccs clubs stores store_aliases deals)
 
 upsert_field_for() {
     case "$1" in
@@ -58,7 +60,10 @@ MODE="upsert"
 DRY_RUN=0
 
 usage() {
-    sed -n '3,31p' "${BASH_SOURCE[0]}" | sed -e 's/^#\{1,\} \{0,1\}//' -e 's/^#$//'
+    # Anchored on `set -euo pipefail` rather than a fixed line range, so editing
+    # the header block above cannot silently truncate (or overrun) --help.
+    sed -n '3,/^set -euo pipefail$/p' "${BASH_SOURCE[0]}" \
+        | sed -e '$d' -e 's/^#\{1,\} \{0,1\}//' -e 's/^#$//'
 }
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -146,12 +151,12 @@ failed=()
 for collection in "${selected[@]}"; do
     file="$DATA_DIR/$collection.json"
     if [[ ! -f "$file" ]]; then
-        printf '  ~ %-8s no %s.json in %s — skipped\n' "$collection" "$collection" "$DATA_DIR"
+        printf '  ~ %-13s no %s.json in %s — skipped\n' "$collection" "$collection" "$DATA_DIR"
         skipped+=("$collection")
         continue
     fi
 
-    printf '  > %-8s %s\n' "$collection" "$file"
+    printf '  > %-13s %s\n' "$collection" "$file"
 
     # Streamed on stdin rather than `docker cp`-ed to a temp file and read with
     # --file: no copy, no cleanup, and no absolute in-container path for MSYS
@@ -182,7 +187,7 @@ for collection in "${selected[@]}"; do
     if (( ok )); then
         imported=$((imported + 1))
     else
-        printf '  ! %-8s import failed\n' "$collection"
+        printf '  ! %-13s import failed\n' "$collection"
         failed+=("$collection")
     fi
 done

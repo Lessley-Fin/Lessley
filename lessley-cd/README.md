@@ -69,8 +69,8 @@ collection. Two scripts import it — `seed-db.sh` (Linux/macOS/Git Bash) and `s
 .\seed-db.ps1                                   # Windows
 ```
 
-With no arguments they seed `users`, `mccs`, `clubs`, `stores` and `deals` into the
-`mongodb` container, reading the credentials and database name from `.env`
+With no arguments they seed `users`, `mccs`, `clubs`, `stores`, `store_aliases` and
+`deals` into the `mongodb` container, reading the credentials and database name from `.env`
 (`DB_USER` / `DB_PASS` / `DB_NAME`). Anything absent from the seed directory is
 skipped with a note — `users.json` is not in the repo, so on a normal checkout the
 `users` collection is left to the Gateway's own bootstrap seeder.
@@ -82,7 +82,7 @@ skipped with a note — `users.json` is not in the repo, so on a normal checkout
 | `-d`, `--database` | `-Database` | `DB_NAME` from `.env`, else `lessley` | Target database |
 | `-f`, `--path` | `-Path` | `../lessley-deals/data/seed` | Directory of `<collection>.json` |
 | `-c`, `--container` | `-Container` | `mongodb` | Running Mongo container |
-| `--collections` | `-Collections` | all five | Comma-separated subset |
+| `--collections` | `-Collections` | all six | Comma-separated subset |
 | `--drop` | `-Drop` | off | Drop each collection first (destructive) |
 | `--insert` | `-Insert` | off | Plain inserts instead of upserts |
 | `--env-file` | `-EnvFile` | `./.env` | Where the defaults come from |
@@ -100,9 +100,11 @@ skipped with a note — `users.json` is not in the repo, so on a normal checkout
 Re-running is safe: rows are upserted on their business key (`id`, or `_id` for `users`),
 so an existing row is updated rather than duplicated.
 
-Those collections — `users`, `clubs`, `deals`, `mccs`, `stores` — are the only ones this
-data goes into. The scraping pipeline writes the same ones, and the Gateway, Personalization
-and deal-optimizer all read them directly; there is no projected copy in between.
+Those collections — `users`, `clubs`, `deals`, `mccs`, `stores`, `store_aliases` — are the
+only ones this data goes into. The scraping pipeline writes the same ones, and the Gateway,
+Personalization and deal-optimizer all read them directly; there is no projected copy in
+between. `store_aliases` is what the pipeline's match stage resolves a scraped name against,
+so seeding `stores` without it leaves matching working off canonical names alone.
 
 > **Note on `_id`.** `mongoimport` gives every row a generated ObjectId `_id` and leaves the
 > business key in `id`, whereas the pipeline writes the business key *as* `_id`. All three

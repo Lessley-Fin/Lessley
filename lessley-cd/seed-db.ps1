@@ -3,8 +3,8 @@
     Seed the Lessley MongoDB with the reference collections.
 
 .DESCRIPTION
-    Imports users, mccs, clubs, stores and deals from a directory of
-    <collection>.json files (JSON arrays) by copying each file into the running
+    Imports users, mccs, clubs, stores, store_aliases and deals from a directory
+    of <collection>.json files (JSON arrays) by copying each file into the running
     mongodb container and running mongoimport there. See README.md -> Seeding
     MongoDB for the data layout.
 
@@ -34,7 +34,7 @@
     Name of the running Mongo container. Default: "mongodb".
 
 .PARAMETER Collections
-    Subset to seed. Default: users, mccs, clubs, stores, deals.
+    Subset to seed. Default: users, mccs, clubs, stores, store_aliases, deals.
 
 .PARAMETER Drop
     Drop each collection before importing (destructive).
@@ -81,8 +81,16 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # Import order matters only for readability; each import is independent.
 # The upsert key differs for users: ASP.NET Identity writes the account id as
 # _id, while the scraping pipeline's exports keep the business key in id.
-$collectionOrder = @('users', 'mccs', 'clubs', 'stores', 'deals')
-$upsertFields    = @{ users = '_id'; mccs = 'id'; clubs = 'id'; stores = 'id'; deals = 'id' }
+# store_aliases follows stores because every alias row points at one by store_id.
+$collectionOrder = @('users', 'mccs', 'clubs', 'stores', 'store_aliases', 'deals')
+$upsertFields    = @{
+    users         = '_id'
+    mccs          = 'id'
+    clubs         = 'id'
+    stores        = 'id'
+    store_aliases = 'id'
+    deals         = 'id'
+}
 
 # Read one KEY from a dotenv file, stripping an inline "  # comment" and any
 # surrounding quotes. Returns $null when the file or the key is absent.
@@ -161,13 +169,13 @@ $failed   = @()
 foreach ($collection in $selected) {
     $file = Join-Path $Path "$collection.json"
     if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
-        Write-Host ("  ~ {0,-8} no {1}.json in {2} - skipped" -f $collection, $collection, $Path)
+        Write-Host ("  ~ {0,-13} no {1}.json in {2} - skipped" -f $collection, $collection, $Path)
         $skipped += $collection
         continue
     }
 
     $remote = "/tmp/lessley-seed-$collection.json"
-    Write-Host ("  > {0,-8} {1}" -f $collection, $file)
+    Write-Host ("  > {0,-13} {1}" -f $collection, $file)
 
     $importArgs = @(
         'mongoimport'
@@ -211,7 +219,7 @@ foreach ($collection in $selected) {
     if ($ok) {
         $imported++
     } else {
-        Write-Host ("  ! {0,-8} import failed" -f $collection) -ForegroundColor Red
+        Write-Host ("  ! {0,-13} import failed" -f $collection) -ForegroundColor Red
         $failed += $collection
     }
 }
