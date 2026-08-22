@@ -299,10 +299,25 @@ def test_mastercard_block_pins_day_of_month_apart_from_monthly_limit() -> None:
     assert "not a members' club" in prompt
 
 
-def test_topcash_block_claims_online_and_maps_cashback_blockers() -> None:
+def test_topcash_block_pins_store_coverage_to_online_only() -> None:
     prompt = build_system_prompt("topcash")
-    # Every TopCash merchant is a web shop, and an account is always required.
-    assert "is_include_online_stores: **yes**" in prompt
+    # Cashback is only ever earned on a tracked click into the merchant's web
+    # shop, so all three coverage fields are a constant -- never read from the
+    # terms, never "unknown".
+    assert "TopCash is ONLINE-ONLY" in prompt
+    assert '"is_include_outlets_stores": "no"' in prompt
+    assert '"is_include_online_stores": "yes"' in prompt
+    assert '"is_include_physical_stores": "no"' in prompt
+    assert "These three values are CONSTANT" in prompt
+    assert 'Never emit "unknown" for' in prompt
+    # Brand copy naming branches is the known failure mode -- it must not flip
+    # is_include_physical_stores.
+    assert "40 סניפים" in prompt
+
+
+def test_topcash_block_claims_membership_and_maps_cashback_blockers() -> None:
+    prompt = build_system_prompt("topcash")
+    # An account and a TopCash click-through are always required.
     assert "membership_required: **yes**" in prompt
     # Payout waiting periods must not become numbers.
     assert "These are days, not limits" in prompt

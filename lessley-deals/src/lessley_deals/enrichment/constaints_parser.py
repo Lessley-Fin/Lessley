@@ -914,10 +914,58 @@ Known facts for this source — apply them unless the text contradicts:
 - membership_required: **yes** — cashback requires a TopCash account and going
   through TopCash (``יש להתחיל את תהליך הקנייה דרך TopCash`` /
   ``בצעו מעבר לחנות דרך TopCash``).
-- is_include_online_stores: **yes** — every TopCash merchant is a web shop.
-- is_include_physical_stores / is_include_outlets_stores: "unknown" unless the
-  text actually names branches.
 - payment_method_required: null — TopCash requires no particular instrument.
+
+## store_coverage is FIXED for this source — do not read it from the text
+
+TopCash is ONLINE-ONLY. The cashback exists only because TopCash tracks the
+click from its own site into the merchant's web shop and is paid an affiliate
+commission on that tracked online order. A purchase made at a physical counter
+carries no tracking link, so it can never earn cashback — no matter what the
+merchant's branches, chain size, or store network look like.
+
+Therefore, for EVERY TopCash deal, always emit exactly:
+
+    "store_coverage": {"is_include_outlets_stores": "no",
+                       "is_include_online_stores": "yes",
+                       "is_include_physical_stores": "no"}
+
+These three values are CONSTANT. They are not a judgement call, they are not
+read from the terms, and they do not depend on the merchant. Copy them verbatim
+into every TopCash answer.
+
+This OVERRIDES the generic rules above, specifically:
+- It overrides "use 'unknown' when the text is silent". Silence is NOT unknown
+  here: the channel is already known from the source. Never emit "unknown" for
+  any of the three store_coverage fields on a TopCash deal.
+- It overrides "'no' requires an explicit prohibition". The prohibition is
+  structural — no tracked click, no cashback — so "no" is correct for physical
+  and outlet stores even when the terms never mention them.
+
+### Text that must NOT change these values
+
+TopCash descriptions are marketing copy about the BRAND, and they routinely
+mention the chain's physical shops. That is background about the merchant, not
+the redemption channel of this cashback deal. Ignore it for store_coverage:
+
+- ``רשת חנויות החשמל ... אשר בבעלותה יותר מ-40 סניפים ברחבי הארץ עכשיו גם
+  באינטרנט`` → still physical: "no". The 40 branches are the brand's; the
+  cashback is on the web shop that the same sentence ends with.
+- ``העסק התחיל את דרכו בסניף קטן ברמת גן`` → company history → still
+  physical: "no".
+- ``מגוון הצעצועים המוצע בחנויות עומד בכל התקנים`` → product blurb → still
+  physical: "no".
+- ``התוסף לא עובד בחנות זו, יש להתחיל את תהליך הקנייה דרך TopCash`` →
+  "חנות" here means the merchant's ONLINE shop as listed on TopCash, and the
+  sentence is about extension tracking → still online: "yes", physical: "no".
+- Travel and booking merchants: ``אין קאשבק עבור הזמנות דרך סוכן או צד שלישי``
+  excludes agents/offices, which only reinforces online: "yes",
+  physical: "no". It is not a reason to emit "unknown".
+- A title of the form ``X% קאשבק באתר <brand>`` ("cashback on the WEBSITE of
+  <brand>") is the normal shape of every deal here and confirms the constant.
+
+There is no TopCash deal that is redeemable in a branch. If you believe you
+found one, you have misread brand copy as redemption terms — emit the constant.
 
 ## What DOES map (things that block the cashback)
 
@@ -953,7 +1001,7 @@ particular never turn a waiting period or a percentage into a number:
   ``קאשבק ינתן על הזמנת מקומות אירוח בלבד`` ·
   ``קאשבק מחושב מעלות המגורים בלבד ללא מסים, דמי שירות, מע"מ``
 
-## Worked example
+## Worked example 1
 
 Terms::
 
@@ -970,9 +1018,35 @@ Correct output::
      "limits": {"max_uses_per_transaction": null,
                 "max_uses_per_month": null,
                 "minimum_purchase": null},
-     "store_coverage": {"is_include_outlets_stores": "unknown",
+     "store_coverage": {"is_include_outlets_stores": "no",
                         "is_include_online_stores": "yes",
-                        "is_include_physical_stores": "unknown"},
+                        "is_include_physical_stores": "no"},
+     "eligibility": {"membership_required": "yes",
+                     "payment_method_required": null}}
+
+## Worked example 2 — brand copy that names branches
+
+Terms::
+
+    1.5% קאשבק באתר A.L.M | א.ל.מ — רשת חנויות החשמל והאלקטרוניקה המוכרת
+    והאהובה אשר בבעלותה יותר מ-40 סניפים ברחבי הארץ, עכשיו גם באינטרנט.
+    יש להתחיל את תהליך הקנייה דרך TopCash.
+
+store_coverage is UNCHANGED — the 40 branches belong to the brand, not to this
+cashback deal::
+
+    {"combinability": {"stackable_with_store_sale": "unknown",
+                       "stackable_with_member_discounts": "unknown",
+                       "stackable_with_coupons": "unknown",
+                       "stackable_with_payment_discounts": "unknown",
+                       "stackable_with_giftcards": "unknown",
+                       "stackable_with_cashback": "unknown"},
+     "limits": {"max_uses_per_transaction": null,
+                "max_uses_per_month": null,
+                "minimum_purchase": null},
+     "store_coverage": {"is_include_outlets_stores": "no",
+                        "is_include_online_stores": "yes",
+                        "is_include_physical_stores": "no"},
      "eligibility": {"membership_required": "yes",
                      "payment_method_required": null}}
 """

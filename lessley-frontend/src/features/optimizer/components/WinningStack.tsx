@@ -63,7 +63,6 @@ export function WinningStack({ result, deals, storeName, store }: WinningStackPr
           <StackSteps
             steps={result.per_step}
             deals={deals}
-            cartTotal={result.starting_price}
             store={store}
           />
 
