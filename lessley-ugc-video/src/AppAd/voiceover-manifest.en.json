@@ -1,0 +1,77 @@
+{
+  "engine": "edge",
+  "language": "en",
+  "voice": "en-US-AvaMultilingualNeural",
+  "lines": {
+    "01-hook": {
+      "file": "voiceover/en/01-hook.mp3",
+      "seconds": 2.586,
+      "frames": 78,
+      "startFrame": 0,
+      "windowFrames": 120
+    },
+    "02-meet": {
+      "file": "voiceover/en/02-meet.mp3",
+      "seconds": 2.873,
+      "frames": 87,
+      "startFrame": 120,
+      "windowFrames": 120
+    },
+    "03a-assume": {
+      "file": "voiceover/en/03a-assume.mp3",
+      "seconds": 3.736,
+      "frames": 113,
+      "startFrame": 246,
+      "windowFrames": 150
+    },
+    "03b-calculates": {
+      "file": "voiceover/en/03b-calculates.mp3",
+      "seconds": 5.068,
+      "frames": 153,
+      "startFrame": 400,
+      "windowFrames": 260
+    },
+    "04-hot": {
+      "file": "voiceover/en/04-hot.mp3",
+      "seconds": 3.37,
+      "frames": 102,
+      "startFrame": 664,
+      "windowFrames": 120
+    },
+    "05-banking": {
+      "file": "voiceover/en/05-banking.mp3",
+      "seconds": 5.46,
+      "frames": 164,
+      "startFrame": 786,
+      "windowFrames": 180
+    },
+    "06-insights": {
+      "file": "voiceover/en/06-insights.mp3",
+      "seconds": 7.131,
+      "frames": 214,
+      "startFrame": 966,
+      "windowFrames": 390
+    },
+    "07a-use": {
+      "file": "voiceover/en/07a-use.mp3",
+      "seconds": 3.762,
+      "frames": 113,
+      "startFrame": 1356,
+      "windowFrames": 180
+    },
+    "07b-power": {
+      "file": "voiceover/en/07b-power.mp3",
+      "seconds": 2.482,
+      "frames": 75,
+      "startFrame": 1536,
+      "windowFrames": 120
+    },
+    "08-cta": {
+      "file": "voiceover/en/08-cta.mp3",
+      "seconds": 2.586,
+      "frames": 78,
+      "startFrame": 1656,
+      "windowFrames": 120
+    }
+  }
+}

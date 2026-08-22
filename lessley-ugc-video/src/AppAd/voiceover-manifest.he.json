@@ -1,0 +1,77 @@
+{
+  "engine": "edge",
+  "language": "he",
+  "voice": "he-IL-AvriNeural",
+  "lines": {
+    "01-hook": {
+      "file": "voiceover/he/01-hook.mp3",
+      "seconds": 3.683,
+      "frames": 111,
+      "startFrame": 0,
+      "windowFrames": 120
+    },
+    "02-meet": {
+      "file": "voiceover/he/02-meet.mp3",
+      "seconds": 4.18,
+      "frames": 126,
+      "startFrame": 120,
+      "windowFrames": 120
+    },
+    "03a-assume": {
+      "file": "voiceover/he/03a-assume.mp3",
+      "seconds": 5.12,
+      "frames": 154,
+      "startFrame": 252,
+      "windowFrames": 150
+    },
+    "03b-calculates": {
+      "file": "voiceover/he/03b-calculates.mp3",
+      "seconds": 7.419,
+      "frames": 223,
+      "startFrame": 410,
+      "windowFrames": 260
+    },
+    "04-hot": {
+      "file": "voiceover/he/04-hot.mp3",
+      "seconds": 4.258,
+      "frames": 128,
+      "startFrame": 664,
+      "windowFrames": 120
+    },
+    "05-banking": {
+      "file": "voiceover/he/05-banking.mp3",
+      "seconds": 8.072,
+      "frames": 243,
+      "startFrame": 796,
+      "windowFrames": 180
+    },
+    "06-insights": {
+      "file": "voiceover/he/06-insights.mp3",
+      "seconds": 8.438,
+      "frames": 254,
+      "startFrame": 1044,
+      "windowFrames": 390
+    },
+    "07a-use": {
+      "file": "voiceover/he/07a-use.mp3",
+      "seconds": 5.094,
+      "frames": 153,
+      "startFrame": 1356,
+      "windowFrames": 180
+    },
+    "07b-power": {
+      "file": "voiceover/he/07b-power.mp3",
+      "seconds": 3.474,
+      "frames": 105,
+      "startFrame": 1536,
+      "windowFrames": 120
+    },
+    "08-cta": {
+      "file": "voiceover/he/08-cta.mp3",
+      "seconds": 3.109,
+      "frames": 94,
+      "startFrame": 1656,
+      "windowFrames": 120
+    }
+  }
+}
