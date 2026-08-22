@@ -58,42 +58,51 @@ After editing the SPA, rebuild the edge image that carries it:
 
 ## Seeding MongoDB
 
-Reference data lives in `main/resources/`. From this folder, for each collection:
+Reference data lives in `../lessley-deals/data/seed/`, one `<collection>.json` array per
+collection. Two scripts import it — `seed-db.sh` (Linux/macOS/Git Bash) and `seed-db.ps1`
+(Windows PowerShell). They do the same thing and take the same options:
 
-#### clubs
 ```bash
-docker cp ..\main\resources\clubs.json mongodb:/tmp/clubs.json
+./seed-db.sh                                    # Linux
 ```
-```bash
-docker exec -it mongodb mongoimport --db lessley --collection clubs --file /tmp/clubs.json --jsonArray --username guest --password guest --authenticationDatabase admin
-```
-#### deals
-```bash
-docker cp ..\main\resources\deals.json mongodb:/tmp/deals.json
-```
-```bash
-docker exec -it mongodb mongoimport --db lessley --collection deals --file /tmp/deals.json --jsonArray --username guest --password guest --authenticationDatabase admin
+```powershell
+.\seed-db.ps1                                   # Windows
 ```
 
-#### mccs
+With no arguments they seed `users`, `mccs`, `clubs`, `stores` and `deals` into the
+`mongodb` container, reading the credentials and database name from `.env`
+(`DB_USER` / `DB_PASS` / `DB_NAME`). Anything absent from the seed directory is
+skipped with a note — `users.json` is not in the repo, so on a normal checkout the
+`users` collection is left to the Gateway's own bootstrap seeder.
+
+| Option (sh) | Option (ps1) | Default | Meaning |
+|---|---|---|---|
+| `-u`, `--username` | `-Username` | `DB_USER` from `.env`, else `guest` | Mongo user |
+| `-p`, `--password` | `-Password` | `DB_PASS` from `.env`, else `guest` | Mongo password |
+| `-d`, `--database` | `-Database` | `DB_NAME` from `.env`, else `lessley` | Target database |
+| `-f`, `--path` | `-Path` | `../lessley-deals/data/seed` | Directory of `<collection>.json` |
+| `-c`, `--container` | `-Container` | `mongodb` | Running Mongo container |
+| `--collections` | `-Collections` | all five | Comma-separated subset |
+| `--drop` | `-Drop` | off | Drop each collection first (destructive) |
+| `--insert` | `-Insert` | off | Plain inserts instead of upserts |
+| `--env-file` | `-EnvFile` | `./.env` | Where the defaults come from |
+| `--dry-run` | `-DryRun` | off | Print the commands, change nothing |
+
 ```bash
-docker cp ..\main\resources\mccs.json mongodb:/tmp/mccs.json
+./seed-db.sh -u admin -p s3cret -f /srv/lessley-dump          # other credentials + data
+./seed-db.sh --collections stores,deals --drop                # re-import two, from scratch
 ```
-```bash
-docker exec -it mongodb mongoimport --db lessley --collection mccs --file /tmp/mccs.json --jsonArray --username guest --password guest --authenticationDatabase admin
+```powershell
+.\seed-db.ps1 -Username admin -Password s3cret -Path D:\dumps\lessley
+.\seed-db.ps1 -Collections stores,deals -Drop
 ```
 
-#### stores
-```bash
-docker cp ..\main\resources\stores.json mongodb:/tmp/stores.json
-```
-```bash
-docker exec -it mongodb mongoimport --db lessley --collection stores --file /tmp/stores.json --jsonArray --username guest --password guest --authenticationDatabase admin
-```
+Re-running is safe: rows are upserted on their business key (`id`, or `_id` for `users`),
+so an existing row is updated rather than duplicated.
 
-Those four collections — `clubs`, `deals`, `mccs`, `stores` — are the only ones this data
-goes into. The scraping pipeline writes the same four, and the Gateway, Personalization and
-deal-optimizer all read them directly; there is no projected copy in between.
+Those collections — `users`, `clubs`, `deals`, `mccs`, `stores` — are the only ones this
+data goes into. The scraping pipeline writes the same ones, and the Gateway, Personalization
+and deal-optimizer all read them directly; there is no projected copy in between.
 
 > **Note on `_id`.** `mongoimport` gives every row a generated ObjectId `_id` and leaves the
 > business key in `id`, whereas the pipeline writes the business key *as* `_id`. All three

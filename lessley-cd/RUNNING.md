@@ -161,7 +161,9 @@ CA or certificate you already have instead of Let's Encrypt? See
    docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .\caddy-local-ca.crt
    # double-click → Install Certificate → Local Machine → Trusted Root Certification Authorities
    ```
-7. **Seed MongoDB reference data** into `mccs`/`stores`/`deals`/`clubs` — see `README.md` → *Seeding MongoDB*.
+7. **Seed MongoDB reference data** into `mccs`/`stores`/`deals`/`clubs` — run
+   `.\seed-db.ps1` (Windows) or `./seed-db.sh` (Linux) from `lessley-cd`.
+   Options and the data layout: `README.md` → *Seeding MongoDB*.
 8. **Create the first admin** — call the bootstrap endpoint with `Bootstrap__Key` once the gateway is up.
 
 ## Adding a client-facing service
