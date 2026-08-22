@@ -2,7 +2,9 @@ import { useState } from "react"
 import { ChevronDown, ExternalLink, Info } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { getClubLogo } from "@/lib/club-logos"
 import { formatAmount } from "@/lib/formatters"
+import { cn } from "@/lib/utils"
 import type { OptimizerDealSummary, OptimizerStep, OptimizerStore } from "@/lib/types"
 import { DealInfoDialog } from "./DealInfoDialog"
 
@@ -43,6 +45,7 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
         {steps.map((step, index) => {
           const deal = deals[step.deal_id]
           const label = dealTypeLabel(deal?.deal_type)
+          const clubLogo = getClubLogo(deal?.source_id, deal?.club_id)
           const isLast = index === steps.length - 1
           // A tender deal only discounts the slice of the bill routed through that
           // instrument; a price-level deal reports null and works off the whole bill.
@@ -61,7 +64,34 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
 
           return (
             <li key={`${step.deal_id}-${index}`}>
-              <div className="rounded-2xl bg-secondary p-3">
+              <div className="relative isolate overflow-hidden rounded-2xl bg-secondary p-3">
+                {/* The club the deal comes from, watermarked across the block so a
+                    stack can be scanned by brand at a glance. Decorative — the club is
+                    already named in the row below — and `-z-10` inside the block's own
+                    stacking context puts it above the fill but behind every bit of text.
+
+                    Sized by height at its own aspect ratio (`h-full w-auto`) rather than
+                    stretched to the block: the block goes from roughly 2:1 on a phone to
+                    9:1 on a wide monitor, and forcing artwork to fill that either zooms
+                    it to an unreadable crop or leaves it letterboxed. Centred, with the
+                    gradient mask dissolving its own left and right edges so an opaque
+                    card scan blends into the fill instead of reading as a pasted-on
+                    rectangle — both physical properties, so RTL and LTR behave alike. */}
+                {clubLogo ? (
+                  <img
+                    src={clubLogo.src}
+                    alt=""
+                    aria-hidden
+                    loading="lazy"
+                    className={cn(
+                      "pointer-events-none absolute inset-y-0 left-1/2 -z-10 h-full w-auto max-w-full",
+                      "-translate-x-1/2 select-none object-contain",
+                      "[mask-image:linear-gradient(to_right,transparent,black_22%,black_78%,transparent)]",
+                      clubLogo.tone === "dark" ? "opacity-[0.09]" : "opacity-[0.16]",
+                    )}
+                  />
+                ) : null}
+
                 <div className="flex items-start gap-3">
                   <span className="surface-teal flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold">
                     {index + 1}
