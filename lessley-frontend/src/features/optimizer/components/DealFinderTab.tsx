@@ -34,6 +34,8 @@ export function DealFinderTab() {
     storeConfirmed ? "" : storeText
   )
 
+  // The search API rejects an empty query, so require at least one filter before submitting.
+  const hasFilter = storeText.trim() !== "" || dealText.trim() !== "" || selectedCategories.length > 0
   const enabled = submittedParams !== null
   const queryParams: DealSearchParams = submittedParams
     ? { ...submittedParams, page, pageSize: PAGE_SIZE }
@@ -46,6 +48,7 @@ export function DealFinderTab() {
   )
 
   function handleSearch() {
+    if (!hasFilter) return
     setSubmittedParams({ mccCodes: selectedCategories, storeText, dealText })
     setPage(1)
   }
@@ -136,10 +139,13 @@ export function DealFinderTab() {
             })}
           </div>
         </div>
-        <Button type="button" variant="hero" size="xl" onClick={handleSearch}>
+        <Button type="button" variant="hero" size="xl" onClick={handleSearch} disabled={!hasFilter}>
           <Search />
           {t("dealFinder.tab.searchDeals")}
         </Button>
+        {!hasFilter ? (
+          <p className="text-center text-xs text-muted-foreground">{t("dealFinder.tab.needsFilter")}</p>
+        ) : null}
       </div>
 
       <div className="space-y-3">

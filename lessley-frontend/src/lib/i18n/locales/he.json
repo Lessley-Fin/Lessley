@@ -469,6 +469,7 @@
       "categoriesLabel": "קטגוריות",
       "filterCategoriesPlaceholder": "סינון {{count}} קטגוריות",
       "searchDeals": "חיפוש דילים",
+      "needsFilter": "הוסיפו חנות, טקסט דיל או קטגוריה כדי לחפש.",
       "promptSearch": "השתמשו במסננים למעלה כדי לחפש דילים בכל מועדוני הנאמנות שלכם.",
       "searching": "מחפש דילים…",
       "noMatches": "אין דילים תואמים למסננים האלה עדיין 🔍",

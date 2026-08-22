@@ -464,6 +464,7 @@
       "categoriesLabel": "Categories",
       "filterCategoriesPlaceholder": "Filter {{count}} categories",
       "searchDeals": "Search deals",
+      "needsFilter": "Add a store, deal text, or category to search.",
       "promptSearch": "Use the filters above to search deals across your loyalty clubs.",
       "searching": "Searching deals…",
       "noMatches": "No deals match those filters yet 🔍",
