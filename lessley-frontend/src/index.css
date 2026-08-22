@@ -1,4 +1,18 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+/* Self-hosted, deliberately: the Google Fonts CDN handed every visitor's IP to a third
+   party, and reaching it needed fonts.googleapis.com in style-src plus fonts.gstatic.com
+   in font-src — a widening of the CSP in lessley-cd/Caddyfile. Vite emits these woff2
+   files into /assets, so `default-src 'self'` already covers them and the CSP is untouched.
+   (The remote @import this replaces was in fact blocked by that CSP, so the app had been
+   rendering the system-ui fallback in production.)
+
+   The variable build carries weights 200-800 in one file per subset, replacing the five
+   static weights the old CDN URL requested. unicode-range means a browser fetches only
+   the subsets a page renders — latin, in practice: the UI is Hebrew and Plus Jakarta Sans
+   has no Hebrew glyphs, so Hebrew text falls through to system-ui exactly as before.
+
+   Note the family this declares is "Plus Jakarta Sans Variable", not "Plus Jakarta Sans".
+   It is named in tailwind.config.js and in the body rule below; keep all three in step. */
+@import "@fontsource-variable/plus-jakarta-sans";
 
 @tailwind base;
 @tailwind components;
@@ -75,7 +89,7 @@
 
   body {
     @apply text-foreground antialiased;
-    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, sans-serif;
     margin: 0;
     /* dvh tracks the mobile browser chrome as it collapses; svh is the fallback. */
     min-height: 100svh;

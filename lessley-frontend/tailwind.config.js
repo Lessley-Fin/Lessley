@@ -5,7 +5,7 @@ export default {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+  			sans: ['"Plus Jakarta Sans Variable"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
   		},
   		boxShadow: {
   			fintech: '0 2px 8px hsl(182 38% 36% / 0.06), 0 12px 32px hsl(186 43% 32% / 0.08)',
