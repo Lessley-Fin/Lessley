@@ -164,6 +164,9 @@ export function ForgotPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isWorking}
               />
+              {/* Save stays disabled until passwordSchema passes, so the rules have to be
+                  visible — otherwise a too-weak password just looks like a dead button. */}
+              <p className="text-xs text-muted-foreground">{t("auth.passwordRequirements")}</p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pw2">{t("auth.forgotPassword.confirmNewPassword")}</Label>

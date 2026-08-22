@@ -31,11 +31,15 @@ export function MainShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="app-header">
         <div className="app-content-width flex items-center gap-2 sm:gap-3">
-          <img src={logoUrl} alt={t("common.appName")} className="size-10 shrink-0 sm:size-12" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold leading-tight sm:text-[15px]">{t("common.appName")}</p>
-            <p className="truncate text-[11px] text-muted-foreground sm:text-xs">{t("common.tagline")}</p>
-          </div>
+          {/* The logo is the app's "home" affordance, and the Optimizer is home — it is the
+              first main tab and where deriveActiveTab sends an unknown route. */}
+          <Link to={ROUTES.OPTIMIZER} aria-label={t("nav.optimizer")} className="flex min-w-0 flex-1 items-center gap-2 transition-opacity hover:opacity-80 sm:gap-3">
+            <img src={logoUrl} alt={t("common.appName")} className="size-10 shrink-0 sm:size-12" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold leading-tight sm:text-[15px]">{t("common.appName")}</p>
+              <p className="truncate text-[11px] text-muted-foreground sm:text-xs">{t("common.tagline")}</p>
+            </div>
+          </Link>
           <Link
             to={ROUTES.QA}
             aria-label={t("nav.qa")}

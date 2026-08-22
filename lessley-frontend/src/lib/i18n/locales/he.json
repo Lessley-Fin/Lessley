@@ -108,6 +108,7 @@
       "sendSignInCode": "שלחו לי קוד",
       "codeSendFailed": "לא ניתן היה לשלוח קוד התחברות."
     },
+    "passwordRequirements": "לפחות 8 תווים, ובהם אות גדולה באנגלית, אות קטנה באנגלית, ספרה ותו מיוחד (לדוגמה !, ? או #).",
     "forgotPassword": {
       "backToSignIn": "חזרה להתחברות",
       "resetPassword": "איפוס סיסמה",

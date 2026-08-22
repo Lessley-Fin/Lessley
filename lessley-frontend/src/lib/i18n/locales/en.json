@@ -108,6 +108,7 @@
       "sendSignInCode": "Email me a code",
       "codeSendFailed": "Could not send a sign-in code."
     },
+    "passwordRequirements": "At least 8 characters, including an uppercase letter, a lowercase letter, a number and a special character (for example !, ? or #).",
     "forgotPassword": {
       "backToSignIn": "Back to sign in",
       "resetPassword": "Reset password",
