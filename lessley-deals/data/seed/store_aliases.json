@@ -139198,5 +139198,33 @@
     },
     "source": "manual",
     "created_at": "2026-08-22T11:27:51.802652+00:00"
+  },
+  {
+    "id": "01a02a78e2b9_079e73fd4b02cffe",
+    "store_id": "01a02a78e2b8_6a2f6e4d46e1833e",
+    "alias": "QUIKSILVER",
+    "alias_forms": {
+      "normalized": "quiksilver",
+      "compact": "quiksilver",
+      "tokens": [
+        "quiksilver"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T17:15:59.951928+00:00"
+  },
+  {
+    "id": "01a02a78e2ba_bd1a89aa3b1d2367",
+    "store_id": "01a02a78e2b8_6a2f6e4d46e1833e",
+    "alias": "קוויקסילבר",
+    "alias_forms": {
+      "normalized": "קוויקסילבר",
+      "compact": "קוויקסילבר",
+      "tokens": [
+        "קוויקסילבר"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T17:15:59.951928+00:00"
   }
 ]
