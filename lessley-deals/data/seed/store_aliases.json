@@ -15,7 +15,7 @@
   },
   {
     "id": "019d209b811c_6e9017a523a23339",
-    "store_id": "019d209b8101_f9b9017f2ef608d3",
+    "store_id": "019dbe364845_7a43b2a2b4516613",
     "alias": "lee-cooper",
     "alias_forms": {
       "normalized": "lee-cooper",
@@ -141,7 +141,7 @@
   },
   {
     "id": "019d209f5a67_d345be76405a8376",
-    "store_id": "019d209f5a3c_1d349739f5f1b4ba",
+    "store_id": "019dbe364847_c683f1553da15b0e",
     "alias": "emporium",
     "alias_forms": {
       "normalized": "emporium",
@@ -155,7 +155,7 @@
   },
   {
     "id": "019d209fae95_b2d29cf88cd7daa0",
-    "store_id": "019d209fae73_acf17ccb777df5b8",
+    "store_id": "019dbe364845_010982d8f76233c3",
     "alias": "minene",
     "alias_forms": {
       "normalized": "minene",
@@ -183,7 +183,7 @@
   },
   {
     "id": "019d20a01178_c15fcae95c2ba7bc",
-    "store_id": "019d20a0115c_7c454bf163fcabfb",
+    "store_id": "019dbe364870_7813e31e49f60d1c",
     "alias": "adidas",
     "alias_forms": {
       "normalized": "adidas",
@@ -197,7 +197,7 @@
   },
   {
     "id": "019d20a0289b_df560360dc9a5fa3",
-    "store_id": "019d20a02880_549c18586e99ac0d",
+    "store_id": "019dbe364847_167313e0f2b69944",
     "alias": "b-unique",
     "alias_forms": {
       "normalized": "b-unique",
@@ -225,7 +225,7 @@
   },
   {
     "id": "019d20a042fd_6747c7b7eda1cc21",
-    "store_id": "019d20a042f9_05a26feb771c76d4",
+    "store_id": "019dbe364845_5a6a32e7498b7591",
     "alias": "nine-west",
     "alias_forms": {
       "normalized": "nine-west",
@@ -239,7 +239,7 @@
   },
   {
     "id": "019d20a07135_407e431dc92837d1",
-    "store_id": "019d20a0710e_cf8c9e8646d95d5c",
+    "store_id": "019dbe36487a_b3ff47009d8c5a12",
     "alias": "nautica",
     "alias_forms": {
       "normalized": "nautica",
@@ -253,7 +253,7 @@
   },
   {
     "id": "019d20a099ec_9bf87c5cc68d4f77",
-    "store_id": "019d20a099e0_10c58ed3f9225171",
+    "store_id": "019dbe364845_f0a6c84987fc4a11",
     "alias": "timberland",
     "alias_forms": {
       "normalized": "timberland",
@@ -323,7 +323,7 @@
   },
   {
     "id": "019d20a1e452_423f272aa949efc5",
-    "store_id": "019d20a1e442_ae5901c1fb58b0de",
+    "store_id": "019d20d2fe79_8110ac860a4058fe",
     "alias": "soltam",
     "alias_forms": {
       "normalized": "soltam",
@@ -407,7 +407,7 @@
   },
   {
     "id": "019d20a25d4f_219a8f579d3634dc",
-    "store_id": "019d20a25d30_fef406b8731558cc",
+    "store_id": "019d24423847_1295be7ad2aee1d9",
     "alias": "lastprice",
     "alias_forms": {
       "normalized": "lastprice",
@@ -530,20 +530,6 @@
     },
     "source": "review",
     "created_at": "2026-03-24T16:29:21.620005+00:00"
-  },
-  {
-    "id": "019d20ae6b60_34cee740ad683c0e",
-    "store_id": "019d20ade954_cffb1896db2cb1a2",
-    "alias": "sharespa",
-    "alias_forms": {
-      "normalized": "sharespa",
-      "compact": "sharespa",
-      "tokens": [
-        "sharespa"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-03-24T16:29:54.912177+00:00"
   },
   {
     "id": "019d20aec4b8_5575aada8176716c",
@@ -828,7 +814,7 @@
   },
   {
     "id": "019d20b99227_3e5f8b92b1869d48",
-    "store_id": "019d20b9920c_5bb5768696b25a72",
+    "store_id": "019dbe364889_105996b82c1c895e",
     "alias": "ערד",
     "alias_forms": {
       "normalized": "ערד",
@@ -1011,7 +997,7 @@
   },
   {
     "id": "019d20c8bbf6_c4712db7712dccdb",
-    "store_id": "019d20c8bbd2_63610a4d09c45752",
+    "store_id": "019fa450229a_20fb817de0105463",
     "alias": "סקאב",
     "alias_forms": {
       "normalized": "סקאב",
@@ -1247,7 +1233,7 @@
   },
   {
     "id": "019d20cdcc2d_7f791af20e21e4dc",
-    "store_id": "019d20cdcc0f_5ea4ce10cc04ce9a",
+    "store_id": "019fa4506ea6_594e47143322b6c2",
     "alias": "פיזיו כסאות",
     "alias_forms": {
       "normalized": "פיזיו כסאות",
@@ -1738,22 +1724,6 @@
     "created_at": "2026-03-24T17:18:39.296505+00:00"
   },
   {
-    "id": "019d20dbd023_1e8c9f5d72a6d2b2",
-    "store_id": "019d20dbcff3_b3662b5a6bfab74f",
-    "alias": "וי אנ ספורט",
-    "alias_forms": {
-      "normalized": "וי אנ ספורט",
-      "compact": "ויאנספורט",
-      "tokens": [
-        "אנ",
-        "וי",
-        "ספורט"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-03-24T17:19:29.772674+00:00"
-  },
-  {
     "id": "019d2104ab8c_fdeea4f0638ba392",
     "store_id": "019d2104ab82_96794fc8e0d55311",
     "alias": "רמי לוי שיווק השקמה",
@@ -2043,7 +2013,7 @@
   },
   {
     "id": "019d24072124_cd57448cfa193018",
-    "store_id": "019d24072119_29eb68ead2468c1b",
+    "store_id": "019dbe364848_9cb877c3839ee4c9",
     "alias": "mekimi",
     "alias_forms": {
       "normalized": "mekimi",
@@ -2072,7 +2042,7 @@
   },
   {
     "id": "019d24092a3d_b575ca52304ead6d",
-    "store_id": "019d24092a14_b6d78f7f969a1d94",
+    "store_id": "019dbe364874_9d4353ca75f83ce6",
     "alias": "מיקסטה קוקטיילס",
     "alias_forms": {
       "normalized": "מיקסטה קוקטיילס",
@@ -2116,7 +2086,7 @@
   },
   {
     "id": "019d240949f8_f89b447b3dbdb963",
-    "store_id": "019d240949d5_5b8f6d4199ad8ca7",
+    "store_id": "019dbe364874_9d4353ca75f83ce6",
     "alias": "מיקסטה שופ",
     "alias_forms": {
       "normalized": "מיקסטה שופ",
@@ -3435,7 +3405,7 @@
   },
   {
     "id": "019d24274342_f027a49ff43376c4",
-    "store_id": "019d24274331_fd21d61d86121bb6",
+    "store_id": "019dbe36484f_34699ba223012372",
     "alias": "pastella",
     "alias_forms": {
       "normalized": "pastella",
@@ -4236,7 +4206,7 @@
   },
   {
     "id": "019d244c5e63_bb35cac0e8b71c70",
-    "store_id": "019d244c5e51_0f89b8d3fcfa4047",
+    "store_id": "019dbe364883_f343f2096e5a6f93",
     "alias": "התיאטרונ הלאומי הבימה",
     "alias_forms": {
       "normalized": "התיאטרונ הלאומי הבימה",
@@ -4839,7 +4809,7 @@
   },
   {
     "id": "019d2451fc88_206204c70bbd5bf8",
-    "store_id": "019d2451fc76_2c5028b6d90dec3f",
+    "store_id": "019dbe364854_1616e6fa56053413",
     "alias": "ארקוסטיל קיטצ'נ arcosteel kitchen",
     "alias_forms": {
       "normalized": "ארקוסטיל קיטצ'נ arcosteel kitchen",
@@ -5440,7 +5410,7 @@
   },
   {
     "id": "019d245dac56_5a5371c179daf24e",
-    "store_id": "019d245dac33_11273530a3b48a61",
+    "store_id": "019dbe364847_871c1dcf6497e80e",
     "alias": "רשת ג'אמפ & עונות",
     "alias_forms": {
       "normalized": "רשת ג'אמפ & עונות",
@@ -7394,7 +7364,7 @@
   },
   {
     "id": "019d4922b7f7_ac9b4feffbae2564",
-    "store_id": "019d4922b7e3_d93b9db301708b37",
+    "store_id": "019dbe364843_102b5e629b98ccf7",
     "alias": "afrodita",
     "alias_forms": {
       "normalized": "afrodita",
@@ -7498,7 +7468,7 @@
   },
   {
     "id": "019d493fd436_5020a866a71e2c0d",
-    "store_id": "019d20a25d30_fef406b8731558cc",
+    "store_id": "019d24423847_1295be7ad2aee1d9",
     "alias": "lastprice | לאסטפרייס",
     "alias_forms": {
       "normalized": "lastprice | לאסטפרייס",
@@ -7800,7 +7770,7 @@
   },
   {
     "id": "019d4dc5f370_0922fd0bff2b9168",
-    "store_id": "019d4dc5f336_5d94810c7b81c080",
+    "store_id": "019d246652be_c51c37e939722bd8",
     "alias": "golf&co | גולפ אנד קו",
     "alias_forms": {
       "normalized": "golf&co | גולפ אנד קו",
@@ -8015,7 +7985,7 @@
   },
   {
     "id": "019d4dcbf75e_e56d7bf5d0ad91f9",
-    "store_id": "019d20a0710e_cf8c9e8646d95d5c",
+    "store_id": "019dbe36487a_b3ff47009d8c5a12",
     "alias": "nautica | נאוטיקה",
     "alias_forms": {
       "normalized": "nautica | נאוטיקה",
@@ -8030,7 +8000,7 @@
   },
   {
     "id": "019d4dcbfdf8_74b3fdbf91356b17",
-    "store_id": "019d20a099e0_10c58ed3f9225171",
+    "store_id": "019dbe364845_f0a6c84987fc4a11",
     "alias": "timberland | טימברלנד",
     "alias_forms": {
       "normalized": "timberland | טימברלנד",
@@ -8385,7 +8355,7 @@
   },
   {
     "id": "019d4dd35e60_8b092de2eaf4724f",
-    "store_id": "019d20b9920c_5bb5768696b25a72",
+    "store_id": "019dbe364889_105996b82c1c895e",
     "alias": "arad textile | ערד טקסטיל",
     "alias_forms": {
       "normalized": "arad textile | ערד טקסטיל",
@@ -8576,7 +8546,7 @@
   },
   {
     "id": "019d4dd7fa40_a74fa085b04c0754",
-    "store_id": "019d20a0115c_7c454bf163fcabfb",
+    "store_id": "019dbe364870_7813e31e49f60d1c",
     "alias": "adidas online | אדידס אונליינ",
     "alias_forms": {
       "normalized": "adidas online | אדידס אונליינ",
@@ -8608,7 +8578,7 @@
   },
   {
     "id": "019d4dd8e048_41118f8cd018ffb4",
-    "store_id": "019d4dd8e035_1694e3a9b39f2f50",
+    "store_id": "019dbe364854_41c107316454897a",
     "alias": "betili | ביתילי",
     "alias_forms": {
       "normalized": "betili | ביתילי",
@@ -8699,7 +8669,7 @@
   },
   {
     "id": "019d4dda58bb_45af2406c54cfc99",
-    "store_id": "019d4dda58a8_6fbed188a6da5d1f",
+    "store_id": "019dbe364855_d6e9f555bebb0ac4",
     "alias": "urban | אורבנ",
     "alias_forms": {
       "normalized": "urban | אורבנ",
@@ -8760,7 +8730,7 @@
   },
   {
     "id": "019d4ddb1fcf_d2e5ceba90d791fd",
-    "store_id": "019d4ddb1fbc_157345d7166d1769",
+    "store_id": "019d24689bca_91f43ec89db4a017",
     "alias": "autodepot | אוטודיפו",
     "alias_forms": {
       "normalized": "autodepot | אוטודיפו",
@@ -9091,7 +9061,7 @@
   },
   {
     "id": "019d4de10f7d_d9bf9d795f7d208a",
-    "store_id": "019d4de10f69_7cb30bb2feee8a01",
+    "store_id": "019dbe364846_627680b97eca6edf",
     "alias": "michael kors | מייקל קורס",
     "alias_forms": {
       "normalized": "michael kors | מייקל קורס",
@@ -10719,7 +10689,7 @@
   },
   {
     "id": "019d4e58dac2_b0b041b5ec138c02",
-    "store_id": "019d4e58daad_075841947ea77ead",
+    "store_id": "019dbe364845_07f0e57baee4f06d",
     "alias": "polgat | פולגת",
     "alias_forms": {
       "normalized": "polgat | פולגת",
@@ -11038,7 +11008,7 @@
   },
   {
     "id": "019d4e5ea92a_c4a0aae858e67c31",
-    "store_id": "019d4e5ea914_df431be09645551f",
+    "store_id": "019d4dd9d4b6_f78a3794da181fe7",
     "alias": "intimen | אינטימנ",
     "alias_forms": {
       "normalized": "intimen | אינטימנ",
@@ -11163,7 +11133,7 @@
   },
   {
     "id": "019d4e5fa257_b06b8dbf31eb974c",
-    "store_id": "019d4e5fa242_30af3a29e28d6a19",
+    "store_id": "019dbe364669_d0514941ce76e1b5",
     "alias": "hacontainer | הקונטיינר",
     "alias_forms": {
       "normalized": "hacontainer | הקונטיינר",
@@ -11410,7 +11380,7 @@
   },
   {
     "id": "019d4f4b228d_abf1737e32189fe9",
-    "store_id": "019d4f4b2274_89a6f0eb6c53f5f7",
+    "store_id": "019dbe364715_f3128f7f1cfd79bf",
     "alias": "adah lazorgan | עדה לזורגנ",
     "alias_forms": {
       "normalized": "adah lazorgan | עדה לזורגנ",
@@ -12109,7 +12079,7 @@
   },
   {
     "id": "019d5a7dc32b_7442b7d633e9ed61",
-    "store_id": "019d5a7dc31b_489ad7b8f7673272",
+    "store_id": "019dbe364836_84af81aae345d89c",
     "alias": "olympia אולימפיה אמנות השינה",
     "alias_forms": {
       "normalized": "olympia אולימפיה אמנות השינה",
@@ -13428,7 +13398,7 @@
   },
   {
     "id": "019d5a90e5b0_9a2f78bf424d7783",
-    "store_id": "019d5a90e57d_a0f7a592a753ca67",
+    "store_id": "019dbe364879_dee1c0f855cacb7e",
     "alias": "dalal cosmetics",
     "alias_forms": {
       "normalized": "dalal cosmetics",
@@ -17067,7 +17037,7 @@
   },
   {
     "id": "019d77cbf2cc_970c75c9ffcf7366",
-    "store_id": "019d77cbf2a4_60ac11653a242fb6",
+    "store_id": "019d5f746e4f_da8639e62cd656e6",
     "alias": "בית הלחם - לחם תושיה",
     "alias_forms": {
       "normalized": "בית הלחמ - לחמ תושיה",
@@ -17081,21 +17051,6 @@
     },
     "source": "review",
     "created_at": "2026-04-10T14:29:07.876062+00:00"
-  },
-  {
-    "id": "019d77d33240_1b6ae4ffdc28ed58",
-    "store_id": "019d77d33212_db3e69c9ceaf10c6",
-    "alias": "מכון טכנוליין",
-    "alias_forms": {
-      "normalized": "מכונ טכנוליינ",
-      "compact": "מכונטכנוליינ",
-      "tokens": [
-        "טכנוליינ",
-        "מכונ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-10T14:37:02.866508+00:00"
   },
   {
     "id": "019d7d218d0a_acb01e68dd8c6f9e",
@@ -17116,36 +17071,6 @@
     "created_at": "2026-04-11T15:20:43.939994+00:00"
   },
   {
-    "id": "019d7d5d3625_029f3afaecfb3214",
-    "store_id": "019d7d5d35eb_92bd86868d53ad12",
-    "alias": "זעפרנ סירימ ושיפודימ",
-    "alias_forms": {
-      "normalized": "זעפרנ סירימ ושיפודימ",
-      "compact": "זעפרנסירימושיפודימ",
-      "tokens": [
-        "ושיפודימ",
-        "זעפרנ",
-        "סירימ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-11T16:25:53.899730+00:00"
-  },
-  {
-    "id": "019d7d5d56d2_5797c0c52244b9bf",
-    "store_id": "019d7d5d5691_062ff14e60f02898",
-    "alias": "החומוסאימ",
-    "alias_forms": {
-      "normalized": "החומוסאימ",
-      "compact": "החומוסאימ",
-      "tokens": [
-        "החומוסאימ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-11T16:26:02.257757+00:00"
-  },
-  {
     "id": "019d7d5d768f_4c8fcc8714ce7250",
     "store_id": "019d7d5d7664_5eb05630693107ca",
     "alias": "חלי ממנ דיאטה אונ ליינ",
@@ -17164,41 +17089,8 @@
     "created_at": "2026-04-11T16:26:10.404201+00:00"
   },
   {
-    "id": "019d7d5d9176_791c4f50e9870423",
-    "store_id": "019d7d5d914c_03be4495d74012ad",
-    "alias": "מרפאת שיניימ דר שולי מוחמד",
-    "alias_forms": {
-      "normalized": "מרפאת שיניימ דר שולי מוחמד",
-      "compact": "מרפאתשיניימדרשולימוחמד",
-      "tokens": [
-        "דר",
-        "מוחמד",
-        "מרפאת",
-        "שולי",
-        "שיניימ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-11T16:26:17.292186+00:00"
-  },
-  {
-    "id": "019d7d5dab18_33cc7670295f3c15",
-    "store_id": "019d7d5daaee_66937ba87ce06a3b",
-    "alias": "סמיח פונ",
-    "alias_forms": {
-      "normalized": "סמיח פונ",
-      "compact": "סמיחפונ",
-      "tokens": [
-        "סמיח",
-        "פונ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-11T16:26:23.854241+00:00"
-  },
-  {
     "id": "019d7d8d1ba6_168385affa7f451d",
-    "store_id": "019d7d8d1b67_4e04b5d8953e3aa1",
+    "store_id": "019d20d53c58_d87eb778a4c2933c",
     "alias": "תווים - טרקלין חשמל",
     "alias_forms": {
       "normalized": "תווימ - טרקלינ חשמל",
@@ -17214,7 +17106,7 @@
   },
   {
     "id": "019d7d8d3861_d17ae74c44f6a073",
-    "store_id": "019d20a0115c_7c454bf163fcabfb",
+    "store_id": "019dbe364870_7813e31e49f60d1c",
     "alias": "Adidas אילת",
     "alias_forms": {
       "normalized": "adidas אילת",
@@ -17245,7 +17137,7 @@
   },
   {
     "id": "019d7d8d51c5_80c50b41e7bf113b",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
+    "store_id": "019d4dcdd304_3006a6980e5e7291",
     "alias": "4שף - 4Chef",
     "alias_forms": {
       "normalized": "4שפ - 4chef",
@@ -17257,21 +17149,6 @@
     },
     "source": "review",
     "created_at": "2026-04-11T17:18:26.712640+00:00"
-  },
-  {
-    "id": "019d7d8dc0eb_126ac5d25681e3a0",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-11T17:18:55.210226+00:00"
   },
   {
     "id": "019d82f480c9_5215041ea249472b",
@@ -17316,36 +17193,6 @@
     },
     "source": "review",
     "created_at": "2026-04-12T18:29:29.435050+00:00"
-  },
-  {
-    "id": "019d82f4c773_a0f81dc0231dd698",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T18:29:33.171054+00:00"
-  },
-  {
-    "id": "019d82f4cd60_980544cab664f5a4",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T18:29:34.688317+00:00"
   },
   {
     "id": "019d82f5a5d1_035228460af573d8",
@@ -17532,7 +17379,7 @@
   },
   {
     "id": "019d82f9fdc2_89fd2f79181163f8",
-    "store_id": "019d82f9fd97_10eb28f680e16a6a",
+    "store_id": "019dbe364845_9edb0b079349e7b0",
     "alias": "mango",
     "alias_forms": {
       "normalized": "mango",
@@ -17638,21 +17485,6 @@
     "created_at": "2026-04-12T18:36:51.627930+00:00"
   },
   {
-    "id": "019d82fb8e75_60b446ee7f6aa676",
-    "store_id": "019d24689bca_91f43ec89db4a017",
-    "alias": "ACE ירושלים",
-    "alias_forms": {
-      "normalized": "ace ירושלימ",
-      "compact": "aceירושלימ",
-      "tokens": [
-        "ace",
-        "ירושלימ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T18:36:57.332393+00:00"
-  },
-  {
     "id": "019d82fc5762_04f90e4175fb4af9",
     "store_id": "019d82fc572a_1dc3868a0999fb81",
     "alias": "תווים - קנת קול",
@@ -17731,38 +17563,6 @@
     "created_at": "2026-04-12T18:39:11.059125+00:00"
   },
   {
-    "id": "019d8310b0e4_56acafc2ed4157c5",
-    "store_id": "019d7d8d1b67_4e04b5d8953e3aa1",
-    "alias": "תווים - טרקלין חשמל",
-    "alias_forms": {
-      "normalized": "תווימ - טרקלינ חשמל",
-      "compact": "תווימטרקלינחשמל",
-      "tokens": [
-        "חשמל",
-        "טרקלינ",
-        "תווימ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:00:02.403529+00:00"
-  },
-  {
-    "id": "019d8310d148_842fac5068fcee93",
-    "store_id": "019d7d8d1b67_4e04b5d8953e3aa1",
-    "alias": "תווים - טרקלין חשמל",
-    "alias_forms": {
-      "normalized": "תווימ - טרקלינ חשמל",
-      "compact": "תווימטרקלינחשמל",
-      "tokens": [
-        "חשמל",
-        "טרקלינ",
-        "תווימ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:00:10.695118+00:00"
-  },
-  {
     "id": "019d8310f5f4_8ff6a2fef56adbc0",
     "store_id": "019d20b62ded_2bf67260c3109b7b",
     "alias": "קבוצת קסטרו",
@@ -17822,36 +17622,6 @@
     },
     "source": "review",
     "created_at": "2026-04-12T19:00:34.131227+00:00"
-  },
-  {
-    "id": "019d831134a8_82c0469525264215",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:00:36.136113+00:00"
-  },
-  {
-    "id": "019d8311395a_dcecd3c1175fcbf5",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:00:37.338826+00:00"
   },
   {
     "id": "019d83118282_92cee435ac8e2128",
@@ -18055,36 +17825,6 @@
     "created_at": "2026-04-12T19:06:59.155109+00:00"
   },
   {
-    "id": "019d83171c24_271395dcdd1c6d43",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:07:03.074672+00:00"
-  },
-  {
-    "id": "019d8317243c_91a8a14780bbe81b",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:07:05.148308+00:00"
-  },
-  {
     "id": "019d83172e06_7108cb86a8800f30",
     "store_id": "019d4942b3ac_48009a8274f694e5",
     "alias": "המשביר לצרכן",
@@ -18175,36 +17915,6 @@
     "created_at": "2026-04-12T19:07:53.844619+00:00"
   },
   {
-    "id": "019d83188e07_285d704131dd5c76",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:08:37.766636+00:00"
-  },
-  {
-    "id": "019d8318921c_d61e161348b24a5e",
-    "store_id": "019d7d8d5198_21432e19e08eb817",
-    "alias": "4שף - 4Chef",
-    "alias_forms": {
-      "normalized": "4שפ - 4chef",
-      "compact": "4שפ4chef",
-      "tokens": [
-        "4chef",
-        "4שפ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-04-12T19:08:38.812130+00:00"
-  },
-  {
     "id": "019d8d465ee4_489f8922e677c118",
     "store_id": "019d8d465eb8_7a4c832b56c5a08b",
     "alias": "סופר סופר קדומים",
@@ -18235,7 +17945,7 @@
   },
   {
     "id": "019d884f9a08_2e31984f9838bdef",
-    "store_id": "019d4dc5f336_5d94810c7b81c080",
+    "store_id": "019d246652be_c51c37e939722bd8",
     "alias": "golf&co",
     "alias_forms": {
       "normalized": "golf&co",
@@ -19754,7 +19464,7 @@
   },
   {
     "id": "019dbe36464f_7d0ace8ed2e941b8",
-    "store_id": "019dbe36464f_7104a0bd853e1b9d",
+    "store_id": "019dbe36465a_11256f9fb661125f",
     "alias": "LACASA - לה קאסה",
     "alias_forms": {
       "normalized": "lacasa - לה קאסה",
@@ -20302,7 +20012,7 @@
   },
   {
     "id": "019dbe364652_ef7ad4533ba10402",
-    "store_id": "019dbe364652_5ac8582c11ac614f",
+    "store_id": "019dbe364883_cf6846c3cf477984",
     "alias": "Sporter - ספורטר",
     "alias_forms": {
       "normalized": "sporter - ספורטר",
@@ -21344,7 +21054,7 @@
   },
   {
     "id": "019dbe364659_1a97e42d1f165cc1",
-    "store_id": "019dbe364659_73b6510bee1a5776",
+    "store_id": "019d209ff7d1_71fbdfb6d01ab799",
     "alias": "אלדו ALDO",
     "alias_forms": {
       "normalized": "אלדו aldo",
@@ -22310,7 +22020,7 @@
   },
   {
     "id": "019dbe36465e_15bd5bab30a6ceb9",
-    "store_id": "019dbe36465e_b704f8b8225be99e",
+    "store_id": "019dbe364848_c108411bb19b8f6a",
     "alias": "NK COLLECTION",
     "alias_forms": {
       "normalized": "nk collection",
@@ -22418,7 +22128,7 @@
   },
   {
     "id": "019dbe36465e_23ca27622f9c8b03",
-    "store_id": "019dbe36465e_962dc55d6a02283b",
+    "store_id": "019dbe3646d9_3bdc84abf660451a",
     "alias": "אבולאפיה",
     "alias_forms": {
       "normalized": "אבולאפיה",
@@ -23559,7 +23269,7 @@
   },
   {
     "id": "019dbe364663_5e6fbdf057100687",
-    "store_id": "019dbe364663_bc1b8e53423664e9",
+    "store_id": "019dbe36481c_d8e28a55431046e2",
     "alias": "ספורטל - SPORTAL",
     "alias_forms": {
       "normalized": "ספורטל - sportal",
@@ -25272,7 +24982,7 @@
   },
   {
     "id": "019dbe36466e_0e2f0c71bcd54307",
-    "store_id": "019dbe36466e_880428a97d5a1784",
+    "store_id": "019d4dcba3a2_1ec163bba25fb43b",
     "alias": "שיאומי - Xiaomi",
     "alias_forms": {
       "normalized": "שיאומי - xiaomi",
@@ -26682,7 +26392,7 @@
   },
   {
     "id": "019dbe364677_4d1847d53224968c",
-    "store_id": "019d77cbf2a4_60ac11653a242fb6",
+    "store_id": "019d5f746e4f_da8639e62cd656e6",
     "alias": "לחם תושיה",
     "alias_forms": {
       "normalized": "לחמ תושיה",
@@ -26928,7 +26638,7 @@
   },
   {
     "id": "019dbe364678_2e148cb6b3c4e526",
-    "store_id": "019dbe364678_75b86908bb859d1e",
+    "store_id": "019dbe3647c5_f87693d8b9e03cbd",
     "alias": "Surprise - סופרייז",
     "alias_forms": {
       "normalized": "surprise - סופרייז",
@@ -29484,7 +29194,7 @@
   },
   {
     "id": "019dbe364690_a8c9554bf5481acc",
-    "store_id": "019dbe364690_4f38f56e28aa6f18",
+    "store_id": "019dbe3647ee_6bcad15f85903b60",
     "alias": "קליאופטרה",
     "alias_forms": {
       "normalized": "קליאופטרה",
@@ -31086,7 +30796,7 @@
   },
   {
     "id": "019dbe36469b_5e2e835213648605",
-    "store_id": "019dbe36469b_cc9c26e41e0f0932",
+    "store_id": "019dbe364670_ba6497849d29628b",
     "alias": "שווארמה אלחלאל",
     "alias_forms": {
       "normalized": "שווארמה אלחלאל",
@@ -31784,7 +31494,7 @@
   },
   {
     "id": "019dbe36469f_bc870115d85b74f5",
-    "store_id": "019dbe36469d_029cf45df20e8595",
+    "store_id": "019dbe3646b9_cf1158e4fc4dcadd",
     "alias": "car wash - לב הארץ",
     "alias_forms": {
       "normalized": "car wash - לב הארצ",
@@ -31882,7 +31592,7 @@
   },
   {
     "id": "019dbe36469f_4d086d96d9742f07",
-    "store_id": "019dbe36469f_6a6e50f8c3030552",
+    "store_id": "019dbe3646b6_9a76658a9f081363",
     "alias": "מרקו פולו",
     "alias_forms": {
       "normalized": "מרקו פולו",
@@ -32963,7 +32673,7 @@
   },
   {
     "id": "019dbe3646a3_98f12806bee41764",
-    "store_id": "019dbe3646a3_e0afb67866c8c0e5",
+    "store_id": "019dbe364821_4de19b1d9365e516",
     "alias": "Yachtime - יאכטיים",
     "alias_forms": {
       "normalized": "yachtime - יאכטיימ",
@@ -33023,7 +32733,7 @@
   },
   {
     "id": "019dbe3646a3_c304d99406738cb9",
-    "store_id": "019dbe3646a3_2a193a05e38c616f",
+    "store_id": "019dbe364812_ab7837c2be17f15d",
     "alias": "Sweet קפה",
     "alias_forms": {
       "normalized": "sweet קפה",
@@ -33436,7 +33146,7 @@
   },
   {
     "id": "019dbe3646a6_b3c834b37c64e737",
-    "store_id": "019dbe3646a6_01211ec53745595c",
+    "store_id": "019fa45e1637_e6d8e0e0fad607cf",
     "alias": "אס טו אייץ - s2h",
     "alias_forms": {
       "normalized": "אס טו אייצ - s2h",
@@ -33984,7 +33694,7 @@
   },
   {
     "id": "019dbe3646a9_f8905fb8bd1169f4",
-    "store_id": "019dbe3646a9_f20a5f2d82e5b170",
+    "store_id": "019dbe364774_685e6270eba68f3c",
     "alias": "הקצביה - עוף נס ציונה",
     "alias_forms": {
       "normalized": "הקצביה - עופ נס ציונה",
@@ -37586,7 +37296,7 @@
   },
   {
     "id": "019dbe3646bd_ef2cad18fb63aaef",
-    "store_id": "019dbe3646bd_f76f10db569cbe67",
+    "store_id": "019fa454c49a_adf656a946d6bf6e",
     "alias": "Audio Medic",
     "alias_forms": {
       "normalized": "audio medic",
@@ -38773,7 +38483,7 @@
   },
   {
     "id": "019dbe3646c3_3043c2c9a270c840",
-    "store_id": "019dbe3646c3_83ee6ecb9803f4cb",
+    "store_id": "019fa454bd4c_fcf788a40be91cd2",
     "alias": "בי קיור לייזר - B CURE LASER",
     "alias_forms": {
       "normalized": "בי קיור לייזר - b cure laser",
@@ -41246,7 +40956,7 @@
   },
   {
     "id": "019dbe3646d1_3b71b22e9017656b",
-    "store_id": "019dbe3646d1_311136a4f5ab0b3e",
+    "store_id": "019dbe3646ae_a9974e7bfd08b30a",
     "alias": "מסעדת קייסר ceasar",
     "alias_forms": {
       "normalized": "מסעדת קייסר ceasar",
@@ -43182,7 +42892,7 @@
   },
   {
     "id": "019dbe3646db_678ac98dd1024ecc",
-    "store_id": "019dbe3646db_5a0fcacee9fc1bd9",
+    "store_id": "019fa454e963_bba258f87fcb84ef",
     "alias": "GO NOODELS",
     "alias_forms": {
       "normalized": "go noodels",
@@ -43516,7 +43226,7 @@
   },
   {
     "id": "019dbe3646de_91fa660424a15b6f",
-    "store_id": "019dbe3646de_f901dc1ec52a70be",
+    "store_id": "019fa450a8e6_178cc0fc03faab43",
     "alias": "מיסטר פרצל",
     "alias_forms": {
       "normalized": "מיסטר פרצל",
@@ -44439,7 +44149,7 @@
   },
   {
     "id": "019dbe3646e2_e49676c73ff65c39",
-    "store_id": "019dbe3646e2_2e54169d8f169406",
+    "store_id": "019dbe364849_4ee789f1d2c5d277",
     "alias": "Biga - ביגה",
     "alias_forms": {
       "normalized": "biga - ביגה",
@@ -49745,7 +49455,7 @@
   },
   {
     "id": "019dbe3646fd_979cf619c7b6abbc",
-    "store_id": "019dbe3646fd_f92423422f90280e",
+    "store_id": "019dbe3647b0_72ae229aa7784861",
     "alias": "M.S Beauty",
     "alias_forms": {
       "normalized": "m.s beauty",
@@ -52509,7 +52219,7 @@
   },
   {
     "id": "019dbe36470e_197d74f0660b7766",
-    "store_id": "019dbe36470e_0bad899a712f1125",
+    "store_id": "019d4e5b4dd0_b9cbeea64bbbabeb",
     "alias": "אהבה קטנה בני ברק",
     "alias_forms": {
       "normalized": "אהבה קטנה בני ברק",
@@ -53819,7 +53529,7 @@
   },
   {
     "id": "019dbe364714_584962ab83da3ab8",
-    "store_id": "019dbe364714_49a2637e51835e22",
+    "store_id": "019dbe3647f7_aa0bc5828fd798f8",
     "alias": "אולגה - olga",
     "alias_forms": {
       "normalized": "אולגה - olga",
@@ -59262,7 +58972,7 @@
   },
   {
     "id": "019dbe364735_b4d677db32ea2249",
-    "store_id": "019dbe364735_721d6354aafc7e47",
+    "store_id": "019dbe3647a6_b1f315dcdc0815da",
     "alias": "Pizza pai - פיצה פאי",
     "alias_forms": {
       "normalized": "pizza pai - פיצה פאי",
@@ -59748,7 +59458,7 @@
   },
   {
     "id": "019dbe364738_12f94aa0daf3eead",
-    "store_id": "019dbe364738_ed19eee88c100ba2",
+    "store_id": "019dbe364692_c281101d14e82ba5",
     "alias": "Golden touch - גולדן טאצ'",
     "alias_forms": {
       "normalized": "golden touch - גולדנ טאצ'",
@@ -60021,7 +59731,7 @@
   },
   {
     "id": "019dbe364739_1cb043cdf36e47c8",
-    "store_id": "019dbe364739_2453ef9bbdf542e1",
+    "store_id": "019dbe3647a3_0b5ca07cf7da049f",
     "alias": "Espressoclub - אספרסו קלאב",
     "alias_forms": {
       "normalized": "espressoclub - אספרסו קלאב",
@@ -61197,7 +60907,7 @@
   },
   {
     "id": "019dbe364740_0a2dbbf6f6aa1ecc",
-    "store_id": "019dbe364740_5d5cf9cccfb3e4e3",
+    "store_id": "019dbe36472b_1705c39a7377833b",
     "alias": "פרחי עידן - Idan Flowers",
     "alias_forms": {
       "normalized": "פרחי עידנ - idan flowers",
@@ -61716,7 +61426,7 @@
   },
   {
     "id": "019dbe364743_c03e521b29ad1d68",
-    "store_id": "019dbe364743_b6b96d2220a7df45",
+    "store_id": "019dbe3646fd_a3052d599eb973f3",
     "alias": "גולדה - Golda",
     "alias_forms": {
       "normalized": "גולדה - golda",
@@ -66772,7 +66482,7 @@
   },
   {
     "id": "019dbe36475d_a4766ea420feac7c",
-    "store_id": "019dbe36475d_ae83d061f6b2c72f",
+    "store_id": "019dbe364832_48712a836c4c0453",
     "alias": "Loko בגדי אופנה לגברים - לוקו",
     "alias_forms": {
       "normalized": "loko בגדי אופנה לגברימ - לוקו",
@@ -67140,7 +66850,7 @@
   },
   {
     "id": "019dbe364760_2778f666fba93763",
-    "store_id": "019dbe364760_25e15ed5fe276fca",
+    "store_id": "019dbe364859_7da399294803ceac",
     "alias": "נאוג'ה - NEOJA",
     "alias_forms": {
       "normalized": "נאוג'ה - neoja",
@@ -67500,7 +67210,7 @@
   },
   {
     "id": "019dbe364762_2898b3b32ef2f7d5",
-    "store_id": "019dbe364762_9e55b2a098619a28",
+    "store_id": "019dbe364672_06a2be4a5abccd11",
     "alias": "Beitea - ביתיי",
     "alias_forms": {
       "normalized": "beitea - ביתיי",
@@ -67835,7 +67545,7 @@
   },
   {
     "id": "019dbe364763_2de321ab45406de1",
-    "store_id": "019dbe364763_f477d05fd4bc51d0",
+    "store_id": "019dbe3647c6_221c8c9b757560cc",
     "alias": "MARCELLA - מרסלה",
     "alias_forms": {
       "normalized": "marcella - מרסלה",
@@ -72303,7 +72013,7 @@
   },
   {
     "id": "019dbe36477b_35638dba498e4f46",
-    "store_id": "019dbe36477b_78b146e8bbe86779",
+    "store_id": "019dbe364794_a53479912ee62e71",
     "alias": "MUNCHIES - מנצ'יס",
     "alias_forms": {
       "normalized": "munchies - מנצ'יס",
@@ -75490,7 +75200,7 @@
   },
   {
     "id": "019dbe36478c_cb0798617305be16",
-    "store_id": "019dbe36478c_3434f2b08a5dc202",
+    "store_id": "019dbe364792_5007b0778bfe79a4",
     "alias": "מייפון",
     "alias_forms": {
       "normalized": "מייפונ",
@@ -76399,7 +76109,7 @@
   },
   {
     "id": "019dbe364791_5967a55e7a73f667",
-    "store_id": "019dbe364791_4c81272ade897575",
+    "store_id": "019dbe3647b6_f0c0adf220169b82",
     "alias": "בית הספר לעיצוב שיער",
     "alias_forms": {
       "normalized": "בית הספר לעיצוב שיער",
@@ -83521,7 +83231,7 @@
   },
   {
     "id": "019dbe3647b6_5bbbcf900a11cd2b",
-    "store_id": "019dbe3647b6_272f1fe26f37a82b",
+    "store_id": "019dbe364847_11c2012418a798b3",
     "alias": "ספידו ישראל",
     "alias_forms": {
       "normalized": "ספידו ישראל",
@@ -88642,7 +88352,7 @@
   },
   {
     "id": "019dbe3647d1_c632cd498772a147",
-    "store_id": "019dbe3647d1_de7f0ee6cebcba59",
+    "store_id": "019dbe364865_12e489b17ed6b95e",
     "alias": "tiktik טיקטיק חבילות ספורט והופעות",
     "alias_forms": {
       "normalized": "tiktik טיקטיק חבילות ספורט והופעות",
@@ -90457,7 +90167,7 @@
   },
   {
     "id": "019dbe3647dc_54649abad3510dea",
-    "store_id": "019dbe3647db_bfdf7a158ec5575b",
+    "store_id": "019dbe3647db_1def47d4bd349596",
     "alias": "הפלאפונים הסלולריים",
     "alias_forms": {
       "normalized": "הפלאפונימ הסלולריימ",
@@ -91227,7 +90937,7 @@
   },
   {
     "id": "019dbe3647e0_669f9a87311b2c34",
-    "store_id": "019dbe3647e0_0737ce151034e757",
+    "store_id": "019dbe364672_5f5d7950c4966813",
     "alias": "TOBACCO",
     "alias_forms": {
       "normalized": "tobacco",
@@ -98374,7 +98084,7 @@
   },
   {
     "id": "019dbe364809_c3a18aeeeb5c03b8",
-    "store_id": "019dbe364809_274e98c993cea318",
+    "store_id": "019dbe364809_5c5e7e16aa7404e8",
     "alias": "מרכז נא לגעת - \"בלק אאוט\" - מסעדת חושך",
     "alias_forms": {
       "normalized": "מרכז נא לגעת - \"בלק אאוט\" - מסעדת חושכ",
@@ -100460,7 +100170,7 @@
   },
   {
     "id": "019dbe364814_8c24eb542782d13d",
-    "store_id": "019dbe364814_3cf0ec0d30cd3b47",
+    "store_id": "019dbe36485d_bf57d7cda6a2b959",
     "alias": "קפה קפה - cafe cafe",
     "alias_forms": {
       "normalized": "קפה קפה - cafe cafe",
@@ -102780,7 +102490,7 @@
   },
   {
     "id": "019dbe36481f_ca3c1213023998d1",
-    "store_id": "019dbe36481f_61bc4a6871e5e6af",
+    "store_id": "019dbe36482d_17549f03d56fe5a0",
     "alias": "הוט מועדון צרכנות - רכישה ישירה",
     "alias_forms": {
       "normalized": "הוט מועדונ צרכנות - רכישה ישירה",
@@ -103008,7 +102718,7 @@
   },
   {
     "id": "019dbe364822_990237a48415146d",
-    "store_id": "019dbe364822_d4c696c115a20819",
+    "store_id": "019dbe3646f8_54359b4f44daaf29",
     "alias": "קשרי תעופה הזמנות",
     "alias_forms": {
       "normalized": "קשרי תעופה הזמנות",
@@ -107530,7 +107240,7 @@
   },
   {
     "id": "019dbe364845_fe5a3a94a51156e7",
-    "store_id": "019dbe364845_03dc4eee0a6349f0",
+    "store_id": "019d4de36536_16b4c98df93014a1",
     "alias": "סבון",
     "alias_forms": {
       "normalized": "סבונ",
@@ -107559,7 +107269,7 @@
   },
   {
     "id": "019dbe364845_0157a6bf6b416a9e",
-    "store_id": "019dbe364845_c9deb1806ee64367",
+    "store_id": "019d20b66097_f042f37c4d7e4599",
     "alias": "אירוקה ביי סופר-פארם",
     "alias_forms": {
       "normalized": "אירוקה ביי סופר-פארמ",
@@ -107575,7 +107285,7 @@
   },
   {
     "id": "019dbe364845_546704d1398d619f",
-    "store_id": "019dbe364845_11cbb26870faa5bb",
+    "store_id": "019d246e3eed_4a657b4a014914e8",
     "alias": "ללין",
     "alias_forms": {
       "normalized": "ללינ",
@@ -107589,7 +107299,7 @@
   },
   {
     "id": "019dbe364845_bc910c8019d744de",
-    "store_id": "019dbe364845_1c82846b268eb91b",
+    "store_id": "019d246652be_c51c37e939722bd8",
     "alias": "גולף",
     "alias_forms": {
       "normalized": "גולפ",
@@ -107603,7 +107313,7 @@
   },
   {
     "id": "019dbe364845_784879732c0e7849",
-    "store_id": "019dbe364845_42c26f0b567c5a77",
+    "store_id": "019d20a0333f_6c51506dd74c497f",
     "alias": "גלי",
     "alias_forms": {
       "normalized": "גלי",
@@ -107646,7 +107356,7 @@
   },
   {
     "id": "019dbe364845_e1ca08846e1c29df",
-    "store_id": "019dbe364845_72e3a5d5c50a8170",
+    "store_id": "019dbe364682_9ebe6858d383b702",
     "alias": "סקצ'רס",
     "alias_forms": {
       "normalized": "סקצ'רס",
@@ -107674,7 +107384,7 @@
   },
   {
     "id": "019dbe364845_ade9aadbf4a805e5",
-    "store_id": "019dbe364845_eb70486a9e2aef00",
+    "store_id": "019d4dd30814_382895550b837951",
     "alias": "פוקס",
     "alias_forms": {
       "normalized": "פוקס",
@@ -107688,7 +107398,7 @@
   },
   {
     "id": "019dbe364845_8eca85c4903cdbd8",
-    "store_id": "019dbe364845_876c9bf358f84bf3",
+    "store_id": "019d82f86abb_26cac75463d57d24",
     "alias": "אמריקן איגל",
     "alias_forms": {
       "normalized": "אמריקנ איגל",
@@ -107703,7 +107413,7 @@
   },
   {
     "id": "019dbe364845_bb1f31ffcb351d23",
-    "store_id": "019dbe364845_f7e3041fb8327af2",
+    "store_id": "019d82f6708b_a834b082bd37f163",
     "alias": "בילבונג",
     "alias_forms": {
       "normalized": "בילבונג",
@@ -107789,7 +107499,7 @@
   },
   {
     "id": "019dbe364846_939991672ae5258e",
-    "store_id": "019dbe364846_55c78c2ccc20120c",
+    "store_id": "019fa454c660_89a926f13a4144a2",
     "alias": "ARMANI EXCHANGE",
     "alias_forms": {
       "normalized": "armani exchange",
@@ -107804,7 +107514,7 @@
   },
   {
     "id": "019dbe364846_cc4c4acac15da035",
-    "store_id": "019dbe364846_935572a53edb5e8e",
+    "store_id": "019fa4504743_af4e369c5a1cc1ca",
     "alias": "paul\\u0026shark",
     "alias_forms": {
       "normalized": "paul\\u0026shark",
@@ -107920,7 +107630,7 @@
   },
   {
     "id": "019dbe364846_c4bb423fd4e52a91",
-    "store_id": "019dbe364846_5cc50686f6ac3088",
+    "store_id": "019d20d231fd_d4ee7cf315f113c3",
     "alias": "ריפליי",
     "alias_forms": {
       "normalized": "ריפליי",
@@ -107934,7 +107644,7 @@
   },
   {
     "id": "019dbe364846_743ec5ed520e83b4",
-    "store_id": "019dbe364846_c9e82dd664ce48b3",
+    "store_id": "019d20d994e4_288153b397649c68",
     "alias": "H\\u0026O",
     "alias_forms": {
       "normalized": "h\\u0026o",
@@ -107962,7 +107672,7 @@
   },
   {
     "id": "019dbe364846_c13347843b0c78f8",
-    "store_id": "019dbe364846_b2a0c5024a6586be",
+    "store_id": "019d82f96213_75b192092d68c2e4",
     "alias": "פוט לוקר",
     "alias_forms": {
       "normalized": "פוט לוקר",
@@ -108270,7 +107980,7 @@
   },
   {
     "id": "019dbe364847_43b7a61f92a37ad2",
-    "store_id": "019dbe364847_f2404d20daa7bb89",
+    "store_id": "019d209ff7d1_71fbdfb6d01ab799",
     "alias": "אלדו",
     "alias_forms": {
       "normalized": "אלדו",
@@ -108314,7 +108024,7 @@
   },
   {
     "id": "019dbe364848_5f5f6386697e218f",
-    "store_id": "019dbe364848_fb84161e1082a753",
+    "store_id": "019d24141a0c_feba6c0a6463b08f",
     "alias": "פלטין מותגים",
     "alias_forms": {
       "normalized": "פלטינ מותגימ",
@@ -108708,7 +108418,7 @@
   },
   {
     "id": "019dbe36484a_111aaa0bf38abe30",
-    "store_id": "019dbe36484a_df5153765d59251a",
+    "store_id": "019dbe36468d_bfff4d6b45819c8f",
     "alias": "רשת פיצה סטורי",
     "alias_forms": {
       "normalized": "רשת פיצה סטורי",
@@ -109675,7 +109385,7 @@
   },
   {
     "id": "019dbe36484f_47be77b61aff87af",
-    "store_id": "019dbe36484f_c4436f05de12a73c",
+    "store_id": "019d21108a74_d0b4935429f4001e",
     "alias": "רשת וניליה",
     "alias_forms": {
       "normalized": "רשת וניליה",
@@ -110022,7 +109732,7 @@
   },
   {
     "id": "019dbe364851_8bf9d85226396877",
-    "store_id": "019dbe364851_49bb80770836c88a",
+    "store_id": "019dbe364855_90524b1cb108db2d",
     "alias": "Casa Bella ביסטרו ובר איטלקי",
     "alias_forms": {
       "normalized": "casa bella ביסטרו ובר איטלקי",
@@ -110462,7 +110172,7 @@
   },
   {
     "id": "019dbe364854_fa2274952f8a1e23",
-    "store_id": "019d4dc5f336_5d94810c7b81c080",
+    "store_id": "019d246652be_c51c37e939722bd8",
     "alias": "גולף אנד קו",
     "alias_forms": {
       "normalized": "גולפ אנד קו",
@@ -110507,7 +110217,7 @@
   },
   {
     "id": "019dbe364854_9bc0a73711275e1d",
-    "store_id": "019dbe364854_cf095f443fa02f72",
+    "store_id": "019d4dcb7ccc_5994c9109a057a6e",
     "alias": "נעמן פורצלן",
     "alias_forms": {
       "normalized": "נעמנ פורצלנ",
@@ -110522,7 +110232,7 @@
   },
   {
     "id": "019dbe364854_6ee4e07ab5fc7087",
-    "store_id": "019dbe364854_d3e21a3926922b6b",
+    "store_id": "019d20d2fe79_8110ac860a4058fe",
     "alias": "סולתם",
     "alias_forms": {
       "normalized": "סולתמ",
@@ -111400,7 +111110,7 @@
   },
   {
     "id": "019dbe364858_e7319813a813122c",
-    "store_id": "019dbe364858_c1f239463a13fd71",
+    "store_id": "019d210637bb_845ae8bf5963b1cd",
     "alias": "Street Games",
     "alias_forms": {
       "normalized": "street games",
@@ -111832,7 +111542,7 @@
   },
   {
     "id": "019dbe36485d_91e92572647df854",
-    "store_id": "019dbe36485d_e81fe85c3d616324",
+    "store_id": "019d24575bbb_2657cf71ddd573bc",
     "alias": "Nimrod and More",
     "alias_forms": {
       "normalized": "nimrod and more",
@@ -113909,7 +113619,7 @@
   },
   {
     "id": "019dbe36486b_b7bcd19886364167",
-    "store_id": "019dbe364868_191a9f9f70d8bb60",
+    "store_id": "019d20ade954_cffb1896db2cb1a2",
     "alias": "share spa - ספא מלון רוקסון אילת",
     "alias_forms": {
       "normalized": "share spa - ספא מלונ רוקסונ אילת",
@@ -114650,7 +114360,7 @@
   },
   {
     "id": "019dbe36486f_2a980b4784b8acb1",
-    "store_id": "019dbe36486f_5f61f07be8c94a87",
+    "store_id": "019dbe364773_f58840a2ef17554c",
     "alias": "עינות ספיר",
     "alias_forms": {
       "normalized": "עינות ספיר",
@@ -114807,7 +114517,7 @@
   },
   {
     "id": "019dbe364870_979bf9368912467f",
-    "store_id": "019dbe364870_ac157721dfda5b56",
+    "store_id": "019dbe364870_7813e31e49f60d1c",
     "alias": "אלקטרה זכיין אדידס",
     "alias_forms": {
       "normalized": "אלקטרה זכיינ אדידס",
@@ -114837,7 +114547,7 @@
   },
   {
     "id": "019dbe364870_4ab6509d0129185a",
-    "store_id": "019dbe364870_e01b0ffb3518378b",
+    "store_id": "019fa4504b18_308b4bb825640680",
     "alias": "קונברס",
     "alias_forms": {
       "normalized": "קונברס",
@@ -116807,7 +116517,7 @@
   },
   {
     "id": "019dbe36487d_ca560afe34ae0299",
-    "store_id": "019dbe36487d_9f4e00c3c9208897",
+    "store_id": "019f947f59e2_2595f9476c5bac09",
     "alias": "איל מקיאג'",
     "alias_forms": {
       "normalized": "איל מקיאג'",
@@ -117640,7 +117350,7 @@
   },
   {
     "id": "019dbe364882_698448549339da31",
-    "store_id": "019dbe364882_ca05e430cd41b7da",
+    "store_id": "019d244e243c_624fe8ddb4054b2a",
     "alias": "בית לסין",
     "alias_forms": {
       "normalized": "בית לסינ",
@@ -119238,7 +118948,7 @@
   },
   {
     "id": "019dbe36488a_dec18e7e6d9af753",
-    "store_id": "019dbe36488a_e721f82b83e6592b",
+    "store_id": "019fa45074eb_e305c0ae77334456",
     "alias": "דסיגואל",
     "alias_forms": {
       "normalized": "דסיגואל",
@@ -120494,7 +120204,7 @@
   },
   {
     "id": "019dbe364892_7c9a4fd742cfe93c",
-    "store_id": "019dbe364892_f254b7e60de610ae",
+    "store_id": "019dbe3646f5_f77e7c618cb2593a",
     "alias": "רשת אגאדיר",
     "alias_forms": {
       "normalized": "רשת אגאדיר",
@@ -121202,36 +120912,6 @@
     "created_at": "2026-06-14T16:53:53.253154+00:00"
   },
   {
-    "id": "019ec70e1fb7_cc8f7e94e18bd962",
-    "store_id": "019ec70e1f19_106322399ecef3af",
-    "alias": "G - BIKE",
-    "alias_forms": {
-      "normalized": "g - bike",
-      "compact": "gbike",
-      "tokens": [
-        "bike"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-06-14T16:54:11.992225+00:00"
-  },
-  {
-    "id": "019ec70e3e06_8953798dbdc57c85",
-    "store_id": "019ec70e3d6d_5644b796533d2f57",
-    "alias": "בי - יו לורד",
-    "alias_forms": {
-      "normalized": "בי - יו לורד",
-      "compact": "בייולורד",
-      "tokens": [
-        "בי",
-        "יו",
-        "לורד"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-06-14T16:54:19.757579+00:00"
-  },
-  {
     "id": "019ec70e5e35_d5d03a6b5fe61d6f",
     "store_id": "019d77cb9737_843e8982aa6a9bfd",
     "alias": "דבי לו - Skin Therapist",
@@ -121264,24 +120944,6 @@
     },
     "source": "review",
     "created_at": "2026-06-14T16:54:42.750858+00:00"
-  },
-  {
-    "id": "019ec70ebb4b_77675913f217b22b",
-    "store_id": "019ec70ebaa5_2a51a054efdbd16b",
-    "alias": "מרכז וטרינרי - ד\"ר עמראן עיראקי",
-    "alias_forms": {
-      "normalized": "מרכז וטרינרי - ד\"ר עמראנ עיראקי",
-      "compact": "מרכזוטרינרידרעמראנעיראקי",
-      "tokens": [
-        "ד\"ר",
-        "וטרינרי",
-        "מרכז",
-        "עיראקי",
-        "עמראנ"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-06-14T16:54:51.813581+00:00"
   },
   {
     "id": "019ec70ecb66_4e933e8115ad2075",
@@ -121542,21 +121204,6 @@
     },
     "source": "review",
     "created_at": "2026-06-14T16:56:28.113163+00:00"
-  },
-  {
-    "id": "019ec7104e56_f32e67506c10a092",
-    "store_id": "019dbe364652_5ac8582c11ac614f",
-    "alias": "Sporter - ספורטר",
-    "alias_forms": {
-      "normalized": "sporter - ספורטר",
-      "compact": "sporterספורטר",
-      "tokens": [
-        "sporter",
-        "ספורטר"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-06-14T16:56:35.158765+00:00"
   },
   {
     "id": "019ec7105bbe_e3259c7f8389cc77",
@@ -122875,7 +122522,7 @@
   },
   {
     "id": "019f9486cbff_d3950ef968552461",
-    "store_id": "019f947f59df_294f564d1a44e0ae",
+    "store_id": "019dbe3646a3_3cbbf09912b9d535",
     "alias": "סבן סבנטי - SEVEN SEVENTY",
     "alias_forms": {
       "normalized": "סבנ סבנטי - seven seventy",
@@ -125156,7 +124803,7 @@
   },
   {
     "id": "019f9487021b_b6b135be4ff0b10f",
-    "store_id": "019f947f59e0_588b6e3fd68a4071",
+    "store_id": "019dbe3647df_64ed9f4443f68a85",
     "alias": "אינגליש קייק",
     "alias_forms": {
       "normalized": "אינגליש קייק",
@@ -126824,7 +126471,7 @@
   },
   {
     "id": "019f94872987_dd64b56c9e8356ae",
-    "store_id": "019f947f59e1_3a37ac4aff208a32",
+    "store_id": "019dbe364692_0a2b09a160d7a3b4",
     "alias": "MUCHA - מוצ'ה",
     "alias_forms": {
       "normalized": "mucha - מוצ'ה",
@@ -127242,7 +126889,7 @@
   },
   {
     "id": "019f94873377_cc9001e2a901e644",
-    "store_id": "019f947f59e2_ad5d3339571afe6e",
+    "store_id": "019dbe364863_39fa83e7be0cfa91",
     "alias": "Full Games - פול גיימס",
     "alias_forms": {
       "normalized": "full games - פול גיימס",
@@ -128011,7 +127658,7 @@
   },
   {
     "id": "019fa44f34e6_fc625614c35b5299",
-    "store_id": "019dbe364851_49bb80770836c88a",
+    "store_id": "019dbe364855_90524b1cb108db2d",
     "alias": "Casa Bella",
     "alias_forms": {
       "normalized": "casa bella",
@@ -128171,7 +127818,7 @@
   },
   {
     "id": "019fa44f3a53_d94363c3dd982eea",
-    "store_id": "019dbe364760_25e15ed5fe276fca",
+    "store_id": "019dbe364859_7da399294803ceac",
     "alias": "Neoja",
     "alias_forms": {
       "normalized": "neoja",
@@ -128340,7 +127987,7 @@
   },
   {
     "id": "019fa44f4038_1b96f66946625243",
-    "store_id": "019d4dc5f336_5d94810c7b81c080",
+    "store_id": "019d246652be_c51c37e939722bd8",
     "alias": "גולף קו",
     "alias_forms": {
       "normalized": "גולפ קו",
@@ -128754,7 +128401,7 @@
   },
   {
     "id": "019fa44f4e7a_0509c2a34e42c04e",
-    "store_id": "019dbe36484f_c4436f05de12a73c",
+    "store_id": "019d21108a74_d0b4935429f4001e",
     "alias": "וניליה",
     "alias_forms": {
       "normalized": "וניליה",
@@ -129750,21 +129397,6 @@
     "created_at": "2026-07-27T16:01:21.441273+00:00"
   },
   {
-    "id": "019fa44fe393_85b84a196ec3ed94",
-    "store_id": "019dbe364672_06a2be4a5abccd11",
-    "alias": "Beitea - ביתיי",
-    "alias_forms": {
-      "normalized": "beitea - ביתיי",
-      "compact": "beiteaביתיי",
-      "tokens": [
-        "beitea",
-        "ביתיי"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-07-27T16:01:21.441273+00:00"
-  },
-  {
     "id": "019fa44fecff_6ba03ad45771323d",
     "store_id": "019dbe36478c_2beadf6a8b20bd14",
     "alias": "אדור - בית אופנה לגברים",
@@ -130230,7 +129862,7 @@
   },
   {
     "id": "019fa4501064_c6e8074c63dc3afa",
-    "store_id": "019fa4501064_4a2126dfeda0b451",
+    "store_id": "019d244fb80e_89fb34471310dc5c",
     "alias": "DAFNI",
     "alias_forms": {
       "normalized": "dafni",
@@ -130590,7 +130222,7 @@
   },
   {
     "id": "019fa4501db0_906db9d6b84830af",
-    "store_id": "019fa4501db0_29c5de321cbfcec4",
+    "store_id": "019dbe364846_be94da98501cb3da",
     "alias": "ICE CUBE",
     "alias_forms": {
       "normalized": "ice cube",
@@ -130636,7 +130268,7 @@
   },
   {
     "id": "019fa4501f65_4bc70a788d8bfe19",
-    "store_id": "019fa4501f65_cee5581b712488f5",
+    "store_id": "019dbe364891_de02de86d66f6bf9",
     "alias": "NORI",
     "alias_forms": {
       "normalized": "nori",
@@ -130781,7 +130413,7 @@
   },
   {
     "id": "019fa450245c_1b25926875404480",
-    "store_id": "019fa450245c_9145b0359837a975",
+    "store_id": "019dbe364847_81a2eb72e8c1663f",
     "alias": "PETIT BATEAU",
     "alias_forms": {
       "normalized": "petit bateau",
@@ -130840,7 +130472,7 @@
   },
   {
     "id": "019fa4502675_23d0a77dca5e42ef",
-    "store_id": "019fa4502674_a3ca912d0fee155b",
+    "store_id": "019dbe36484b_9f76fe1ac1a6bbee",
     "alias": "LA CARNE",
     "alias_forms": {
       "normalized": "la carne",
@@ -130955,7 +130587,7 @@
   },
   {
     "id": "019fa4502b5d_7ea3b773c1766ec8",
-    "store_id": "019fa4502b5d_066187f33edcada2",
+    "store_id": "019fa983690d_a96cf57690ba787d",
     "alias": "SUPERDRY",
     "alias_forms": {
       "normalized": "superdry",
@@ -130969,7 +130601,7 @@
   },
   {
     "id": "019fa4502be3_999055d1c363b093",
-    "store_id": "019fa4502be3_b3315222562cded6",
+    "store_id": "019d20b66097_f042f37c4d7e4599",
     "alias": "ERROCA",
     "alias_forms": {
       "normalized": "erroca",
@@ -130983,7 +130615,7 @@
   },
   {
     "id": "019fa4502cb0_2bfed7ebe3501460",
-    "store_id": "019fa4502cb0_f64e70f44d0198c9",
+    "store_id": "019dbe364847_582fc49fd8d511e3",
     "alias": "LACOSTE",
     "alias_forms": {
       "normalized": "lacoste",
@@ -131042,7 +130674,7 @@
   },
   {
     "id": "019fa4502ed3_bb1af444ea82b4a7",
-    "store_id": "019fa4502ed2_5930f5d9b0bd34a0",
+    "store_id": "019dbe36485d_acbbb9691f9be481",
     "alias": "Bread and Breakfast",
     "alias_forms": {
       "normalized": "bread and breakfast",
@@ -131319,7 +130951,7 @@
   },
   {
     "id": "019fa4503b7c_d0098fd35766708c",
-    "store_id": "019fa4503b7c_11c8f0ab6b1e5509",
+    "store_id": "019dbe364848_dfcedec66c77ddb0",
     "alias": "Under Armour",
     "alias_forms": {
       "normalized": "under armour",
@@ -131555,7 +131187,7 @@
   },
   {
     "id": "019fa450442a_8bc8e975f90ab136",
-    "store_id": "019fa450442a_ece5e251310d604a",
+    "store_id": "019dbe36476c_f30159a287197bb8",
     "alias": "Dreams - דרימס",
     "alias_forms": {
       "normalized": "dreams - דרימס",
@@ -131859,7 +131491,7 @@
   },
   {
     "id": "019fa4504f07_a64336e1382d135d",
-    "store_id": "019fa4504f07_415e5d28bbd4ebd6",
+    "store_id": "019d5f8a0944_c288e065a6a11bbc",
     "alias": "VENTA",
     "alias_forms": {
       "normalized": "venta",
@@ -132321,7 +131953,7 @@
   },
   {
     "id": "019fa450613b_a35bfb2d965d7e62",
-    "store_id": "019fa450613b_b2b7d59e22fca89a",
+    "store_id": "019dbe364847_9ba19947608cc434",
     "alias": "לאסטר",
     "alias_forms": {
       "normalized": "לאסטר",
@@ -132335,7 +131967,7 @@
   },
   {
     "id": "019fa45061ed_94f5cb773f9bf2ea",
-    "store_id": "019fa45061ed_335ae67f4359002d",
+    "store_id": "019dbe36468d_1e1bc2c688655e71",
     "alias": "pelle",
     "alias_forms": {
       "normalized": "pelle",
@@ -132627,7 +132259,7 @@
   },
   {
     "id": "019fa4506d04_db22d095a1f08913",
-    "store_id": "019fa4506d04_3f70c71be0b8b89e",
+    "store_id": "019dbe36484f_b218fad196f6a8b1",
     "alias": "Orien Top",
     "alias_forms": {
       "normalized": "orien top",
@@ -132686,7 +132318,7 @@
   },
   {
     "id": "019fa4506f26_03a75c70a29434b5",
-    "store_id": "019fa4506f26_21f92a2cf8a903d7",
+    "store_id": "019d4dd59660_f062d0e035302393",
     "alias": "יעקבי",
     "alias_forms": {
       "normalized": "יעקבי",
@@ -132815,7 +132447,7 @@
   },
   {
     "id": "019fa4507358_e47509bdad03c2d9",
-    "store_id": "019fa4507358_a7dfa05e8c4438ce",
+    "store_id": "019dbe36484a_7db5bbcde37005bb",
     "alias": "JAPAN JAPAN",
     "alias_forms": {
       "normalized": "japan japan",
@@ -133001,7 +132633,7 @@
   },
   {
     "id": "019fa4507a1c_15c414a63b8dcfda",
-    "store_id": "019fa4507a1c_f7955515f11fbe07",
+    "store_id": "019dbe364830_654099a2c69039b0",
     "alias": "TAGALOS",
     "alias_forms": {
       "normalized": "tagalos",
@@ -133339,7 +132971,7 @@
   },
   {
     "id": "019fa450884a_95619088579cad95",
-    "store_id": "019fa450884a_8c5d01ffa0b3f107",
+    "store_id": "019dbe36484d_7abc828f4875e995",
     "alias": "Fratelli",
     "alias_forms": {
       "normalized": "fratelli",
@@ -133353,7 +132985,7 @@
   },
   {
     "id": "019fa45088fa_53bc7295c6fa2976",
-    "store_id": "019fa45088fa_1d193cca417e0927",
+    "store_id": "019dbe364847_1b096e8886244494",
     "alias": "PUMA",
     "alias_forms": {
       "normalized": "puma",
@@ -133396,7 +133028,7 @@
   },
   {
     "id": "019fa4508aea_c397af2f4d27ec26",
-    "store_id": "019fa4508aea_53e724a5e944638d",
+    "store_id": "019d20d4a0e4_57bbd0cd6fb08e4a",
     "alias": "Lavido",
     "alias_forms": {
       "normalized": "lavido",
@@ -133878,7 +133510,7 @@
   },
   {
     "id": "019fa4509d59_339f1eb7c1812cc5",
-    "store_id": "019fa4509d59_f1c5b0360af5ff73",
+    "store_id": "019d2425a9e5_cc36a37bed7ec83e",
     "alias": "פלייגראונד",
     "alias_forms": {
       "normalized": "פלייגראונד",
@@ -134066,7 +133698,7 @@
   },
   {
     "id": "019fa450a400_31a36fadeafb4430",
-    "store_id": "019fa450a400_7ca553a7f153349b",
+    "store_id": "019dbe36487d_4c6e77a9e490eddb",
     "alias": "VILEBREQUIN",
     "alias_forms": {
       "normalized": "vilebrequin",
@@ -134225,7 +133857,7 @@
   },
   {
     "id": "019fa450a9dd_332acde017616844",
-    "store_id": "019fa450a9dd_941af897ff28fe4a",
+    "store_id": "019d24460364_fef8bf794134791a",
     "alias": "ביג אלקטריק",
     "alias_forms": {
       "normalized": "ביג אלקטריק",
@@ -134271,7 +133903,7 @@
   },
   {
     "id": "019fa450ab3e_3a7af253655c4060",
-    "store_id": "019fa450ab3e_bc3343cdbb87f450",
+    "store_id": "019dbe364873_42f3291da0187858",
     "alias": "PALOMINO",
     "alias_forms": {
       "normalized": "palomino",
@@ -134313,7 +133945,7 @@
   },
   {
     "id": "019fa450acca_118d5afbcaa32030",
-    "store_id": "019fa450acca_1820ce518b39ea76",
+    "store_id": "019dbe364847_fd9c2acdbec5a754",
     "alias": "SAM EDELMAN",
     "alias_forms": {
       "normalized": "sam edelman",
@@ -134371,7 +134003,7 @@
   },
   {
     "id": "019fa450af7c_8bd6dca8c4b2df13",
-    "store_id": "019fa450af7c_ab050b10bf324381",
+    "store_id": "019dbe364830_2754dc295b777ec8",
     "alias": "Gustino",
     "alias_forms": {
       "normalized": "gustino",
@@ -134461,7 +134093,7 @@
   },
   {
     "id": "019fa450b308_2ce6f5c885443295",
-    "store_id": "019fa450b308_9310fd4d21a9af03",
+    "store_id": "019d20d994e4_288153b397649c68",
     "alias": "אייץ אנד או",
     "alias_forms": {
       "normalized": "אייצ אנד או",
@@ -134553,7 +134185,7 @@
   },
   {
     "id": "019fa450b6b8_02c7c628579299bc",
-    "store_id": "019fa450b6b8_ba1ebebb6a43efe8",
+    "store_id": "019dbe364891_6a684a1f168371af",
     "alias": "Wok a Way",
     "alias_forms": {
       "normalized": "wok a way",
@@ -134568,7 +134200,7 @@
   },
   {
     "id": "019fa450b75f_62fab8f00355e918",
-    "store_id": "019fa450b75f_bf746224d63a72e8",
+    "store_id": "019fa4508032_9974d22502ae61a3",
     "alias": "פאט ויני",
     "alias_forms": {
       "normalized": "פאט ויני",
@@ -134597,7 +134229,7 @@
   },
   {
     "id": "019fa450b886_ffc27c8579a2ee00",
-    "store_id": "019fa450b886_20db49dd8c632e4c",
+    "store_id": "019d4dcd37c8_f85c95a9815a84f9",
     "alias": "ד\"ר גב",
     "alias_forms": {
       "normalized": "ד\"ר גב",
@@ -134712,7 +134344,7 @@
   },
   {
     "id": "019fa450bd03_a42229e071681dde",
-    "store_id": "019fa450bd03_0b31d726d3448172",
+    "store_id": "019d241cfd97_13236ea090733b5a",
     "alias": "תותי קפה",
     "alias_forms": {
       "normalized": "תותי קפה",
@@ -134941,7 +134573,7 @@
   },
   {
     "id": "019fa454ad9b_9724d65c05266ce0",
-    "store_id": "019dbe364854_d3e21a3926922b6b",
+    "store_id": "019d20d2fe79_8110ac860a4058fe",
     "alias": "סולתם רדד",
     "alias_forms": {
       "normalized": "סולתמ רדד",
@@ -135051,7 +134683,7 @@
   },
   {
     "id": "019fa454b292_c212e83bd52d979b",
-    "store_id": "019dbe364743_b6b96d2220a7df45",
+    "store_id": "019dbe3646fd_a3052d599eb973f3",
     "alias": "גלידה GOLDA",
     "alias_forms": {
       "normalized": "גלידה golda",
@@ -135647,7 +135279,7 @@
   },
   {
     "id": "019fa454c6d0_5e0022b8361f87b4",
-    "store_id": "019fa454c6d0_ea7682794bc39f0c",
+    "store_id": "019d209ef547_5ea1a0d2db578362",
     "alias": "ארנקי עמנואל",
     "alias_forms": {
       "normalized": "ארנקי עמנואל",
@@ -135875,7 +135507,7 @@
   },
   {
     "id": "019fa454cdbf_b1cb928ae85bdcaa",
-    "store_id": "019fa454cdbf_eecbafc128a75734",
+    "store_id": "019d82f8bfed_6b186416e8d9823e",
     "alias": "צ׳ילדרנס פלייס",
     "alias_forms": {
       "normalized": "צ'ילדרנס פלייס",
@@ -136087,7 +135719,7 @@
   },
   {
     "id": "019fa454d40d_190534ea46331573",
-    "store_id": "019fa454d40d_d97b601858de656b",
+    "store_id": "019dbe364891_1c9b2b013988a89e",
     "alias": "מייקס פלייס",
     "alias_forms": {
       "normalized": "מייקס פלייס",
@@ -136210,7 +135842,7 @@
   },
   {
     "id": "019fa454d7dc_cfe05b59d0bb4577",
-    "store_id": "019fa454d7dc_157cb8e2a1836f65",
+    "store_id": "019dbe36485c_e58b7bf4835e528c",
     "alias": "Cafe Lugano",
     "alias_forms": {
       "normalized": "cafe lugano",
@@ -137145,7 +136777,7 @@
   },
   {
     "id": "019fa454f430_5e32411d7e6186d3",
-    "store_id": "019fa454f430_07828cc633889aba",
+    "store_id": "019fa454f3bc_fce2fb35d6fc0710",
     "alias": "קאמפיי סטריט ווק",
     "alias_forms": {
       "normalized": "קאמפיי סטריט ווק",
@@ -137908,7 +137540,7 @@
   },
   {
     "id": "019fa45e299e_31c08a65e29ce66b",
-    "store_id": "019fa45e2934_3cd4ebde99506296",
+    "store_id": "019dbe36482f_60c4e592a4ad5ba5",
     "alias": "IZ - CAFE",
     "alias_forms": {
       "normalized": "iz - cafe",
@@ -138009,36 +137641,6 @@
     "created_at": "2026-07-27T16:18:12.619062+00:00"
   },
   {
-    "id": "019fa45ebc9b_c7edfea49092e3e7",
-    "store_id": "019fa45ebc2f_8eeb4dfb6afe0a7e",
-    "alias": "G - BIKE",
-    "alias_forms": {
-      "normalized": "g - bike",
-      "compact": "gbike",
-      "tokens": [
-        "bike"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-07-27T16:18:19.822950+00:00"
-  },
-  {
-    "id": "019fa45ecf54_b11c2c96dea3625f",
-    "store_id": "019fa45ecee6_c7c6afd22eefce7c",
-    "alias": "בי - יו לורד",
-    "alias_forms": {
-      "normalized": "בי - יו לורד",
-      "compact": "בייולורד",
-      "tokens": [
-        "בי",
-        "יו",
-        "לורד"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-07-27T16:18:24.614215+00:00"
-  },
-  {
     "id": "019fa45ede8b_2c572fc637c13da4",
     "store_id": "019fa45ede1f_cb71cfc09edd4295",
     "alias": "שש - צ 2011",
@@ -138052,21 +137654,6 @@
     },
     "source": "review",
     "created_at": "2026-07-27T16:18:28.510650+00:00"
-  },
-  {
-    "id": "019fa45ee9c6_581a5b2d89092abb",
-    "store_id": "019fa45ee959_08c467210bda1424",
-    "alias": "A.Q - BAR",
-    "alias_forms": {
-      "normalized": "a.q - bar",
-      "compact": "aqbar",
-      "tokens": [
-        "a.q",
-        "bar"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-07-27T16:18:31.385029+00:00"
   },
   {
     "id": "019fa45efc07_f6d2808a5c2bfb86",
@@ -138788,7 +138375,7 @@
   },
   {
     "id": "019fa983678e_a421f7541118b699",
-    "store_id": "019fa983678e_2c9e468912098399",
+    "store_id": "019dbe364845_892e60faf5c267bf",
     "alias": "Factory 54 - פקטורי 54",
     "alias_forms": {
       "normalized": "factory 54 - פקטורי 54",
@@ -138833,7 +138420,7 @@
   },
   {
     "id": "019fa98368af_827cb1cebcdfdd27",
-    "store_id": "019fa98368af_2981133d4b99f9ec",
+    "store_id": "019dbe364846_254c843333e09137",
     "alias": "CALVIN KLEIN - קלווין קליין",
     "alias_forms": {
       "normalized": "calvin klein - קלווינ קליינ",
@@ -139060,7 +138647,7 @@
   },
   {
     "id": "019fa9836f00_9a74e3d9e20ab3d1",
-    "store_id": "019fa9836f00_81bb6be5bb03ccd9",
+    "store_id": "019dbe3646a6_2561e746490f3adb",
     "alias": "Lucky Chicken - לאקי צ'יקן",
     "alias_forms": {
       "normalized": "lucky chicken - לאקי צ'יקנ",
@@ -139136,21 +138723,6 @@
     "created_at": "2026-07-28T21:34:55.437319+00:00"
   },
   {
-    "id": "019faaa73b7c_5709c796202f49f9",
-    "store_id": "019fa45e2934_3cd4ebde99506296",
-    "alias": "IZ - CAFE",
-    "alias_forms": {
-      "normalized": "iz - cafe",
-      "compact": "izcafe",
-      "tokens": [
-        "cafe",
-        "iz"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-07-28T21:35:14.293611+00:00"
-  },
-  {
     "id": "019faaa7fac5_fae331bcde087775",
     "store_id": "019fa45ea00b_27c6ed5c7619e79e",
     "alias": "A- MEAT",
@@ -139164,21 +138736,6 @@
     },
     "source": "review",
     "created_at": "2026-07-28T21:36:03.267728+00:00"
-  },
-  {
-    "id": "019faaa8c9a2_5c4c5bb92ea983b6",
-    "store_id": "019dbe3646cd_33fcd9c0fd43dd3e",
-    "alias": "A.Q - BAR",
-    "alias_forms": {
-      "normalized": "a.q - bar",
-      "compact": "aqbar",
-      "tokens": [
-        "a.q",
-        "bar"
-      ]
-    },
-    "source": "review",
-    "created_at": "2026-07-28T21:36:56.226609+00:00"
   },
   {
     "id": "019faaa9561f_2e6e94a6bf62f00b",
@@ -139227,5 +138784,419 @@
     },
     "source": "review",
     "created_at": "2026-07-28T21:38:16.460631+00:00"
+  },
+  {
+    "id": "01a0290f53d4_e92553d70c0381a8",
+    "store_id": "019d4dcdd304_3006a6980e5e7291",
+    "alias": "4chef",
+    "alias_forms": {
+      "normalized": "4chef",
+      "compact": "4chef",
+      "tokens": [
+        "4chef"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T10:41:04.941779+00:00"
+  },
+  {
+    "id": "01a0290f53d5_87a5b7667019e774",
+    "store_id": "019d5f8a0944_c288e065a6a11bbc",
+    "alias": "ונטה שיווק - Venta",
+    "alias_forms": {
+      "normalized": "ונטה שיווק - venta",
+      "compact": "ונטהשיווקventa",
+      "tokens": [
+        "venta",
+        "ונטה",
+        "שיווק"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T10:41:04.941779+00:00"
+  },
+  {
+    "id": "01a0290f53d6_7798a09b59b35a85",
+    "store_id": "019d4dcba3a2_1ec163bba25fb43b",
+    "alias": "xiaomi",
+    "alias_forms": {
+      "normalized": "xiaomi",
+      "compact": "xiaomi",
+      "tokens": [
+        "xiaomi"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T10:41:04.941779+00:00"
+  },
+  {
+    "id": "01a02923fc7c_6e83f88a6eff43c7",
+    "store_id": "019d4dd30814_382895550b837951",
+    "alias": "fox",
+    "alias_forms": {
+      "normalized": "fox",
+      "compact": "fox",
+      "tokens": [
+        "fox"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc7d_cce6eefefd84c3e8",
+    "store_id": "019dbe364854_1616e6fa56053413",
+    "alias": "arcosteel",
+    "alias_forms": {
+      "normalized": "arcosteel",
+      "compact": "arcosteel",
+      "tokens": [
+        "arcosteel"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc7e_19b5512dd9f9c422",
+    "store_id": "019d246652be_c51c37e939722bd8",
+    "alias": "Golf",
+    "alias_forms": {
+      "normalized": "golf",
+      "compact": "golf",
+      "tokens": [
+        "golf"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc7f_1107c3b4516bee28",
+    "store_id": "019dbe364845_07f0e57baee4f06d",
+    "alias": "polgat",
+    "alias_forms": {
+      "normalized": "polgat",
+      "compact": "polgat",
+      "tokens": [
+        "polgat"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc80_ff0c028d926cab98",
+    "store_id": "019dbe364854_41c107316454897a",
+    "alias": "betili",
+    "alias_forms": {
+      "normalized": "betili",
+      "compact": "betili",
+      "tokens": [
+        "betili"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc81_9b97201b1b2007d8",
+    "store_id": "019dbe364846_627680b97eca6edf",
+    "alias": "michael kors",
+    "alias_forms": {
+      "normalized": "michael kors",
+      "compact": "michaelkors",
+      "tokens": [
+        "kors",
+        "michael"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc82_7068f676f64fb33f",
+    "store_id": "019d20c3f9e4_87847b1fb98e5c11",
+    "alias": "VN SPORT",
+    "alias_forms": {
+      "normalized": "vn sport",
+      "compact": "vnsport",
+      "tokens": [
+        "sport",
+        "vn"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc83_452e5373e20dae87",
+    "store_id": "019fa4502d24_ea3d8e92b3f7c416",
+    "alias": "artikim tlv",
+    "alias_forms": {
+      "normalized": "artikim tlv",
+      "compact": "artikimtlv",
+      "tokens": [
+        "artikim",
+        "tlv"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc84_a9665b5eb87dd65d",
+    "store_id": "019d4dcd37c8_f85c95a9815a84f9",
+    "alias": "dr gav",
+    "alias_forms": {
+      "normalized": "dr gav",
+      "compact": "drgav",
+      "tokens": [
+        "dr",
+        "gav"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc85_6f34c7491a9d92b9",
+    "store_id": "019dbe364669_d0514941ce76e1b5",
+    "alias": "hacontainer",
+    "alias_forms": {
+      "normalized": "hacontainer",
+      "compact": "hacontainer",
+      "tokens": [
+        "hacontainer"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc86_c54348b1eaede5db",
+    "store_id": "019d4de36536_16b4c98df93014a1",
+    "alias": "sabon",
+    "alias_forms": {
+      "normalized": "sabon",
+      "compact": "sabon",
+      "tokens": [
+        "sabon"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc87_c292f86e61873528",
+    "store_id": "019d4dcb7ccc_5994c9109a057a6e",
+    "alias": "naaman",
+    "alias_forms": {
+      "normalized": "naaman",
+      "compact": "naaman",
+      "tokens": [
+        "naaman"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc88_1c215fdddc059d77",
+    "store_id": "019d4dd59660_f062d0e035302393",
+    "alias": "jacobi",
+    "alias_forms": {
+      "normalized": "jacobi",
+      "compact": "jacobi",
+      "tokens": [
+        "jacobi"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc89_daa17ce2246a5c2b",
+    "store_id": "019fa450229a_20fb817de0105463",
+    "alias": "SCAB",
+    "alias_forms": {
+      "normalized": "scab",
+      "compact": "scab",
+      "tokens": [
+        "scab"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc8a_abc2975753129698",
+    "store_id": "019dbe364889_105996b82c1c895e",
+    "alias": "ARAD",
+    "alias_forms": {
+      "normalized": "arad",
+      "compact": "arad",
+      "tokens": [
+        "arad"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a02923fc8b_685d07ca33b63f80",
+    "store_id": "019dbe364715_f3128f7f1cfd79bf",
+    "alias": "adah lazorgan",
+    "alias_forms": {
+      "normalized": "adah lazorgan",
+      "compact": "adahlazorgan",
+      "tokens": [
+        "adah",
+        "lazorgan"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:03:38.765215+00:00"
+  },
+  {
+    "id": "01a0292ec71d_dcdd367ef37981d2",
+    "store_id": "019d24141a0c_feba6c0a6463b08f",
+    "alias": "platin",
+    "alias_forms": {
+      "normalized": "platin",
+      "compact": "platin",
+      "tokens": [
+        "platin"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:15:26.113695+00:00"
+  },
+  {
+    "id": "01a0292ec71e_a3e560cb63a8008b",
+    "store_id": "019dbe364836_84af81aae345d89c",
+    "alias": "Olympia",
+    "alias_forms": {
+      "normalized": "olympia",
+      "compact": "olympia",
+      "tokens": [
+        "olympia"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:15:26.113695+00:00"
+  },
+  {
+    "id": "01a0292ec71f_bc0e292866b5f5e1",
+    "store_id": "019d21108a74_d0b4935429f4001e",
+    "alias": "VANIGLIA",
+    "alias_forms": {
+      "normalized": "vaniglia",
+      "compact": "vaniglia",
+      "tokens": [
+        "vaniglia"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:15:26.113695+00:00"
+  },
+  {
+    "id": "01a0293475ec_46ea31b49f4949a3",
+    "store_id": "019d24575bbb_2657cf71ddd573bc",
+    "alias": "nimrod",
+    "alias_forms": {
+      "normalized": "nimrod",
+      "compact": "nimrod",
+      "tokens": [
+        "nimrod"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:21:38.399158+00:00"
+  },
+  {
+    "id": "01a0293475ed_adb6dcbb5e091097",
+    "store_id": "019d24689bca_91f43ec89db4a017",
+    "alias": "autodepot",
+    "alias_forms": {
+      "normalized": "autodepot",
+      "compact": "autodepot",
+      "tokens": [
+        "autodepot"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:21:38.399158+00:00"
+  },
+  {
+    "id": "01a0293475ee_661ca8aeeac1fc12",
+    "store_id": "019d4e5b4dd0_b9cbeea64bbbabeb",
+    "alias": "ahava ktana",
+    "alias_forms": {
+      "normalized": "ahava ktana",
+      "compact": "ahavaktana",
+      "tokens": [
+        "ahava",
+        "ktana"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:21:38.399158+00:00"
+  },
+  {
+    "id": "01a0293475ef_a2371e614b7a87ad",
+    "store_id": "019d4dd9d4b6_f78a3794da181fe7",
+    "alias": "intima",
+    "alias_forms": {
+      "normalized": "intima",
+      "compact": "intima",
+      "tokens": [
+        "intima"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:21:38.399158+00:00"
+  },
+  {
+    "id": "01a0293475f0_12807b95b4f43365",
+    "store_id": "019d4dd9d4b6_f78a3794da181fe7",
+    "alias": "intimen",
+    "alias_forms": {
+      "normalized": "intimen",
+      "compact": "intimen",
+      "tokens": [
+        "intimen"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:21:38.399158+00:00"
+  },
+  {
+    "id": "01a0293a28dc_4990de3b485cd976",
+    "store_id": "019dbe364855_d6e9f555bebb0ac4",
+    "alias": "urban",
+    "alias_forms": {
+      "normalized": "urban",
+      "compact": "urban",
+      "tokens": [
+        "urban"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:27:51.802652+00:00"
+  },
+  {
+    "id": "01a0293a28dd_0908bb6c1bc47342",
+    "store_id": "019d2425a9e5_cc36a37bed7ec83e",
+    "alias": "Playground",
+    "alias_forms": {
+      "normalized": "playground",
+      "compact": "playground",
+      "tokens": [
+        "playground"
+      ]
+    },
+    "source": "manual",
+    "created_at": "2026-08-22T11:27:51.802652+00:00"
   }
 ]
