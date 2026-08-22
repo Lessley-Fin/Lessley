@@ -69,3 +69,8 @@ videos/**/.media/
 videos/**/renders/
 *.bak.mp3
 *.bak.*.mp3
+# Loose audio dropped at a project ROOT — source tracks staged by hand while working.
+# Depth-2 only, so everything under videos/<project>/assets/ stays tracked.
+videos/*/*.mp3
+videos/*/*.wav
+videos/*/*.m4a
