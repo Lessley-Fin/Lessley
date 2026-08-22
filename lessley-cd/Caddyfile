@@ -107,7 +107,21 @@
 	# Everything else: the SPA, with history-API fallback so client-side routes reload.
 	handle {
 		root * /srv/frontend
-		header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
+		# img-src names the six hosts the scraping pipeline actually sources deal and
+		# store imagery from; 'self' alone blanked every deal picture (Hot deals, Deal
+		# finder, the deal dialogs) into its emoji fallback, and a blanket `https:`
+		# would hand any injected markup a same-origin-token exfiltration beacon that
+		# connect-src otherwise denies. This list is the twin of ALLOWED_IMAGE_HOSTS in
+		# lessley-deals/src/lessley_deals/enrichment/image_urls.py, which refuses to
+		# store a URL the browser would refuse to load. Change both, or neither.
+		#
+		# report-uri is what keeps the allowlist from failing silently: a new club CDN
+		# reports itself on first sight instead of quietly degrading to emoji until
+		# someone notices. Chrome prefers report-to and ignores report-uri when both are
+		# present; Firefox and Safari only understand report-uri, so both are set and
+		# neither double-reports.
+		header Content-Security-Policy "default-src 'self'; img-src 'self' data: https://cdn.hot.co.il https://pics.k4a.co.il https://www.topcash.co.il https://media.dolcemaster.co.il https://www.mastercard.com https://www.mastercard.co.il; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; report-uri /api/v1/csp-report; report-to csp-endpoint"
+		header Reporting-Endpoints `csp-endpoint="https://{$DOMAIN}/api/v1/csp-report"`
 		try_files {path} /index.html
 		file_server
 	}

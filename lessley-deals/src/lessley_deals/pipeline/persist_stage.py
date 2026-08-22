@@ -19,6 +19,7 @@ from lessley_deals.domain.protocols import (
     ReviewRepository,
 )
 from lessley_deals.enrichment.enrich_store_urls import clean_store_url
+from lessley_deals.enrichment.image_urls import clean_image_url
 from lessley_deals.persistence.id_gen import generate_id
 from lessley_deals.review.actions import build_name_forms
 
@@ -149,7 +150,9 @@ class PersistStage:
             chunk = auto_match_batch[i : i + _BATCH_SIZE]
             for prec, deal in chunk:
                 raw_payload = prec.raw.raw_payload
-                image_url = raw_payload.get("image_url")
+                # Straight from the scraped page, so it is untrusted input on its way to
+                # an <img src> in every user's browser — validate before it is persisted.
+                image_url = clean_image_url(raw_payload.get("image_url"))
                 store_url_candidate = clean_store_url(deal.url)
 
                 if image_url or store_url_candidate:

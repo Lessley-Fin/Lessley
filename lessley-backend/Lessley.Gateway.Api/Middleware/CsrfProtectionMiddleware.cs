@@ -40,6 +40,11 @@ namespace Lessley.Gateway.Api.Middleware
         public static bool IsAnonymousAuthPath(PathString path) =>
             AnonymousAuthPaths.Any(prefix => path.StartsWithSegments(prefix));
 
+        /// <summary>Where the edge CSP sends violation reports. Shared with the rate limiter,
+        /// which gives the path its own partition for the same "the browser sends it, not us"
+        /// reason.</summary>
+        public const string CspReportPath = "/api/csp-report";
+
         public CsrfProtectionMiddleware(RequestDelegate next) => _next = next;
 
         public async Task InvokeAsync(HttpContext context)
@@ -47,8 +52,15 @@ namespace Lessley.Gateway.Api.Middleware
             // SignalR's negotiate is a POST that rides the auth cookie but can't carry our
             // CSRF header; hub invocations travel over the WebSocket (not CSRF-able HTTP),
             // so the /hubs path is exempt.
+            //
+            // CSP violation reports are POSTed by the browser itself, not by the SPA, so they
+            // can carry the session cookie while having no way to read the CSRF cookie or set
+            // the header. Without this exemption every report would 403 and the img-src
+            // allowlist would go back to failing silently. Nothing is at risk: the endpoint
+            // only writes a log line and acts on no identity.
             if (!SafeMethods.Contains(context.Request.Method) &&
                 !context.Request.Path.StartsWithSegments("/hubs") &&
+                !context.Request.Path.StartsWithSegments(CspReportPath) &&
                 !IsAnonymousAuthPath(context.Request.Path) &&
                 !string.IsNullOrEmpty(context.Request.Cookies[AuthCookieNames.Access]))
             {

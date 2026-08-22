@@ -2,6 +2,7 @@ using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Consumers;
 using Lessley.Gateway.Api.Contracts;
 using Lessley.Gateway.Api.Data;
+using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Models;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -144,6 +145,23 @@ namespace Lessley.Gateway.Api.Extensions
                 options.RejectionStatusCode = 429;
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
+                    // CSP violation reports get their own partition. The browser emits one
+                    // per blocked resource per page load, so a policy regression on a page
+                    // full of deal cards would otherwise drain the caller's shared bucket and
+                    // start 429-ing the API calls that actually matter. Capped tighter than
+                    // the general bucket, and never queued — a dropped report costs nothing,
+                    // since the next page view sends it again.
+                    if (httpContext.Request.Path.StartsWithSegments(CsrfProtectionMiddleware.CspReportPath))
+                        return RateLimitPartition.GetFixedWindowLimiter(
+                            $"csp:{httpContext.Connection.RemoteIpAddress}",
+                            _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit       = 10,
+                                Window            = TimeSpan.FromMinutes(1),
+                                QueueLimit        = 0,
+                                AutoReplenishment = true
+                            });
+
                     // Authenticated calls partition by user id; anonymous calls partition by
                     // client IP (real IP via forwarded headers) so one caller can't share or
                     // exhaust a single global bucket.
