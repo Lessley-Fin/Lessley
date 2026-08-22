@@ -208,6 +208,14 @@ export interface PagedDealSearchResult {
   pageSize: number
 }
 
+/**
+ * The hot feed. Already ordered by the gateway — ranked deals first, then the exploration
+ * slice — so the client renders it as it arrives and never re-sorts.
+ */
+export interface HotDealsResult {
+  items: DealSearchResultItem[]
+}
+
 export interface SpendingByDayInsight {
   day: string
   total_amount: number

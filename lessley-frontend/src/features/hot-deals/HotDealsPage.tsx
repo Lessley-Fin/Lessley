@@ -6,22 +6,17 @@ import { DealDetailDialog } from "@/components/shared/DealDetailDialog"
 import { DealResultCard } from "@/components/shared/DealResultCard"
 import { InfoDialog } from "@/components/shared/InfoDialog"
 import { useClubs } from "@/features/clubs/hooks"
-import { useDealSearch } from "@/features/deal-finder/hooks"
+import { useHotDeals } from "@/features/deal-finder/hooks"
 import type { DealSearchResultItem } from "@/lib/types"
 
-// No popularity/search-interest data exists in the backend, so this can't be a real "trending"
-// feed — it's a fixed, broad category slice of real deals, honestly framed as "featured" rather
-// than ranked by interest.
-const FEATURED_CATEGORIES = ["GROCERIES", "RESTAURANT", "ELECTRONICS", "CLOTHES_&_ACCESSORIES", "COFFEE_&_SNACKS", "CAR_&_FUEL"]
+const SURFACE = "hot"
+const HOT_LIMIT = 10
 
 export function HotDealsPage() {
   const { t } = useTranslation()
   const [openItem, setOpenItem] = useState<DealSearchResultItem | null>(null)
   const { data: clubs = [] } = useClubs()
-  const { data, isLoading, error } = useDealSearch(
-    { mccCodes: FEATURED_CATEGORIES, storeText: "", dealText: "", page: 1, pageSize: 10 },
-    true
-  )
+  const { data, isLoading, error } = useHotDeals(HOT_LIMIT)
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -56,12 +51,25 @@ export function HotDealsPage() {
           </p>
         ) : (
           data?.items.map((item, index) => (
-            <DealResultCard key={item.deal.dealId} item={item} clubs={clubs} rank={index + 1} onOpen={setOpenItem} />
+            <DealResultCard
+              key={item.deal.dealId}
+              item={item}
+              clubs={clubs}
+              rank={index + 1}
+              surface={SURFACE}
+              position={index}
+              onOpen={setOpenItem}
+            />
           ))
         )}
       </div>
 
-      <DealDetailDialog item={openItem} clubs={clubs} onOpenChange={(open) => !open && setOpenItem(null)} />
+      <DealDetailDialog
+        item={openItem}
+        clubs={clubs}
+        surface={SURFACE}
+        onOpenChange={(open) => !open && setOpenItem(null)}
+      />
     </div>
   )
 }

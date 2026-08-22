@@ -107,6 +107,8 @@ builder.Services.AddSingleton<IMongoClient>(_ =>
     new MongoClient(builder.Configuration.GetConnectionString("MongoDb")));
 builder.Services.AddScoped<IDealFinderRepository, DealFinderRepository>();
 builder.Services.AddScoped<IDealFinderService, DealFinderService>();
+builder.Services.AddScoped<IInterestRepository, InterestRepository>();
+builder.Services.AddScoped<IInterestService, InterestService>();
 builder.Services.AddScoped<IMccRepository, MccRepository>();
 builder.Services.AddScoped<IClubRepository, ClubRepository>();
 

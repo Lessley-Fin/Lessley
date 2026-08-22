@@ -446,15 +446,15 @@
   },
   "dealFinder": {
     "hotDeals": {
-      "title": "Featured deals",
-      "subtitle": "Real deals across your loyalty clubs, refreshed regularly",
+      "title": "Hot deals",
+      "subtitle": "What other members are opening, copying and claiming right now",
       "loading": "Loading deals…",
       "loadFailed": "Failed to load deals.",
-      "empty": "No featured deals right now — check back soon.",
+      "empty": "No hot deals right now — check back soon.",
       "infoDialog": {
         "ariaLabel": "What is this list?",
-        "title": "What makes a deal \"featured\"?",
-        "body": "This isn't a popularity ranking — we don't track what's trending. It's a curated selection of real deals across popular categories like groceries, dining, and electronics."
+        "title": "What makes a deal \"hot\"?",
+        "body": "Deals are ranked by how many members opened, copied or claimed them after seeing them — counted once per person, and weighted toward the last few weeks. A few slots are always kept for deals we have barely shown yet, so newcomers get a fair chance to surface."
       }
     },
     "tab": {

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Check, Loader2, Search, Store } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input"
 import { useClubs } from "@/features/clubs/hooks"
 import type { DealSearchParams } from "@/features/deal-finder/api"
 import { useDealSearch, useMccCategories } from "@/features/deal-finder/hooks"
+import { track } from "@/features/interest/tracker"
 import { formatCategoryLabel } from "@/lib/constants"
 import type { DealSearchResultItem, StoreDocument } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { useStoreSearch } from "../hooks"
 
 const PAGE_SIZE = 10
+const SURFACE = "deal_finder"
 
 export function DealFinderTab() {
   const { t } = useTranslation()
@@ -41,6 +43,19 @@ export function DealFinderTab() {
     ? { ...submittedParams, page, pageSize: PAGE_SIZE }
     : { mccCodes: [], storeText: "", dealText: "", page: 1, pageSize: PAGE_SIZE }
   const { data, isLoading, error } = useDealSearch(queryParams, enabled)
+
+  // A store surfacing in a result set is weaker evidence than a click, but it is evidence:
+  // it is what the user asked for by name or category. Keyed on the page of results rather
+  // than on render — this component re-renders on every keystroke in three inputs.
+  useEffect(() => {
+    if (!data) return
+    const seen = new Set<string>()
+    for (const item of data.items) {
+      if (seen.has(item.store.storeId)) continue
+      seen.add(item.store.storeId)
+      track("store", item.store.storeId, "search_hit", { surface: SURFACE })
+    }
+  }, [data])
 
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0
   const filteredCategoryChips = mccCategories.filter((mc) =>
@@ -166,7 +181,16 @@ export function DealFinderTab() {
             {t("dealFinder.tab.noMatches")}
           </p>
         ) : (
-          data?.items.map((item) => <DealResultCard key={item.deal.dealId} item={item} clubs={clubs} onOpen={setOpenItem} />)
+          data?.items.map((item, index) => (
+            <DealResultCard
+              key={item.deal.dealId}
+              item={item}
+              clubs={clubs}
+              surface={SURFACE}
+              position={(page - 1) * PAGE_SIZE + index}
+              onOpen={setOpenItem}
+            />
+          ))
         )}
 
         {totalPages > 1 ? (
@@ -198,7 +222,12 @@ export function DealFinderTab() {
         ) : null}
       </div>
 
-      <DealDetailDialog item={openItem} clubs={clubs} onOpenChange={(open) => !open && setOpenItem(null)} />
+      <DealDetailDialog
+        item={openItem}
+        clubs={clubs}
+        surface={SURFACE}
+        onOpenChange={(open) => !open && setOpenItem(null)}
+      />
     </>
   )
 }

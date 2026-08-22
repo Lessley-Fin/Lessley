@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import { DealTerms } from "@/components/shared/DealTerms"
 import { DiscountBadge } from "@/components/shared/DiscountBadge"
+import { track } from "@/features/interest/tracker"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -22,10 +23,12 @@ import { getClubName } from "@/lib/utils"
 interface DealDetailDialogProps {
   item: DealSearchResultItem | null
   clubs: ClubDto[]
+  /** Which screen opened the dialog — recorded with the events it produces. */
+  surface?: string
   onOpenChange: (open: boolean) => void
 }
 
-export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialogProps) {
+export function DealDetailDialog({ item, clubs, surface, onOpenChange }: DealDetailDialogProps) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
@@ -33,6 +36,18 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
     void navigator.clipboard.writeText(code)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 2000)
+    if (item) {
+      track("deal", item.deal.dealId, "coupon_copy", { surface })
+      track("store", item.store.storeId, "coupon_copy", { surface })
+    }
+  }
+
+  // No preventDefault: the link navigates as it always did. The event is buffered, and the
+  // tracker flushes on visibilitychange — which a new tab or a navigation away both fire.
+  function handleRedirect() {
+    if (!item) return
+    track("deal", item.deal.dealId, "redirect", { surface })
+    track("store", item.store.storeId, "redirect", { surface })
   }
 
   const category = item?.store.metadata.mccCodes[0]
@@ -122,7 +137,12 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
             <DialogFooter>
               {item.deal.benefitUrl ? (
                 <Button asChild variant="hero" size="xl">
-                  <a href={item.deal.benefitUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={item.deal.benefitUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleRedirect}
+                  >
                     {t("dealFinder.detailDialog.getThisDeal")}
                   </a>
                 </Button>

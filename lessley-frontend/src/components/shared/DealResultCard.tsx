@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next"
 
 import { DealImage } from "@/components/shared/DealImage"
 import { DiscountBadge } from "@/components/shared/DiscountBadge"
+import { track } from "@/features/interest/tracker"
+import { useImpression } from "@/features/interest/useImpression"
 import { emojiForCategory, formatCategoryLabel } from "@/lib/constants"
 import { formatAmount, formatDate } from "@/lib/formatters"
 import type { ClubDto, DealSearchResultItem } from "@/lib/types"
@@ -12,18 +14,30 @@ interface DealResultCardProps {
   item: DealSearchResultItem
   clubs: ClubDto[]
   rank?: number
+  /** Which screen this card is on — recorded with every event it produces. */
+  surface?: string
+  /** 0-based rank in the list. Recorded so position debiasing can be added without a backfill. */
+  position?: number
   onOpen: (item: DealSearchResultItem) => void
 }
 
-export function DealResultCard({ item, clubs, rank, onOpen }: DealResultCardProps) {
+export function DealResultCard({ item, clubs, rank, surface, position, onOpen }: DealResultCardProps) {
   const { t } = useTranslation()
   const { deal, store } = item
   const category = store.metadata.mccCodes[0]
+  const impressionRef = useImpression<HTMLButtonElement>("deal", deal.dealId, { surface, position })
+
+  function handleOpen() {
+    track("deal", deal.dealId, "open", { surface, position })
+    track("store", store.storeId, "open", { surface, position })
+    onOpen(item)
+  }
 
   return (
     <button
+      ref={impressionRef}
       type="button"
-      onClick={() => onOpen(item)}
+      onClick={handleOpen}
       className="w-full overflow-hidden rounded-3xl bg-card text-start shadow-[var(--shadow-card)] transition-transform active:scale-[0.99]"
     >
       {/* Scraped imagery is almost always a wide store logo, so it is contained

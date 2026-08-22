@@ -7,6 +7,9 @@ public static class MongoIndexInitializer
 {
     private static readonly TimeSpan Ttl = TimeSpan.FromDays(90);
 
+    /// <summary>Retention for raw engagement events — the 30-day scoring window plus slack.</summary>
+    private static readonly TimeSpan InterestEventTtl = TimeSpan.FromDays(40);
+
     public static async Task CreateIndexesAsync(string connectionString, string databaseName)
     {
         var client = new MongoClient(connectionString);
@@ -18,6 +21,65 @@ public static class MongoIndexInitializer
         await CreateRefreshTokenIndexesAsync(db);
         await CreatePendingRegistrationIndexesAsync(db);
         await CreateVerificationCodeIndexesAsync(db);
+        await CreateInterestIndexesAsync(db);
+    }
+
+    private static async Task CreateInterestIndexesAsync(IMongoDatabase db)
+    {
+        var events = db.GetCollection<BsonDocument>("interest_events");
+        var stats  = db.GetCollection<BsonDocument>("entity_stats");
+        var gaps   = db.GetCollection<BsonDocument>("search_gaps");
+
+        // Idempotent ingest: the client retries a flush it could not confirm, and this is what
+        // makes the retry cost nothing. Without it a flaky connection inflates the ranking.
+        await events.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("event_id"),
+            new CreateIndexOptions { Name = "uq_interest_event_id", Unique = true }
+        ));
+
+        // TTL doubling as the retention policy: raw events exist only to be collapsed by the
+        // rollup, so one past the scoring window has no remaining purpose. Slightly longer
+        // than the 30-day window so a missed run still has a full window to score.
+        await events.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("ts"),
+            new CreateIndexOptions { ExpireAfter = InterestEventTtl, Name = "ttl_interest_event_ts" }
+        ));
+
+        // The rollup's $match/$group path.
+        await events.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("entity_type").Ascending("entity_id").Ascending("ts"),
+            new CreateIndexOptions { Name = "idx_interest_entity_ts" }
+        ));
+
+        // Per-user history — supports a subject-access export or deletion without a scan.
+        await events.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("user_id").Ascending("ts"),
+            new CreateIndexOptions { Name = "idx_interest_user_ts" }
+        ));
+
+        // The hot endpoint's read: top N by score for one entity type.
+        await stats.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("entity_type").Descending("hot_score"),
+            new CreateIndexOptions { Name = "idx_entity_stats_type_score" }
+        ));
+
+        // One row per entity — the rollup upserts against this key.
+        await stats.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("entity_type").Ascending("entity_id"),
+            new CreateIndexOptions { Name = "uq_entity_stats_type_id", Unique = true }
+        ));
+
+        // One row per normalized query, so the upsert counts rather than duplicates.
+        await gaps.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("query_norm"),
+            new CreateIndexOptions { Name = "uq_search_gap_query", Unique = true }
+        ));
+
+        // Read path: what users want most that the catalog does not carry.
+        await gaps.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Descending("hits"),
+            new CreateIndexOptions { Name = "idx_search_gap_hits" }
+        ));
     }
 
     private static async Task CreatePendingRegistrationIndexesAsync(IMongoDatabase db)

@@ -36,6 +36,22 @@ public class DealFinderController : ControllerBase
         };
     }
 
+    /// <summary>Returns deals ranked by user interest, with a reserved slice of under-observed deals.</summary>
+    /// <param name="limit">How many deals to return (1–50).</param>
+    [HttpGet("hot")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetHot([FromQuery] int limit = 10, CancellationToken ct = default)
+    {
+        var result = await _dealFinderService.GetHotAsync(limit, ct);
+
+        return result switch
+        {
+            UserOperationResult.Success s => Ok(s.Payload),
+            _                             => throw new InvalidOperationException("Unknown result"),
+        };
+    }
+
     /// <summary>Searches deals by MCC categories, store name fragment, or deal text. At least one filter is required.</summary>
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
