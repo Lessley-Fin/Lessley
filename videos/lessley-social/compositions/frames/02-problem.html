@@ -1,0 +1,324 @@
+<template>
+  <style>
+        /* ── faces: self-embedded, both subsets. The Latin subset carries the DIGITS,
+              so dropping it would break every ₪ figure in the film. ──────────────── */
+        @font-face{font-family:"Heebo";font-style:normal;font-weight:400;font-display:block;src:url("assets/fonts/heebo-400-hebrew.woff2") format("woff2");unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+        @font-face{font-family:"Heebo";font-style:normal;font-weight:400;font-display:block;src:url("assets/fonts/heebo-400-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;}
+        @font-face{font-family:"Heebo";font-style:normal;font-weight:600;font-display:block;src:url("assets/fonts/heebo-600-hebrew.woff2") format("woff2");unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+        @font-face{font-family:"Heebo";font-style:normal;font-weight:600;font-display:block;src:url("assets/fonts/heebo-600-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;}
+        @font-face{font-family:"Heebo";font-style:normal;font-weight:800;font-display:block;src:url("assets/fonts/heebo-800-hebrew.woff2") format("woff2");unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+        @font-face{font-family:"Heebo";font-style:normal;font-weight:800;font-display:block;src:url("assets/fonts/heebo-800-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;}
+        @font-face{font-family:"Frank Ruhl Libre";font-style:normal;font-weight:700;font-display:block;src:url("assets/fonts/frank-ruhl-libre-700-hebrew.woff2") format("woff2");unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+        @font-face{font-family:"Frank Ruhl Libre";font-style:normal;font-weight:700;font-display:block;src:url("assets/fonts/frank-ruhl-libre-700-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;}
+
+        /* ── tokens — copied from frame.md, never re-tinted ───────────────────── */
+        #root {
+          --bg: #f1f6f8;
+          --ink: #182734;
+          --muted: #687682;
+          --primary: #397c7f;
+          --accent-light: rgba(57,124,127,0.08);
+          --accent-med: rgba(57,124,127,0.15);
+          --brd: rgba(57,124,127,0.2);
+          --card-bg: rgba(57,124,127,0.04);
+          --mint: #d1f0ef;
+          --mint-ink: #17544f;
+          /* RATIONED — frames 01, 07, 13 only. --payoff is a FILL (dark ink rides on
+             it); --payoff-ink is the same gold darkened for LARGE TEXT on cream, where
+             the fill value only reaches 1.9:1. Contrast is a gate, not a preference. */
+          --payoff: #f1a446;
+          --payoff-ink: #a86a15;
+          /* the second ground */
+          --dark: #1d2c3a;
+          --dark-ink: #f1f6f8;
+          --dark-muted: #a0adb6;
+          --dark-surface: #24384a;
+
+          position: relative;
+          width: 1080px;
+          height: 1920px;
+          overflow: hidden;
+          /* RTL lives here, at container level. NEVER dir="rtl" on <html> — it renders
+             the whole video black (confirmed failure in the sibling demo project). */
+          direction: rtl;
+          text-align: right;
+          font-family: "Heebo", sans-serif;
+          font-synthesis: none;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        /* Full-bleed grounds ride on a clip layer, never on #root — the frame root is
+           clip-gated to its scene window, so a background on it is not a dependable ground. */
+        .ground { position: absolute; inset: 0; }
+        .g-cream { background: var(--bg); }
+        .g-dark  { background: var(--dark); }
+
+        /* the content region: top 83%, side-safe */
+        .stage {
+          position: absolute;
+          left: 72px; right: 72px; top: 120px;
+          bottom: 326px;
+        }
+
+        /* ── type ramp ────────────────────────────────────────────────────────── */
+        .h1 { font-family: "Frank Ruhl Libre", serif; font-weight: 700; font-size: 104px;
+              line-height: 1.06; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+        .h2 { font-family: "Frank Ruhl Libre", serif; font-weight: 700; font-size: 78px;
+              line-height: 1.12; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+        .body { font-family: "Heebo", sans-serif; font-weight: 400; font-size: 40px;
+                line-height: 1.5; color: var(--muted); margin: 0; }
+        .label { font-family: "Heebo", sans-serif; font-weight: 600; font-size: 26px;
+                 letter-spacing: 0.06em; color: var(--muted); margin: 0; }
+        .fig { font-family: "Heebo", sans-serif; font-weight: 800; font-variant-numeric: tabular-nums;
+               line-height: 1; color: var(--ink); display: inline-block; transform-origin: center center; }
+        .on-dark .h1, .on-dark .h2 { color: var(--dark-ink); }
+        .on-dark .body, .on-dark .label { color: var(--dark-muted); }
+
+
+        /* ── THE RAMP — every frame draws from these. No per-frame font sizes. ──── */
+        /* d1: the frame's single headline. d2: a quieter second display line.
+           impact: the one-word slam (frame 2 only). Figures have four fixed steps. */
+        .d1 { font-family: "Frank Ruhl Libre", serif; font-weight: 700; font-size: 88px;
+              line-height: 1.14; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+        .d2 { font-family: "Frank Ruhl Libre", serif; font-weight: 700; font-size: 64px;
+              line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+        .impact { font-family: "Frank Ruhl Libre", serif; font-weight: 700; font-size: 128px;
+                  line-height: 1; letter-spacing: -0.03em; margin: 0; }
+        .on-dark .d1, .on-dark .d2, .on-dark .impact { color: var(--dark-ink); }
+        .sup { font-family: "Heebo", sans-serif; font-weight: 400; font-size: 40px;
+               line-height: 1.5; color: var(--muted); margin: 0; }
+        .on-dark .sup { color: var(--dark-muted); }
+        .fig-hero   { font-size: 230px; letter-spacing: -0.03em; }
+        .fig-payoff { font-size: 168px; }
+        .fig-card   { font-size: 112px; }
+        .fig-stat   { font-size: 58px; }
+
+        /* Headline BANDS. Adjacent frames always sit on alternating tracks, so giving
+           odd and even frames different bands means two headlines can never occupy the
+           same line during a dissolve — which is what read as overlapping text. */
+        .band-a { position: absolute; top: 130px; left: 0; right: 0; }
+        .band-b { position: absolute; top: 300px; left: 0; right: 0; }
+
+        /* Every figure is bidi-isolated so ₪700 can never render as 700₪. */
+        .num { unicode-bidi: isolate; direction: ltr; display: inline-block; }
+        /* Latin runs (brand names, the URL) inside Hebrew copy */
+        .ltr { unicode-bidi: isolate; direction: ltr; display: inline-block; }
+
+        /* per-word reveal: words are their own boxes so each can carry a tween */
+        .words { display: flex; flex-wrap: wrap; gap: 0 0.28em; justify-content: flex-start; }
+        .words > span { display: inline-block; will-change: transform, opacity; }
+
+        /* marker sweep — grows from the RIGHT (RTL) and sits behind the word */
+        .mark { position: relative; display: inline-block; }
+        .mark > .mark-ink { position: relative; z-index: 1; }
+        .mark > .mark-bar {
+          position: absolute; z-index: 0; right: -0.08em; left: -0.08em;
+          bottom: 0.04em; height: 0.42em; border-radius: 0.06em;
+          background: var(--accent-med); transform-origin: right center;
+        }
+        .on-dark .mark > .mark-bar { background: rgba(57,124,127,0.55); }
+
+        /* pills / chips / cards */
+        .pill { display: inline-flex; align-items: center; gap: 14px; border-radius: 100px;
+                padding: 18px 36px; font-family: "Heebo", sans-serif; font-weight: 600; font-size: 32px; }
+        .pill-teal { background: var(--primary); color: #fff; }
+        .pill-mint { background: var(--mint); color: var(--mint-ink); }
+        .pill-gold { background: var(--payoff); color: #3a2408; }
+        .card { background: #fff; border-radius: 34px; border: 1.5px solid var(--brd); }
+        .card-tint { background: var(--card-bg); border: 1.5px solid var(--brd); border-radius: 34px; }
+        .card-dark { background: var(--dark-surface); border-radius: 34px;
+                     border: 1.5px solid rgba(241,246,248,0.12); }
+        .chip { display: flex; align-items: center; justify-content: center;
+                background: #fff; border-radius: 26px; overflow: hidden;
+                box-shadow: 0 10px 30px rgba(12,22,32,0.28); }
+        .chip img { width: 100%; height: 100%; object-fit: contain; padding: 12px; box-sizing: border-box; }
+
+        /* the carried device — one size for the whole film; it never rescales */
+        .device { position: absolute; width: 500px; height: 1084px; border-radius: 66px;
+                  padding: 10px; box-sizing: border-box; background: #2a3038;
+                  box-shadow: 0 40px 90px rgba(8,16,24,0.55); }
+        .device-rim { position: absolute; inset: 0; border-radius: 66px;
+                      border: 2px solid #9aa3ab; pointer-events: none; }
+        .device-screen { position: relative; width: 100%; height: 100%; border-radius: 56px;
+                         overflow: hidden; background: #f1f6f8; }
+        .island { position: absolute; top: 12px; left: 50%; margin-left: -68px; width: 136px;
+                  height: 40px; border-radius: 20px; background: #14181c; z-index: 5; }
+
+        /* oversized house cursor — enters from off-frame, never an OS cursor */
+        .cursor { position: absolute; width: 76px; height: 76px; z-index: 40; }
+
+
+        /* ── frame-local ── */
+
+        #f2-field { position: absolute; inset: 0; z-index: 1; }
+        .chipwrap { position: absolute; }
+        .name-chip { font-family: "Heebo", sans-serif; font-weight: 800; font-size: 34px;
+                     color: var(--dark); background: #fff; }
+        .zero { position: absolute; bottom: -14px; right: -10px; background: var(--dark-surface);
+                color: var(--dark-muted); border: 1.5px solid rgba(241,246,248,0.14);
+                border-radius: 100px; padding: 6px 18px; font-family: "Heebo", sans-serif;
+                font-weight: 800; font-size: 26px; unicode-bidi: isolate; direction: ltr; }
+        .line1 { justify-content: center; z-index: 6; text-shadow: 0 6px 26px rgba(12,20,28,0.98),
+                 0 2px 10px rgba(12,20,28,0.95); }
+        .line2 { position: absolute; top: 470px; left: 0; right: 0; text-align: center; z-index: 6;
+                 color: var(--primary); text-shadow: 0 6px 30px rgba(12,20,28,0.9); }
+
+  </style>
+
+  <div id="root" data-composition-id="02-problem" data-width="1080" data-height="1920" data-duration="5.34">
+
+    <div id="f2-bg" class="ground g-dark clip" data-start="0" data-duration="5.34" data-track-index="0"></div>
+
+    <div id="f2-scene" class="clip stage on-dark" data-start="0" data-duration="5.34" data-track-index="1">
+      <div id="f2-field" data-layout-allow-overlap><div class="chipwrap" id="f2-c0" style="left:92px;top:150px;width:210px;height:210px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/mastercard_logo.jpg" alt="" /></div><span class="zero" id="f2-z0">₪0</span></div><div class="chipwrap" id="f2-c1" style="left:640px;top:96px;width:176px;height:176px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/topcash_logo.png" alt="" /></div><span class="zero" id="f2-z1">₪0</span></div><div class="chipwrap" id="f2-c2" style="left:330px;top:372px;width:186px;height:186px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/hever_giftcard_logo.jpg" alt="" /></div><span class="zero" id="f2-z2">₪0</span></div><div class="chipwrap" id="f2-c3" style="left:726px;top:430px;width:168px;height:168px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/paisplus_logo.jpg" alt="" /></div><span class="zero" id="f2-z3">₪0</span></div><div class="chipwrap" id="f2-c4" style="left:108px;top:610px;width:172px;height:172px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/hot_logo.png" alt="" /></div><span class="zero" id="f2-z4">₪0</span></div><div class="chipwrap" id="f2-c5" style="left:560px;top:700px;width:190px;height:190px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/hever_teamim_logo.jpg" alt="" /></div><span class="zero" id="f2-z5">₪0</span></div><div class="chipwrap" id="f2-c6" style="left:830px;top:806px;width:160px;height:160px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/paisplus_food_chains_logo.png" alt="" /></div><span class="zero" id="f2-z6">₪0</span></div><div class="chipwrap" id="f2-c7" style="left:236px;top:900px;width:176px;height:176px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/swish_logo.png" alt="" /></div><span class="zero" id="f2-z7">₪0</span></div><div class="chipwrap" id="f2-c8" style="left:610px;top:1024px;width:168px;height:168px;"><div class="chip" style="width:100%;height:100%;"><img src="assets/paisplus_networks_logo.jpg" alt="" /></div><span class="zero" id="f2-z8">₪0</span></div><div class="chipwrap" id="f2-c9" style="left:300px;top:1180px;width:200px;height:172px;"><div class="chip name-chip" style="width:100%;height:100%;">בהצדעה</div><span class="zero" id="f2-z9">₪0</span></div></div>
+      <div id="f2-l1" class="words line1 d1 band-b"><span>עשרה</span><span>מועדונים.</span></div>
+      <div id="f2-l2" class="line2 impact">אפס מעקב.</div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+
+          var ID = "02-problem";
+          var ROOT = document.querySelector('[data-composition-id="' + ID + '"]') || document;
+          function el(id) { return ROOT.querySelector('[id="' + id + '"]'); }
+          function all(sel) { return Array.prototype.slice.call(ROOT.querySelectorAll(sel)); }
+
+          window.__timelines = window.__timelines || {};
+          var tl = gsap.timeline({ paused: true });
+          window.__timelines[ID] = tl;
+
+          /* ── helpers — each reproduces a rule recipe from this frame's packet ──── */
+
+          // dynamic-content-sequencing: binary opacity + a rise from below. Two fromTo
+          // tweens at the same position keep the arrival crisp AND seek-safe.
+          function rise(t, at, dur, off) {
+            if (!t) return;
+            tl.fromTo(t, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, at);
+            tl.fromTo(t, { y: off === undefined ? 34 : off },
+                         { y: 0, duration: dur === undefined ? 0.5 : dur, ease: "power4.out" }, at);
+          }
+          // per-word staggered reveal, RTL: DOM order === right-to-left order in an RTL flow,
+          // so a plain forward stagger already fires right → left.
+          function words(sel, at, step, dur, off) {
+            var ws = all(sel);
+            for (var i = 0; i < ws.length; i++) {
+              rise(ws[i], at + i * (step === undefined ? 0.075 : step), dur, off);
+            }
+            return at + ws.length * (step === undefined ? 0.075 : step);
+          }
+          // spring-pop-entrance, SMOOTH-SETTLE register: power3.out, no overshoot.
+          // The doctrine bans back/elastic/bounce as a default; this is the house entrance.
+          function pop(t, at, dur, from) {
+            if (!t) return;
+            var s = from === undefined ? 0.88 : from;
+            tl.fromTo(t, { opacity: 0, scale: s }, { opacity: 1, scale: 1,
+              duration: dur === undefined ? 0.52 : dur, ease: "power3.out" }, at);
+          }
+          function fade(t, at, dur, to) {
+            if (!t) return;
+            tl.fromTo(t, { opacity: 0 }, { opacity: to === undefined ? 1 : to,
+              duration: dur === undefined ? 0.5 : dur, ease: "power2.out" }, at);
+          }
+          // counting-dynamic-scale: value tween + a transform-scale growth sharing one
+          // ease. font-size stays static CSS; only the transform changes per frame.
+          function countTo(t, target, at, dur, startScale, fmt) {
+            if (!t) return;
+            var state = { v: 0 };
+            tl.to(state, { v: target, duration: dur, ease: "power3.out",
+              onUpdate: function () {
+                t.textContent = fmt ? fmt(Math.round(state.v)) : Math.round(state.v).toLocaleString("en-US");
+              } }, at);
+            tl.fromTo(t, { scale: startScale === undefined ? 0.55 : startScale },
+                         { scale: 1, duration: dur, ease: "power3.out" }, at);
+          }
+          // counting down — same recipe, non-zero start.
+          function countFrom(t, from, target, at, dur, fmt) {
+            if (!t) return;
+            var state = { v: from };
+            tl.to(state, { v: target, duration: dur, ease: "power3.out",
+              onUpdate: function () {
+                t.textContent = fmt ? fmt(Math.round(state.v)) : Math.round(state.v).toLocaleString("en-US");
+              } }, at);
+          }
+          // css-marker-patterns: the highlight sweep, drawn RIGHT → LEFT (RTL).
+          function sweep(t, at, dur) {
+            if (!t) return;
+            tl.fromTo(t, { scaleX: 0 }, { scaleX: 1,
+              duration: dur === undefined ? 0.42 : dur, ease: "power2.inOut" }, at);
+          }
+          // svg-path-draw: stroke-dashoffset → 0.
+          function draw(t, at, dur) {
+            if (!t) return;
+            var len = 0;
+            try { len = t.getTotalLength(); } catch (e) { len = 400; }
+            if (!len) len = 400;
+            tl.set(t, { strokeDasharray: len, strokeDashoffset: len }, 0);
+            tl.fromTo(t, { strokeDashoffset: len }, { strokeDashoffset: 0,
+              duration: dur === undefined ? 0.5 : dur, ease: "power2.out" }, at);
+          }
+          // sine-wave-loop, LOW-AMPLITUDE register: the only sanctioned aliveness during a
+          // hold. A finite tween chain over the hold — never repeat/yoyo (seek would break).
+          function jitter(t, at, span) {
+            if (!t) return;
+            var steps = Math.max(2, Math.round(span / 0.42));
+            for (var i = 0; i < steps; i++) {
+              tl.to(t, { y: (i % 2 === 0 ? -1.6 : 1.6), duration: span / steps, ease: "sine.inOut" },
+                    at + i * (span / steps));
+            }
+          }
+          // stat-bars-and-fills: the fill grows from the RIGHT edge (RTL).
+          function fill(t, at, dur, to) {
+            if (!t) return;
+            tl.fromTo(t, { scaleX: 0 }, { scaleX: to === undefined ? 1 : to,
+              duration: dur === undefined ? 0.9 : dur, ease: "power3.out" }, at);
+          }
+          // discrete-text-sequence: a hard cut, no fade — the swap itself is the beat.
+          function hardcut(t, at) {
+            if (!t) return;
+            tl.fromTo(t, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, at);
+          }
+          function hardhide(t, at) {
+            if (!t) return;
+            tl.to(t, { opacity: 0, duration: 0.001, ease: "none" }, at);
+          }
+
+
+          /* Scene 1 (0.0–1.4s) — three chips arrive from the right edge, right→left stagger. */
+          var order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+          var cx = 468, cy = 940;   /* convergence sits BELOW the type band, not through it */
+          for (var i = 0; i < order.length; i++) {
+            var c = el("f2-c" + order[i]);
+            if (!c) continue;
+            var at = (i < 3) ? (0.10 + i * 0.22) : (1.42 + (i - 3) * 0.17);
+            tl.fromTo(c, { opacity: 0, x: 300 + i * 26, y: -40 + (i % 3) * 34, scale: 0.86 },
+                         { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.62, ease: "power3.out" }, at);
+            /* depth: chips further down the stagger sit back, slightly blurred */
+            if (i % 3 === 2) tl.set(c, { filter: "blur(3px)", opacity: 0.82 }, 0);
+          }
+
+          /* Scene 2 (1.4–2.8s) — the line reads THROUGH the crowd as it keeps arriving. */
+          words("#f2-l1 > span", 1.46, 0.10, 0.46, 30);
+
+          /* Scene 3 (2.8–4.2s) — every ₪0 stamp flips on, then the field closes IN on center
+             (the inverse of center-outward-expansion). */
+          for (var z = 0; z < 10; z++) { pop(el("f2-z" + z), 2.82 + z * 0.045, 0.3, 0.7); }
+          for (var k = 0; k < order.length; k++) {
+            var ch = el("f2-c" + order[k]);
+            if (!ch) continue;
+            var r = ch.getBoundingClientRect ? null : null;
+            var lx = parseFloat(ch.style.left) + parseFloat(ch.style.width) / 2;
+            var ly = parseFloat(ch.style.top) + parseFloat(ch.style.height) / 2;
+            tl.to(ch, { x: (cx - lx) * 0.40, y: (cy - ly) * 0.40, duration: 1.05,
+                        ease: "power2.inOut" }, 3.16 + (k % 4) * 0.03);
+          }
+
+          /* Scene 4 (4.2–5.0s) — one hard word slams dead-center on the peak of the crowding. */
+          tl.fromTo(el("f2-l2"), { opacity: 0, scale: 1.24 },
+                    { opacity: 1, scale: 1, duration: 0.34, ease: "power4.out" }, 4.20);
+          tl.to(el("f2-l1"), { opacity: 0.28, duration: 0.3, ease: "power2.out" }, 4.20);
+
+    })();
+  </script>
+</template>

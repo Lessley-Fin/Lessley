@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #f1f6f8;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-is33" id="root" data-composition-id="main" data-start="0" data-duration="76" data-width="1080" data-height="1920">
+      <div data-hf-id="hf-vb67" id="el-01-hook" class="scene" data-composition-id="01-hook" data-composition-src="compositions/frames/01-hook.html" data-start="0" data-duration="6.32" data-track-index="0"></div>
+
+      <div data-hf-id="hf-wq1m" id="el-02-problem" class="scene" data-composition-id="02-problem" data-composition-src="compositions/frames/02-problem.html" data-start="6" data-duration="5.34" data-track-index="1"></div>
+
+      <div data-hf-id="hf-rwo4" id="el-03-open-banking" class="scene" data-composition-id="03-open-banking" data-composition-src="compositions/frames/03-open-banking.html" data-start="11" data-duration="6.28" data-track-index="0"></div>
+
+      <div data-hf-id="hf-3zsd" id="el-04-read-only" class="scene" data-composition-id="04-read-only" data-composition-src="compositions/frames/04-read-only.html" data-start="17" data-duration="6.32" data-track-index="1"></div>
+
+      <div data-hf-id="hf-p226" id="el-05-optimizer-input" class="scene" data-composition-id="05-optimizer-input" data-composition-src="compositions/frames/05-optimizer-input.html" data-start="23" data-duration="5.32" data-track-index="0"></div>
+
+      <div data-hf-id="hf-caqe" id="el-06-the-engine" class="scene" data-composition-id="06-the-engine" data-composition-src="compositions/frames/06-the-engine.html" data-start="28" data-duration="8.32" data-track-index="1"></div>
+
+      <div data-hf-id="hf-leji" id="el-07-payoff" class="scene" data-composition-id="07-payoff" data-composition-src="compositions/frames/07-payoff.html" data-start="36" data-duration="7.28" data-track-index="0"></div>
+
+      <div data-hf-id="hf-8g4c" id="el-08-how-it-stacks" class="scene" data-composition-id="08-how-it-stacks" data-composition-src="compositions/frames/08-how-it-stacks.html" data-start="43" data-duration="5.34" data-track-index="1"></div>
+
+      <div data-hf-id="hf-9tya" id="el-09-deal-finder" class="scene" data-composition-id="09-deal-finder" data-composition-src="compositions/frames/09-deal-finder.html" data-start="48" data-duration="5.32" data-track-index="0"></div>
+
+      <div data-hf-id="hf-pt7t" id="el-10-insights" class="scene" data-composition-id="10-insights" data-composition-src="compositions/frames/10-insights.html" data-start="53" data-duration="6.28" data-track-index="1"></div>
+
+      <div data-hf-id="hf-5snx" id="el-11-recommendations" class="scene" data-composition-id="11-recommendations" data-composition-src="compositions/frames/11-recommendations.html" data-start="59" data-duration="6.32" data-track-index="0"></div>
+
+      <div data-hf-id="hf-8u3r" id="el-12-notifications" class="scene" data-composition-id="12-notifications" data-composition-src="compositions/frames/12-notifications.html" data-start="65" data-duration="5.34" data-track-index="1"></div>
+
+      <div data-hf-id="hf-r9zp" id="el-13-cta" class="scene" data-composition-id="13-cta" data-composition-src="compositions/frames/13-cta.html" data-start="70" data-duration="6" data-track-index="0"></div>
+
+      <!-- BGM -->
+      <audio data-hf-id="hf-ydl8" id="el-bgm" src="assets/music/bed-76s.mp3" data-start="0" data-duration="76" data-track-index="11" data-volume="0.22"></audio>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+      // ── frame transitions (injected by transitions.mjs) ──
+      (function () { var tl = window.__timelines["main"];
+        tl.to("#el-01-hook", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.32, ease: "power2.inOut" }, 6);
+        tl.fromTo("#el-02-problem", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.32, ease: "power2.inOut" }, 6);
+        tl.to("#el-02-problem", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.34, ease: "power3.in" }, 11);
+        tl.fromTo("#el-03-open-banking", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.34, ease: "power3.out" }, 11);
+        tl.to("#el-03-open-banking", { opacity: 0, duration: 0.28, ease: "power2.inOut" }, 17);
+        tl.fromTo("#el-04-read-only", { opacity: 0 }, { opacity: 1, duration: 0.28, ease: "power2.inOut" }, 17);
+        tl.to("#el-04-read-only", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.32, ease: "power2.inOut" }, 23);
+        tl.fromTo("#el-05-optimizer-input", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.32, ease: "power2.inOut" }, 23);
+        tl.to("#el-05-optimizer-input", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.32, ease: "power2.inOut" }, 28);
+        tl.fromTo("#el-06-the-engine", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.32, ease: "power2.inOut" }, 28);
+        tl.to("#el-06-the-engine", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.32, ease: "power2.inOut" }, 36);
+        tl.fromTo("#el-07-payoff", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.32, ease: "power2.inOut" }, 36);
+        tl.to("#el-07-payoff", { opacity: 0, duration: 0.28, ease: "power2.inOut" }, 43);
+        tl.fromTo("#el-08-how-it-stacks", { opacity: 0 }, { opacity: 1, duration: 0.28, ease: "power2.inOut" }, 43);
+        tl.to("#el-08-how-it-stacks", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.34, ease: "power3.in" }, 48);
+        tl.fromTo("#el-09-deal-finder", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.34, ease: "power3.out" }, 48);
+        tl.to("#el-09-deal-finder", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.32, ease: "power2.inOut" }, 53);
+        tl.fromTo("#el-10-insights", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.32, ease: "power2.inOut" }, 53);
+        tl.to("#el-10-insights", { opacity: 0, duration: 0.28, ease: "power2.inOut" }, 59);
+        tl.fromTo("#el-11-recommendations", { opacity: 0 }, { opacity: 1, duration: 0.28, ease: "power2.inOut" }, 59);
+        tl.to("#el-11-recommendations", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.32, ease: "power2.inOut" }, 65);
+        tl.fromTo("#el-12-notifications", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.32, ease: "power2.inOut" }, 65);
+        tl.to("#el-12-notifications", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.34, ease: "power3.in" }, 70);
+        tl.fromTo("#el-13-cta", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.34, ease: "power3.out" }, 70);
+        tl.to({}, { duration: 76 }, 0); // full-span anchor — main.duration() == composition total (Studio master duration)
+      })();
+    </script>
+  </body>
+</html>

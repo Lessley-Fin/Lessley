@@ -1,0 +1,6 @@
+# Regenerated on demand — `npx hyperframes snapshot`
+snapshots/
+
+# Studio caches, rebuilt from the compositions on first open
+.thumbnails/
+.waveform-cache/

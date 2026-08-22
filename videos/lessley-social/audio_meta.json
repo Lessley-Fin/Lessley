@@ -1,0 +1,9 @@
+{
+  "bgm": {
+    "path": "assets/music/bed-76s.mp3",
+    "volume": 0.22
+  },
+  "bgm_pending": false,
+  "voices": [],
+  "sfx": []
+}

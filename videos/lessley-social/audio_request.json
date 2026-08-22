@@ -1,0 +1,11 @@
+{
+  "provider": "auto",
+  "speed": 1,
+  "lines": [],
+  "bgm": {
+    "mode": "retrieve",
+    "query": "calm confident fintech underscore, steady mid-tempo pulse, restrained, clear downbeats",
+    "blob": "בנקאות פתוחה + מנוע האופטימיזציה — שני חיבורים שמהם נגזרות כל שאר היכולות",
+    "arc": "Mechanism-First Cascade — hook → pain → foundation 1 (open banking) → trust → foundation 2 (the optimizer) → capability cascade → CTA"
+  }
+}
