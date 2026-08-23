@@ -86,6 +86,7 @@
     "optimizer": "אופטימיזציה",
     "recommend": "המלצות",
     "notifications": "התראות",
+    "notificationsUnread": "התראות, {{count}} שלא נקראו",
     "qa": "שאלות ותשובות",
     "profileAndSettings": "פרופיל והגדרות"
   },

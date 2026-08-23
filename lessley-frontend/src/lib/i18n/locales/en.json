@@ -86,6 +86,7 @@
     "optimizer": "Optimizer",
     "recommend": "Recommend",
     "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {{count}} unread",
     "qa": "Questions & answers",
     "profileAndSettings": "Profile and settings"
   },
