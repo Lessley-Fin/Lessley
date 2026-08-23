@@ -311,7 +311,14 @@
       "empty": "אין עדיין מספיק היסטוריה להשוואת תקופות.",
       "thisPeriod": "התקופה הזו",
       "current": "נוכחי",
-      "previous": "קודם"
+      "previous": "קודם",
+      "summary": {
+        "more": "הוצאתם {{amount}} יותר בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}} — עלייה של {{percent}}%.",
+        "less": "הוצאתם {{amount}} פחות בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}} — ירידה של {{percent}}%.",
+        "moreAmountOnly": "הוצאתם {{amount}} יותר בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}}.",
+        "lessAmountOnly": "הוצאתם {{amount}} פחות בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}}.",
+        "same": "הוצאתם בערך אותו סכום בין {{currentStart}} ל-{{currentEnd}} כמו בין {{previousStart}} ל-{{previousEnd}}."
+      }
     },
     "statsGrid": {
       "transactions": "עסקאות",

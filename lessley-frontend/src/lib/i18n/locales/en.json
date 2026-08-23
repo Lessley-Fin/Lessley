@@ -311,7 +311,14 @@
       "empty": "Not enough history yet to compare periods.",
       "thisPeriod": "This period",
       "current": "Current",
-      "previous": "Previous"
+      "previous": "Previous",
+      "summary": {
+        "more": "You spent {{amount}} more between {{currentStart}} and {{currentEnd}} than between {{previousStart}} and {{previousEnd}} — up {{percent}}%.",
+        "less": "You spent {{amount}} less between {{currentStart}} and {{currentEnd}} than between {{previousStart}} and {{previousEnd}} — down {{percent}}%.",
+        "moreAmountOnly": "You spent {{amount}} more between {{currentStart}} and {{currentEnd}} than between {{previousStart}} and {{previousEnd}}.",
+        "lessAmountOnly": "You spent {{amount}} less between {{currentStart}} and {{currentEnd}} than between {{previousStart}} and {{previousEnd}}.",
+        "same": "You spent about the same between {{currentStart}} and {{currentEnd}} as between {{previousStart}} and {{previousEnd}}."
+      }
     },
     "statsGrid": {
       "transactions": "Transactions",
