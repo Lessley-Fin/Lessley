@@ -4,6 +4,11 @@ export default {
     content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
   	extend: {
+  		// Small phones (iPhone SE / Galaxy S-mini class) sit below this; the
+  		// default `sm` at 640px is far too late to relax mobile-first spacing.
+  		screens: {
+  			xs: '380px'
+  		},
   		fontFamily: {
   			sans: ['"Plus Jakarta Sans Variable"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
   		},

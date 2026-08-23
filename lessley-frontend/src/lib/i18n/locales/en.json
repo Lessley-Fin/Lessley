@@ -64,10 +64,8 @@
           "subtitle": "Behind the scenes",
           "point1Title": "Stacked savings",
           "point1Desc": "Combine a store coupon with the right card benefit in one step.",
-          "point2Title": "Exact product match",
-          "point2Desc": "We price the item you actually want, not a lookalike.",
-          "point3Title": "Ephemeral coupons",
-          "point3Desc": "Scraped from retailers and forums minutes after they appear."
+          "point2Title": "Ephemeral coupons",
+          "point2Desc": "Scraped from retailers and forums minutes after they appear."
         },
         "safety": {
           "title": "Built to be safe",

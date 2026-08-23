@@ -4,6 +4,7 @@ import { CircleQuestionMark, type LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -43,28 +44,33 @@ export function InfoDialog({
           <CircleQuestionMark />
         </Button>
       </DialogTrigger>
-      <DialogContent className={className ?? "max-w-[340px] rounded-3xl"}>
+      <DialogContent className={className}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {TitleIcon ? <TitleIcon className="size-4 text-primary" aria-hidden /> : null}
+            {TitleIcon ? <TitleIcon className="size-4 shrink-0 text-primary" aria-hidden /> : null}
             {title}
           </DialogTitle>
           {subtitle ? <DialogDescription>{subtitle}</DialogDescription> : null}
         </DialogHeader>
-        {highlights ? (
-          <div className="space-y-2">
-            {highlights.map(({ icon: Icon, title: highlightTitle, description }) => (
-              <div key={highlightTitle} className="flex gap-3 rounded-2xl bg-secondary p-3">
-                <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-                <div>
-                  <p className="text-sm font-semibold">{highlightTitle}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
+        {/* Highlights and children are caller-supplied and unbounded in length —
+            they belong in the scrolling body, or a long list gets clipped by the
+            dialog's overflow-hidden on a short viewport. */}
+        <DialogBody>
+          {highlights ? (
+            <div className="space-y-2">
+              {highlights.map(({ icon: Icon, title: highlightTitle, description }) => (
+                <div key={highlightTitle} className="flex gap-3 rounded-2xl bg-secondary p-3">
+                  <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">{highlightTitle}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-        {children}
+              ))}
+            </div>
+          ) : null}
+          {children}
+        </DialogBody>
       </DialogContent>
     </Dialog>
   )

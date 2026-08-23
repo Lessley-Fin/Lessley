@@ -84,10 +84,6 @@ export function AboutLessleyDialog() {
           title: t("common.aboutLessley.slides.how.point2Title"),
           description: t("common.aboutLessley.slides.how.point2Desc"),
         },
-        {
-          title: t("common.aboutLessley.slides.how.point3Title"),
-          description: t("common.aboutLessley.slides.how.point3Desc"),
-        },
       ],
     },
     {
@@ -121,7 +117,7 @@ export function AboutLessleyDialog() {
           <Sparkles /> {t("common.aboutLessley.trigger")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("common.aboutLessley.dialogTitle")}</DialogTitle>
         </DialogHeader>
@@ -130,7 +126,10 @@ export function AboutLessleyDialog() {
             <CarouselContent>
               {SLIDES.map(({ key, icon: Icon, title, subtitle, points }) => (
                 <CarouselItem key={key}>
-                  <div className="flex min-h-[360px] flex-col gap-3 rounded-3xl bg-card p-5 shadow-[var(--shadow-card)]">
+                  {/* The slide keeps a floor height so the dots don't jump between
+                      slides of different length — but only where there's room for
+                      it; on short viewports it collapses to its content instead. */}
+                  <div className="flex h-full flex-col gap-3 rounded-3xl bg-card p-4 shadow-[var(--shadow-card)] xs:p-5 sm:min-h-[360px]">
                     <div className="flex items-center gap-2 text-primary">
                       <Icon className="size-5" aria-hidden />
                     </div>
