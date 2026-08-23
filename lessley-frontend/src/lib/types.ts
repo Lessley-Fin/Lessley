@@ -140,6 +140,8 @@ export interface MccCategoryDto {
 export interface ClubDto {
   id: string
   name: string
+  /** The scraper id deals are tagged with (`hot`, `mastercard`) — join deals on this. */
+  sourceId?: string | null
 }
 
 /**
