@@ -7160,7 +7160,7 @@
   },
   {
     "id": "club_hever_gift_card_company",
-    "name": "Hever (חבר) — Gift Cards",
+    "name": "חבר של קבע",
     "source_id": "hever_gift_card_company",
     "description": "Hever gift-card store directory — loading bonus on gift cards",
     "metadata": {},
@@ -7512,7 +7512,7 @@
   },
   {
     "id": "club_hever_teamim_card_store",
-    "name": "Hever (חבר) — טעמים",
+    "name": "חבר טעמים",
     "source_id": "hever_teamim_card_store",
     "description": "Hever \"Ta'amim\" restaurant card — loading bonus, redeemable at member restaurants",
     "metadata": {},
