@@ -9,6 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 import { useClubs } from "@/features/clubs/hooks"
 import { AnalysisPeriodCard } from "@/features/insights/components/AnalysisPeriodCard"
 import { useAccounts } from "@/features/insights/hooks"
+import { resolveClubName } from "@/lib/clubs"
 import { emojiForStore } from "@/lib/constants"
 import { formatAmount } from "@/lib/formatters"
 import { getDirection } from "@/lib/i18n/config"
@@ -118,7 +119,13 @@ export function MissedShopsSlide({ shops, isLoading, days, onDaysChange }: Misse
     return named
   }, [accounts])
 
-  const clubNames = useMemo(() => new Map(clubs.map((club) => [club.id, club.name])), [clubs])
+  // Keyed by the id a shop record carries, which for a tiered card is the rung
+  // (`club_paisplus_networks_vip`) and not the parent the clubs collection holds —
+  // so the name has to be resolved, not looked up.
+  const clubNames = useMemo(
+    () => (id: string) => resolveClubName(clubs, id) ?? id,
+    [clubs],
+  )
 
   const byBand = useMemo(() => {
     const grouped = {} as Record<StoreMatchBand, MissedShop[]>
@@ -233,7 +240,7 @@ interface NamesByIdProps {
   /** account id → "product · provider", read off the accounts the client fetched itself. */
   accountNames: Map<string, string>
   /** club id → club name. */
-  clubNames: Map<string, string>
+  clubNames: (id: string) => string
 }
 
 function BandCard({
@@ -367,7 +374,7 @@ function TransactionCard({
           {merchant.shops.map((shop) => {
             // The club is the whole point of the row: the deal existed and the user is a
             // member, so naming the club is what tells them how they could have claimed it.
-            const missedClubs = shop.club_ids.map((id) => clubNames.get(id) ?? id)
+            const missedClubs = shop.club_ids.map((id) => clubNames(id))
 
             return (
               <li key={shop.store_id} className="flex items-start gap-2 rounded-xl bg-card px-2.5 py-2">

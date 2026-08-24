@@ -68,10 +68,18 @@ class Deal(Document):
     # document — a missing club must cost that deal its club badge, not take recommendations
     # down for everyone. ``python -m deals backfill-club-ids`` repairs those rows.
     club_id: str | None = None
+    # "active" / "expired", stamped by the scraping pipeline's versioning layer after each
+    # run. None on rows written before it existed — those are live deals that predate the
+    # field, which is why every query filters on ``!= "expired"`` rather than ``== "active"``.
+    status: str | None = None
 
     @property
     def deal_id(self) -> str:
         return _business_key(self.business_id, self.id)
+
+    @property
+    def is_expired(self) -> bool:
+        return self.status == "expired"
 
     class Settings:
         name = "deals"

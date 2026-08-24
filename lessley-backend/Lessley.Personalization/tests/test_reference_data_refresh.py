@@ -16,16 +16,26 @@ from services.reference_data_repository import ReferenceDataRepository
 
 
 class _Doc:
-    """Stands in for a Beanie document class whose find_all() returns fixed rows."""
+    """Stands in for a Beanie document class returning fixed rows.
+
+    Both entry points the repository uses are supported: ``find_all()`` for the
+    collections it loads whole, and ``find(query)`` for deals, which are filtered
+    on their lifecycle. The query is recorded so a test can assert on it.
+    """
 
     def __init__(self, rows: list, fails: bool = False):
         self._rows = rows
         self._fails = fails
+        self.last_query: dict | None = None
 
     def find_all(self):
         if self._fails:
             raise RuntimeError("mongo is down")
         return self
+
+    def find(self, query=None):
+        self.last_query = query
+        return self.find_all()
 
     async def to_list(self):
         return self._rows
@@ -106,3 +116,19 @@ async def test_a_failed_refresh_keeps_the_previous_snapshot(monkeypatch):
 
     assert set(repo._stores) == {"s1"}, "a failed rebuild must not publish partial data"
     assert repo._loaded is True, "the cache is still usable, so it must still count as loaded"
+
+
+@pytest.mark.asyncio
+async def test_expired_deals_are_left_out_of_the_snapshot(monkeypatch):
+    """Recommending a benefit that no longer exists is worse than missing one.
+
+    The scraping pipeline flags deals its sources have stopped offering; loading
+    them anyway would put retired offers into missed-savings analysis, where a
+    user is told what they *should* have done.
+    """
+    deals = _Doc([])
+    _patch_sources(monkeypatch, _Doc([]), deals, _Doc([]))
+
+    await ReferenceDataRepository().load_async(force=True)
+
+    assert deals.last_query == {"status": {"$ne": "expired"}}

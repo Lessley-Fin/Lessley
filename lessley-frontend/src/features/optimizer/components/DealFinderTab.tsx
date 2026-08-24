@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { useClubs } from "@/features/clubs/hooks"
 import type { DealSearchParams } from "@/features/deal-finder/api"
 import { useDealSearch, useMccCategories } from "@/features/deal-finder/hooks"
+import { useMyProfile } from "@/features/user/hooks"
 import { formatCategoryLabel } from "@/lib/constants"
 import type { DealSearchResultItem, StoreDocument } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -29,6 +30,10 @@ export function DealFinderTab() {
 
   const { data: mccCategories = [] } = useMccCategories()
   const { data: clubs = [] } = useClubs()
+  // The search is scoped server-side to the caller's own clubs, so say so: without it
+  // an empty result reads as "no such deal" when it really means "not in your clubs".
+  const { data: profile } = useMyProfile()
+  const selectedClubCount = profile?.clubs.length ?? 0
   // Confirmed picks skip the query so accepting a suggestion doesn't immediately reopen the list.
   const { data: storeSuggestions = [], isFetching: isSearchingStores } = useStoreSearch(
     storeConfirmed ? "" : storeText
@@ -149,6 +154,11 @@ export function DealFinderTab() {
       </div>
 
       <div className="space-y-3">
+        {enabled && selectedClubCount > 0 ? (
+          <p className="text-center text-xs text-muted-foreground">
+            {t("dealFinder.tab.scopedToClubs", { count: selectedClubCount })}
+          </p>
+        ) : null}
         {!enabled ? (
           <p className="rounded-3xl bg-card p-6 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
             {t("dealFinder.tab.promptSearch")}

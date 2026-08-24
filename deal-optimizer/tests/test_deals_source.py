@@ -21,8 +21,10 @@ from deal_optimizer import deals_source
 class _FakeCollection:
     def __init__(self, docs: list[dict[str, Any]]) -> None:
         self._docs = docs
+        self.last_query: dict[str, Any] | None = None
 
     def find(self, query):
+        self.last_query = query
         return iter(self._docs)
 
     def find_one(self, query):
@@ -38,7 +40,8 @@ class _FakeDb:
 
     def __getitem__(self, name: str) -> _FakeCollection:
         self.requested.append(name)
-        return _FakeCollection(self._contents.get(name, []))
+        self.last = _FakeCollection(self._contents.get(name, []))
+        return self.last
 
 
 def test_default_collections_are_the_long_standing_names():
@@ -84,3 +87,34 @@ def test_collections_can_be_overridden_by_environment(monkeypatch):
         monkeypatch.delenv("DEALS_COLLECTION")
         monkeypatch.delenv("STORES_COLLECTION")
         importlib.reload(deals_source)
+
+
+def test_expired_deals_are_filtered_out_of_the_query():
+    """The pipeline stamps a lifecycle on every row; pricing must respect it.
+
+    Without this the engine keeps quoting savings on offers the source took
+    down — the collection used to have no lifecycle at all, so nothing stopped it.
+    """
+    db = _FakeDb({"deals": [{"id": "d1", "store_id": "s1"}]})
+
+    deals_source.load_store_deals("s1", db=db)
+
+    assert db.last.last_query["status"] == {"$ne": "expired"}
+
+
+def test_the_filter_is_not_expired_rather_than_is_active():
+    """Absent is not expired, and Mongo's ``$ne`` is what makes that true.
+
+    ``{"status": {"$ne": "expired"}}`` matches documents with no ``status`` field
+    at all; ``{"status": "active"}`` does not. Rows written before the pipeline
+    stamped a lifecycle are live deals that simply predate the field, so the
+    stricter filter would empty the optimizer on any database not yet fully
+    re-scraped — a silent, total outage of every quote.
+    """
+    db = _FakeDb({"deals": []})
+
+    deals_source.load_store_deals("s1", db=db)
+
+    assert db.last.last_query["status"] == {"$ne": "expired"}, (
+        "must stay an inequality — an equality on 'active' hides unstamped rows"
+    )

@@ -2,18 +2,20 @@ import { useState } from "react"
 import { Calendar, ChevronDown, ChevronUp, ExternalLink } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { ClubLogoTile } from "@/components/shared/ClubLogoTile"
 import { Card, CardContent } from "@/components/ui/card"
+import { resolveClubName } from "@/lib/clubs"
 import { cn } from "@/lib/utils"
 import type { ClubDto, DealSearchResultItem } from "@/lib/types"
 
-function getClubName(clubs: ClubDto[], clubId: string): string {
-  return clubs.find((c) => c.id === clubId)?.name ?? clubId
-}
-
 function ClubBadge({ clubs, clubId }: { clubs: ClubDto[]; clubId: string }) {
+  const name = resolveClubName(clubs, clubId)
+  if (!name) return null
+
   return (
-    <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
-      {getClubName(clubs, clubId)}
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-100 py-0.5 pe-2 ps-0.5 text-[10px] font-semibold text-violet-700">
+      <ClubLogoTile clubId={clubId} clubName={name} variant="inline" />
+      {name}
     </span>
   )
 }

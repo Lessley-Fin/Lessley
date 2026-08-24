@@ -3,6 +3,7 @@ using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
+using System.Security.Claims;
 
 namespace Lessley.Gateway.Api.Controllers;
 
@@ -37,6 +38,7 @@ public class DealFinderController : ControllerBase
     }
 
     /// <summary>Searches deals by MCC categories, store name fragment, or deal text. At least one filter is required.</summary>
+    /// <remarks>Results cover only the caller's own loyalty clubs; there is no query parameter for that.</remarks>
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -55,7 +57,7 @@ public class DealFinderController : ControllerBase
             : null;
 
         var query  = new DealSearchQuery(mccList, store, deal, page, pageSize);
-        var result = await _dealFinderService.SearchAsync(query, ct);
+        var result = await _dealFinderService.SearchAsync(query, CallerEmail(), ct);
 
         return result switch
         {
@@ -64,4 +66,6 @@ public class DealFinderController : ControllerBase
             _                                      => throw new InvalidOperationException("Unknown result"),
         };
     }
+
+    private string CallerEmail() => User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
 }

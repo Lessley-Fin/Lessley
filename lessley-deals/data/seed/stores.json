@@ -223381,5 +223381,3229 @@
       ],
       "store_url": null
     }
+  },
+  {
+    "id": "01a02f5d51db_a49e119bff6cc737",
+    "name": "vans online",
+    "name_forms": {
+      "normalized": "vans online",
+      "compact": "vansonline",
+      "tokens": [
+        "online",
+        "vans"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SHOPPING_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of VANS)"
+    }
+  },
+  {
+    "id": "01a02f5d535f_381ccc53754ff5b4",
+    "name": "שייקשוק אונליין",
+    "name_forms": {
+      "normalized": "שייקשוק אונליינ",
+      "compact": "שייקשוקאונליינ",
+      "tokens": [
+        "אונליינ",
+        "שייקשוק"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "COFFEE_&_SNACKS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of שייק שוק)"
+    }
+  },
+  {
+    "id": "01a02f5d5506_03d09663752186d1",
+    "name": "H&O און ליין",
+    "name_forms": {
+      "normalized": "h&o אונ ליינ",
+      "compact": "hoאונליינ",
+      "tokens": [
+        "h&o",
+        "אונ",
+        "ליינ"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BOOKS_&_GAMES",
+        "BUSINESS_EXPENSES",
+        "CHARITY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of h&o)"
+    }
+  },
+  {
+    "id": "01a02f5d56cd_5fed789b18b741e0",
+    "name": "מכלול אונליין",
+    "name_forms": {
+      "normalized": "מכלול אונליינ",
+      "compact": "מכלולאונליינ",
+      "tokens": [
+        "אונליינ",
+        "מכלול"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SHOPPING_OTHER",
+        "BOOKS_&_GAMES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of מכלול)"
+    }
+  },
+  {
+    "id": "01a02f5d5841_695d69cbd1d24fc8",
+    "name": "עגליס אונליין",
+    "name_forms": {
+      "normalized": "עגליס אונליינ",
+      "compact": "עגליסאונליינ",
+      "tokens": [
+        "אונליינ",
+        "עגליס"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "KIDS",
+        "BOOKS_&_GAMES",
+        "FURNITURE_&_INTERIOR"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of עגליס)"
+    }
+  },
+  {
+    "id": "01a02f5d5943_c214c77b97ce051e",
+    "name": "מקדונלדס אונליין",
+    "name_forms": {
+      "normalized": "מקדונלדס אונליינ",
+      "compact": "מקדונלדסאונליינ",
+      "tokens": [
+        "אונליינ",
+        "מקדונלדס"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT",
+        "GROCERIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of מקדונלדס)"
+    }
+  },
+  {
+    "id": "01a02f5d5a42_fe9f892dd7f03479",
+    "name": "ויקטורי אונליין",
+    "name_forms": {
+      "normalized": "ויקטורי אונליינ",
+      "compact": "ויקטוריאונליינ",
+      "tokens": [
+        "אונליינ",
+        "ויקטורי"
+      ]
+    },
+    "created_at": "2026-08-23T16:04:00.091336+00:00",
+    "updated_at": "2026-08-23T16:04:00.091336+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BUSINESS_EXPENSES",
+        "SHOPPING_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (online storefront of ויקטורי)"
+    }
+  },
+  {
+    "id": "01a02ffc658c_bacba66a5c6890e0",
+    "name": "altra online",
+    "name_forms": {
+      "normalized": "altra online",
+      "compact": "altraonline",
+      "tokens": [
+        "altra",
+        "online"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc6712_4a23be2f06127b13",
+    "name": "JANSPORT online",
+    "name_forms": {
+      "normalized": "jansport online",
+      "compact": "jansportonline",
+      "tokens": [
+        "jansport",
+        "online"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc69cd_f9ce2fe59229d7e1",
+    "name": "נעמן ורדינון אונליין",
+    "name_forms": {
+      "normalized": "נעמנ ורדינונ אונליינ",
+      "compact": "נעמנורדינונאונליינ",
+      "tokens": [
+        "אונליינ",
+        "ורדינונ",
+        "נעמנ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc6c7b_9e0eba9e715fcd55",
+    "name": "oh my box",
+    "name_forms": {
+      "normalized": "oh my box",
+      "compact": "ohmybox",
+      "tokens": [
+        "box",
+        "my",
+        "oh"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc6eca_fd57bb3749e05b66",
+    "name": "מקימי אונליין",
+    "name_forms": {
+      "normalized": "מקימי אונליינ",
+      "compact": "מקימיאונליינ",
+      "tokens": [
+        "אונליינ",
+        "מקימי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc7128_76b381aa21839f01",
+    "name": "בואנו קאזה אונליין",
+    "name_forms": {
+      "normalized": "בואנו קאזה אונליינ",
+      "compact": "בואנוקאזהאונליינ",
+      "tokens": [
+        "אונליינ",
+        "בואנו",
+        "קאזה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc72d5_91dc3062ccec42e5",
+    "name": "paul&shark",
+    "name_forms": {
+      "normalized": "paul&shark",
+      "compact": "paulshark",
+      "tokens": [
+        "paul&shark"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc75aa_74ae0453b763b9f5",
+    "name": "הבוסתן של מוטי",
+    "name_forms": {
+      "normalized": "הבוסתנ של מוטי",
+      "compact": "הבוסתנשלמוטי",
+      "tokens": [
+        "הבוסתנ",
+        "מוטי",
+        "של"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc77fd_585c4ccee3faa02c",
+    "name": "ווטרלנד פארק המים אילת",
+    "name_forms": {
+      "normalized": "ווטרלנד פארק המימ אילת",
+      "compact": "ווטרלנדפארקהמימאילת",
+      "tokens": [
+        "אילת",
+        "המימ",
+        "ווטרלנד",
+        "פארק"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc7a7c_75ff37415db7a647",
+    "name": "מוזיאון נחום גוטמן לאמנות",
+    "name_forms": {
+      "normalized": "מוזיאונ נחומ גוטמנ לאמנות",
+      "compact": "מוזיאוננחומגוטמנלאמנות",
+      "tokens": [
+        "גוטמנ",
+        "לאמנות",
+        "מוזיאונ",
+        "נחומ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc7c9d_7328e0a58d6219d7",
+    "name": "הטייסת",
+    "name_forms": {
+      "normalized": "הטייסת",
+      "compact": "הטייסת",
+      "tokens": [
+        "הטייסת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc7e1e_4833f04f39ef5a0c",
+    "name": "אטלנטיס ספורט ימי",
+    "name_forms": {
+      "normalized": "אטלנטיס ספורט ימי",
+      "compact": "אטלנטיסספורטימי",
+      "tokens": [
+        "אטלנטיס",
+        "ימי",
+        "ספורט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc80bf_bd65daf906d91f9f",
+    "name": "קרייזי רומס",
+    "name_forms": {
+      "normalized": "קרייזי רומס",
+      "compact": "קרייזירומס",
+      "tokens": [
+        "קרייזי",
+        "רומס"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc828b_5ea823b512d9142e",
+    "name": "לופ - LOOP",
+    "name_forms": {
+      "normalized": "לופ - loop",
+      "compact": "לופloop",
+      "tokens": [
+        "loop",
+        "לופ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc8426_3e2d106d63b2c226",
+    "name": "סקאי פילד בלומפילד",
+    "name_forms": {
+      "normalized": "סקאי פילד בלומפילד",
+      "compact": "סקאיפילדבלומפילד",
+      "tokens": [
+        "בלומפילד",
+        "סקאי",
+        "פילד"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc8588_ed4a8ac725a09786",
+    "name": "לונה פארק בילו סנטר",
+    "name_forms": {
+      "normalized": "לונה פארק בילו סנטר",
+      "compact": "לונהפארקבילוסנטר",
+      "tokens": [
+        "בילו",
+        "לונה",
+        "סנטר",
+        "פארק"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc86fd_0503bf6935c3aa1c",
+    "name": "אקווה בום",
+    "name_forms": {
+      "normalized": "אקווה בומ",
+      "compact": "אקווהבומ",
+      "tokens": [
+        "אקווה",
+        "בומ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc8906_9ec711e290d93db9",
+    "name": "פארק קרסו למדע",
+    "name_forms": {
+      "normalized": "פארק קרסו למדע",
+      "compact": "פארקקרסולמדע",
+      "tokens": [
+        "למדע",
+        "פארק",
+        "קרסו"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc8aea_2f189c2a8803dd23",
+    "name": "רשות הטבע והגנים",
+    "name_forms": {
+      "normalized": "רשות הטבע והגנימ",
+      "compact": "רשותהטבעוהגנימ",
+      "tokens": [
+        "הטבע",
+        "והגנימ",
+        "רשות"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc8ce8_0a19f5cea417f7b3",
+    "name": "פיקסל - צילום בסמארטפון",
+    "name_forms": {
+      "normalized": "פיקסל - צילומ בסמארטפונ",
+      "compact": "פיקסלצילומבסמארטפונ",
+      "tokens": [
+        "בסמארטפונ",
+        "פיקסל",
+        "צילומ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc8ef8_80734394e3c5be4e",
+    "name": "ילדי הפלא",
+    "name_forms": {
+      "normalized": "ילדי הפלא",
+      "compact": "ילדיהפלא",
+      "tokens": [
+        "הפלא",
+        "ילדי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc9227_22c45c5a70a16e9a",
+    "name": "מלון קאסלנד ריזורט",
+    "name_forms": {
+      "normalized": "מלונ קאסלנד ריזורט",
+      "compact": "מלונקאסלנדריזורט",
+      "tokens": [
+        "מלונ",
+        "קאסלנד",
+        "ריזורט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc9493_20b43d972a346215",
+    "name": "מלון אלמונד",
+    "name_forms": {
+      "normalized": "מלונ אלמונד",
+      "compact": "מלונאלמונד",
+      "tokens": [
+        "אלמונד",
+        "מלונ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc96e7_52295c0ca171310e",
+    "name": "מלון נס עמים",
+    "name_forms": {
+      "normalized": "מלונ נס עמימ",
+      "compact": "מלוננסעמימ",
+      "tokens": [
+        "מלונ",
+        "נס",
+        "עמימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc98be_db3efd923cfa2630",
+    "name": "מלון אדם בוטיק אילת",
+    "name_forms": {
+      "normalized": "מלונ אדמ בוטיק אילת",
+      "compact": "מלונאדמבוטיקאילת",
+      "tokens": [
+        "אדמ",
+        "אילת",
+        "בוטיק",
+        "מלונ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc9ac0_c51517ac90deba55",
+    "name": "פרימה ורה ירושלים",
+    "name_forms": {
+      "normalized": "פרימה ורה ירושלימ",
+      "compact": "פרימהורהירושלימ",
+      "tokens": [
+        "ורה",
+        "ירושלימ",
+        "פרימה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc9c15_ac8a10c02652a236",
+    "name": "share spa דן כרמל חיפה",
+    "name_forms": {
+      "normalized": "share spa דנ כרמל חיפה",
+      "compact": "sharespaדנכרמלחיפה",
+      "tokens": [
+        "share",
+        "spa",
+        "דנ",
+        "חיפה",
+        "כרמל"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc9dbc_845f139391c8c51d",
+    "name": "DREAM PILATES- דרים פילאטיס לא פעיל",
+    "name_forms": {
+      "normalized": "dream pilates- דרימ פילאטיס לא פעיל",
+      "compact": "dreampilatesדרימפילאטיסלאפעיל",
+      "tokens": [
+        "dream",
+        "pilates-",
+        "דרימ",
+        "לא",
+        "פילאטיס",
+        "פעיל"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffc9fda_c84369b9edc243ed",
+    "name": "חמאם תורכי אילת - אנג'ל ספא",
+    "name_forms": {
+      "normalized": "חמאמ תורכי אילת - אנג'ל ספא",
+      "compact": "חמאמתורכיאילתאנגלספא",
+      "tokens": [
+        "אילת",
+        "אנג'ל",
+        "חמאמ",
+        "ספא",
+        "תורכי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffca29f_b23581301d0de57f",
+    "name": "ספייס האוס דיזינגוף",
+    "name_forms": {
+      "normalized": "ספייס האוס דיזינגופ",
+      "compact": "ספייסהאוסדיזינגופ",
+      "tokens": [
+        "דיזינגופ",
+        "האוס",
+        "ספייס"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffca517_99cb13661a29387e",
+    "name": "MI VA - TLV",
+    "name_forms": {
+      "normalized": "mi va - tlv",
+      "compact": "mivatlv",
+      "tokens": [
+        "mi",
+        "tlv",
+        "va"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffca7a7_dba93725ed4d64de",
+    "name": "קיטקט פטיסרי ובייקרי אשדוד",
+    "name_forms": {
+      "normalized": "קיטקט פטיסרי ובייקרי אשדוד",
+      "compact": "קיטקטפטיסריובייקריאשדוד",
+      "tokens": [
+        "אשדוד",
+        "ובייקרי",
+        "פטיסרי",
+        "קיטקט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcaa28_dacf05030d0fad86",
+    "name": "סואי סושי",
+    "name_forms": {
+      "normalized": "סואי סושי",
+      "compact": "סואיסושי",
+      "tokens": [
+        "סואי",
+        "סושי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcaca2_330ed1082c43539f",
+    "name": "שוקיט- shookit",
+    "name_forms": {
+      "normalized": "שוקיט- shookit",
+      "compact": "שוקיטshookit",
+      "tokens": [
+        "shookit",
+        "שוקיט-"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcae87_f4364ae45504be0c",
+    "name": "רשת אניס",
+    "name_forms": {
+      "normalized": "רשת אניס",
+      "compact": "רשתאניס",
+      "tokens": [
+        "אניס",
+        "רשת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb066_8c1e725f19f127ad",
+    "name": "סנו עד הבית אונליין",
+    "name_forms": {
+      "normalized": "סנו עד הבית אונליינ",
+      "compact": "סנועדהביתאונליינ",
+      "tokens": [
+        "אונליינ",
+        "הבית",
+        "סנו",
+        "עד"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb240_557348f84c1e4999",
+    "name": "מסעדת לורנס",
+    "name_forms": {
+      "normalized": "מסעדת לורנס",
+      "compact": "מסעדתלורנס",
+      "tokens": [
+        "לורנס",
+        "מסעדת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb3b2_e6355d28fe8d7696",
+    "name": "סושי טיים",
+    "name_forms": {
+      "normalized": "סושי טיימ",
+      "compact": "סושיטיימ",
+      "tokens": [
+        "טיימ",
+        "סושי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb54b_ed85fb4a3e585cc3",
+    "name": "טורקיז שווארמה",
+    "name_forms": {
+      "normalized": "טורקיז שווארמה",
+      "compact": "טורקיזשווארמה",
+      "tokens": [
+        "טורקיז",
+        "שווארמה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb6e2_6d3dbb59b3a9d1d1",
+    "name": "Mila house",
+    "name_forms": {
+      "normalized": "mila house",
+      "compact": "milahouse",
+      "tokens": [
+        "house",
+        "mila"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb880_8e32dbc8eb84d7fd",
+    "name": "NINNYO TLV",
+    "name_forms": {
+      "normalized": "ninnyo tlv",
+      "compact": "ninnyotlv",
+      "tokens": [
+        "ninnyo",
+        "tlv"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
+  },
+  {
+    "id": "01a02ffcb9f5_b7a347a9b2079f63",
+    "name": "קפה עלית",
+    "name_forms": {
+      "normalized": "קפה עלית",
+      "compact": "קפהעלית",
+      "tokens": [
+        "עלית",
+        "קפה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "COFFEE_&_SNACKS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcbb70_4d4a21e970e7a76f",
+    "name": "מלון play אילת",
+    "name_forms": {
+      "normalized": "מלונ play אילת",
+      "compact": "מלונplayאילת",
+      "tokens": [
+        "play",
+        "אילת",
+        "מלונ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcbcb9_c00b95241dd92d36",
+    "name": "PLAY MIDTOWN",
+    "name_forms": {
+      "normalized": "play midtown",
+      "compact": "playmidtown",
+      "tokens": [
+        "midtown",
+        "play"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcbe0f_385ba2feac6721b7",
+    "name": "פליי סי פורט",
+    "name_forms": {
+      "normalized": "פליי סי פורט",
+      "compact": "פלייסיפורט",
+      "tokens": [
+        "סי",
+        "פורט",
+        "פליי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcbfdd_fe9b28364a2dd631",
+    "name": "מלון Enjoy Dead Sea",
+    "name_forms": {
+      "normalized": "מלונ enjoy dead sea",
+      "compact": "מלונenjoydeadsea",
+      "tokens": [
+        "dead",
+        "enjoy",
+        "sea",
+        "מלונ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc138_7d45eb07db6f16c3",
+    "name": "WEST ASHDOD",
+    "name_forms": {
+      "normalized": "west ashdod",
+      "compact": "westashdod",
+      "tokens": [
+        "ashdod",
+        "west"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc2a9_df760b7dcc4516ff",
+    "name": "פליי הצוק ת\"א",
+    "name_forms": {
+      "normalized": "פליי הצוק ת\"א",
+      "compact": "פלייהצוקתא",
+      "tokens": [
+        "הצוק",
+        "פליי",
+        "ת\"א"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc402_c0023f31856dcccb",
+    "name": "הפיראט האדום - ישפרו מודיעין",
+    "name_forms": {
+      "normalized": "הפיראט האדומ - ישפרו מודיעינ",
+      "compact": "הפיראטהאדומישפרומודיעינ",
+      "tokens": [
+        "האדומ",
+        "הפיראט",
+        "ישפרו",
+        "מודיעינ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "KIDS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc55f_8b338b2f0e06ee09",
+    "name": "פוד בוקס",
+    "name_forms": {
+      "normalized": "פוד בוקס",
+      "compact": "פודבוקס",
+      "tokens": [
+        "בוקס",
+        "פוד"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc7ba_511c0b67f5c7224d",
+    "name": "korin-wellness- קורין בריאות",
+    "name_forms": {
+      "normalized": "korin-wellness- קורינ בריאות",
+      "compact": "korinwellnessקורינבריאות",
+      "tokens": [
+        "korin-wellness-",
+        "בריאות",
+        "קורינ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc8e5_c33439ead6a3683a",
+    "name": "מירי ביוטי & סקין",
+    "name_forms": {
+      "normalized": "מירי ביוטי & סקינ",
+      "compact": "מיריביוטיסקינ",
+      "tokens": [
+        "ביוטי",
+        "מירי",
+        "סקינ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcc9fe_19b1cc363bf461e5",
+    "name": "קליית מקדמיה",
+    "name_forms": {
+      "normalized": "קליית מקדמיה",
+      "compact": "קלייתמקדמיה",
+      "tokens": [
+        "מקדמיה",
+        "קליית"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffccb0b_a4ba8d451264bac5",
+    "name": "מרקט בית קליה אבו עלי ובניו",
+    "name_forms": {
+      "normalized": "מרקט בית קליה אבו עלי ובניו",
+      "compact": "מרקטביתקליהאבועליובניו",
+      "tokens": [
+        "אבו",
+        "בית",
+        "ובניו",
+        "מרקט",
+        "עלי",
+        "קליה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffccc11_8c0da1ad442f55ca",
+    "name": "ג'ימבול",
+    "name_forms": {
+      "normalized": "ג'ימבול",
+      "compact": "גימבול",
+      "tokens": [
+        "ג'ימבול"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "KIDS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffccd0e_f39e1ec63f4276a4",
+    "name": "אי אר מותגים E.R",
+    "name_forms": {
+      "normalized": "אי אר מותגימ e.r",
+      "compact": "איארמותגימer",
+      "tokens": [
+        "e.r",
+        "אי",
+        "אר",
+        "מותגימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffccea3_c6755bc5ee453e0d",
+    "name": "פיצוציית ר.נ.ט.א",
+    "name_forms": {
+      "normalized": "פיצוציית ר.נ.ט.א",
+      "compact": "פיצוצייתרנטא",
+      "tokens": [
+        "פיצוציית",
+        "ר.נ.ט.א"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffccfb9_fd035f5b1ebb68bb",
+    "name": "dalal מסעדת דלאל",
+    "name_forms": {
+      "normalized": "dalal מסעדת דלאל",
+      "compact": "dalalמסעדתדלאל",
+      "tokens": [
+        "dalal",
+        "דלאל",
+        "מסעדת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcd17b_9ef5b6062660e184",
+    "name": "חומוס ינאי",
+    "name_forms": {
+      "normalized": "חומוס ינאי",
+      "compact": "חומוסינאי",
+      "tokens": [
+        "חומוס",
+        "ינאי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcd2e5_45f09944d5528c5a",
+    "name": "טרקטורוני צפת",
+    "name_forms": {
+      "normalized": "טרקטורוני צפת",
+      "compact": "טרקטורוניצפת",
+      "tokens": [
+        "טרקטורוני",
+        "צפת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "LEISURE_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcd405_4f97d9debf093d9c",
+    "name": "בית קפה קשטוטה",
+    "name_forms": {
+      "normalized": "בית קפה קשטוטה",
+      "compact": "ביתקפהקשטוטה",
+      "tokens": [
+        "בית",
+        "קפה",
+        "קשטוטה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "COFFEE_&_SNACKS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcd5d9_58c68a5ebd6f9004",
+    "name": "zuzana מסעדה זוזאנה",
+    "name_forms": {
+      "normalized": "zuzana מסעדה זוזאנה",
+      "compact": "zuzanaמסעדהזוזאנה",
+      "tokens": [
+        "zuzana",
+        "זוזאנה",
+        "מסעדה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcd833_d11e4bcb2d4b9d16",
+    "name": "RACHEL - רשל",
+    "name_forms": {
+      "normalized": "rachel - רשל",
+      "compact": "rachelרשל",
+      "tokens": [
+        "rachel",
+        "רשל"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GIFTS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcd9ac_36b27b882fe82b60",
+    "name": "השניצליה של ממן",
+    "name_forms": {
+      "normalized": "השניצליה של ממנ",
+      "compact": "השניצליהשלממנ",
+      "tokens": [
+        "השניצליה",
+        "ממנ",
+        "של"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcdae6_0e24375d12d30142",
+    "name": "הטעמיה",
+    "name_forms": {
+      "normalized": "הטעמיה",
+      "compact": "הטעמיה",
+      "tokens": [
+        "הטעמיה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GROCERIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcdc29_10c2342d4140f761",
+    "name": "velorasoft luxure בגדי ולורסופט לוקסר",
+    "name_forms": {
+      "normalized": "velorasoft luxure בגדי ולורסופט לוקסר",
+      "compact": "velorasoftluxureבגדיולורסופטלוקסר",
+      "tokens": [
+        "luxure",
+        "velorasoft",
+        "בגדי",
+        "ולורסופט",
+        "לוקסר"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcdd88_1930a7d3817584e1",
+    "name": "מרפאת שיניים ואסתטיקה ד\"ר קדרי חסן",
+    "name_forms": {
+      "normalized": "מרפאת שיניימ ואסתטיקה ד\"ר קדרי חסנ",
+      "compact": "מרפאתשיניימואסתטיקהדרקדריחסנ",
+      "tokens": [
+        "ד\"ר",
+        "ואסתטיקה",
+        "חסנ",
+        "מרפאת",
+        "קדרי",
+        "שיניימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcdf35_09482b3712fd7bfc",
+    "name": "Smart Pet - סמארט פט",
+    "name_forms": {
+      "normalized": "smart pet - סמארט פט",
+      "compact": "smartpetסמארטפט",
+      "tokens": [
+        "pet",
+        "smart",
+        "סמארט",
+        "פט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "PETS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffce126_d90a3c89c0444c75",
+    "name": "מוסך הסרגל",
+    "name_forms": {
+      "normalized": "מוסכ הסרגל",
+      "compact": "מוסכהסרגל",
+      "tokens": [
+        "הסרגל",
+        "מוסכ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CAR_&_FUEL"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffce2ca_9a9a12599cfc5ea5",
+    "name": "חביבי קפה",
+    "name_forms": {
+      "normalized": "חביבי קפה",
+      "compact": "חביביקפה",
+      "tokens": [
+        "חביבי",
+        "קפה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "COFFEE_&_SNACKS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffce477_68f3b9a2098de9da",
+    "name": "ג'ימי הגדול",
+    "name_forms": {
+      "normalized": "ג'ימי הגדול",
+      "compact": "גימיהגדול",
+      "tokens": [
+        "ג'ימי",
+        "הגדול"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GROCERIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffce63c_b0c81be51027e9a3",
+    "name": "Noyzz Jewelry - נויז ג'ולרי",
+    "name_forms": {
+      "normalized": "noyzz jewelry - נויז ג'ולרי",
+      "compact": "noyzzjewelryנויזגולרי",
+      "tokens": [
+        "jewelry",
+        "noyzz",
+        "ג'ולרי",
+        "נויז"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffce7ca_99f75b26f0c78ec1",
+    "name": "נובל יין ואלכוהול Nobel",
+    "name_forms": {
+      "normalized": "נובל יינ ואלכוהול nobel",
+      "compact": "נובליינואלכוהולnobel",
+      "tokens": [
+        "nobel",
+        "ואלכוהול",
+        "יינ",
+        "נובל"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffce95d_2ee9beba23aef747",
+    "name": "גילטי ביוטי - Guilty",
+    "name_forms": {
+      "normalized": "גילטי ביוטי - guilty",
+      "compact": "גילטיביוטיguilty",
+      "tokens": [
+        "guilty",
+        "ביוטי",
+        "גילטי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffceacb_b5264d75ab4f945b",
+    "name": "שמן הזית ג'השאן",
+    "name_forms": {
+      "normalized": "שמנ הזית ג'השאנ",
+      "compact": "שמנהזיתגהשאנ",
+      "tokens": [
+        "ג'השאנ",
+        "הזית",
+        "שמנ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcec64_a055336b87a33e67",
+    "name": "עולם הביגוד והקמפינג",
+    "name_forms": {
+      "normalized": "עולמ הביגוד והקמפינג",
+      "compact": "עולמהביגודוהקמפינג",
+      "tokens": [
+        "הביגוד",
+        "והקמפינג",
+        "עולמ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcee44_1ce7ffff1317abad",
+    "name": "מוריה קליניק",
+    "name_forms": {
+      "normalized": "מוריה קליניק",
+      "compact": "מוריהקליניק",
+      "tokens": [
+        "מוריה",
+        "קליניק"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffceff8_e1e2f235c9e168a6",
+    "name": "קשקוש אבירהים",
+    "name_forms": {
+      "normalized": "קשקוש אבירהימ",
+      "compact": "קשקושאבירהימ",
+      "tokens": [
+        "אבירהימ",
+        "קשקוש"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcf1a7_5d9a65a3880600c1",
+    "name": "בי אנד בי אלקטריק מוצרי חשמל B&B",
+    "name_forms": {
+      "normalized": "בי אנד בי אלקטריק מוצרי חשמל b&b",
+      "compact": "ביאנדביאלקטריקמוצריחשמלbb",
+      "tokens": [
+        "b&b",
+        "אלקטריק",
+        "אנד",
+        "בי",
+        "חשמל",
+        "מוצרי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "ELECTRONICS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcf344_617b5f43687cba56",
+    "name": "בא לי סטוק",
+    "name_forms": {
+      "normalized": "בא לי סטוק",
+      "compact": "באליסטוק",
+      "tokens": [
+        "בא",
+        "לי",
+        "סטוק"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "KIDS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcf4a6_70531b8fe1a2a112",
+    "name": "לה פרפיום",
+    "name_forms": {
+      "normalized": "לה פרפיומ",
+      "compact": "להפרפיומ",
+      "tokens": [
+        "לה",
+        "פרפיומ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcf631_c951f762c4208a53",
+    "name": "בגט אל אמיר",
+    "name_forms": {
+      "normalized": "בגט אל אמיר",
+      "compact": "בגטאלאמיר",
+      "tokens": [
+        "אל",
+        "אמיר",
+        "בגט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GROCERIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcf7c7_8c98977848016aac",
+    "name": "סופרמרקט קאש בבלאש",
+    "name_forms": {
+      "normalized": "סופרמרקט קאש בבלאש",
+      "compact": "סופרמרקטקאשבבלאש",
+      "tokens": [
+        "בבלאש",
+        "סופרמרקט",
+        "קאש"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcf904_c9b78d0de332e996",
+    "name": "CLEARLY - קלירלי",
+    "name_forms": {
+      "normalized": "clearly - קלירלי",
+      "compact": "clearlyקלירלי",
+      "tokens": [
+        "clearly",
+        "קלירלי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "ELECTRONICS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcfa4b_7e0e9762630788a5",
+    "name": "סדנאות קוקטיילים חוויתיות לכל הגילאים",
+    "name_forms": {
+      "normalized": "סדנאות קוקטיילימ חוויתיות לכל הגילאימ",
+      "compact": "סדנאותקוקטיילימחוויתיותלכלהגילאימ",
+      "tokens": [
+        "הגילאימ",
+        "חוויתיות",
+        "לכל",
+        "סדנאות",
+        "קוקטיילימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "EDUCATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcfbd6_01736525d06e91e9",
+    "name": "להואני הכל לבעלי חיים",
+    "name_forms": {
+      "normalized": "להואני הכל לבעלי חיימ",
+      "compact": "להואניהכללבעליחיימ",
+      "tokens": [
+        "הכל",
+        "חיימ",
+        "לבעלי",
+        "להואני"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "PETS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcfcfb_d13b9bee746636a8",
+    "name": "פנינה במרום",
+    "name_forms": {
+      "normalized": "פנינה במרומ",
+      "compact": "פנינהבמרומ",
+      "tokens": [
+        "במרומ",
+        "פנינה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffcff29_94591e742923493b",
+    "name": "אייס קרים סטור - Ice cream store",
+    "name_forms": {
+      "normalized": "אייס קרימ סטור - ice cream store",
+      "compact": "אייסקרימסטורicecreamstore",
+      "tokens": [
+        "cream",
+        "ice",
+        "store",
+        "אייס",
+        "סטור",
+        "קרימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0069_eac7b96215c8d178",
+    "name": "Coco’z Tattoo - קוקו'ז טאטו",
+    "name_forms": {
+      "normalized": "coco’z tattoo - קוקו'ז טאטו",
+      "compact": "cocoztattooקוקוזטאטו",
+      "tokens": [
+        "coco’z",
+        "tattoo",
+        "טאטו",
+        "קוקו'ז"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0178_f5759288cfef2f2c",
+    "name": "ג׳ייקובס",
+    "name_forms": {
+      "normalized": "ג'ייקובס",
+      "compact": "גייקובס",
+      "tokens": [
+        "ג'ייקובס"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HOBBIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd02a1_61b5d315b176ea09",
+    "name": "מוצרי מזון תאילנדי אסייתי שאמי תאי",
+    "name_forms": {
+      "normalized": "מוצרי מזונ תאילנדי אסייתי שאמי תאי",
+      "compact": "מוצרימזונתאילנדיאסייתישאמיתאי",
+      "tokens": [
+        "אסייתי",
+        "מוצרי",
+        "מזונ",
+        "שאמי",
+        "תאי",
+        "תאילנדי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0401_7e6624c0bce73049",
+    "name": "השומר מרכזים רפואיים",
+    "name_forms": {
+      "normalized": "השומר מרכזימ רפואיימ",
+      "compact": "השומרמרכזימרפואיימ",
+      "tokens": [
+        "השומר",
+        "מרכזימ",
+        "רפואיימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0504_9e4e91160401bacf",
+    "name": "איזי ויז'ן",
+    "name_forms": {
+      "normalized": "איזי ויז'נ",
+      "compact": "איזיויזנ",
+      "tokens": [
+        "איזי",
+        "ויז'נ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HEALTHCARE"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0621_78afe5112f1df685",
+    "name": "קאיו בר קוקטלים - CAYO",
+    "name_forms": {
+      "normalized": "קאיו בר קוקטלימ - cayo",
+      "compact": "קאיוברקוקטלימcayo",
+      "tokens": [
+        "cayo",
+        "בר",
+        "קאיו",
+        "קוקטלימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BARS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0732_8b129537c8928256",
+    "name": "המטבח של חיים",
+    "name_forms": {
+      "normalized": "המטבח של חיימ",
+      "compact": "המטבחשלחיימ",
+      "tokens": [
+        "המטבח",
+        "חיימ",
+        "של"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0876_b3569ae4b2614e5e",
+    "name": "DUEK MOTORS - דואק מוטורס",
+    "name_forms": {
+      "normalized": "duek motors - דואק מוטורס",
+      "compact": "duekmotorsדואקמוטורס",
+      "tokens": [
+        "duek",
+        "motors",
+        "דואק",
+        "מוטורס"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd09f9_e4e912c6d872dcd0",
+    "name": "צמיגי אביב",
+    "name_forms": {
+      "normalized": "צמיגי אביב",
+      "compact": "צמיגיאביב",
+      "tokens": [
+        "אביב",
+        "צמיגי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CAR_&_FUEL"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0b28_1b606259918447bd",
+    "name": "mattar בורקס מטר",
+    "name_forms": {
+      "normalized": "mattar בורקס מטר",
+      "compact": "mattarבורקסמטר",
+      "tokens": [
+        "mattar",
+        "בורקס",
+        "מטר"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0c78_2050f5fd7809b3e9",
+    "name": "אריאל אספקה טכנית",
+    "name_forms": {
+      "normalized": "אריאל אספקה טכנית",
+      "compact": "אריאלאספקהטכנית",
+      "tokens": [
+        "אספקה",
+        "אריאל",
+        "טכנית"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HOME"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0e07_76b878819398d56c",
+    "name": "אטרקציות סמאש לאב",
+    "name_forms": {
+      "normalized": "אטרקציות סמאש לאב",
+      "compact": "אטרקציותסמאשלאב",
+      "tokens": [
+        "אטרקציות",
+        "לאב",
+        "סמאש"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "LEISURE_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd0f87_8faace82ce4dfaca",
+    "name": "חוויה בנוף",
+    "name_forms": {
+      "normalized": "חוויה בנופ",
+      "compact": "חוויהבנופ",
+      "tokens": [
+        "בנופ",
+        "חוויה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd10f8_16bd0d43df11185d",
+    "name": "פארק המים יו ספלאש",
+    "name_forms": {
+      "normalized": "פארק המימ יו ספלאש",
+      "compact": "פארקהמימיוספלאש",
+      "tokens": [
+        "המימ",
+        "יו",
+        "ספלאש",
+        "פארק"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "LEISURE_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1246_40b17af12889d8ac",
+    "name": "מסעדת על ההר",
+    "name_forms": {
+      "normalized": "מסעדת על ההר",
+      "compact": "מסעדתעלההר",
+      "tokens": [
+        "ההר",
+        "מסעדת",
+        "על"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd13e1_85202d2d75a0c760",
+    "name": "dazelet מסעדת דזלט",
+    "name_forms": {
+      "normalized": "dazelet מסעדת דזלט",
+      "compact": "dazeletמסעדתדזלט",
+      "tokens": [
+        "dazelet",
+        "דזלט",
+        "מסעדת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GROCERIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1582_7ea2fb3d2d6eec1d",
+    "name": "קזאן אקספרס",
+    "name_forms": {
+      "normalized": "קזאנ אקספרס",
+      "compact": "קזאנאקספרס",
+      "tokens": [
+        "אקספרס",
+        "קזאנ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1724_ec01cb878289878a",
+    "name": "שולחן ערוך מוצרים חד פעמיים",
+    "name_forms": {
+      "normalized": "שולחנ ערוכ מוצרימ חד פעמיימ",
+      "compact": "שולחנערוכמוצרימחדפעמיימ",
+      "tokens": [
+        "חד",
+        "מוצרימ",
+        "ערוכ",
+        "פעמיימ",
+        "שולחנ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HOME"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1892_49f075a8f7810931",
+    "name": "מפגש התעשיה",
+    "name_forms": {
+      "normalized": "מפגש התעשיה",
+      "compact": "מפגשהתעשיה",
+      "tokens": [
+        "התעשיה",
+        "מפגש"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd19ce_b4df88c4ce34a069",
+    "name": "Shaya Barbershop - שיה ברברשופ",
+    "name_forms": {
+      "normalized": "shaya barbershop - שיה ברברשופ",
+      "compact": "shayabarbershopשיהברברשופ",
+      "tokens": [
+        "barbershop",
+        "shaya",
+        "ברברשופ",
+        "שיה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1b12_67d9d794cc9771b7",
+    "name": "Shuva Barbershop - שובה ברברשופ",
+    "name_forms": {
+      "normalized": "shuva barbershop - שובה ברברשופ",
+      "compact": "shuvabarbershopשובהברברשופ",
+      "tokens": [
+        "barbershop",
+        "shuva",
+        "ברברשופ",
+        "שובה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1cc4_a7e4c8bcd140550a",
+    "name": "פני אקספרס",
+    "name_forms": {
+      "normalized": "פני אקספרס",
+      "compact": "פניאקספרס",
+      "tokens": [
+        "אקספרס",
+        "פני"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GROCERIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1e2b_7dc7396c036f997d",
+    "name": "פלאפל תנעמי",
+    "name_forms": {
+      "normalized": "פלאפל תנעמי",
+      "compact": "פלאפלתנעמי",
+      "tokens": [
+        "פלאפל",
+        "תנעמי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd1f3b_1a74d5c9e611698d",
+    "name": "LN Beauty - אל אן ביוטי",
+    "name_forms": {
+      "normalized": "ln beauty - אל אנ ביוטי",
+      "compact": "lnbeautyאלאנביוטי",
+      "tokens": [
+        "beauty",
+        "ln",
+        "אל",
+        "אנ",
+        "ביוטי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2054_e4d128d81b016c8d",
+    "name": "בפינה של הרצל",
+    "name_forms": {
+      "normalized": "בפינה של הרצל",
+      "compact": "בפינהשלהרצל",
+      "tokens": [
+        "בפינה",
+        "הרצל",
+        "של"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2162_bfc1c147a4013750",
+    "name": "JB Patisserie - ג'יי בי פטיסרי",
+    "name_forms": {
+      "normalized": "jb patisserie - ג'יי בי פטיסרי",
+      "compact": "jbpatisserieגייביפטיסרי",
+      "tokens": [
+        "jb",
+        "patisserie",
+        "בי",
+        "ג'יי",
+        "פטיסרי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "COFFEE_&_SNACKS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2284_196f5832b7c1821d",
+    "name": "חומוס אבו ברקוביץ",
+    "name_forms": {
+      "normalized": "חומוס אבו ברקוביצ",
+      "compact": "חומוסאבוברקוביצ",
+      "tokens": [
+        "אבו",
+        "ברקוביצ",
+        "חומוס"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "RESTAURANT"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd239d_0a05440ae1e439dd",
+    "name": "סופרמרקט שרביט",
+    "name_forms": {
+      "normalized": "סופרמרקט שרביט",
+      "compact": "סופרמרקטשרביט",
+      "tokens": [
+        "סופרמרקט",
+        "שרביט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "FOOD_&_DRINKS_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd24e5_1e52641e109808d6",
+    "name": "LIGHTHOUSE - מיקרוביט ישראל",
+    "name_forms": {
+      "normalized": "lighthouse - מיקרוביט ישראל",
+      "compact": "lighthouseמיקרוביטישראל",
+      "tokens": [
+        "lighthouse",
+        "ישראל",
+        "מיקרוביט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "KIDS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd260b_ff5efa9e602db8d2",
+    "name": "מועדון רחובות לספורט תרבות ונופש",
+    "name_forms": {
+      "normalized": "מועדונ רחובות לספורט תרבות ונופש",
+      "compact": "מועדונרחובותלספורטתרבותונופש",
+      "tokens": [
+        "ונופש",
+        "לספורט",
+        "מועדונ",
+        "רחובות",
+        "תרבות"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2781_e9c8a3ad6390784f",
+    "name": "היליס - Hilis מוצרים לילדים ותינוקות",
+    "name_forms": {
+      "normalized": "היליס - hilis מוצרימ לילדימ ותינוקות",
+      "compact": "היליסhilisמוצרימלילדימותינוקות",
+      "tokens": [
+        "hilis",
+        "היליס",
+        "ותינוקות",
+        "לילדימ",
+        "מוצרימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "KIDS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2921_d747d641f31cf264",
+    "name": "מלי - תרפיה בשוקולד",
+    "name_forms": {
+      "normalized": "מלי - תרפיה בשוקולד",
+      "compact": "מליתרפיהבשוקולד",
+      "tokens": [
+        "בשוקולד",
+        "מלי",
+        "תרפיה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CULTURE_&_EVENTS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2ab8_aef18ec1e606aa8e",
+    "name": "אדור - בית אופנה לגברים",
+    "name_forms": {
+      "normalized": "אדור - בית אופנה לגברימ",
+      "compact": "אדורביתאופנהלגברימ",
+      "tokens": [
+        "אדור",
+        "אופנה",
+        "בית",
+        "לגברימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2c25_2b1db9e6c590c742",
+    "name": "עובד - חנות טמבור",
+    "name_forms": {
+      "normalized": "עובד - חנות טמבור",
+      "compact": "עובדחנותטמבור",
+      "tokens": [
+        "חנות",
+        "טמבור",
+        "עובד"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HOME"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2ddc_414433ecc6b371a0",
+    "name": "ש.ר.מ - שרות רוקחים מקצועיים - ספא פארם",
+    "name_forms": {
+      "normalized": "ש.ר.מ - שרות רוקחימ מקצועיימ - ספא פארמ",
+      "compact": "שרמשרותרוקחיממקצועיימספאפארמ",
+      "tokens": [
+        "מקצועיימ",
+        "ספא",
+        "פארמ",
+        "רוקחימ",
+        "ש.ר.מ",
+        "שרות"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd2f7e_180539405c4a9caa",
+    "name": "אישה יפה - ויצמן ציונה",
+    "name_forms": {
+      "normalized": "אישה יפה - ויצמנ ציונה",
+      "compact": "אישהיפהויצמנציונה",
+      "tokens": [
+        "אישה",
+        "ויצמנ",
+        "יפה",
+        "ציונה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "BEAUTY"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd309b_7c896b54e581f263",
+    "name": "דני - תיקונים",
+    "name_forms": {
+      "normalized": "דני - תיקונימ",
+      "compact": "דניתיקונימ",
+      "tokens": [
+        "דני",
+        "תיקונימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "ELECTRONICS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd31a0_30c201976c1c9a43",
+    "name": "ש.ר.מ. - שירות רוקחים מקצועים - בית מרקחת הלא",
+    "name_forms": {
+      "normalized": "ש.ר.מ. - שירות רוקחימ מקצועימ - בית מרקחת הלא",
+      "compact": "שרמשירותרוקחיממקצועימביתמרקחתהלא",
+      "tokens": [
+        "בית",
+        "הלא",
+        "מקצועימ",
+        "מרקחת",
+        "רוקחימ",
+        "ש.ר.מ.",
+        "שירות"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SPORTS_&_FITNESS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd32d3_7424e19ac887f431",
+    "name": "טמבור - מישור הנוף",
+    "name_forms": {
+      "normalized": "טמבור - מישור הנופ",
+      "compact": "טמבורמישורהנופ",
+      "tokens": [
+        "הנופ",
+        "טמבור",
+        "מישור"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HOME"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd33e3_3010f45084efdec2",
+    "name": "אדר - סוכנויות אודיו שיווק",
+    "name_forms": {
+      "normalized": "אדר - סוכנויות אודיו שיווק",
+      "compact": "אדרסוכנויותאודיושיווק",
+      "tokens": [
+        "אדר",
+        "אודיו",
+        "סוכנויות",
+        "שיווק"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "ELECTRONICS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd3578_435c451ac2aa606d",
+    "name": "YONI - HAIR DESIGN",
+    "name_forms": {
+      "normalized": "yoni - hair design",
+      "compact": "yonihairdesign",
+      "tokens": [
+        "design",
+        "hair",
+        "yoni"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CLOTHES_&_ACCESSORIES"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd36cf_a40b3a3a3143d54e",
+    "name": "איקאה קריית אתא",
+    "name_forms": {
+      "normalized": "איקאה קריית אתא",
+      "compact": "איקאהקרייתאתא",
+      "tokens": [
+        "איקאה",
+        "אתא",
+        "קריית"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "SHOPPING_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd37ee_43b4cd9eb0a00ccd",
+    "name": "ישרוטל-הוט - אוריינט",
+    "name_forms": {
+      "normalized": "ישרוטל-הוט - אוריינט",
+      "compact": "ישרוטלהוטאוריינט",
+      "tokens": [
+        "אוריינט",
+        "ישרוטל-הוט"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd3972_1dfbdb84d22e6fe8",
+    "name": "איי איי בוקינג טרוול - AIBookingTravel",
+    "name_forms": {
+      "normalized": "איי איי בוקינג טרוול - aibookingtravel",
+      "compact": "אייאייבוקינגטרוולaibookingtravel",
+      "tokens": [
+        "aibookingtravel",
+        "איי",
+        "בוקינג",
+        "טרוול"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "TRANSPORT_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd3b10_6217bfe0cb89f310",
+    "name": "בום ביי",
+    "name_forms": {
+      "normalized": "בומ ביי",
+      "compact": "בומביי",
+      "tokens": [
+        "בומ",
+        "ביי"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "HOME"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd3cb2_7607ca5b81ea8986",
+    "name": "סקודה בני ברק - אולם תצוגה מרכזי",
+    "name_forms": {
+      "normalized": "סקודה בני ברק - אולמ תצוגה מרכזי",
+      "compact": "סקודהבניברקאולמתצוגהמרכזי",
+      "tokens": [
+        "אולמ",
+        "בני",
+        "ברק",
+        "מרכזי",
+        "סקודה",
+        "תצוגה"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "CAR_&_FUEL"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd3e72_c394155dbdc6a7fb",
+    "name": "ממלכת הדרקונים והמים",
+    "name_forms": {
+      "normalized": "ממלכת הדרקונימ והמימ",
+      "compact": "ממלכתהדרקונימוהמימ",
+      "tokens": [
+        "הדרקונימ",
+        "והמימ",
+        "ממלכת"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "LEISURE_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd4098_c5f84e9ba7ca1bbb",
+    "name": "מחזמר \"גבירתי הנאווה\"",
+    "name_forms": {
+      "normalized": "מחזמר \"גבירתי הנאווה\"",
+      "compact": "מחזמרגבירתיהנאווה",
+      "tokens": [
+        "\"גבירתי",
+        "הנאווה\"",
+        "מחזמר"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "LEISURE_OTHER"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd429f_5778b2fc31897f0f",
+    "name": "ארקיע",
+    "name_forms": {
+      "normalized": "ארקיע",
+      "compact": "ארקיע",
+      "tokens": [
+        "ארקיע"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "VACATION"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd43ea_0755cb9cd467b5d4",
+    "name": "ITAY BRANDS",
+    "name_forms": {
+      "normalized": "itay brands",
+      "compact": "itaybrands",
+      "tokens": [
+        "brands",
+        "itay"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "GIFTS"
+      ],
+      "mcc_confidence": "INHERITED",
+      "mcc_source": "review:system:bulk-resolve (new business, category from hot)"
+    }
+  },
+  {
+    "id": "01a02ffd44f2_94824bef3c08e2c8",
+    "name": "זגה רהיטים",
+    "name_forms": {
+      "normalized": "זגה רהיטימ",
+      "compact": "זגהרהיטימ",
+      "tokens": [
+        "זגה",
+        "רהיטימ"
+      ]
+    },
+    "created_at": "2026-08-23T18:57:45.355438+00:00",
+    "updated_at": "2026-08-23T18:57:45.355438+00:00",
+    "metadata": {
+      "mcc_codes": [
+        "OTHER"
+      ],
+      "mcc_confidence": "UNKNOWN",
+      "mcc_source": "review:system:bulk-resolve (new business, category unknown)"
+    }
   }
 ]

@@ -69,9 +69,17 @@ def _make_repos(data_dir: str) -> SimpleNamespace:
     When MongoDB is selected and the stores collection is empty the seed files
     (data/seed/stores.json + data/seed/store_aliases.json) are imported
     automatically so the pipeline can start matching immediately.
+
+    The versioning repositories come along too, plus ``projection_enabled`` —
+    whether the versioning layer owns the ``deals`` collection on this
+    deployment. A command that writes deals has to know, or it will append rows
+    the projector has no idea about.
     """
+    from lessley_deals.pipeline.factory import PipelineConfig
+
     config = _get_config(data_dir)
     review_repo = ReviewJsonRepository(config.reviews_path)
+    pipeline_config = PipelineConfig(data_dir=Path(data_dir))
 
     storage = os.environ.get("DEALS_STORAGE", "json").lower()
     if storage == "mongo":
@@ -81,6 +89,10 @@ def _make_repos(data_dir: str) -> SimpleNamespace:
         from lessley_deals.persistence.repositories.mongo.deals import DealMongoRepository
         from lessley_deals.persistence.repositories.mongo.raw_deals import RawDealMongoRepository
         from lessley_deals.persistence.repositories.mongo.raw_stores import RawStoreMongoRepository
+        from lessley_deals.persistence.repositories.mongo.deal_versions import (
+            CurrentDealMongoRepository,
+            DealVersionMongoRepository,
+        )
         from lessley_deals.persistence.repositories.mongo.stores import CanonicalStoreMongoRepository
         db = get_database()
         repos = SimpleNamespace(
@@ -91,9 +103,18 @@ def _make_repos(data_dir: str) -> SimpleNamespace:
             raw_store_repo=RawStoreMongoRepository(db),
             review_repo=review_repo,
             club_repo=ClubMongoRepository(db),
+            version_repo=DealVersionMongoRepository(db),
+            current_repo=CurrentDealMongoRepository(db),
+            projection_enabled=pipeline_config.projection_enabled,
         )
         _auto_seed_mongo_if_empty(db, data_dir)
         return repos
+    from lessley_deals.persistence.repositories.deal_versions import (
+        CurrentDealJsonRepository,
+        DealVersionJsonRepository,
+    )
+
+    base = Path(data_dir)
     return SimpleNamespace(
         store_repo=CanonicalStoreJsonRepository(config.stores_path),
         alias_repo=AliasJsonRepository(config.aliases_path),
@@ -102,6 +123,9 @@ def _make_repos(data_dir: str) -> SimpleNamespace:
         raw_store_repo=RawStoreJsonRepository(config.raw_stores_path),
         review_repo=review_repo,
         club_repo=ClubJsonRepository(config.clubs_path),
+        version_repo=DealVersionJsonRepository(base / "deal_versions.json"),
+        current_repo=CurrentDealJsonRepository(base / "deals_current.json"),
+        projection_enabled=pipeline_config.projection_enabled,
     )
 
 
@@ -319,13 +343,56 @@ def process(
     verdicts = match_stage.run(normalized, index)
     verdict_map = {v.record_id: v for v in verdicts}
 
+    # The versioning layer owns ``deals`` (see pipeline/factory.py), so this
+    # rebuild hands its deals to the same ingestion instead of appending them.
+    # Appending here is what used to leave a second row behind every time a
+    # source reworded an offer, with nothing left pointing at the first.
     persist_stage = PersistStage(deal_repo, review_repo, store_repo,
                                  review_no_match=review_no_match,
-                                 club_repo=repos.club_repo)
-    asyncio.run(persist_stage.run(pipeline_records, normalized_map, verdict_map))
+                                 club_repo=repos.club_repo,
+                                 write_deals=not repos.projection_enabled)
+    built = asyncio.run(persist_stage.run(pipeline_records, normalized_map, verdict_map))
+
+    if repos.projection_enabled and built:
+        console.print(f"Ingesting [bold]{len(built)}[/bold] rebuilt deal(s)…")
+        for report in asyncio.run(_ingest_rebuilt(repos, built)):
+            console.print(f"  {report.summary()}")
 
     ctx.finish()
     console.print(PipelineReport.from_context(ctx).summary())
+
+
+async def _ingest_rebuilt(repos: SimpleNamespace, deals: list) -> list:
+    """Version + project deals rebuilt from the raw archive, not from a scrape.
+
+    Two guards distinguish a rebuild from an observation, and both matter:
+
+    * **no expiry sweep** — the archive is not a snapshot of what a source
+      offers today, so a deal absent from it means nothing;
+    * **no reactivation** — the archive still holds the raw record of every
+      offer ever retired, which would otherwise bring them all back.
+
+    What is left is exactly what a rebuild should do: add offers that are new
+    to us, update ones whose text changed, and leave every retired one retired.
+    """
+    from lessley_deals.pipeline.factory import IngestionTuning, build_identity_resolver
+    from lessley_deals.versioning.ingestion import IngestionService
+    from lessley_deals.versioning.projection import DealProjector
+    from dataclasses import replace as _replace
+
+    config = _replace(
+        IngestionTuning.from_env(),
+        enable_expiry_sweep=False,
+        allow_reactivation=False,
+    )
+    service = IngestionService(
+        repos.version_repo,
+        repos.current_repo,
+        identity=build_identity_resolver(),
+        config=config,
+        projector=DealProjector(repos.deal_repo),
+    )
+    return await service.ingest_grouped(deals)
 
 
 @app.command(name="sync-swish-groups")
@@ -1107,8 +1174,22 @@ def rematch_reviews(
     from lessley_deals.matching.config import MatchConfig
     from lessley_deals.matching.index import AliasIndex
     from lessley_deals.matching.pipeline import MatchPipeline
-    from lessley_deals.review.actions import ReviewActions
+    from lessley_deals.review.actions import ReviewActions, build_name_forms
+    from lessley_deals.normalization.text import (
+        collapse_whitespace,
+        extract_branch,
+        strip_legal_suffixes,
+    )
     from rich.table import Table
+
+    def normalize_store_name(raw_name: str):
+        """The store-name half of the normalization pipeline, on one name.
+
+        Mirrors `StoreNameNormalizerStep` — the pipeline itself wants a whole
+        `RawScrapedRecord`, and a review item only carries the name.
+        """
+        name, _branch = extract_branch(strip_legal_suffixes(raw_name))
+        return build_name_forms(collapse_whitespace(name))
 
     _setup_logging(log_level)
 
@@ -1139,10 +1220,21 @@ def rematch_reviews(
     no_match: list = []
 
     for item in items:
+        # Re-derive the name forms instead of reusing `item.input_name_forms`.
+        # Those were computed by whatever normalizer was current when the item was
+        # queued, and a fix to that normalizer is exactly the sort of change this
+        # command exists to propagate — reusing the cached forms would re-ask the
+        # old question and get the old answer. `raw_input_name` is the untouched
+        # scraped string; older items that predate it keep their stored forms.
+        forms = (
+            normalize_store_name(item.raw_input_name)
+            if item.raw_input_name
+            else item.input_name_forms
+        )
         normalized = NormalizedRecord(
             raw_id=item.raw_id,
             source_id="",
-            store_name_forms=item.input_name_forms,
+            store_name_forms=forms,
             deal_description="",
             normalized_at=item.created_at,
             domain=None,
@@ -1906,6 +1998,246 @@ def run_history_cmd(
             f"exp={row.get('deals_expired', 0)}"
             + (f"  [red]{row.get('error')}[/red]" if row.get("error") else "")
         )
+
+
+@app.command(name="reconcile-deals")
+def reconcile_deals_cmd(
+    source: Optional[str] = typer.Option(
+        None, "--source", help="Only reconcile this source_id (default: every source with heads)"
+    ),
+    delete: bool = typer.Option(
+        False, "--delete", help="Remove orphaned rows instead of flagging them expired"
+    ),
+    apply_changes: bool = typer.Option(
+        False, "--apply", help="Actually write. Without it the command only reports."
+    ),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Clean up ``deals`` rows that no live offer accounts for any more.
+
+    Every run *before* the versioning layer owned ``deals`` appended a freshly
+    generated id for each deal it rebuilt, so a source rewording an offer left
+    the previous row behind with nothing pointing at it.  Those orphans are
+    indistinguishable from live deals to the optimizer and the Gateway, which
+    keep pricing and showing offers no source has listed for months.
+
+    This walks each source's head table — the authority on what is currently on
+    offer — and flags (or deletes) every ``deals`` row it does not account for.
+
+    **Only sources that actually have heads are touched.**  A source whose deals
+    predate versioning has no heads at all, and sweeping it would read as "every
+    one of these is an orphan" and wipe the source outright.  Dry-run by default
+    for the same reason: look at the numbers before writing.
+    """
+    _setup_logging(log_level)
+
+    from dataclasses import replace
+    from datetime import datetime, timezone
+
+    from lessley_deals.domain.enums import DealLifecycleStatus
+    from lessley_deals.pipeline.factory import build_pipeline
+    from lessley_deals.versioning.projection import stale_deal_ids
+
+    bundle = build_pipeline()
+    deal_repo = bundle.repos["deal_repo"]
+    current_repo = bundle.current_repo
+    if current_repo is None:
+        console.print("[red]Versioning is off (DEALS_VERSIONING=0) — nothing to reconcile against.[/red]")
+        raise typer.Exit(code=1)
+
+    sources = [source] if source else sorted(bundle.source_ids)
+    verb = "delete" if delete else "expire"
+    total = 0
+
+    for source_id in sources:
+        heads = current_repo.get_by_source(source_id)
+        if not heads:
+            console.print(f"[dim]{source_id:<28} no heads — skipped[/dim]")
+            continue
+
+        orphans = stale_deal_ids(deal_repo.get_ids_by_source(source_id), heads)
+        colour = "yellow" if orphans else "green"
+        console.print(
+            f"  [{colour}]{source_id:<28}[/{colour}] "
+            f"heads={len(heads):<6} orphaned rows={len(orphans)}"
+        )
+        total += len(orphans)
+
+        if not orphans or not apply_changes:
+            continue
+
+        if delete:
+            deal_repo.delete_by_ids(sorted(orphans))
+        else:
+            # Flagging needs the row itself, so read it back rather than
+            # inventing a deal from an id we know nothing else about.
+            doomed = [d for d in deal_repo.get_all() if d.id in orphans]
+            now = datetime.now(timezone.utc)
+            deal_repo.bulk_upsert([
+                replace(
+                    d,
+                    status=DealLifecycleStatus.EXPIRED,
+                    expired_at=d.expired_at or now,
+                )
+                for d in doomed
+            ])
+
+    if not apply_changes and total:
+        console.print(
+            f"\n[bold]Dry run:[/bold] {total} row(s) would be {verb}d. "
+            "Re-run with --apply to write."
+        )
+    elif apply_changes:
+        console.print(f"\n[green]Reconciled {total} row(s).[/green]")
+    else:
+        console.print("\n[green]Nothing to reconcile.[/green]")
+
+
+
+@app.command(name="resolve-reviews")
+def resolve_reviews_cmd(
+    apply_changes: bool = typer.Option(
+        False, "--apply", help="Actually write. Without it the command only reports."
+    ),
+    no_create: bool = typer.Option(
+        False, "--no-create", help="Link only; never add a store for an online storefront."
+    ),
+    raw_dir: Optional[str] = typer.Option(
+        None,
+        "--raw-dir",
+        help="Where to read raw records for URL/source evidence (default: --data-dir).",
+    ),
+    limit_show: int = typer.Option(25, "--show", help="How many rows of each kind to print."),
+    data_dir: str = typer.Option("data", "--data-dir", "-d"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
+) -> None:
+    """Settle the store-match review queue wherever the evidence is conclusive.
+
+    Three rules link an item to an existing store — the project's own matcher
+    re-run against today's catalogue, a shared registrable domain, or a name form
+    already carried by a store or alias. One veto sits over all of them: a name
+    carrying an online marker never links to a store without one, because
+    "vans online" is a different business from "vans". Such a storefront instead
+    becomes a store of its own, inheriting its categories from the brand behind it.
+
+    Anything else is left pending for `deals review`. Dry-run by default.
+    """
+    _setup_logging(log_level)
+
+    import json as _json
+
+    from lessley_deals.domain.enums import ReviewStatus
+    from lessley_deals.matching.config import MatchConfig
+    from lessley_deals.matching.index import AliasIndex
+    from lessley_deals.matching.pipeline import MatchPipeline
+    from lessley_deals.review.bulk_resolve import (
+        CatalogueIndex,
+        apply_resolutions,
+        plan_resolutions,
+    )
+    from rich.table import Table
+
+    repos = _make_repos(data_dir)
+    stores = repos.store_repo.get_all()
+    aliases = repos.alias_repo.get_all()
+    clubs = repos.club_repo.get_all()
+
+    items = [
+        i for i in repos.review_repo.get_all()
+        if i.status in (ReviewStatus.PENDING, ReviewStatus.SKIPPED)
+    ]
+    if not items:
+        console.print("[green]Nothing pending.[/green]")
+        return
+
+    # Raw records carry the two things a review item does not: which source produced
+    # it (hence which club it belongs to) and the merchant's own URL.
+    raw_path = Path(raw_dir or data_dir) / "raw_source_deals.json"
+    raw_by_id: dict[str, dict] = {}
+    if raw_path.exists():
+        for record in _json.loads(raw_path.read_text(encoding="utf-8")):
+            payload = record.get("raw_payload") or {}
+            raw_by_id[record["id"]] = {
+                "source_id": record.get("source_id"),
+                "url": record.get("url"),
+                # `supplierWebsite` is HOT's field for the merchant's own site; its
+                # `url` usually points at the benefit page on hot.co.il instead.
+                "store_url": (
+                    payload.get("store_url")
+                    or payload.get("webSite")
+                    or payload.get("supplierWebsite")
+                ),
+                # The source's own merchant category, where it publishes one. Better
+                # evidence than anything inferable from a name, and free.
+                "category": payload.get("item_category"),
+            }
+    covered = sum(1 for i in items if i.raw_id in raw_by_id)
+    if covered < len(items):
+        console.print(
+            f"[yellow]{len(items) - covered} of {len(items)} items have no raw record in "
+            f"{raw_path} — they lose their URL and club evidence.[/yellow]\n"
+            "[dim]Point --raw-dir at the directory whose scrape produced this queue.[/dim]"
+        )
+
+    console.print(f"Planning [bold]{len(items)}[/bold] items…")
+    resolutions = plan_resolutions(
+        items,
+        catalogue=CatalogueIndex.build(stores, aliases),
+        match_index=AliasIndex(aliases=aliases, stores=stores),
+        matcher=MatchPipeline(MatchConfig()),
+        raw_by_id=raw_by_id,
+        club_by_source={c.source_id: c.id for c in clubs},
+        allow_create=not no_create,
+    )
+
+    links = [r for r in resolutions if r.action == "link"]
+    creates = [r for r in resolutions if r.action == "create"]
+    deferred = [r for r in resolutions if r.action == "defer"]
+
+    if links:
+        table = Table(title=f"Link to an existing store ({len(links)})")
+        table.add_column("Scraped name")
+        table.add_column("Store")
+        table.add_column("Evidence")
+        for r in links[:limit_show]:
+            table.add_row(r.input_name, r.store_name or "—", r.reason)
+        console.print(table)
+        if len(links) > limit_show:
+            console.print(f"[dim]…and {len(links) - limit_show} more.[/dim]")
+
+    if creates:
+        table = Table(title=f"New store for an online storefront ({len(creates)})")
+        table.add_column("Name")
+        table.add_column("Categories inherited from")
+        table.add_column("Club")
+        for r in creates[:limit_show]:
+            table.add_row(r.input_name, r.reason, r.club_id or "—")
+        console.print(table)
+
+    console.print(
+        f"\n[green]Link:[/green] {len(links)}  "
+        f"[cyan]Create:[/cyan] {len(creates)}  "
+        f"[yellow]Left for a human:[/yellow] {len(deferred)}\n"
+    )
+
+    if not apply_changes:
+        console.print("[dim]Dry run — nothing written. Re-run with --apply.[/dim]")
+        return
+
+    report = apply_resolutions(
+        resolutions,
+        {i.id: i for i in items},
+        store_repo=repos.store_repo,
+        alias_repo=repos.alias_repo,
+        review_repo=repos.review_repo,
+        club_repo=repos.club_repo,
+    )
+    console.print(f"[green]{report.summary()}[/green]")
+    console.print(
+        "[dim]No deals were written — run `deals process` to rebuild them from the raw "
+        "records now that the aliases exist.[/dim]"
+    )
+
 
 
 if __name__ == "__main__":

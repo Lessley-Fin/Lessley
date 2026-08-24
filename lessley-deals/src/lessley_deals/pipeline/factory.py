@@ -30,6 +30,7 @@ from lessley_deals.scraping.orchestrator import ScraperOrchestrator
 from lessley_deals.scraping.registry import SourceRegistry
 from lessley_deals.versioning.hashing import DealIdentityResolver
 from lessley_deals.versioning.ingestion import IngestionConfig, IngestionService
+from lessley_deals.versioning.projection import DealProjector
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +72,25 @@ class PipelineConfig:
     written when versioning is on, but as history only.  Turning this off leaves every
     consumer reading whatever was in ``deals`` before the run."""
 
+    project_deals: bool = field(default_factory=lambda: _env_flag("DEALS_PROJECT", True))
+    """Let the versioning layer own ``deals``, mirroring the head table onto it
+    after each run (see versioning/projection.py).  This is what makes deals that
+    a source stopped offering disappear from what consumers read; with it off,
+    ``deals`` goes back to being append-only and expired offers are served
+    forever.  Requires ``enable_versioning``."""
+
+    delete_expired: bool = field(default_factory=lambda: _env_flag("DEALS_DELETE_EXPIRED", False))
+    """Delete expired rows from ``deals`` instead of flagging them
+    ``status="expired"``.  Off by default: a flagged row still explains why a
+    saved deal stopped applying, and survives the source bringing it back."""
+
     @property
     def use_mongo(self) -> bool:
         return self.storage == "mongo"
+
+    @property
+    def projection_enabled(self) -> bool:
+        return self.enable_versioning and self.project_deals
 
 
 @dataclass
@@ -228,13 +245,18 @@ def build_pipeline(config: PipelineConfig | None = None) -> PipelineBundle:
     )
     normalize_stage = NormalizeStage(create_default_pipeline())
     match_stage = MatchStage(MatchPipeline(MatchConfig()))
+    # Exactly one writer for ``deals``.  With projection on, the ingestion owns
+    # it and writes each offer under its *stable* id; PersistStage would append
+    # a second row under a freshly generated one for the same offer, and neither
+    # writer could then tell which row the other left behind.
+    write_deals = config.write_deals and not config.projection_enabled
     persist_stage = PersistStage(
         repos["deal_repo"],
         repos["review_repo"],
         repos["store_repo"],
         review_no_match=config.review_no_match,
         club_repo=repos["club_repo"],
-        write_deals=config.write_deals,
+        write_deals=write_deals,
     )
 
     constraints_stage = None
@@ -245,12 +267,18 @@ def build_pipeline(config: PipelineConfig | None = None) -> PipelineBundle:
 
     ingest_stage = None
     if config.enable_versioning:
+        projector = None
+        if config.project_deals:
+            projector = DealProjector(
+                repos["deal_repo"], delete_expired=config.delete_expired
+            )
         ingest_stage = IngestStage(
             IngestionService(
                 repos["version_repo"],
                 repos["current_repo"],
                 identity=build_identity_resolver(),
                 config=IngestionTuning.from_env(),
+                projector=projector,
             )
         )
 
@@ -263,12 +291,15 @@ def build_pipeline(config: PipelineConfig | None = None) -> PipelineBundle:
         alias_repo=repos["alias_repo"],
         constraints_stage=constraints_stage,
         ingest_stage=ingest_stage,
-        publish=publish,
     )
 
     logger.info(
-        "Pipeline built — storage=%s versioning=%s sources=%d",
-        config.storage, config.enable_versioning, len(registry.list_all()),
+        "Pipeline built — storage=%s versioning=%s projection=%s sources=%d",
+        config.storage,
+        config.enable_versioning,
+        "delete" if (config.projection_enabled and config.delete_expired)
+        else config.projection_enabled,
+        len(registry.list_all()),
     )
     return PipelineBundle(
         pipeline=pipeline,

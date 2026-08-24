@@ -176,6 +176,28 @@ class Deal:
     # group-sync flow; query-time fan-out matches against these for accuracy.
     group_member_store_ids: list[str] | None = None
 
+    # --- Lifecycle ---------------------------------------------------------
+    # Owned by the versioning layer, not by the scrape: ``DealProjector`` stamps
+    # these onto every row from the head table on each run (see
+    # versioning/projection.py).  They are what makes ``deals`` a *current* read
+    # model instead of an append-only log — consumers filter on ``status``.
+    deal_key: str | None = None
+    """Stable business key shared by every version of this offer."""
+
+    status: DealLifecycleStatus = DealLifecycleStatus.ACTIVE
+    """ACTIVE while the source still offers it, EXPIRED once it stops."""
+
+    first_seen_at: datetime | None = None
+
+    last_seen_at: datetime | None = None
+    """Last run that still saw this offer — how stale the row is, in one field."""
+
+    expires_at: datetime | None = None
+    """End date the source declared for itself, when it publishes one."""
+
+    expired_at: datetime | None = None
+    """When *we* concluded it was gone.  None while ACTIVE."""
+
     @property
     def fingerprint(self) -> str:
         data = f"{self.store_id}|{self.source_id}|{self.deal_description or ''}|{self.currency or ''}"

@@ -27,13 +27,17 @@ versioning layer, but they are history rather than the read path: they carry a
 of whichever run last populated them. Reading them is what previously hid every
 HOT deal from the optimizer.
 
-Two consequences of ``deals`` being the source of truth, both deliberate:
+``deals`` now has a lifecycle of its own: the pipeline's versioning layer
+mirrors its head table onto the collection after every run, stamping each row
+``status: "active"`` or ``status: "expired"`` (see ``versioning/projection.py``
+there). Queries here filter the expired ones out, so an offer a source stopped
+listing stops being priced. Rows written before that existed carry no ``status``
+at all and are treated as active — absent is not the same as expired, and
+silently dropping them would empty the optimizer.
 
-* there is no ``status`` field to filter on, so an expired deal keeps being
-  returned until it is deleted — the collection has no lifecycle of its own;
-* the business key is ``_id`` on rows the pipeline writes, but imported rows
-  keep an ObjectId ``_id`` plus a real ``id``, so it is read off whichever is
-  present (see ``_to_engine_dict``).
+One wrinkle remains: the business key is ``_id`` on rows the pipeline writes,
+but imported rows keep an ObjectId ``_id`` plus a real ``id``, so it is read off
+whichever is present (see ``_to_engine_dict``).
 
 Store matching happens in the query rather than via ``engine._deal_matches_store``
 so group-wide deals are caught in all the shapes the pipeline produces:
@@ -62,6 +66,11 @@ STORES_COLLECTION = os.environ.get("STORES_COLLECTION", "stores")
 
 # Set by the repository layer, never part of the deal itself.
 _INTERNAL_FIELDS = ("_id", "fingerprint")
+
+# Deals the source has stopped offering. ``$ne`` rather than ``{"status":
+# "active"}`` on purpose: it also matches rows written before the pipeline
+# stamped a status, which are live deals that simply predate the field.
+_ON_OFFER = {"status": {"$ne": "expired"}}
 
 
 @lru_cache(maxsize=1)
@@ -97,7 +106,8 @@ def load_store_deals(store_id: str, db: Database | None = None) -> list[dict[str
                 {"group_member_store_ids": store_id},
                 {"group_member_stores": store_id},
                 {"group_member_stores.store_id": store_id},
-            ]
+            ],
+            **_ON_OFFER,
         }
     )
     return [_to_engine_dict(doc) for doc in cursor]

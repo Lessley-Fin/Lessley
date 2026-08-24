@@ -22,6 +22,7 @@ python -m deals schedules                            # Resolved schedules + next
 python -m deals run-source hot                       # One source once, as the scheduler would
 python -m deals run-history --source hot             # Recent scheduled runs from the journal
 python -m deals deal-history <deal_key>              # Full version history of one deal
+python -m deals reconcile-deals                      # Sweep `deals` rows no live offer accounts for (dry run)
 python -m deals scrape --all                         # Scrape all sources
 python -m deals scrape --source hot                  # Scrape one source
 python -m deals process                              # Normalize + match raw data
@@ -104,6 +105,8 @@ Thresholds from `MatchConfig`: auto-accept ≥ 0.90, send to review ≥ 0.50, di
 
   Expiry is guarded on purpose — a deal is only expired when the run had no errors, covered ≥50% of the known active deals, and the deal has been missing for ≥2 runs *and* ≥24h. Never weaken these without reading `docs/orchestration.md#3` first; under-expiring is recoverable, mass false expiry is not.
 
+  `projection.py::DealProjector` is what carries those decisions to the collection consumers actually read — see the storage notes above. One rule when calling the ingestion by hand: a **rebuild** from the raw archive (`deals process`) must pass `allow_reactivation=False`, because that archive still holds the raw record of every offer ever retired and would otherwise bring them all back.
+
 **Group gift cards** — HOT deals are classified as either store-specific or group-wide gift cards (e.g. "קבוצת גולף"). Group deals embed `group_member_stores` on the record so query-time fan-out can surface them for any member.
 
 The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json` by `sync_swish_groups()` (`scraping/helpers/swish_group_sync.py`). Swish entries are tagged `managed_by: "swish_scraper"`, store members as structured `{name, store_id, confidence}` dicts (resolved against the canonical stores via the matching pipeline), and push unresolved members to the review queue with `verdict.explanation.details["kind"] == "group_member_match"`. CLI: `python -m deals sync-swish-groups`. See `docs/group-deals.md`.
@@ -117,8 +120,17 @@ The Swish (נפשונית) catalogue is auto-synced into `hot_store_groups.json`
 - **`deals`, `stores`, `clubs` and `mccs` are the shared read path.** Every consumer
   reads them directly — `deal-optimizer`'s `deals_source`, the Gateway's deal search
   and Personalization's reference data — so they are what a scrape run must leave
-  correct. Written by default (`DEALS_WRITE_LEGACY=1`); turning that off leaves every
-  consumer reading whatever was there before the run.
+  correct.
+- **`deals` has a lifecycle.** With `DEALS_PROJECT=1` (default) the versioning layer
+  owns the collection: after each run `DealProjector` mirrors the head table onto it,
+  upserting every live offer under its **stable** `deal_id` and stamping the ones the
+  sources stopped listing `status: "expired"` (or deleting them, with
+  `DEALS_DELETE_EXPIRED=1`). That is what makes a retired deal stop being priced and
+  shown; before it, `deals` was append-only, so every rewording left an untracked
+  duplicate behind and no offer ever went away. Consumers filter
+  `status != "expired"` — **never** `== "active"`, because rows predating the field
+  carry no status and are live. `python -m deals reconcile-deals` sweeps the duplicates
+  the old behaviour left behind.
 - `deals_current` (head, one row per deal) + `deal_versions` (append-only history) are
   the pipeline's own change tracking, written when `DEALS_VERSIONING=1`. They carry the
   deal under a `snapshot` sub-document and only cover the sources of whichever run last
@@ -197,6 +209,8 @@ in messy freeform text; skip it when they're already named JSON/HTML fields.
 | `MONGO_DB` | `lessley` | MongoDB database name |
 | `DEALS_VERSIONING` | `1` | SCD Type 2 deal history (see `docs/orchestration.md`) |
 | `DEALS_WRITE_LEGACY` | `1` | Write the shared `deals` collection every consumer reads |
+| `DEALS_PROJECT` | `1` | Versioning owns `deals`: expired offers stop being served |
+| `DEALS_DELETE_EXPIRED` | — | Delete expired rows from `deals` instead of flagging them |
 | `DEALS_MAX_CONCURRENCY` | `3` | Sources scraped in parallel by the worker |
 | `DEALS_SCHEDULE_<SOURCE>` | — | Per-source override: `off`, a cron string, or `15m`/`6h` |
 | `DEALS_ABSENCE_THRESHOLD` / `DEALS_ABSENCE_GRACE_HOURS` | `2` / `24` | Misses + wall-clock before a deal expires |

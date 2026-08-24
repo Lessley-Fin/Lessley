@@ -31,8 +31,23 @@ public class DealFinderRepository : IDealFinderRepository
             Builders<T>.Filter.Eq("id", id),
             Builders<T>.Filter.Eq("_id", id));
 
+    /// <summary>
+    /// Excludes deals the scraping pipeline has marked as no longer offered. Its versioning
+    /// layer stamps every row <c>status: "active"</c> or <c>"expired"</c> after each run;
+    /// without this filter, search keeps returning offers the source took down months ago.
+    /// <para>
+    /// Written as "not expired" rather than "is active" deliberately: rows written before
+    /// the pipeline stamped a status carry no such field, and they are live deals that
+    /// simply predate it — matching only <c>"active"</c> would hide all of them.
+    /// </para>
+    /// </summary>
+    private static FilterDefinition<DealDocument> NotExpired() =>
+        Builders<DealDocument>.Filter.Ne("status", "expired");
+
     public async Task<DealSearchResult?> GetByIdAsync(string dealId, CancellationToken ct = default)
     {
+        // Fetched by explicit id, so an expired deal is still returned here: a saved deal
+        // or a notification linking to one must resolve to "this offer ended", not a 404.
         var deal = await _dealCollection
             .Find(ByBusinessId<DealDocument>(dealId))
             .FirstOrDefaultAsync(ct);
@@ -68,7 +83,14 @@ public class DealFinderRepository : IDealFinderRepository
         var storeIds  = matchingStores.Select(s => s.StoreId).ToList();
 
         // Step 2: filter deals within matching stores
-        var dealFilter = Builders<DealDocument>.Filter.In(d => d.StoreId, storeIds);
+        var dealFilter = Builders<DealDocument>.Filter.In(d => d.StoreId, storeIds) & NotExpired();
+
+        // Scoped by the service to the caller's own clubs. Matched on the raw field name
+        // because `club_id` is nullable on the document: a row the pipeline wrote before
+        // the club map existed carries none, and cannot be attributed to any club, so it
+        // is correctly excluded here rather than leaking into every user's results.
+        if (query.ClubIds?.Count > 0)
+            dealFilter &= Builders<DealDocument>.Filter.In("club_id", query.ClubIds);
 
         if (!string.IsNullOrWhiteSpace(query.DealText))
             dealFilter &= Builders<DealDocument>.Filter.Or(
