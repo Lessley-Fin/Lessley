@@ -2,9 +2,10 @@ import { useState } from "react"
 import { ChevronDown, ExternalLink, Info } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { useClubs } from "@/features/clubs/hooks"
 import { getClubLogo } from "@/lib/club-logos"
 import { formatAmount } from "@/lib/formatters"
-import { cn } from "@/lib/utils"
+import { cn, getClubNameBySource } from "@/lib/utils"
 import type { OptimizerDealSummary, OptimizerStep, OptimizerStore } from "@/lib/types"
 import { DealInfoDialog } from "./DealInfoDialog"
 
@@ -34,6 +35,7 @@ function useDealTypeLabel() {
 export function StackSteps({ steps, deals, store }: StackStepsProps) {
   const { t } = useTranslation()
   const dealTypeLabel = useDealTypeLabel()
+  const { data: clubs = [] } = useClubs()
   const [openStep, setOpenStep] = useState<number | null>(null)
 
   const activeStep = openStep === null ? null : (steps[openStep] ?? null)
@@ -46,6 +48,8 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
           const deal = deals[step.deal_id]
           const label = dealTypeLabel(deal?.deal_type)
           const clubLogo = getClubLogo(deal?.source_id, deal?.club_id)
+          // The club as people know it ("HOT Israel"), not the scraper id behind it.
+          const club = getClubNameBySource(clubs, deal?.source_id)
           const isLast = index === steps.length - 1
           // A tender deal only discounts the slice of the bill routed through that
           // instrument; a price-level deal reports null and works off the whole bill.
@@ -101,7 +105,7 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
                     <p className="text-sm font-medium">{deal?.title ?? step.deal_id}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       {label ? <span className="rounded-md bg-card px-1.5 py-0.5 capitalize">{label}</span> : null}
-                      {deal?.source_id ? <span>{deal.source_id}</span> : null}
+                      {club ? <span>{club}</span> : null}
                     </div>
                   </div>
 

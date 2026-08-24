@@ -13,8 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useClubs } from "@/features/clubs/hooks"
 import { formatAmount } from "@/lib/formatters"
 import type { OptimizerDealSummary, OptimizerStep, OptimizerStore } from "@/lib/types"
+import { getClubNameBySource } from "@/lib/utils"
 
 interface DealInfoDialogProps {
   deal: OptimizerDealSummary | null
@@ -35,8 +37,10 @@ function useDealTypeLabel() {
 export function DealInfoDialog({ deal, step, store, open, onOpenChange }: DealInfoDialogProps) {
   const { t } = useTranslation()
   const dealTypeLabel = useDealTypeLabel()
+  const { data: clubs = [] } = useClubs()
 
   const typeLabel = dealTypeLabel(deal?.deal_type)
+  const club = getClubNameBySource(clubs, deal?.source_id)
   const storeImages = store?.image_urls ?? []
 
   return (
@@ -47,7 +51,7 @@ export function DealInfoDialog({ deal, step, store, open, onOpenChange }: DealIn
             <DialogHeader>
               <DialogTitle className="text-start text-base">{deal.title ?? deal.deal_id}</DialogTitle>
               <DialogDescription className="text-start">
-                {[typeLabel, deal.source_id].filter(Boolean).join(" · ") || t("optimizer.dealInfo.deal")}
+                {[typeLabel, club].filter(Boolean).join(" · ") || t("optimizer.dealInfo.deal")}
               </DialogDescription>
             </DialogHeader>
 
@@ -83,7 +87,7 @@ export function DealInfoDialog({ deal, step, store, open, onOpenChange }: DealIn
                 maxUsesPerTransaction={deal.max_uses_per_transaction}
                 maxUsesPerMonth={deal.max_uses_per_month}
                 membershipRequired={deal.membership_required}
-                membershipSource={deal.source_id}
+                membershipSource={club}
                 fineprint={deal.terms_and_conditions}
               />
 

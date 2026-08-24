@@ -21,7 +21,7 @@ public class ClubRepository : IClubRepository
         // pipeline seeds put it in _id ("club_hot"), while rows imported from
         // main/resources/clubs.json keep it in `id` and get a generated ObjectId _id.
         // Reading only _id throws InvalidCastException on the imported shape.
-        var projection = Builders<BsonDocument>.Projection.Include("_id").Include("id").Include("name");
+        var projection = Builders<BsonDocument>.Projection.Include("_id").Include("id").Include("name").Include("source_id");
 
         var docs = await _collection
             .Find(FilterDefinition<BsonDocument>.Empty)
@@ -29,8 +29,15 @@ public class ClubRepository : IClubRepository
             .ToListAsync(ct);
 
         return docs
-            .Select(d => new ClubDto(BusinessId(d), d.GetValue("name", "").AsString))
+            .Select(d => new ClubDto(BusinessId(d), d.GetValue("name", "").AsString, SourceId(d)))
             .ToList();
+    }
+
+    /// <summary>The scraper id deals are tagged with, absent on rows that predate it.</summary>
+    private static string? SourceId(BsonDocument doc)
+    {
+        var sourceId = doc.GetValue("source_id", BsonNull.Value);
+        return sourceId.IsString && sourceId.AsString.Length > 0 ? sourceId.AsString : null;
     }
 
     /// <summary>The club's business id, from <c>id</c> when present and <c>_id</c> otherwise.</summary>
