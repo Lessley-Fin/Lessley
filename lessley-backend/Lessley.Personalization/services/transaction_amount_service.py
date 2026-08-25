@@ -1,9 +1,8 @@
 """
 The one place that reads money off a transaction.
 
-Every insight in this codebase — what the user spends on, where, when, and what they saved —
-comes down to turning one row of the Open Finance card feed into a number. That turn is where
-the bugs live, because the feed's two amounts do not mean what their names suggest:
+A row of the Open Finance card feed carries two amounts, and neither means what its name
+suggests:
 
     "amount": {
         "originalAmount": { "amount": -41328.00, "currency": "CZK" },
@@ -12,33 +11,19 @@ the bugs live, because the feed's two amounts do not mean what their names sugge
 
 `originalAmount` is not the sticker price before a discount. It is the amount *before the issuer
 touched it* — before converting the currency, before splitting it into payments. Read naively,
-that hotel bill in Prague looks like ILS 34,512 saved.
+that hotel bill in Prague looks like ILS 34,512 saved. Measured against a real year of 355
+transactions, the naive readings reported ILS 51,499.36 of savings against a genuine 1.99.
 
-So the rules live here, once, instead of being re-derived at each call site:
+Every row is one of four kinds, and the kind decides what its money means:
 
-  - **A refund is not spending.** A credit arrives as the mirror of the purchase — positive
-    where the purchase was negative. `abs()` turned every one of them back into spending.
-  - **A conversion is not a discount.** When the two amounts carry different currencies, the
-    gap between them is an exchange rate. The issuer's cut on it is a *fee*, in `markupFee`.
-  - **An installment is not a discount.** A four-payment plan is four rows, each carrying the
-    whole purchase in `originalAmount` and one payment in `chargedAmount`. The feed says so
-    outright in `isCreditCardInstallment`.
-  - **But a settled purchase billed at nothing *is* a saving.** `chargedAmount.amount` arrives
-    as `""` on real rows. Where the row is still `PENDING` that means "not billed yet" and the
-    charge is coming. Where it is `BOOKED` — settlement final, `isInvoiced` true — it means the
-    merchant recorded the sale and the card was charged nothing: a voucher, a gift card, points,
-    or a fee the issuer waived. No money left the account, so it is not spending, and the user
-    genuinely did not pay the price the merchant asked. That is the one gap in this feed that
-    is a real saving.
-  - **A duplicate is not a second purchase.** `isDuplicate` marks rows the provider has already
-    told us are the same transaction seen twice.
+    regular    the user paid what the merchant asked
+    statement  the issuer billed less than the merchant asked — a real discount
+    coupon     settled, and the card was never billed: a loaded club card paid
+    refund     money came back
 
-Measured against a real year (355 transactions, `data/shmer.json`): the naive readings reported
-ILS 53,456.67 of spending against an actual outflow of 52,447.43, and ILS 51,499.36 of savings
-against a genuine 1.99.
-
-This is a Layer-2 service in the sense of the repo's architecture: pure business logic, no
-database, no HTTP, no I/O. It takes a `Transaction` and gives back a number.
+Three of those four are gaps between the two amounts, and only one of them is a discount. The
+order in `detailed_kind_of` is what tells them apart, and each check is there because it fired
+on real data. Please do not reorder it.
 """
 
 import logging
@@ -50,23 +35,24 @@ from models.transaction import Transaction
 logger = logging.getLogger(__name__)
 
 
-# ── Why a purchase did or did not contribute to the savings total ─────────────────
-# Three of these carry money — `SAVING_COUNTED` (a genuine gap), `SAVING_NOT_CHARGED` (the club
-# card paid) and `SAVING_REFUNDED` (the money came back). The rest name a gap between the
-# original and charged amount that exists for a reason other than a discount. They are logged,
-# not shown, so that a savings figure that looks wrong can be explained without re-reading the
-# feed by hand.
+# What kind of thing happened. `detailed_kind_of` returns one of these six; `kind_of` folds the
+# first three into REGULAR, because "the user simply paid" is one idea however it was billed.
+ORDINARY = "ordinary"
+FOREIGN = "foreign"
+INSTALLMENT = "installment"
+STATEMENT = "statement"
+COUPON = "coupon"
+REFUND = "refund"
+DUPLICATE = "duplicate"
 
-SAVING_COUNTED = "counted"
-SAVING_NOT_CHARGED = "not_charged"
-SAVING_REFUNDED = "refunded"
-SAVING_NO_GAP = "no_gap"
-SAVING_MISSING_AMOUNT = "missing_amount"
-SAVING_FOREIGN_CURRENCY = "foreign_currency"
-SAVING_REFUND = "refund"
-SAVING_INSTALLMENT = "installment"
-SAVING_INSTALLMENT_INFERRED = "installment_inferred"
-SAVING_DUPLICATE = "duplicate"
+REGULAR = "regular"
+
+REGULAR_SHAPES = (ORDINARY, FOREIGN, INSTALLMENT)
+
+# The order the client reads them in: everyday first, then the exceptions by how much explaining
+# they need. Fixed rather than sorted by count, so the legend does not reshuffle between one time
+# range and the next.
+MIX_ORDER = [ORDINARY, FOREIGN, INSTALLMENT, STATEMENT, REFUND, COUPON]
 
 # Which way the money moved. The feed signs its amounts: a purchase is negative, a refund or a
 # credit is positive. That sign is more reliable than `classification.type`, which labelled two
@@ -80,34 +66,23 @@ UNKNOWN = "unknown"
 # charge that never happened.
 SETTLED = "BOOKED"
 
-# What kind of thing happened, for describing a year back to the user. Every countable row gets
-# exactly one of these — see `kind_of` for why they are ranked rather than combined.
-KIND_ORDINARY = "ordinary"
-KIND_FOREIGN = "foreign"
-KIND_INSTALLMENT = "installment"
-KIND_REFUND = "refund"
-KIND_VOUCHER = "voucher"
-KIND_DUPLICATE = "duplicate"
-
-# The order the client reads them in: the everyday case first, then the exceptions by how much
-# explaining they need. Fixed rather than sorted by count, so the legend does not reshuffle
-# between one time range and the next.
-KIND_ORDER = [KIND_ORDINARY, KIND_FOREIGN, KIND_INSTALLMENT, KIND_REFUND, KIND_VOUCHER]
-
 
 class TransactionAmountService:
     """
-    Reads amounts off transactions, and says why when it declines to.
+    Reads amounts off transactions. Stateless: a transaction in, a number or a label out.
 
-    Stateless and side-effect free: every method takes a transaction and returns a number or a
-    label. Callers do the grouping and summing; this class only decides what one row is worth.
+    Callers do the grouping and summing. Four figures answer four different questions:
+
+        paid      what the bank billed
+        returned  what came back
+        saved     what the user did not have to pay
+        value     what the purchase was worth, whoever paid for it
     """
 
     # ── The two amounts, unpacked safely ──────────────────────────────────────────
 
     @staticmethod
     def _charged(transaction: Transaction) -> tuple[float | None, str | None]:
-        """What the issuer billed, and in which currency. `None` when the feed left it blank."""
         amount = transaction.amount
         if not amount or not amount.chargedAmount:
             return None, None
@@ -115,428 +90,288 @@ class TransactionAmountService:
 
     @staticmethod
     def _original(transaction: Transaction) -> tuple[float | None, str | None]:
-        """What the merchant asked for, before conversion or splitting, and in which currency."""
         amount = transaction.amount
         if not amount or not amount.originalAmount:
             return None, None
         return amount.originalAmount.amount, amount.originalAmount.currency
 
-    # ── Is this row worth counting at all? ────────────────────────────────────────
+    def _charged_amount(self, transaction: Transaction) -> float | None:
+        return self._charged(transaction)[0]
+
+    def _original_amount(self, transaction: Transaction) -> float | None:
+        return self._original(transaction)[0]
+
+    # ── What kind of row is this? ─────────────────────────────────────────────────
 
     @staticmethod
     def is_duplicate(transaction: Transaction) -> bool:
-        """Whether the provider has flagged this as the same transaction seen twice."""
         return bool(transaction.isDuplicate)
 
-    def was_never_charged(self, transaction: Transaction) -> bool:
-        """
-        Whether this purchase settled without the card being billed for it.
-
-        The signature is a blank (or zero) `chargedAmount` on a row the issuer has finished
-        with, against a merchant figure that is an expense. On real data every such row is
-        `BOOKED` and `isInvoiced` — the invoice went out and the amount on it was nothing —
-        while the one `PENDING` row in the feed carries an ordinary charge. A voucher, a gift
-        card, points, or a waived fee all land here; the feed does not say which, and for the
-        purpose of "did the user pay this" it does not matter.
-
-        The `BOOKED` check is what makes this safe. Before settlement a blank charge means the
-        billing has not happened yet, not that it never will, and counting it as a saving would
-        reverse itself the moment the charge lands.
-        """
-        if transaction.status != SETTLED:
-            return False
-        charged, _ = self._charged(transaction)
-        if charged is not None and charged != 0:
-            return False
-        original, _ = self._original(transaction)
-        # A blank charge against a *credit* is a refund that has not been paid out, which is
-        # the opposite of a saving.
-        return original is not None and original < 0
-
-    def paid_with_club_card(self, transaction: Transaction) -> bool:
-        """
-        Whether a club's own benefit card paid for this, rather than the bank.
-
-        A Hever נטען card is loaded up front and only spends at the club's partner shops, so a
-        purchase charged to one already carried the discount. It arrives here as a settled row
-        the card was never billed for — `was_never_charged` — which is the same signature a gift
-        card or redeemed points leave. That is the limit of what the feed can tell us: it says
-        no money left the account, not which club is behind it, so nothing downstream may claim
-        to name the club from this alone.
-
-        This is deliberately *not* read off the accounts feed. The product string there is a
-        guess at wording nobody has confirmed, and it costs a second API call that can fail;
-        this signature is in the transaction already and cannot be worded differently.
-        """
-        return not self.is_duplicate(transaction) and self.was_never_charged(transaction)
-
     def direction(self, transaction: Transaction) -> str:
-        """
-        Which way the money moved: out of the account, into it, or not enough information.
-
-        Read from the sign of the billed amount. A purchase is negative; a refund, a chargeback
-        or a cashback credit is positive. Zero counts as `UNKNOWN` rather than as a free
-        purchase — a real charge is never exactly nothing, so a zero is a blank in disguise.
-        """
-        charged, _ = self._charged(transaction)
+        """Which way the money moved, read from the sign of whichever amount the feed gave us."""
+        charged = self._charged_amount(transaction)
         if charged is None or charged == 0:
-            # Nothing was billed — either not yet, or never. Either way the merchant's own
-            # figure is what says which way this row points, and it is the only figure a
-            # pending row has at all.
-            original, _ = self._original(transaction)
+            original = self._original_amount(transaction)
             if original is None or original == 0:
                 return UNKNOWN
             return OUTFLOW if original < 0 else INFLOW
         return OUTFLOW if charged < 0 else INFLOW
 
-    def is_purchase(self, transaction: Transaction) -> bool:
+    def is_coupon(self, transaction: Transaction) -> bool:
         """
-        Whether this row is the user buying something, as opposed to money coming back.
+        Settled, and the card was never billed for it: a loaded club card paid.
 
-        This is the question the *counts* ask — "how many times did you shop here" — and a
-        refund is not a visit. The sums ask a different question and keep refunds, so that a
-        credit can cancel the purchase it reverses.
+        A נטען card is topped up in advance and only spends at the club's own shops, so the
+        purchase carried its discount before it reached the bank. The `BOOKED` check is what
+        makes this safe — before settlement a blank charge means the billing has not happened
+        yet, not that it never will.
+
+        The feed says no money left the account. It does not say whose card it was, so nothing
+        downstream may name the club.
         """
-        return not self.is_duplicate(transaction) and self.direction(transaction) == OUTFLOW
+        if transaction.status != SETTLED:
+            return False
+        charged = self._charged_amount(transaction)
+        if charged is not None and charged != 0:
+            return False
+        original = self._original_amount(transaction)
+        return original is not None and original < 0
 
-    # ── How much money moved ──────────────────────────────────────────────────────
-    #
-    # There are two different questions here and they have two different answers, because a
-    # voucher purchase is worth something without costing anything:
-    #
-    #   amount_spent    — what left the bank. A voucher costs nothing, so it is zero.
-    #   purchase_value  — what the purchase was worth, however it was paid for.
-    #
-    # "How much did I spend in total" is the first. Everything else — what the user buys, where,
-    # when, on which card — is the second: shopping at TERMINAL X with a gift card is still
-    # shopping at TERMINAL X, and a voucher account that reports zero activity is worse than
-    # useless. Do not collapse these two back into one.
-
-    def purchase_value(self, transaction: Transaction) -> float:
+    def is_installment(self, transaction: Transaction) -> bool:
         """
-        What this purchase was worth, as a positive number, regardless of how it was paid for.
+        One payment of a plan, not a purchase at a quarter of the price.
 
-        The billed figure where there is one, and the merchant's figure where the card was never
-        charged — the voucher covered the price, but the price is what the user bought.
+        The feed says so outright in `isCreditCardInstallment`, and that is authoritative where
+        it is present. The shape check is the fallback for a trimmed payload that has dropped
+        the flag, where a plan can only be recognised by the charge dividing the full price a
+        whole number of times. In that mode a genuine half-price sale is suppressed along with
+        the plans; that is deliberate — see `SAVINGS`.
         """
-        if self.is_duplicate(transaction) or self.direction(transaction) != OUTFLOW:
-            return 0.0
-        if self.was_never_charged(transaction):
-            original, _ = self._original(transaction)
-            return abs(original) if original is not None else 0.0
-        return self._billed_or_estimated(transaction)
-
-    def net_purchase_value(self, transaction: Transaction) -> float:
-        """
-        `purchase_value`, signed so that a refund cancels the purchase it reverses.
-
-        This is what the per-category, per-shop, per-account and per-day sums add up, so that a
-        refunded hotel stops counting as a holiday the user took.
-        """
-        if self.is_duplicate(transaction):
-            return 0.0
-        return self.purchase_value(transaction) - self.amount_received(transaction)
-
-    def amount_spent(self, transaction: Transaction) -> float:
-        """
-        How much money left the account on this row, as a positive number. Zero if none did.
-
-        The billed figure is the right one to sum even for an installment plan: each row bills
-        one payment, so the rows of a four-payment plan add up to the purchase exactly once.
-
-        A purchase that settled without being billed cost nothing, whatever the merchant asked
-        — the voucher paid for it, not the account. It is a saving instead; see `saving_of`.
-
-        That leaves the row still waiting to be billed, where the merchant's figure stands in as
-        the best estimate of the charge to come — see `_billed_or_estimated`.
-
-        This is the *only* figure that answers "how much did I spend". Everywhere the question
-        is what the user bought rather than what it cost them, use `purchase_value`.
-        """
-        if not self.is_purchase(transaction):
-            return 0.0
-        if self.was_never_charged(transaction):
-            return 0.0
-        return self._billed_or_estimated(transaction)
-
-    def _billed_or_estimated(self, transaction: Transaction) -> float:
-        """
-        The billed figure, or the merchant's figure where billing has not happened yet.
-
-        The substitution has to be *positively* safe, not merely unobjectionable. It is not safe
-        for a plan, where the merchant's figure is the whole purchase rather than this month's
-        payment. It is not safe across a currency, where the figure is koruna or dollars and
-        would be summed as shekels — and a blank charge on a real row still carries its own
-        currency ("amount": "", "currency": "ILS"), so a match can be confirmed where there is
-        one. Where it cannot be, the row is left out rather than guessed at.
-        """
-        charged, charged_currency = self._charged(transaction)
-        if charged is not None:
-            return abs(charged)
-
-        original, original_currency = self._original(transaction)
-        if original is None:
-            return 0.0
         if transaction.isCreditCardInstallment:
-            return 0.0
-        if charged_currency != original_currency:
-            return 0.0
-        return abs(original)
-
-    def amount_received(self, transaction: Transaction) -> float:
-        """How much money came back on this row — a refund, a chargeback, a credit."""
-        if self.is_duplicate(transaction) or self.direction(transaction) != INFLOW:
-            return 0.0
-        charged, _ = self._charged(transaction)
-        if charged is not None:
-            return abs(charged)
-        original, _ = self._original(transaction)
-        return abs(original) if original is not None else 0.0
-
-    def net_amount(self, transaction: Transaction) -> float:
-        """
-        The signed effect on the balance: negative for a purchase, positive for a refund.
-
-        Summing this over a period answers "how much worse off am I", which is a different — and
-        for a period comparison, more honest — question than `amount_spent`, because a refund
-        cancels the purchase it reverses instead of being ignored.
-        """
-        if self.is_duplicate(transaction):
-            return 0.0
-        return self.amount_received(transaction) - self.amount_spent(transaction)
-
-    def markup_fee(self, transaction: Transaction) -> float:
-        """
-        The issuer's cut for converting a foreign purchase, as a positive number.
-
-        Present on exactly the rows whose two amounts differ in currency. It is the real cost of
-        spending abroad, and the honest thing to show where the naive reading of those rows was
-        showing a windfall.
-        """
-        if self.is_duplicate(transaction) or not transaction.markupFee:
-            return 0.0
-        fee = transaction.markupFee.amount
-        return abs(fee) if fee is not None else 0.0
-
-    # ── How much of it was a discount ─────────────────────────────────────────────
-
-    def saving_of(self, transaction: Transaction) -> tuple[float, str]:
-        """
-        The discount on this purchase, and why it is — or is not — counted.
-
-        The gap between the merchant's figure and the billed one is only a discount once every
-        other thing that opens a gap has been ruled out. The checks run in order and the first
-        one to apply wins; each is there because it fired on real data.
-        """
-        if self.is_duplicate(transaction):
-            return 0.0, SAVING_DUPLICATE
-
-        # Money coming back is money the user did not keep paying. Checked up front rather than
-        # left to the sign comparison below, which needs *both* amounts and so misses a refund
-        # that arrived with only one of them.
-        if self.direction(transaction) == INFLOW:
-            return self.amount_received(transaction), SAVING_REFUNDED
-
+            return True
         charged, charged_currency = self._charged(transaction)
         original, original_currency = self._original(transaction)
-
-        # The whole price, saved: the sale settled and the card was never billed for it. This
-        # is checked before the blank-amount rule below, because the two look identical in the
-        # amounts alone and are told apart only by the row having settled.
-        if self.was_never_charged(transaction):
-            return abs(original), SAVING_NOT_CHARGED
-
-        # A figure the bank has not sent *yet* is not a free purchase, and neither is a zero
-        # one. Reading either as "paid nothing" booked the whole amount as savings.
         if charged is None or original is None or charged == 0:
-            return 0.0, SAVING_MISSING_AMOUNT
-
-        # 41,328 koruna billed as 6,815 shekels is a conversion, not 34,512 saved. What the
-        # conversion actually cost is in `markup_fee`, and it is a fee, not a saving.
+            return False
         if charged_currency != original_currency:
-            return 0.0, SAVING_FOREIGN_CURRENCY
-
-        # A refund mirrors the purchase it reverses, so the gap between the two figures is the
-        # transaction counted twice rather than a discount found in it. The money that came
-        # back is still money the user did not end up paying, and it is counted as such —
-        # `amount_received`, not the gap.
-        if (charged > 0) != (original > 0):
-            return self.amount_received(transaction), SAVING_REFUNDED
-
-        # The feed says so itself. This is the authoritative answer where it is present.
-        if transaction.isCreditCardInstallment:
-            return 0.0, SAVING_INSTALLMENT
-
-        paid, sticker = abs(charged), abs(original)
-        if sticker <= paid:
-            return 0.0, SAVING_NO_GAP
-
-        # Not every caller's feed carries the flag — a trimmed payload drops it — so a plan is
-        # also recognised by its shape: the billed amount divides the merchant's figure a whole
-        # number of times. Reported under its own name so that a pile of these is a visible
-        # sign the flag is missing upstream rather than a silent guess.
-        if self._looks_like_installments(sticker, paid):
-            return 0.0, SAVING_INSTALLMENT_INFERRED
-
-        return sticker - paid, SAVING_COUNTED
-
-    @staticmethod
-    def _looks_like_installments(sticker: float, paid: float) -> bool:
-        """
-        Whether the charge divides the full price a whole number of times.
-
-        The fallback for feeds without `isCreditCardInstallment`. It cannot tell a plan from an
-        exact half-price sale, and it resolves that tie in favour of the plan — see ``SAVINGS``
-        for why that trade is worth making.
-        """
-        ratio = sticker / paid  # `paid` is non-zero: a zero charge never reaches here
+            return False
+        ratio = abs(original) / abs(charged)
         payments = round(ratio)
         if not 2 <= payments <= SAVINGS.MAX_INSTALLMENTS:
             return False
         return abs(ratio - payments) <= SAVINGS.INSTALLMENT_RATIO_TOLERANCE
 
-    def amount_saved(self, transaction: Transaction) -> float:
-        """How much this purchase actually knocked off the price."""
-        return self.saving_of(transaction)[0]
-
-    # ── Explaining a total ────────────────────────────────────────────────────────
-
-    def savings_exclusions(self, transactions: list[Transaction]) -> dict[str, int]:
-        """
-        How many purchases landed in each reason, for the caller to log.
-
-        Kept apart from the sum so the calculation itself stays a plain addition. Most of a year
-        is expected to come back as `no_gap`; a sudden pile of `foreign_currency` or
-        `installment` is what explains a savings figure that looks too good, and a pile of
-        `installment_inferred` says the feed has stopped sending the flag.
-        """
-        return dict(Counter(self.saving_of(purchase)[1] for purchase in transactions))
-
-    # ── What kind of row is this? ─────────────────────────────────────────────────
-
-    def kind_of(self, transaction: Transaction) -> str:
-        """
-        The one label that best describes this row, for telling the user what their year held.
-
-        A row can carry more than one of these traits — four of the Prague credits are both a
-        refund and a foreign purchase — so the checks run in a fixed priority and the first one
-        wins. That keeps the census summing to the transaction count, which is what makes it
-        legible as a proportional bar rather than a set of overlapping figures.
-
-        The order runs most-surprising first: being told "this came back to you" matters more
-        than "this was in koruna", and both matter more than "this was a normal purchase".
-        """
-        if self.is_duplicate(transaction):
-            return KIND_DUPLICATE
-        if self.direction(transaction) == INFLOW:
-            return KIND_REFUND
-        if self.was_never_charged(transaction):
-            return KIND_VOUCHER
-        if transaction.isCreditCardInstallment:
-            return KIND_INSTALLMENT
+    def is_foreign(self, transaction: Transaction) -> bool:
+        """The two amounts are in different currencies, so the gap between them is a rate."""
         _, charged_currency = self._charged(transaction)
         _, original_currency = self._original(transaction)
-        # Both currencies have to be known before they can disagree. A row missing one of the
-        # two amounts entirely is not a conversion — it is an ordinary purchase we know less
-        # about, and calling it foreign would put it under the wrong heading.
-        if charged_currency and original_currency and charged_currency != original_currency:
-            return KIND_FOREIGN
-        return KIND_ORDINARY
+        return bool(charged_currency and original_currency and charged_currency != original_currency)
 
-    def composition(self, transactions: list[Transaction]) -> list[dict]:
+    def is_statement(self, transaction: Transaction) -> bool:
+        """The issuer billed less than the merchant asked, in the same currency. A real discount."""
+        charged = self._charged_amount(transaction)
+        original = self._original_amount(transaction)
+        if charged is None or original is None or charged == 0:
+            return False
+        return abs(original) > abs(charged)
+
+    def detailed_kind_of(self, transaction: Transaction) -> str:
         """
-        The make-up of the user's year: how many transactions of each kind, and worth how much.
+        The one label that best describes this row.
 
-        Duplicates are left out rather than given a row — they are not a thing that happened to
-        the user. Kinds with nothing in them are omitted too, so the client renders only what the
-        year actually contained. Two kinds carry an extra figure worth surfacing: what the
-        currency conversions cost in markup, and how many distinct plans the installments belong
-        to, since seven payments across two plans reads very differently from seven plans.
+        Ranked rather than combined, because a row can carry several of these traits at once —
+        four of the Prague credits are both a refund and a foreign purchase — and a census that
+        counted them twice would not sum to the transaction count.
+        """
+        if self.is_duplicate(transaction):
+            return DUPLICATE
+        if self.direction(transaction) == INFLOW:
+            return REFUND
+        if self.is_coupon(transaction):
+            return COUPON
+        if self.is_foreign(transaction):
+            return FOREIGN
+        if self.is_installment(transaction):
+            return INSTALLMENT
+        if self.is_statement(transaction):
+            return STATEMENT
+        return ORDINARY
+
+    def kind_of(self, transaction: Transaction) -> str:
+        """The same reading, folded to the four kinds the totals are built from."""
+        detailed = self.detailed_kind_of(transaction)
+        return REGULAR if detailed in REGULAR_SHAPES else detailed
+
+    # ── How much money moved ──────────────────────────────────────────────────────
+
+    def paid(self, transaction: Transaction) -> float:
+        """What the bank billed for this row. A coupon cost nothing; a refund is not a payment."""
+        if self.kind_of(transaction) not in (REGULAR, STATEMENT):
+            return 0.0
+        return self._billed_or_estimated(transaction)
+
+    def returned(self, transaction: Transaction) -> float:
+        """What came back on this row."""
+        if self.kind_of(transaction) != REFUND:
+            return 0.0
+        charged = self._charged_amount(transaction)
+        if charged is not None:
+            return abs(charged)
+        original = self._original_amount(transaction)
+        return abs(original) if original is not None else 0.0
+
+    def saved(self, transaction: Transaction) -> float:
+        """
+        What the user did not have to pay: the whole price on a coupon, the gap on a statement.
+
+        A refund is not here. The feed reports a returned pair of shoes and a topcash cashback
+        identically — both arrive as a positive amount — so calling either a saving would call
+        both one. Money coming back reduces what was spent instead; see `spend`.
+        """
+        kind = self.kind_of(transaction)
+        if kind == COUPON:
+            return abs(self._original_amount(transaction) or 0.0)
+        if kind == STATEMENT:
+            return abs(self._original_amount(transaction)) - abs(self._charged_amount(transaction))
+        return 0.0
+
+    def value(self, transaction: Transaction) -> float:
+        """
+        What this purchase was worth, whoever paid for it, signed so a refund cancels a purchase.
+
+        The figure for every question about *what the user buys* rather than what it cost them:
+        shopping at TERMINAL X with a loaded card is still shopping at TERMINAL X, and a card
+        used only for coupons would otherwise report no activity at all.
+        """
+        if self.is_duplicate(transaction):
+            return 0.0
+        kind = self.kind_of(transaction)
+        if kind == COUPON:
+            return abs(self._original_amount(transaction) or 0.0)
+        return self.paid(transaction) - self.returned(transaction)
+
+    def _billed_or_estimated(self, transaction: Transaction) -> float:
+        """
+        The billed figure, or the merchant's figure where billing has not happened yet.
+
+        The substitution has to be positively safe. It is not safe for a plan, where the
+        merchant's figure is the whole purchase rather than this month's payment, nor across a
+        currency, where the figure is koruna and would be summed as shekels. A blank charge on
+        a real row still carries its own currency ("amount": "", "currency": "ILS"), so a match
+        can be confirmed where there is one; where it cannot be, the row is left out.
+        """
+        charged, charged_currency = self._charged(transaction)
+        if charged is not None:
+            return abs(charged)
+        original, original_currency = self._original(transaction)
+        if original is None or transaction.isCreditCardInstallment:
+            return 0.0
+        if charged_currency != original_currency:
+            return 0.0
+        return abs(original)
+
+    def markup_fee(self, transaction: Transaction) -> float:
+        """The issuer's cut for converting a foreign purchase — a fee, never a saving."""
+        if self.is_duplicate(transaction) or not transaction.markupFee:
+            return 0.0
+        fee = transaction.markupFee.amount
+        return abs(fee) if fee is not None else 0.0
+
+    # ── Totals over a list ────────────────────────────────────────────────────────
+
+    def spend(self, transactions: list[Transaction]) -> float:
+        """What the bank statement shows: billed less returned. Coupons are absent, having cost nothing."""
+        return sum(self.paid(t) for t in transactions) - sum(self.returned(t) for t in transactions)
+
+    def savings(self, transactions: list[Transaction]) -> float:
+        """Everything the user did not have to pay."""
+        return sum(self.saved(t) for t in transactions)
+
+    def total_value(self, transactions: list[Transaction]) -> float:
+        """What they bought, whoever paid. Larger than `spend` by the coupons."""
+        return sum(self.value(t) for t in transactions)
+
+    def spend_breakdown(self, transactions: list[Transaction]) -> list[dict]:
+        """Where `spend` comes from: regular, statements at what was billed, less refunds."""
+        return [
+            self._source_row(REGULAR, transactions, self.paid),
+            self._source_row(STATEMENT, transactions, self.paid),
+            self._source_row(REFUND, transactions, self.returned),
+        ]
+
+    def savings_breakdown(self, transactions: list[Transaction]) -> list[dict]:
+        """Where `savings` comes from: the whole price on a coupon, the gap on a statement."""
+        return [
+            self._source_row(COUPON, transactions, self.saved),
+            self._source_row(STATEMENT, transactions, self.saved),
+        ]
+
+    def _source_row(self, kind: str, transactions: list[Transaction], amount_of) -> dict:
+        of_kind = [t for t in transactions if self.kind_of(t) == kind]
+        return {"source": kind, "count": len(of_kind), "amount": sum(amount_of(t) for t in of_kind)}
+
+    def mix(self, transactions: list[Transaction]) -> list[dict]:
+        """
+        What the period was made of, and how each part reaches the spend total.
+
+        `amount` is what the client prints, always positive — a refund of 40 reads as "40 came
+        back". `contributes` is the same money signed by which way it moved, so summing that
+        column lands on `spend` exactly. A coupon contributes nothing: no money left the bank.
         """
         rows = []
-        for kind in KIND_ORDER:
-            of_kind = [t for t in transactions if self.kind_of(t) == kind]
+        for kind in MIX_ORDER:
+            of_kind = [t for t in transactions if self.detailed_kind_of(t) == kind]
             if not of_kind:
                 continue
-
-            # A refund's worth is what came back; everything else is what was bought.
-            amount = (
-                sum(self.amount_received(t) for t in of_kind)
-                if kind == KIND_REFUND
-                else sum(self.purchase_value(t) for t in of_kind)
-            )
-            row = {
-                "kind": kind,
-                "count": len(of_kind),
-                "amount": amount,
-                # The same money, signed by which way it moved, so that summing this column
-                # over every row lands exactly on `total_spent`. `amount` is what the client
-                # prints — a refund of 40 reads as "40 came back", not "-40" — and a client
-                # that had to negate one row to make the total work would be doing arithmetic
-                # of its own, which is the thing these figures exist to prevent.
-                "signed_amount": sum(self.net_purchase_value(t) for t in of_kind),
-            }
-
-            if kind == KIND_FOREIGN:
-                row["markup_fees"] = sum(self.markup_fee(t) for t in of_kind)
-            if kind == KIND_INSTALLMENT:
-                row["plan_count"] = self._distinct_plans(of_kind)
-
-            rows.append(row)
+            rows.append(self._mix_row(kind, of_kind))
         return rows
+
+    def _mix_row(self, kind: str, of_kind: list[Transaction]) -> dict:
+        if kind == REFUND:
+            amount = sum(self.returned(t) for t in of_kind)
+            contributes = -amount
+        elif kind == COUPON:
+            amount = sum(self.saved(t) for t in of_kind)
+            contributes = 0.0
+        else:
+            amount = sum(self.paid(t) for t in of_kind)
+            contributes = amount
+
+        row = {"kind": kind, "count": len(of_kind), "amount": amount, "contributes": contributes}
+        if kind == FOREIGN:
+            row["markup_fees"] = sum(self.markup_fee(t) for t in of_kind)
+        if kind == INSTALLMENT:
+            row["plan_count"] = self._distinct_plans(of_kind)
+        return row
 
     @staticmethod
     def _distinct_plans(installment_rows: list[Transaction]) -> int:
-        """
-        How many separate plans these payments belong to.
-
-        A plan repeats the merchant, the full price and the number of payments on every one of
-        its rows, which is enough to tell two plans apart without the feed naming them.
-        """
-        plans = set()
-        for transaction in installment_rows:
-            original = transaction.amount.originalAmount if transaction.amount else None
-            plans.add(
-                (
-                    transaction.merchantName,
-                    original.amount if original else None,
-                    transaction.installments.total if transaction.installments else None,
-                )
+        """A plan repeats the merchant, the full price and the payment count on every one of its rows."""
+        return len({
+            (
+                transaction.merchantName,
+                transaction.amount.originalAmount.amount if transaction.amount and transaction.amount.originalAmount else None,
+                transaction.installments.total if transaction.installments else None,
             )
-        return len(plans)
+            for transaction in installment_rows
+        })
 
-    def total_spent(self, transactions: list[Transaction]) -> float:
-        """
-        The headline figure: everything the user paid for, however they paid, less what came back.
-
-        `net_purchase_value`, summed — the same figure the per-category, per-shop and per-account
-        breakdowns add up, so the headline and every breakdown of it agree by construction. They
-        used to disagree by exactly the vouchers: this counted what left the bank and they counted
-        what was bought, and a club card bought ILS 1,367 of things while the bank paid nothing.
-
-        A purchase on a club card counts here at its full price. It is money the user paid,
-        through a card they loaded, and it is also a saving — `amount_saved` counts it too. That
-        is not double counting: the two answer different questions, "what did I get" and "what
-        did I not have to pay for now".
-        """
-        return sum(self.net_purchase_value(t) for t in transactions)
+    def kind_census(self, transactions: list[Transaction]) -> dict[str, int]:
+        """How many rows of each kind, for the caller to log when a total looks wrong."""
+        return dict(Counter(self.detailed_kind_of(t) for t in transactions))
 
     # ── Preparing a list for grouping ─────────────────────────────────────────────
 
     def countable(self, transactions: list[Transaction]) -> list[Transaction]:
-        """
-        Everything the provider has not told us to ignore — duplicates removed, refunds kept.
-
-        Refunds stay because the per-group sums net them out: a credit has to reach the category
-        it belongs to in order to cancel the purchase it reverses. The *counts* filter them out
-        separately, with `is_purchase`.
-        """
+        """Everything the provider has not told us to ignore. Refunds stay, so sums can net them out."""
         return [t for t in transactions if not self.is_duplicate(t)]
 
+    def is_purchase(self, transaction: Transaction) -> bool:
+        """The user buying something. A refund is not a visit."""
+        return not self.is_duplicate(transaction) and self.direction(transaction) == OUTFLOW
+
     def purchases_only(self, transactions: list[Transaction]) -> list[Transaction]:
-        """Just the buying — no refunds, no duplicates. For questions about shopping habits."""
         return [t for t in transactions if self.is_purchase(t)]
 
     def purchase_count(self, transactions: list[Transaction]) -> int:
-        """How many of these rows are the user actually buying something."""
         return sum(1 for t in transactions if self.is_purchase(t))

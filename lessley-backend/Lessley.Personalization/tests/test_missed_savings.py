@@ -551,3 +551,82 @@ def test_a_refund_is_neither_missed_nor_applied():
 
     assert answer.missed.purchase_count == 0
     assert answer.applied.purchase_count == 0
+
+
+# ── Statements: a discount taken, and a coupon still missed ─────────────────
+
+
+def _statement_tx(tx_id="t1", merchant="סטימצקי", asked=100.0, billed=90.0):
+    """The issuer billed less than the merchant asked, in the same currency."""
+    transaction = _tx(tx_id, merchant=merchant)
+    transaction.status = "BOOKED"
+    transaction.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-abs(asked), currency="ILS"),
+        chargedAmount=AmountDetail(amount=-abs(billed), currency="ILS"),
+    )
+    return transaction
+
+
+def test_a_statement_purchase_is_both_missed_and_applied():
+    """
+    It took a statement discount and could still have used a coupon, so it is both.
+
+    The two amounts are different and neither is the purchase: missed counts what the bank
+    actually billed, applied counts only the gap the issuer knocked off.
+    """
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_statement_tx("t1", asked=100.0, billed=90.0)], user_club_ids=["c1"]
+    )
+
+    assert answer.missed.total_amount == 90.0
+    assert answer.applied.total_amount == 10.0
+
+
+def test_the_applied_side_names_which_discount_landed():
+    service = _service(_world([_store("s1", "סטימצקי"), _store("s2", "גולדה")]))
+
+    answer = service.savings_opportunities(
+        [
+            _statement_tx("t1", merchant="סטימצקי", asked=100.0, billed=90.0),
+            _club_card_tx("t2", merchant="גולדה", price=80.0),
+        ],
+        user_club_ids=["c1"],
+    )
+
+    sources = {p.source for m in answer.applied.merchants for p in m.purchases}
+    assert sources == {"statement", "coupon"}
+    assert answer.applied.total_amount == 90.0
+
+
+def test_a_statement_needs_no_shop_match_to_count_as_applied():
+    """The gap between what was asked and what was billed is evidence in itself."""
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_statement_tx("t1", merchant="שום חנות שאין לנו", asked=100.0, billed=90.0)],
+        user_club_ids=["c1"],
+    )
+
+    assert answer.applied.total_amount == 10.0
+    assert answer.missed.total_amount == 0.0
+
+
+def test_a_refund_is_never_an_applied_discount():
+    """
+    A returned purchase and a cashback arrive identically, so neither is called a saving.
+
+    It reduces what was spent instead, which is the spending total's job rather than this one.
+    """
+    service = _service(_world([_store("s1", "סטימצקי")]))
+    refund = _tx("t1", merchant="סטימצקי")
+    refund.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-29.21, currency="ILS"),
+        chargedAmount=AmountDetail(amount=29.21, currency="ILS"),
+    )
+
+    answer = service.savings_opportunities([refund], user_club_ids=["c1"])
+
+    assert answer.applied.purchase_count == 0
+    assert answer.missed.purchase_count == 0

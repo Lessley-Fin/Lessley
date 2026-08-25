@@ -22,6 +22,7 @@ function _merchant(overrides: Partial<SavingsMerchant> = {}): SavingsMerchant {
     deal_count: 0,
     account_ids: ["acc-loaded"],
     club_ids: [],
+    sources: [],
     shops: [],
     purchases: [{ transaction_id: "t1", amount: 80, date: null, account_id: "acc-loaded" }],
     ...overrides,

@@ -100,203 +100,102 @@ def test_spending_difference_splits_by_cutoff_date():
     assert result["difference"] == 60
 
 
-# ── Task 3: spending saved (charged vs original amount) ────────────────────────
+# ── Task 1: what the user did not have to pay ─────────────────────────────
 #
-# A gap between the two amounts is only a discount once a conversion, a refund, an installment
-# plan and a missing figure have been ruled out. Each of those produced a gap on real data, and
-# together they reported a year's savings as 51,499 against a total spend of 51,668.
-
-def test_spending_saved_counts_a_genuine_discount():
-    service = _service()
-    transactions = [_tx(charged=-47.81, original=-49.80)]
-
-    assert service.spending_saved(transactions) == pytest.approx(1.99)
+# Which gaps count as a discount is settled one row at a time in test_transaction_amounts.py.
+# What matters here is that the total and the breakdown beside it describe the same money.
 
 
-def test_spending_saved_equal_amounts_is_zero():
-    service = _service()
-    transactions = [_tx(charged=-50, original=-50)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_a_charge_larger_than_the_original():
-    service = _service()
-    transactions = [_tx(charged=-100, original=-90)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_counts_a_settled_purchase_that_was_never_billed():
-    """Nothing was charged and the row has settled: the voucher paid, so the price was saved."""
-    service = _service()
-    transactions = [_tx(charged=None, original=-40)]
-
-    assert service.spending_saved(transactions) == 40
-
-
-def test_spending_saved_ignores_a_charge_that_has_not_landed_yet():
-    """Before settlement the charge is still coming, so there is nothing saved to report."""
-    service = _service()
-    transactions = [_tx(charged=None, original=-40, status="PENDING")]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_treats_a_settled_zero_charge_like_a_blank_one():
-    """Billed exactly nothing and billed nothing at all say the same thing about what was paid."""
-    service = _service()
-    transactions = [_tx(charged=0.0, original=-40)]
-
-    assert service.spending_saved(transactions) == 40
-
-
-def test_spending_saved_ignores_a_currency_conversion():
-    """USD 20 billed as ILS 60.26 is a conversion, not ILS 40.26 saved."""
-    service = _service()
-    transactions = [_tx(charged=-60.26, charged_currency="ILS", original=-20.0, original_currency="USD")]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_an_installment_plan():
-    """ILS 3,728 charged as four payments of 932 is the full price, paid in four."""
-    service = _service()
-    transactions = [_tx(charged=-932, original=-3728)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_a_plan_whose_payments_do_not_divide_evenly():
-    """The issuer rounds the last payment, so a plan's ratio is near-integer, not exact."""
-    service = _service()
-    transactions = [_tx(charged=-333.34, original=-1000.0)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_counts_a_refund_as_money_not_paid():
-    """
-    What came back, not the gap between the two figures — that gap is the purchase counted twice.
-
-    A refund belongs in this total because the question is "how much did the user not end up
-    paying", and money returned to them is exactly that.
-    """
-    service = _service()
-    transactions = [_tx(charged=29.21, original=-29.21)]
-
-    assert service.spending_saved(transactions) == 29.21
-
-
-def test_spending_saved_sums_across_transactions():
+def test_spending_saved_splits_the_total_by_the_discount_that_did_it():
     service = _service()
     transactions = [
-        _tx(charged=-90, original=-100),
-        _tx(charged=-47.81, original=-49.80),
-        _tx(charged=None, original=-40, status="PENDING"),
+        _tx(charged=None, original=-176.15),   # coupon: the whole price
+        _tx(charged=-47.81, original=-49.80),  # statement: the gap
+        _tx(charged=-86, original=-86),        # regular: nothing
     ]
 
-    assert service.spending_saved(transactions) == pytest.approx(11.99)
+    saved = service.spending_saved(transactions)
+    rows = {row["source"]: row["amount"] for row in saved["breakdown"]}
+
+    assert saved["total_amount"] == pytest.approx(178.14)
+    assert rows["coupon"] == 176.15
+    assert rows["statement"] == pytest.approx(1.99)
+    assert sum(rows.values()) == pytest.approx(saved["total_amount"])
 
 
-def test_savings_exclusions_names_why_each_purchase_was_dropped():
-    service = _service()
-    transactions = [
-        _tx(charged=-90, original=-100),                                                    # counted
-        _tx(charged=-50, original=-50),                                                     # no gap
-        _tx(charged=None, original=-40, status="PENDING"),                                  # missing
-        _tx(charged=-60.26, charged_currency="ILS", original=-20.0, original_currency="USD"),  # fx
-        _tx(charged=-932, original=-3728),                                                  # installment
-        _tx(charged=29.21, original=-29.21),                                                # refund
-    ]
-
-    assert service.savings_exclusions(transactions) == {
-        "counted": 1,
-        "no_gap": 1,
-        "missing_amount": 1,
-        "foreign_currency": 1,
-        "installment_inferred": 1,
-        "refunded": 1,
-    }
-
-
-# ── Vouchers count as activity everywhere except the headline total ────────────
-
-def test_an_account_used_only_for_vouchers_still_reports_its_activity():
-    """A voucher card reporting 0 spent was the whole complaint: it is used, so it must show."""
-    service = _service()
-    transactions = [
-        _tx(charged=-100, account_id="bank", account_number="****1"),
-        _tx(charged=None, original=-176.15, account_id="voucher", account_number="****2"),
-    ]
-
-    by_account = {row["accountId"]: row for row in service.top_spending_accounts(transactions)}
-
-    assert by_account["voucher"]["total_amount"] == pytest.approx(176.15)
-    assert by_account["voucher"]["total_count"] == 1
-
-
-def test_the_headline_total_counts_the_club_card_purchase_too():
+def test_spending_saved_leaves_refunds_out():
     """
-    The same two purchases: 276.15 of things bought, however each one was paid for.
+    A returned purchase and a cashback arrive identically, so neither is counted as a saving.
 
-    The club-card purchase used to be missing from this figure while appearing at full worth in
-    every breakdown beside it, so the breakdowns did not add up to the total they sat under.
+    Money coming back reduces what was spent instead — see the spending total below.
+    """
+    service = _service()
+
+    assert service.spending_saved([_tx(charged=29.21, original=-29.21)])["total_amount"] == 0
+
+
+# ── Tasks 2, 3 and 8: what the bank statement shows, and what it is made of ─────
+
+
+def test_the_headline_total_is_what_the_bank_billed():
+    """
+    100 billed and 176.15 on a coupon → 100. No money left the account for the coupon.
+
+    Deliberately smaller than the per-category and per-account breakdowns, which count the
+    coupon at its full worth: they answer what the user buys, this answers what it cost them.
     """
     service = _service()
     transactions = [
         _tx(charged=-100, account_id="bank"),
-        _tx(charged=None, original=-176.15, account_id="voucher"),
+        _tx(charged=None, original=-176.15, account_id="coupon"),
     ]
 
     total = service.spending_total(transactions)
 
-    assert total["total_amount"] == pytest.approx(276.15)
+    assert total["total_amount"] == 100
     assert total["purchase_count"] == 2
 
 
-def test_the_composition_adds_up_to_the_headline_total():
-    """
-    `signed_amount` over every kind lands exactly on `total_amount`.
+def test_the_spend_breakdown_adds_up_to_the_headline():
+    service = _service()
+    transactions = [
+        _tx(charged=-100),
+        _tx(charged=-47.81, original=-49.80),
+        _tx(charged=20.0),
+    ]
 
-    `amount` is what the client prints — a refund of 40 reads as "40 came back", not "-40" — so
-    it is the signed figure that has to reconcile. Without it a client would have to know which
-    kinds to subtract, which is arithmetic it must never be asked to do.
+    total = service.spending_total(transactions)
+    rows = {row["source"]: row["amount"] for row in total["breakdown"]}
+
+    assert rows["regular"] + rows["statement"] - rows["refund"] == pytest.approx(total["total_amount"])
+
+
+def test_the_mix_contributions_add_up_to_the_headline():
+    """
+    `contributes` is the column that reconciles; `amount` is the one the screen prints.
+
+    A client that had to know which rows to negate would be doing arithmetic of its own, which
+    is how the screen came to disagree with this service before.
     """
     service = _service()
     transactions = [
-        _tx(charged=-100, account_id="bank"),
-        _tx(charged=None, original=-176.15, account_id="voucher"),
-        _tx(charged=40.0, account_id="bank"),
+        _tx(charged=-100),
+        _tx(charged=None, original=-176.15),
+        _tx(charged=20.0),
     ]
 
     total = service.spending_total(transactions)
 
-    assert sum(row["signed_amount"] for row in total["composition"]) == pytest.approx(
-        total["total_amount"]
-    )
+    assert sum(row["contributes"] for row in total["mix"]) == pytest.approx(total["total_amount"])
 
 
-def test_the_headline_total_gives_back_what_was_reclaimed():
+def test_the_mix_shows_the_coupon_without_counting_it():
     service = _service()
-    transactions = [_tx(charged=-100), _tx(charged=30.0)]
+    transactions = [_tx(charged=-100), _tx(charged=None, original=-176.15)]
 
-    assert service.spending_total(transactions)["total_amount"] == 70
+    coupon = next(row for row in service.spending_total(transactions)["mix"] if row["kind"] == "coupon")
 
-
-def test_a_refund_cancels_the_purchase_it_reverses_in_a_category():
-    """Four NUMASTAYS credits against one hotel charge: VACATION nets down, it does not ignore."""
-    service = _service()
-    transactions = [_tx(charged=-1000), _tx(charged=250.0)]
-
-    assert service.top_spending_categories(transactions)[0]["total_amount"] == 750
-
-
-def test_a_refund_does_not_count_as_a_visit():
-    service = _service()
-    transactions = [_tx(charged=-1000), _tx(charged=250.0)]
-
-    assert service.top_spending_categories(transactions)[0]["total_count"] == 1
+    assert (coupon["amount"], coupon["contributes"]) == (176.15, 0.0)
 
 
 _EMPTY_ANSWER = SavingsAnswerSchema(

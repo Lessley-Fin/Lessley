@@ -431,7 +431,7 @@ async def calculate_spending_saved(
 
     try:
         service = DIContainer.get_insights_service()
-        total_saved = await service.calculate_spending_saved_async(email, req.time_filter, req.days)
+        saved = await service.calculate_spending_saved_async(email, req.time_filter, req.days)
 
         response_time_ms = (time.time() - start_time) * 1000
 
@@ -446,12 +446,12 @@ async def calculate_spending_saved(
                         "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
-                    "total_saved": total_saved,
+                    "total_saved": saved["total_amount"],
                 },
             },
         )
 
-        return BasicResponse(status="success", data={"total_saved": total_saved})
+        return BasicResponse(status="success", data=saved)
 
     except Exception as e:
         logger.error(

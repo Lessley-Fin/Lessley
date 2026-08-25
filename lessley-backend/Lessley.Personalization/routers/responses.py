@@ -52,6 +52,7 @@ class SavingsPurchaseSchema(BaseModel):
     amount: float = Field(..., description="What the purchase was worth")
     date: str | None = Field(default=None, description="When the purchase happened")
     account_id: str | None = Field(default=None, description="The account it was charged to")
+    source: str = Field(default="", description="regular | statement | coupon — which kind of row this is")
 
 
 class SavingsShopSchema(BaseModel):
@@ -83,6 +84,7 @@ class SavingsMerchantSchema(BaseModel):
     deal_count: int = Field(..., description="Deals live across every shop matched here")
     account_ids: list[str] = Field(default_factory=list, description="Accounts these were charged to")
     club_ids: list[str] = Field(default_factory=list, description="Clubs the deals apply through")
+    sources: list[str] = Field(default_factory=list, description="Which kinds of discount landed here")
     shops: list[SavingsShopSchema] = Field(default_factory=list, description="The shops that matched")
     purchases: list[SavingsPurchaseSchema] = Field(default_factory=list, description="The purchases themselves")
 

@@ -13,6 +13,7 @@ from services.mcc_service import MccService
 from services.transaction_amount_service import TransactionAmountService
 from config.constants import LIMITS, SHOP_MATCH
 from models.transaction import Transaction
+from services.transaction_amount_service import COUPON
 from services.utils.store_similarity import EXACT, SIMILAR, STRONG, SURFACEABLE, WEAK
 from routers.responses import (
     AppliedSavingsSchema,
@@ -110,27 +111,17 @@ class InsightsService:
     # that "what is this row worth" has one answer across every insight below. These stay as
     # thin names because the `seq(...).sum(...)` chains read better with them.
 
-    def _purchase_amount(self, transaction: Transaction) -> float:
-        """
-        What this purchase was worth, signed so a refund cancels what it reverses.
-
-        Every breakdown below sums this rather than `amount_spent`, because they answer "what
-        does the user buy" and not "what did it cost them". A voucher purchase is worth its full
-        price here even though no money left the bank — otherwise a card used only for vouchers
-        reports no activity at all.
-        """
-        return self.amount_service.net_purchase_value(transaction)
+    def _value(self, transaction: Transaction) -> float:
+        """What this purchase was worth, whoever paid for it. Signed, so a refund cancels one."""
+        return self.amount_service.value(transaction)
 
     def _purchase_count(self, transactions: list[Transaction]) -> int:
-        """How many of these are the user buying something. A refund is not a visit."""
         return self.amount_service.purchase_count(transactions)
 
-    def _amount_saved(self, transaction: Transaction) -> float:
-        """How much this purchase actually knocked off the price."""
-        return self.amount_service.amount_saved(transaction)
+    def _saved(self, transaction: Transaction) -> float:
+        return self.amount_service.saved(transaction)
 
     def _countable(self, transactions: list[Transaction]) -> list[Transaction]:
-        """Everything not flagged a duplicate. Refunds stay in, so the sums can net them out."""
         return self.amount_service.countable(transactions)
 
     @staticmethod
@@ -183,7 +174,7 @@ class InsightsService:
         return {
             "category": category_name,
             "total_count": self._purchase_count(purchases),
-            "total_amount": seq(purchases).sum(self._purchase_amount),
+            "total_amount": seq(purchases).sum(self._value),
             "mcc_codes": (
                 seq(purchases)                                            # the purchases in this pile
                 .where(lambda purchase: purchase.categoryCode)            # those the bank gave a code for
@@ -220,7 +211,7 @@ class InsightsService:
             "accountId": account_id,
             "accountNumber": purchases[0].accountNumber,
             "total_count": self._purchase_count(purchases),
-            "total_amount": seq(purchases).sum(self._purchase_amount),
+            "total_amount": seq(purchases).sum(self._value),
         }
 
     # ── Which shops take the user's money? ────────────────────────────────────
@@ -259,7 +250,7 @@ class InsightsService:
             "normalized_merchantName": merchant_name,
             "accountNumber": account_number,
             "transaction_count": self._purchase_count(purchases),
-            "transaction_amount": seq(purchases).sum(self._purchase_amount),
+            "transaction_amount": seq(purchases).sum(self._value),
         }
 
     def _summarise_shop(self, group: tuple) -> dict:
@@ -291,7 +282,7 @@ class InsightsService:
             .where(lambda purchase: self._date_of(purchase))       # those we know the date of
             .group_by(self._day_name_of)                           # one pile per weekday
             .map(lambda group: (group[0],                          # weekday ->
-                                seq(group[1]).sum(self._purchase_amount)))  # money spent that day
+                                seq(group[1]).sum(self._value)))  # money spent that day
             .to_dict()
         )
 
@@ -310,12 +301,12 @@ class InsightsService:
         current_total = (
             dated_purchases                                                    # every dated purchase
             .where(lambda purchase: self._date_of(purchase) >= cutoff)         # the recent stretch
-            .sum(self._purchase_amount)                                           # added up
+            .sum(self._value)                                           # added up
         )
         previous_total = (
             dated_purchases                                                    # every dated purchase
             .where(lambda purchase: self._date_of(purchase) < cutoff)          # the stretch before that
-            .sum(self._purchase_amount)                                           # added up
+            .sum(self._value)                                           # added up
         )
 
         return {
@@ -328,31 +319,36 @@ class InsightsService:
 
     def spending_total(self, transactions: list[Transaction]) -> dict:
         """
-        The headline total: how much worse off the account is over this period.
+        What the bank statement shows over this period, and what it is made of.
 
-        Deliberately not the sum of the breakdowns. Those answer "what does the user buy" and
-        count a voucher purchase at its full worth; this one answers "what did it cost", where
-        a voucher cost nothing and a refund gives money back. The two disagreeing is the point,
-        not a bug — `purchase_count` says how many purchases stand behind the figure.
+        Not the sum of the breakdowns elsewhere. Those answer "what does the user buy" and count
+        a coupon purchase at its full worth; this one answers "what did it cost", where a coupon
+        cost nothing because no money left the account.
         """
-        countable = self.amount_service.countable(transactions)
+        countable = self._countable(transactions)
         return {
-            "total_amount": self.amount_service.total_spent(countable),
-            "purchase_count": self.amount_service.purchase_count(countable),
-            # What the year was made of, for the client to describe rather than just total.
-            "composition": self.amount_service.composition(countable),
+            "total_amount": self.amount_service.spend(countable),
+            "purchase_count": self._purchase_count(countable),
+            "breakdown": self.amount_service.spend_breakdown(countable),
+            "mix": self.amount_service.mix(countable),
         }
 
-    def spending_saved(self, transactions: list[Transaction]) -> float:
-        """Total money the user did not have to pay, thanks to discounts."""
-        return (
-            seq(transactions)          # every purchase the user made
-            .sum(self._amount_saved)   # add up what each one knocked off the price
-        )
+    def spending_saved(self, transactions: list[Transaction]) -> dict:
+        """
+        Every shekel the user did not have to pay, and which kind of discount did it.
+
+        Refunds are not here. The feed reports a returned purchase and a cashback identically,
+        so counting either as a saving would count both — see `TransactionAmountService.saved`.
+        """
+        countable = self._countable(transactions)
+        return {
+            "total_amount": self.amount_service.savings(countable),
+            "breakdown": self.amount_service.savings_breakdown(countable),
+        }
 
     def savings_exclusions(self, transactions: list[Transaction]) -> dict[str, int]:
-        """How many purchases landed in each reason, for the caller to log."""
-        return self.amount_service.savings_exclusions(transactions)
+        """How many rows of each kind, for the caller to log."""
+        return self.amount_service.kind_census(transactions)
 
     def spending_saved_by_account(self, transactions: list[Transaction]) -> list[dict]:
         """The same savings total, split by which account earned it."""
@@ -371,7 +367,7 @@ class InsightsService:
         return {
             "accountId": account_id,
             "accountNumber": purchases[0].accountNumber,
-            "total_saved": seq(purchases).sum(self._amount_saved),
+            "total_saved": seq(purchases).sum(self._saved),
         }
 
     # ── What could the user have saved elsewhere? ────────────────────────
@@ -414,22 +410,19 @@ class InsightsService:
         """
         What the user missed, and what they already took, over these purchases.
 
-        Two rules hold this together, and both exist because breaking them produced numbers a
-        user could not reconcile with what was on screen:
+        **Missed** is everything that is not a coupon and could have been one: a regular or
+        statement purchase whose merchant matches a deal-running shop in one of their clubs.
+        It is counted at what the bank billed. Every purchase is assigned to its *strongest*
+        match and appears under that band only, so the three band subtotals sum to the total
+        exactly — reported per shop, a single coffee matching a café and two lookalikes was
+        counted three times and the tabs added up to more than the headline.
 
-        **Every purchase is counted once, under one band.** A single coffee can match the café
-        itself, a near-certain match and two lookalikes. Reported per shop it was counted once
-        per match; reported per band it appeared under three bands at once, and the tabs added
-        up to more than the total. Here it is assigned to its *strongest* match and appears
-        there only, so the three band subtotals sum to `total_amount` exactly.
+        **Applied** is every discount that actually landed: a coupon at the whole price it
+        covered, a statement at the gap between what was asked and what was billed. Neither
+        needs a shop match — the discount is evidence in itself.
 
-        **A purchase on a club card is never a missed saving.** It already took the discount at
-        the till — see `TransactionAmountService.paid_with_club_card` — so it goes to `applied`
-        whether or not our catalogue knows the shop, and never to `missed`.
-
-        Grouping, de-duplication and totalling all happen here rather than in a client. Two
-        clients doing this independently is two chances to disagree with each other and with
-        this service, which is exactly what happened.
+        A statement purchase is in both, at different amounts. It took a statement discount and
+        could still have used a coupon, so it is a saving made *and* a saving missed.
         """
         empty = SavingsAnswerSchema(
             missed=MissedSavingsSchema(total_amount=0.0, purchase_count=0, bands=[]),
@@ -438,39 +431,31 @@ class InsightsService:
         if not transactions:
             return empty
 
-        # Refunds and duplicates are not purchases, so neither missed a deal nor took one.
         purchases = [t for t in self.amount_service.purchases_only(transactions) if t.id]
 
-        applied_rows: list[tuple] = []
-        missed_rows: list[tuple] = []
+        missed_rows = []
         for transaction in purchases:
-            shops = self._shops_for(transaction, user_club_ids)
-            if self.amount_service.paid_with_club_card(transaction):
-                # The card is the evidence; a shop we happen not to carry does not undo it.
-                applied_rows.append((transaction, "", shops))
-            elif shops:
-                # The strongest reading of this purchase decides where it is counted.
-                best = min(shops, key=lambda pair: _BAND_ORDER[pair[0].band])[0].band
-                missed_rows.append((transaction, best, shops))
-
-        bands = []
-        for band in _BANDS_BY_CONFIDENCE:
-            in_band = [row for row in missed_rows if row[1] == band]
-            if not in_band:
+            if self.amount_service.kind_of(transaction) == COUPON:
                 continue
-            merchants = self._merchants_from(in_band, band)
-            bands.append(
-                SavingsBandSchema(
-                    band=band,
-                    # Totalled from the merchants actually returned, so a cap can never leave a
-                    # subtotal describing rows the client was never given.
-                    total_amount=sum(merchant.amount for merchant in merchants),
-                    purchase_count=sum(merchant.purchase_count for merchant in merchants),
-                    merchants=merchants,
-                )
-            )
+            shops = self._shops_for(transaction, user_club_ids)
+            if not shops:
+                continue
+            best = min(shops, key=lambda pair: _BAND_ORDER[pair[0].band])[0].band
+            missed_rows.append((transaction, best, shops))
 
-        applied_merchants = self._merchants_from(applied_rows, "")
+        applied_rows = [
+            (transaction, self.amount_service.kind_of(transaction), self._shops_for(transaction, user_club_ids))
+            for transaction in purchases
+            if self.amount_service.saved(transaction) > 0
+        ]
+
+        bands = [
+            self._band_of(band, [row for row in missed_rows if row[1] == band])
+            for band in _BANDS_BY_CONFIDENCE
+            if any(row[1] == band for row in missed_rows)
+        ]
+
+        applied_merchants = self._merchants_from(applied_rows, "", self.amount_service.saved)
         answer = SavingsAnswerSchema(
             missed=MissedSavingsSchema(
                 total_amount=sum(band.total_amount for band in bands),
@@ -500,7 +485,17 @@ class InsightsService:
         )
         return answer
 
-    def _merchants_from(self, rows: list[tuple], band: str) -> List[SavingsMerchantSchema]:
+    def _band_of(self, band: str, rows: list[tuple]) -> SavingsBandSchema:
+        """One band's merchants, totalled from the merchants actually returned."""
+        merchants = self._merchants_from(rows, band, self.amount_service.paid)
+        return SavingsBandSchema(
+            band=band,
+            total_amount=sum(merchant.amount for merchant in merchants),
+            purchase_count=sum(merchant.purchase_count for merchant in merchants),
+            merchants=merchants,
+        )
+
+    def _merchants_from(self, rows: list[tuple], band: str, amount_of) -> List[SavingsMerchantSchema]:
         """
         Gather purchases into the merchants the screen shows, biggest first.
 
@@ -509,13 +504,14 @@ class InsightsService:
         purchase reaches this exactly once, so nothing here has to de-duplicate.
         """
         gathered: Dict[str, dict] = {}
-        for transaction, _, shops in rows:
+        for transaction, source, shops in rows:
             entry = gathered.setdefault(
                 self._merchant_of(transaction),
-                {"purchases": [], "amount": 0.0, "shops": {}, "clubs": set(), "accounts": []},
+                {"purchases": [], "amount": 0.0, "shops": {}, "clubs": set(), "accounts": [], "sources": set()},
             )
+            entry["sources"].add(source)
             entry["purchases"].append(transaction)
-            entry["amount"] += self.amount_service.purchase_value(transaction)
+            entry["amount"] += amount_of(transaction)
             if transaction.accountId and transaction.accountId not in entry["accounts"]:
                 entry["accounts"].append(transaction.accountId)
             for match, clubs in shops:
@@ -525,12 +521,12 @@ class InsightsService:
                     entry["shops"][match.identity.store_id] = (match, clubs)
                 entry["clubs"].update(clubs)
 
-        merchants = [self._describe_merchant(name, entry, band) for name, entry in gathered.items()]
+        merchants = [self._describe_merchant(name, entry, band, amount_of) for name, entry in gathered.items()]
         # Most money first: the point of the list is what is at stake at each place.
         merchants.sort(key=lambda merchant: (-merchant.amount, merchant.merchant_name))
         return merchants[: SHOP_MATCH.MAX_SHOPS]
 
-    def _describe_merchant(self, name: str, entry: dict, band: str) -> SavingsMerchantSchema:
+    def _describe_merchant(self, name: str, entry: dict, band: str, amount_of) -> SavingsMerchantSchema:
         """Turn one merchant's gathered purchases into the shape the client renders."""
         shops = sorted(entry["shops"].values(), key=lambda pair: _BAND_ORDER[pair[0].band])
         return SavingsMerchantSchema(
@@ -545,6 +541,7 @@ class InsightsService:
             # say that: a blank charge means no money left the account, not whose card it was.
             # The shops below still carry their own clubs, which is a fact about the shop.
             club_ids=sorted(entry["clubs"]) if band else [],
+            sources=sorted(source for source in entry["sources"] if source),
             shops=[
                 SavingsShopSchema(
                     store_id=match.identity.store_id,
@@ -563,7 +560,8 @@ class InsightsService:
             purchases=[
                 SavingsPurchaseSchema(
                     transaction_id=transaction.id,
-                    amount=self.amount_service.purchase_value(transaction),
+                    amount=amount_of(transaction),
+                    source=self.amount_service.kind_of(transaction),
                     date=str(self._date_of(transaction)) if self._date_of(transaction) else None,
                     account_id=transaction.accountId,
                 )
@@ -829,7 +827,7 @@ class InsightsService:
 
     async def calculate_spending_saved_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> float:
+    ) -> dict:
         """
         Calculates total spending saved (abs difference between charged and original amounts).
         """
@@ -843,7 +841,7 @@ class InsightsService:
 
         try:
             transactions = await self._transactions_for(user_id, time_filter, days, use_mock)
-            total_saved = self.spending_saved(transactions)
+            saved = self.spending_saved(transactions)
 
             logger.info(
                 "Spending saved calculated successfully",
@@ -851,12 +849,12 @@ class InsightsService:
                     "reason": "Business logic complete",
                     "extra_data": {
                         "user_id": user_id,
-                        "total_saved": total_saved,
-                        "excluded": self.savings_exclusions(transactions),
+                        "total_saved": saved["total_amount"],
+                        "kinds": self.savings_exclusions(transactions),
                     },
                 },
             )
-            return total_saved
+            return saved
         except Exception as e:
             logger.error(
                 f"Error: {str(e)}",

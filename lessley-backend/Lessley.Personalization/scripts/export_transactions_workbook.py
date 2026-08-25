@@ -165,23 +165,23 @@ def write_transactions(workbook, transactions, amounts, merchant_shops, band_of,
         ("accountId", 20), ("accountNumber", 20), ("provider", 10), ("status", 9),
         ("original", 12), ("orig ccy", 9), ("charged", 12), ("chg ccy", 9),
         ("markup fee", 11), ("installment?", 11), ("duplicate?", 10),
-        ("kind", 12), ("direction", 10), ("is purchase", 10),
-        ("SAVED", 11), ("saving reason", 20),
-        ("MISSED", 11), ("APPLIED", 11), ("matched shops", 34), ("band", 10), ("club card?", 10),
+        ("KIND", 12), ("detailed kind", 13), ("direction", 10), ("is purchase", 10),
+        ("paid", 11), ("returned", 11), ("SAVED", 11), ("value", 11),
+        ("MISSED", 11), ("APPLIED", 11), ("matched shops", 34), ("band", 10),
         ("q: total-amount", 14), ("q: save-with-lessley", 14), ("q: spending-by-accounts", 15),
         ("q: top-accounts", 14), ("q: missed-discount", 14), ("q: discount-applied", 14),
-        ("q: spending-overview", 14), ("overview kind", 13),
+        ("q: mix contributes", 15),
     ]
     sheet.append([name for name, _ in columns])
     style_header(sheet)
     autosize(sheet, {i + 1: width for i, (_, width) in enumerate(columns)})
 
     for transaction in transactions:
-        saving, reason = amounts.saving_of(transaction)
-        spent = amounts.amount_spent(transaction)
-        received = amounts.amount_received(transaction)
-        value = amounts.purchase_value(transaction)
         kind = amounts.kind_of(transaction)
+        paid = amounts.paid(transaction)
+        returned = amounts.returned(transaction)
+        saved = amounts.saved(transaction)
+        value = amounts.value(transaction)
         tid = transaction.id or ""
 
         is_missed = tid in missed_ids
@@ -204,28 +204,28 @@ def write_transactions(workbook, transactions, amounts, merchant_shops, band_of,
             "yes" if transaction.isCreditCardInstallment else "",
             "yes" if transaction.isDuplicate else "",
             kind,
+            amounts.detailed_kind_of(transaction),
             amounts.direction(transaction),
             "yes" if amounts.is_purchase(transaction) else "",
-            saving,
-            reason,
-            value if is_missed else 0.0,
-            value if is_applied else 0.0,
+            paid,
+            returned,
+            saved,
+            value,
+            paid if is_missed else 0.0,
+            saved if is_applied else 0.0,
             ", ".join(sorted(set(merchant_shops.get(tid, [])))[:4]),
-            # One band, never a list: a purchase is counted under its strongest match only.
             band_of.get(tid, ""),
-            "yes" if amounts.paid_with_club_card(transaction) else "",
             # ── what each query takes from this row ───────────────────────────
-            amounts.net_purchase_value(transaction),             # spending-total: total_amount
-            saving,                                              # spending-saved
-            saving,                                              # spending-saved-by-account (group by accountId)
-            amounts.net_purchase_value(transaction),             # top-accounts (group by accountId)
-            value if is_missed else 0.0,                         # missed-savings header
-            value if is_applied else 0.0,                        # discounts-applied header
-            amounts.net_purchase_value(transaction),             # spending overview (signed, per composition)
-            kind,
+            paid - returned,                                     # 2/3 total-amount
+            saved,                                               # 1  save-with-lessley
+            value,                                               # 7  spending-by-accounts
+            value,                                               # 4/5/6 top-accounts, categories
+            paid if is_missed else 0.0,                          # 9  missed-discount
+            saved if is_applied else 0.0,                        # 10 discount-applied
+            paid - returned,                                     # 8  mix, summed over contributes
         ])
 
-    money_columns = [9, 11, 13, 19, 21, 22, 26, 27, 28, 29, 30, 31, 32]
+    money_columns = [9, 11, 13, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
     for row in sheet.iter_rows(min_row=2):
         for index in money_columns:
             row[index - 1].number_format = MONEY
@@ -253,28 +253,33 @@ def write_totals(workbook, insights, amounts, transactions, answer, row_count):
         return f"=SUM(Transactions!{letter}2:{letter}{last})"
 
     rows = [
-        ("total-amount", "/insights/spending-total", total["total_amount"], column("Z"),
+        ("total-amount", "/insights/spending-total", total["total_amount"], column("AB"),
          total["purchase_count"],
-         "net_purchase_value: everything bought less what came back. A club-card purchase counts at full price."),
-        ("save-with-lessley", "/insights/spending-saved", saved, column("AA"),
-         sum(1 for t in transactions if amounts.amount_saved(t)),
-         "amount_saved: the original-vs-charged gap, plus club-card purchases, plus refunds."),
-        ("spending-by-accounts", "/insights/spending-saved-by-account", saved, column("AB"),
-         len({t.accountId for t in transactions if t.accountId}),
-         "the same amount_saved, grouped by accountId. Pivot column AB by column E to check each account."),
-        ("top-accounts", "/insights/top-accounts", sum(amounts.net_purchase_value(t) for t in countable),
-         column("AC"), len({t.accountId for t in countable if t.accountId}),
-         "net_purchase_value grouped by accountId. Now the same figure as total-amount, so the two agree."),
+         "paid - returned. Regular and statement rows at what the bank billed, less credits. "
+         "Coupon rows count zero: no money left the account."),
+        ("save-with-lessley", "/insights/spending-saved", saved["total_amount"], column("AC"),
+         sum(1 for t in transactions if amounts.saved(t)),
+         "the whole price of a coupon row, plus the original-minus-charged gap on a statement row. "
+         "Credits are not counted: the feed reports a return and a cashback identically."),
+        ("spending-by-accounts", "/insights/top-accounts", amounts.total_value(countable), column("AD"),
+         len({t.accountId for t in countable if t.accountId}),
+         "value, grouped by accountId. Pivot column AD by column E. Each card sums whatever kinds "
+         "it holds, so a coupon card shows its coupons."),
+        ("top-accounts / categories", "/insights/top-stores, /insights/categories",
+         amounts.total_value(countable), column("AE"), len(countable),
+         "the same value. Larger than total-amount by the coupons, because these answer what the "
+         "user buys rather than what the bank billed."),
         ("missed-discount", "/insights/savings-opportunities (missed)", answer.missed.total_amount,
-         column("AD"), answer.missed.purchase_count,
-         "purchase_value of every purchase that matched a deal-running shop and was NOT paid with a club card. "
+         column("AF"), answer.missed.purchase_count,
+         "what the bank billed on every non-coupon purchase that matched a deal-running shop. "
          "Counted once, under its strongest band."),
         ("discount-applied", "/insights/savings-opportunities (applied)", answer.applied.total_amount,
-         column("AE"), answer.applied.purchase_count,
-         "purchase_value of every purchase a club card paid for, whether or not our catalogue knows the shop."),
-        ("spending-overview", "/insights/spending-total (composition)", sum(
-            row["signed_amount"] for row in total["composition"]), column("AF"), len(countable),
-         "signed_amount per kind, which sums to total-amount exactly. See the Overview sheet."),
+         column("AG"), answer.applied.purchase_count,
+         "every discount that landed: a coupon at the whole price, a statement at the gap. Equal "
+         "to save-with-lessley, from the same two sources."),
+        ("spending-overview / mix", "/insights/spending-total (mix)",
+         sum(row["contributes"] for row in total["mix"]), column("AH"), len(countable),
+         "the mix contributions, which sum to total-amount exactly. See the Overview sheet."),
     ]
 
     for name, endpoint, service_value, formula, count, explanation in rows:
@@ -372,33 +377,36 @@ def write_by_account(workbook, insights, transactions):
 
 
 def write_overview(workbook, insights, transactions):
-    """The composition behind spending-overview: what the period was actually made of."""
+    """The mix behind the spending overview, and the sum it is meant to explain."""
     sheet = workbook.create_sheet("Overview")
     total = insights.spending_total(transactions)
-    sheet.append(["kind", "count", "amount (shown)", "signed (counted)", "markup fees", "distinct plans"])
+    sheet.append(["kind", "count", "amount (shown)", "contributes (counted)", "markup fees", "distinct plans"])
     style_header(sheet)
-    autosize(sheet, {1: 16, 2: 9, 3: 16, 4: 16, 5: 14, 6: 14})
+    autosize(sheet, {1: 16, 2: 9, 3: 16, 4: 20, 5: 14, 6: 14})
 
-    for row in total["composition"]:
-        sheet.append([row["kind"], row["count"], row["amount"], row["signed_amount"],
+    for row in total["mix"]:
+        sheet.append([row["kind"], row["count"], row["amount"], row["contributes"],
                       row.get("markup_fees"), row.get("plan_count")])
     for row in sheet.iter_rows(min_row=2):
         for index in (3, 4, 5):
             row[index - 1].number_format = MONEY
 
-    last = len(total["composition"]) + 1
+    last = len(total["mix"]) + 1
     sheet.append([])
     sheet.append(["total-amount (spending-total)", total["purchase_count"], None, total["total_amount"]])
-    sheet.append(["sum of the signed column", None, None, f"=SUM(D2:D{last})"])
-    sheet.append([
-        "'amount' is what the screen prints \u2014 a refund reads as what came back, not as a negative. "
-        "'signed' is the same money by which way it moved, and it is that column which sums to "
-        "total-amount exactly."
-    ])
+    sheet.append(["sum of the contributes column", None, None, f"=SUM(D2:D{last})"])
+    sheet.append([])
+    sheet.append(["spend breakdown", "count", "amount"])
+    for row in total["breakdown"]:
+        sheet.append([row["source"], row["count"], row["amount"]])
+    sheet.append([])
+    sheet.append(["savings breakdown", "count", "amount"])
+    for row in insights.spending_saved(transactions)["breakdown"]:
+        sheet.append([row["source"], row["count"], row["amount"]])
+
     for row in sheet.iter_rows(min_row=last + 2):
+        row[2].number_format = MONEY
         row[3].number_format = MONEY
-    sheet.cell(row=last + 4, column=1).alignment = Alignment(wrap_text=True, vertical="top")
-    sheet.merge_cells(start_row=last + 4, start_column=1, end_row=last + 5, end_column=5)
 
 
 def main() -> int:

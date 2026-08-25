@@ -299,11 +299,7 @@
       "label": "Saved with Lessley",
       "club": "club",
       "clubs": "clubs",
-      "infoDialog": {
-        "ariaLabel": "What does 'saved' mean?",
-        "title": "How this is calculated",
-        "body": "This reflects club and card discounts matched to purchases you made in this period — not a projection, but savings tied to transactions that already happened."
-      }
+      "purchaseCount": "({{count}} purchases)"
     },
     "spendingOverviewSlide": {
       "title": "Spending overview",
@@ -328,7 +324,9 @@
       "abroad": "{{count}} abroad",
       "installments": "{{count}} in payments",
       "refunded": "{{count}} refunded",
-      "vouchers": "{{count}} on vouchers"
+      "vouchers": "{{count}} on vouchers",
+      "discounted": "{{count}} billed less",
+      "coupons": "{{count}} on a coupon"
     },
     "topCategorySlide": {
       "title": "Top category",
@@ -358,7 +356,9 @@
       "markupFees": "{{amount}} of it went on conversion fees",
       "plans": "Payments on {{count}} plan",
       "plans_other": "Payments on {{count}} plans",
-      "savedNote": "Money you kept"
+      "savedNote": "Money you kept",
+      "sumHeading": "How this adds up",
+      "sumNote": "A coupon adds ₪0 because no money left the bank, and a credit subtracts. The result is exactly what your bank statement shows."
     },
     "transactionKinds": {
       "ordinary": {
@@ -377,10 +377,19 @@
         "label": "Came back",
         "note": "Refunds and credits returned to your card"
       },
-      "voucher": {
-        "label": "Cost nothing",
-        "note": "A voucher, gift card or waived fee covered it"
+      "coupon": {
+        "label": "Coupon",
+        "note": "Paid with a loaded club card, so no money left the bank."
+      },
+      "statement": {
+        "label": "Billed less",
+        "note": "The issuer charged less than the shop asked — the gap is the discount."
       }
+    },
+    "explain": {
+      "spendTotal": "What the bank billed: regular purchases plus what was actually charged on discounted ones, less credits. Coupon purchases are not counted — no money left your account for them.",
+      "savedTotal": "Every shekel you did not pay: the full price of a coupon purchase, plus the gap on a billing discount. Credits are not counted here — the feed reports a returned purchase and a cashback identically.",
+      "sourceBlind": "This counts every purchase, including ones paid by coupon, so it comes to more than your bank statement total."
     }
   },
   "recommendations": {

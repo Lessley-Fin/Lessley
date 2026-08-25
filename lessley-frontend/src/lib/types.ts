@@ -115,6 +115,8 @@ export interface SavingsPurchase {
   amount: number
   date: string | null
   account_id?: string | null
+  /** Which kind of discount landed here. Empty on a missed purchase. */
+  source?: DiscountSource | ""
 }
 
 export interface SavingsShop {
@@ -146,6 +148,8 @@ export interface SavingsMerchant {
   account_ids: string[]
   /** Clubs the deals apply through. Always empty on an applied merchant — see below. */
   club_ids: string[]
+  /** Which kinds of discount landed at this merchant. Empty on a missed merchant. */
+  sources: DiscountSource[]
   shops: SavingsShop[]
   purchases: SavingsPurchase[]
 }
@@ -274,29 +278,52 @@ export interface SpendingPeriodComparison {
   difference: number
 }
 
+/** Which kind of row this is. The first three are all "the user simply paid"; the last three
+ *  each mean something different about the money. */
+export type TransactionKind = "ordinary" | "foreign" | "installment" | "statement" | "refund" | "coupon"
+
+/** Which kind of discount landed on a purchase. */
+export type DiscountSource = "coupon" | "statement"
+
 /** One kind of thing that happened in the period. Every countable transaction carries exactly
  *  one kind, so the counts sum to the transaction total and can be drawn as a proportional bar. */
 export interface TransactionMixEntry {
-  kind: "ordinary" | "foreign" | "installment" | "refund" | "voucher"
+  kind: TransactionKind
   count: number
-  /** What was bought, or for a refund, what came back. */
+  /** What the screen prints, always positive — a refund reads as what came back. */
   amount: number
+  /** The same money signed by which way it moved. Summing this column lands on
+   *  {@link SpendingTotalInsight.total_amount} exactly; a coupon contributes nothing. */
+  contributes: number
   /** foreign only — what the currency conversions cost in issuer markup. */
   markup_fees?: number
   /** installment only — how many distinct plans these payments belong to. */
   plan_count?: number
 }
 
+/** One part of a total, named by where it came from. */
+export interface SourceBreakdownEntry {
+  source: TransactionKind
+  count: number
+  amount: number
+}
+
 export interface SpendingTotalInsight {
-  /** Money that left the account, less money that came back. Excludes vouchers, which cost
-   *  nothing — so this is deliberately smaller than the sum of the per-category breakdowns. */
+  /** Exactly what the bank statement shows: billed, plus statement discounts at what was
+   *  actually charged, less refunds. Coupons are absent — no money left the account for them —
+   *  so this is deliberately smaller than the per-category and per-account breakdowns. */
   total_amount: number
   purchase_count: number
-  composition: TransactionMixEntry[]
+  /** regular + statement − refund. */
+  breakdown: SourceBreakdownEntry[]
+  mix: TransactionMixEntry[]
 }
 
 export interface SpendingSavedInsight {
-  total_saved: number
+  /** Coupons at the whole price they covered, plus the gap on a statement discount. Refunds
+   *  are not here: the feed reports a returned purchase and a cashback identically. */
+  total_amount: number
+  breakdown: SourceBreakdownEntry[]
 }
 
 export interface SpendingSavedByAccountInsight {

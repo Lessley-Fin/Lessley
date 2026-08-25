@@ -57,6 +57,7 @@ function _merchant(overrides: Partial<SavingsMerchant> = {}): SavingsMerchant {
     deal_count: 1,
     account_ids: [],
     club_ids: ["club_hever_gift_card_company"],
+    sources: [],
     shops: [
       {
         store_id: "s1",
