@@ -22,9 +22,16 @@ export function formatDate(value: string | undefined) {
   return parsed.toLocaleDateString()
 }
 
-export function formatShortDate(date: Date) {
+// Day + month is enough while everything on screen sits in one calendar year;
+// pass `withYear` when a range reaches back past New Year, or "24 Dec" and
+// "24 Dec" a year apart read as the same day.
+export function formatShortDate(date: Date, options?: { withYear?: boolean }) {
   const locale = i18n.language === "he" ? "he-IL" : "en-GB"
-  return date.toLocaleDateString(locale, { day: "numeric", month: "short" })
+  return date.toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    ...(options?.withYear ? { year: "numeric" } : {}),
+  })
 }
 
 export function formatRelativeTime(isoDate: string) {

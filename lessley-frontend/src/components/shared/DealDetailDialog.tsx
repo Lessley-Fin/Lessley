@@ -39,15 +39,19 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
 
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[340px] rounded-3xl">
+      {/* The deal is the densest thing we put in a dialog — title, badge row,
+          terms, coupon and an image strip — so it gets a wider, taller box than
+          the max-w-sm default. On a phone it's still the full-bleed width the
+          base sets; the extra room only shows up once the screen has it. */}
+      <DialogContent className="max-w-md sm:max-h-[75dvh] sm:max-w-md">
         {item ? (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <span className="text-2xl" aria-hidden>
+                <span className="shrink-0 text-xl xs:text-2xl" aria-hidden>
                   {emojiForCategory(category)}
                 </span>
-                {item.store.name}
+                <span className="min-w-0">{item.store.name}</span>
               </DialogTitle>
               <DialogDescription>
                 {category ? t(`categories.${category}`, { defaultValue: formatCategoryLabel(category) }) : t("dealFinder.detailDialog.deal")}
@@ -55,9 +59,9 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
             </DialogHeader>
 
             <DialogBody>
-              <p className="text-[15px] font-semibold">{item.deal.title}</p>
+              <p className="text-[15px] font-semibold sm:text-base">{item.deal.title}</p>
               {item.deal.description && item.deal.description !== item.deal.title ? (
-                <p className="text-sm text-muted-foreground">{item.deal.description}</p>
+                <p className="text-sm text-muted-foreground sm:text-[15px]">{item.deal.description}</p>
               ) : null}
 
               <div className="flex flex-wrap items-center gap-2">
@@ -109,7 +113,7 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
                       key={url + i}
                       src={url}
                       alt={`${item.store.name} ${i + 1}`}
-                      className="h-20 w-28 shrink-0 rounded-xl bg-white object-contain p-2"
+                      className="h-16 w-24 shrink-0 rounded-xl bg-white object-contain p-2 xs:h-20 xs:w-28 sm:h-24 sm:w-32"
                       onError={(e) => {
                         ;(e.target as HTMLImageElement).style.display = "none"
                       }}

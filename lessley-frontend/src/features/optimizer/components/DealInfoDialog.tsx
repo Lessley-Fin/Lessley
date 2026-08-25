@@ -45,11 +45,11 @@ export function DealInfoDialog({ deal, step, store, open, onOpenChange }: DealIn
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[340px] rounded-3xl">
+      <DialogContent>
         {deal ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-start text-base">{deal.title ?? deal.deal_id}</DialogTitle>
+              <DialogTitle className="text-start text-sm xs:text-base">{deal.title ?? deal.deal_id}</DialogTitle>
               <DialogDescription className="text-start">
                 {[typeLabel, club].filter(Boolean).join(" · ") || t("optimizer.dealInfo.deal")}
               </DialogDescription>
@@ -100,7 +100,7 @@ export function DealInfoDialog({ deal, step, store, open, onOpenChange }: DealIn
                       key={`${url}-${index}`}
                       urls={[url]}
                       alt={store?.name ?? deal.title ?? deal.deal_id}
-                      className="h-20 w-28 shrink-0 rounded-xl bg-white"
+                      className="h-16 w-24 shrink-0 rounded-xl bg-white xs:h-20 xs:w-28"
                       imageClassName="object-contain p-2"
                       fallback={null}
                     />
