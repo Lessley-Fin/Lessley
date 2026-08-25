@@ -5,7 +5,7 @@ import {
   checkHasConnection,
   fetchAccounts,
   fetchCategoryInsights,
-  fetchMissedSavingsByStore,
+  fetchSavingsOpportunities,
   fetchMatchingClubs,
   fetchSpendingByDayInsights,
   fetchSpendingPeriodComparison,
@@ -126,10 +126,10 @@ export function useInitOpenFinance() {
   })
 }
 
-export function useMissedSavingsByStore(days: number, enabled: boolean) {
+export function useSavingsOpportunities(days: number, enabled: boolean) {
   return useQuery({
-    queryKey: queryKeys.insights.missedSavingsByStore(days),
-    queryFn: () => fetchMissedSavingsByStore(days),
+    queryKey: queryKeys.insights.savingsOpportunities(days),
+    queryFn: () => fetchSavingsOpportunities(days),
     enabled,
   })
 }

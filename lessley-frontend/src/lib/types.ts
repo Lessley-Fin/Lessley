@@ -110,24 +110,14 @@ export interface ClubRecommendationResponse {
  */
 export type StoreMatchBand = "EXACT" | "STRONG" | "SIMILAR"
 
-export interface MissedShopPurchase {
+export interface SavingsPurchase {
   transaction_id: string
-  merchant_name: string
   amount: number
   date: string | null
-  /** Which account paid for it — resolve against {@link OpenFinanceAccount} to name it. */
   account_id?: string | null
-  /**
-   * Clubs whose own benefit card paid for this purchase, so the discount was already taken.
-   *
-   * Empty means the purchase genuinely missed out. Non-empty is the *opposite* of a missed
-   * saving — a Hever נטען card only spends at Hever's shops, so the user did the thing this
-   * screen would otherwise be telling them to do. Never word it as a loss.
-   */
-  covered_by_club_ids?: string[]
 }
 
-export interface MissedShop {
+export interface SavingsShop {
   store_id: string
   store_name: string
   match_band: StoreMatchBand
@@ -136,16 +126,64 @@ export interface MissedShop {
   deal_titles: string[]
   club_ids: string[]
   also_known_as: string[]
-  covered_transaction_count: number
-  covered_amount: number
-  /** Of those, the ones that actually missed out — the numbers to lead with. */
-  missed_transaction_count?: number
-  missed_amount?: number
-  /** Of those, the ones a club's own card already paid off. */
-  committed_transaction_count?: number
-  committed_amount?: number
-  committed_club_ids?: string[]
-  purchases: MissedShopPurchase[]
+}
+
+/**
+ * One place the user shopped, already grouped, de-duplicated and totalled by the service.
+ *
+ * Every number here is final. Nothing on this screen re-adds, re-groups or re-counts any of
+ * it: two implementations of the same rules is two chances to disagree, and the app spent a
+ * while telling users they had missed a discount they had in fact taken because of exactly
+ * that. If a figure is needed and is not on this type, it belongs in the payload.
+ */
+export interface SavingsMerchant {
+  merchant_name: string
+  /** The band these purchases were counted under. Empty on an applied merchant. */
+  band: StoreMatchBand | ""
+  purchase_count: number
+  amount: number
+  deal_count: number
+  account_ids: string[]
+  /** Clubs the deals apply through. Always empty on an applied merchant — see below. */
+  club_ids: string[]
+  shops: SavingsShop[]
+  purchases: SavingsPurchase[]
+}
+
+/**
+ * One band's merchants and its own subtotal.
+ *
+ * The subtotals add up to {@link MissedSavings.total_amount} exactly, because the service
+ * counts each purchase under its strongest band and nowhere else.
+ */
+export interface SavingsBand {
+  band: StoreMatchBand
+  total_amount: number
+  purchase_count: number
+  merchants: SavingsMerchant[]
+}
+
+export interface MissedSavings {
+  total_amount: number
+  purchase_count: number
+  bands: SavingsBand[]
+}
+
+/**
+ * Purchases a club's own card paid for, so the discount came off at the till.
+ *
+ * `club_ids` on these merchants is empty by design: the feed says no money left the account,
+ * which does not name the club behind the card. Never word these as "saved with <club>".
+ */
+export interface AppliedSavings {
+  total_amount: number
+  purchase_count: number
+  merchants: SavingsMerchant[]
+}
+
+export interface SavingsAnswer {
+  missed: MissedSavings
+  applied: AppliedSavings
 }
 
 export interface MccCategoryDto {

@@ -11,12 +11,17 @@ from services.user_repository import UserRepository
 from services.reference_data_repository import ReferenceDataRepository
 from services.mcc_service import MccService
 from services.transaction_amount_service import TransactionAmountService
-from config.constants import BENEFIT_CARDS, LIMITS, SHOP_MATCH
+from config.constants import LIMITS, SHOP_MATCH
 from models.transaction import Transaction
 from services.utils.store_similarity import EXACT, SIMILAR, STRONG, SURFACEABLE, WEAK
 from routers.responses import (
-    MissedShopPurchaseSchema,
-    MissedShopSchema,
+    AppliedSavingsSchema,
+    MissedSavingsSchema,
+    SavingsAnswerSchema,
+    SavingsBandSchema,
+    SavingsMerchantSchema,
+    SavingsPurchaseSchema,
+    SavingsShopSchema,
 )
 
 
@@ -30,6 +35,13 @@ MAX_ALTERNATIVE_STORES_PER_CLUB = 10
 
 # Most confident first, for picking one reading of a shop over another.
 _BAND_ORDER = {EXACT: 0, STRONG: 1, SIMILAR: 2, WEAK: 3}
+
+# The bands a purchase can be counted under, strongest first. WEAK never surfaces.
+_BANDS_BY_CONFIDENCE = [EXACT, STRONG, SIMILAR]
+
+# A merchant card has room for a handful of shops. The cap is on what is *shown* under a
+# merchant, never on which purchases are counted — the totals must describe every purchase.
+MAX_SHOPS_PER_MERCHANT = 8
 
 
 def trim_categories_by_match_level(categories: list, matching_score) -> list:
@@ -362,36 +374,7 @@ class InsightsService:
             "total_saved": seq(purchases).sum(self._amount_saved),
         }
 
-    # ── Which clubs already paid off? ─────────────────────────────────────────
-
-    @staticmethod
-    def _clubs_already_used(transaction: Transaction, account_products: Dict[str, str] | None) -> set[str]:
-        """
-        The clubs whose own benefit card paid for this purchase.
-
-        A Hever נטען card only spends at Hever's partner shops, so a purchase charged to one
-        already took the discount — it is the opposite of a missed saving. The transaction
-        cannot say so on its own: it names an ``accountId`` and nothing else, and the product
-        string that gives the card away lives on the accounts feed. `account_products` is that
-        feed, folded to ``{accountId: product}`` by the caller.
-
-        An empty or missing map means we simply do not know, and nothing is suppressed — the
-        answer degrades to what it was before this existed rather than to silence.
-        """
-        if not account_products or not transaction.accountId:
-            return set()
-
-        product = (account_products.get(transaction.accountId) or "").strip().lower()
-        if not product:
-            return set()
-
-        return {
-            club_id
-            for club_id, keywords in BENEFIT_CARDS.PRODUCT_KEYWORDS_BY_CLUB.items()
-            if any(keyword.strip().lower() in product for keyword in keywords)
-        }
-
-    # ── What could the user have saved elsewhere? ─────────────────────────────
+    # ── What could the user have saved elsewhere? ────────────────────────
 
     def _shops_for(self, transaction: Transaction, user_club_ids: List[str] | None) -> list:
         """
@@ -423,136 +406,168 @@ class InsightsService:
             kept.append((match, clubs))
         return kept
 
-    # ── The same answer, gathered by shop instead of by purchase ──────────────
+    # ── The savings answer, in the shape the screen renders ─────────────────
 
-    def missed_savings_by_store(
-        self,
-        transactions: list[Transaction],
-        user_club_ids: List[str] | None = None,
-        account_products: Dict[str, str] | None = None,
-    ) -> List[MissedShopSchema]:
+    def savings_opportunities(
+        self, transactions: list[Transaction], user_club_ids: List[str] | None = None
+    ) -> SavingsAnswerSchema:
         """
-        The shops that were running a deal, each with the purchases it could have covered.
+        What the user missed, and what they already took, over these purchases.
 
-        The same matching as `missed_savings`, gathered the other way round. A user does not
-        want to hear about one coffee three separate times — they want to hear that קפה קפה
-        has a coupon and they have bought coffee three times this month.
+        Two rules hold this together, and both exist because breaking them produced numbers a
+        user could not reconcile with what was on screen:
 
-        `account_products` is ``{accountId: product}`` off the accounts feed. It splits each
-        shop's purchases in two: the ones charged to an ordinary card, which genuinely missed
-        out, and the ones charged to a club's own benefit card, which already took the discount
-        at the till. Both stay on the shop — a purchase that already saved is worth saying out
-        loud, and hiding it would leave the user wondering why a shop they clearly use went
-        missing. Pass nothing and every purchase reads as missed, exactly as it did before.
+        **Every purchase is counted once, under one band.** A single coffee can match the café
+        itself, a near-certain match and two lookalikes. Reported per shop it was counted once
+        per match; reported per band it appeared under three bands at once, and the tabs added
+        up to more than the total. Here it is assigned to its *strongest* match and appears
+        there only, so the three band subtotals sum to `total_amount` exactly.
+
+        **A purchase on a club card is never a missed saving.** It already took the discount at
+        the till — see `TransactionAmountService.paid_with_club_card` — so it goes to `applied`
+        whether or not our catalogue knows the shop, and never to `missed`.
+
+        Grouping, de-duplication and totalling all happen here rather than in a client. Two
+        clients doing this independently is two chances to disagree with each other and with
+        this service, which is exactly what happened.
         """
-        if not transactions:
-            return []
-
-        # A refunded purchase is not a reason to suggest a coupon, and a duplicate would put
-        # the same purchase under the shop twice. Unlike the breakdowns above, nothing is netted
-        # here — this is a list of visits, not a total.
-        gathered: Dict[str, dict] = {}
-        for transaction in self.amount_service.purchases_only(transactions):
-            if not transaction.id:
-                continue
-            # Which clubs this card *is* — read once, then narrowed to each shop's own clubs.
-            paid_by_club = self._clubs_already_used(transaction, account_products)
-            for match, clubs in self._shops_for(transaction, user_club_ids):
-                entry = gathered.setdefault(
-                    match.identity.store_id,
-                    {"match": match, "clubs": set(), "purchases": [], "amount": 0.0},
-                )
-                # Keep the most confident reading of this shop across all the purchases.
-                if _BAND_ORDER[match.band] < _BAND_ORDER[entry["match"].band]:
-                    entry["match"] = match
-                entry["clubs"].update(clubs)
-                # Only a club that carries *this* shop can have paid off at it. Without the
-                # intersection a Hever card would mark a purchase committed at a shop Hever
-                # does not run, and the user would lose a saving they really did miss.
-                entry["purchases"].append((transaction, sorted(paid_by_club & set(clubs))))
-                entry["amount"] += self.amount_service.purchase_value(transaction)
-
-        shops = [self._describe_shop(entry) for entry in gathered.values()]
-
-        # Band first, then money. Sorting on money alone lets a single coffee produce a dozen
-        # lookalike cafés that crowd a shop the user demonstrably visited out of the answer —
-        # and being told about the shop you actually used is worth more than any number of
-        # shops merely like it.
-        #
-        # Money here means *missed* money, so a shop where every visit already saved sinks to
-        # the bottom rather than crowding out one where the user is still losing out.
-        shops.sort(
-            key=lambda shop: (
-                _BAND_ORDER[shop.match_band],
-                -shop.missed_amount,
-                -shop.covered_amount,
-                shop.store_name,
-            )
+        empty = SavingsAnswerSchema(
+            missed=MissedSavingsSchema(total_amount=0.0, purchase_count=0, bands=[]),
+            applied=AppliedSavingsSchema(total_amount=0.0, purchase_count=0, merchants=[]),
         )
-        shops = shops[: SHOP_MATCH.MAX_SHOPS]
+        if not transactions:
+            return empty
+
+        # Refunds and duplicates are not purchases, so neither missed a deal nor took one.
+        purchases = [t for t in self.amount_service.purchases_only(transactions) if t.id]
+
+        applied_rows: list[tuple] = []
+        missed_rows: list[tuple] = []
+        for transaction in purchases:
+            shops = self._shops_for(transaction, user_club_ids)
+            if self.amount_service.paid_with_club_card(transaction):
+                # The card is the evidence; a shop we happen not to carry does not undo it.
+                applied_rows.append((transaction, "", shops))
+            elif shops:
+                # The strongest reading of this purchase decides where it is counted.
+                best = min(shops, key=lambda pair: _BAND_ORDER[pair[0].band])[0].band
+                missed_rows.append((transaction, best, shops))
+
+        bands = []
+        for band in _BANDS_BY_CONFIDENCE:
+            in_band = [row for row in missed_rows if row[1] == band]
+            if not in_band:
+                continue
+            merchants = self._merchants_from(in_band, band)
+            bands.append(
+                SavingsBandSchema(
+                    band=band,
+                    # Totalled from the merchants actually returned, so a cap can never leave a
+                    # subtotal describing rows the client was never given.
+                    total_amount=sum(merchant.amount for merchant in merchants),
+                    purchase_count=sum(merchant.purchase_count for merchant in merchants),
+                    merchants=merchants,
+                )
+            )
+
+        applied_merchants = self._merchants_from(applied_rows, "")
+        answer = SavingsAnswerSchema(
+            missed=MissedSavingsSchema(
+                total_amount=sum(band.total_amount for band in bands),
+                purchase_count=sum(band.purchase_count for band in bands),
+                bands=bands,
+            ),
+            applied=AppliedSavingsSchema(
+                total_amount=sum(merchant.amount for merchant in applied_merchants),
+                purchase_count=sum(merchant.purchase_count for merchant in applied_merchants),
+                merchants=applied_merchants,
+            ),
+        )
 
         logger.info(
-            "Missed savings by store completed",
+            "Savings opportunities calculated",
             extra={
                 "reason": "Batch processing complete",
                 "extra_data": {
                     "transaction_count": len(transactions),
-                    "shops_found": len(shops),
-                    "same_store_shops": sum(1 for shop in shops if shop.is_same_store),
-                    "committed_purchases": sum(shop.committed_transaction_count for shop in shops),
-                    "fully_committed_shops": sum(1 for shop in shops if shop.missed_transaction_count == 0),
+                    "missed_amount": answer.missed.total_amount,
+                    "missed_purchases": answer.missed.purchase_count,
+                    "applied_amount": answer.applied.total_amount,
+                    "applied_purchases": answer.applied.purchase_count,
+                    "by_band": {band.band: band.purchase_count for band in answer.missed.bands},
                 },
             },
         )
-        return shops
+        return answer
 
-    def _describe_shop(self, entry: dict) -> MissedShopSchema:
-        """Turn one shop's gathered purchases into the shape the client expects."""
-        match = entry["match"]
-        identity = match.identity
+    def _merchants_from(self, rows: list[tuple], band: str) -> List[SavingsMerchantSchema]:
+        """
+        Gather purchases into the merchants the screen shows, biggest first.
 
-        # Each purchase arrives paired with the clubs that already paid off on it. Split the
-        # money the same way, so the client can lead with what was missed and still say
-        # "you already saved here" about the rest.
-        missed_count = missed_amount = 0
-        committed_count = committed_amount = 0
-        committed_clubs: set[str] = set()
-        for transaction, covered_by in entry["purchases"]:
-            value = self.amount_service.purchase_value(transaction)
-            if covered_by:
-                committed_count += 1
-                committed_amount += value
-                committed_clubs.update(covered_by)
-            else:
-                missed_count += 1
-                missed_amount += value
+        The user thinks in terms of what they bought, not which catalogue row it matched, so a
+        merchant carries every shop its purchases matched rather than the other way round. A
+        purchase reaches this exactly once, so nothing here has to de-duplicate.
+        """
+        gathered: Dict[str, dict] = {}
+        for transaction, _, shops in rows:
+            entry = gathered.setdefault(
+                self._merchant_of(transaction),
+                {"purchases": [], "amount": 0.0, "shops": {}, "clubs": set(), "accounts": []},
+            )
+            entry["purchases"].append(transaction)
+            entry["amount"] += self.amount_service.purchase_value(transaction)
+            if transaction.accountId and transaction.accountId not in entry["accounts"]:
+                entry["accounts"].append(transaction.accountId)
+            for match, clubs in shops:
+                # Keep the most confident reading of a shop the user hit more than once.
+                existing = entry["shops"].get(match.identity.store_id)
+                if existing is None or _BAND_ORDER[match.band] < _BAND_ORDER[existing[0].band]:
+                    entry["shops"][match.identity.store_id] = (match, clubs)
+                entry["clubs"].update(clubs)
 
-        return MissedShopSchema(
-            store_id=identity.store_id,
-            store_name=identity.name,
-            match_band=match.band,
-            is_same_store=match.is_confident,
-            deal_count=len(identity.deals),
-            deal_titles=[deal.title for deal in identity.deals[:3] if getattr(deal, "title", None)],
-            club_ids=sorted(entry["clubs"]),
-            also_known_as=identity.names[1:],
-            covered_transaction_count=len(entry["purchases"]),
-            covered_amount=entry["amount"],
-            missed_transaction_count=missed_count,
-            missed_amount=missed_amount,
-            committed_transaction_count=committed_count,
-            committed_amount=committed_amount,
-            committed_club_ids=sorted(committed_clubs),
+        merchants = [self._describe_merchant(name, entry, band) for name, entry in gathered.items()]
+        # Most money first: the point of the list is what is at stake at each place.
+        merchants.sort(key=lambda merchant: (-merchant.amount, merchant.merchant_name))
+        return merchants[: SHOP_MATCH.MAX_SHOPS]
+
+    def _describe_merchant(self, name: str, entry: dict, band: str) -> SavingsMerchantSchema:
+        """Turn one merchant's gathered purchases into the shape the client renders."""
+        shops = sorted(entry["shops"].values(), key=lambda pair: _BAND_ORDER[pair[0].band])
+        return SavingsMerchantSchema(
+            merchant_name=name,
+            band=band,
+            purchase_count=len(entry["purchases"]),
+            amount=entry["amount"],
+            deal_count=sum(len(match.identity.deals) for match, _ in shops),
+            account_ids=entry["accounts"],
+            # Named only for a missed purchase, where the club is the deal the user could have
+            # claimed. On an applied one it would read as "this club paid", and the feed cannot
+            # say that: a blank charge means no money left the account, not whose card it was.
+            # The shops below still carry their own clubs, which is a fact about the shop.
+            club_ids=sorted(entry["clubs"]) if band else [],
+            shops=[
+                SavingsShopSchema(
+                    store_id=match.identity.store_id,
+                    store_name=match.identity.name,
+                    match_band=match.band,
+                    is_same_store=match.is_confident,
+                    deal_count=len(match.identity.deals),
+                    deal_titles=[
+                        deal.title for deal in match.identity.deals[:3] if getattr(deal, "title", None)
+                    ],
+                    club_ids=sorted(clubs),
+                    also_known_as=match.identity.names[1:],
+                )
+                for match, clubs in shops[:MAX_SHOPS_PER_MERCHANT]
+            ],
             purchases=[
-                MissedShopPurchaseSchema(
+                SavingsPurchaseSchema(
                     transaction_id=transaction.id,
-                    merchant_name=self._merchant_of(transaction),
                     amount=self.amount_service.purchase_value(transaction),
                     date=str(self._date_of(transaction)) if self._date_of(transaction) else None,
                     account_id=transaction.accountId,
-                    covered_by_club_ids=covered_by,
                 )
-                for transaction, covered_by in entry["purchases"]
+                for transaction in entry["purchases"]
             ],
         )
 
@@ -595,53 +610,6 @@ class InsightsService:
         if sort:
             transactions = self.open_finance_service.sort_transactions(transactions)
         return transactions
-
-    async def _account_products_for(self, user_id: str, use_mock: bool) -> Dict[str, str]:
-        """
-        ``{accountId: product}`` for the user's accounts — what tells a club's own benefit card
-        apart from an ordinary one.
-
-        A second call to Open Finance, because the transaction feed does not carry the product
-        and the missed-savings calculation cannot ask for it on its own. Failure is swallowed
-        on purpose: not knowing which card paid costs us the "you already saved here" reading,
-        and that is worth far less than the whole answer. Without this the endpoint would start
-        500-ing on an outage that used to be invisible to it.
-
-        Every distinct product string is logged. Nobody has yet seen a real Hever payload, so
-        ``BENEFIT_CARDS.PRODUCT_KEYWORDS_BY_CLUB`` is matching a guess at the wording — these
-        logs are how that guess gets confirmed or corrected.
-        """
-        if use_mock:
-            return {}
-
-        try:
-            accounts = await self.open_finance_service.get_user_accounts_async(user_id)
-        except Exception as e:
-            logger.warning(
-                f"Could not read account products, treating every purchase as missed: {str(e)}",
-                exc_info=e,
-                extra={"reason": "Accounts unavailable", "extra_data": {"user_id": user_id}},
-            )
-            return {}
-
-        products = {
-            account.get("id"): account.get("product")
-            for account in accounts
-            if account.get("id") and account.get("product")
-        }
-
-        logger.info(
-            "Account products read",
-            extra={
-                "reason": "Identifying club benefit cards",
-                "extra_data": {
-                    "user_id": user_id,
-                    "account_count": len(accounts),
-                    "products": sorted(set(products.values())),
-                },
-            },
-        )
-        return products
 
     async def calculate_user_categories_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
@@ -936,15 +904,15 @@ class InsightsService:
             )
             raise
 
-    async def calculate_missed_savings_by_store_async(
+    async def calculate_savings_opportunities_async(
         self, user_id: str, time_filter: bool, days: int = LIMITS.DAYS, use_mock: bool = False
-    ) -> List[MissedShopSchema]:
+    ) -> SavingsAnswerSchema:
         """
-        The same analysis as `calculate_missed_savings_async`, gathered by shop.
+        The savings picture for a period: what was missed, and what the club card already took.
 
-        One row per shop that runs a deal, carrying the purchases it could have covered, so
-        the user reads "קפה קפה has a coupon and you bought coffee four times" rather than the
-        same suggestion repeated against four separate transactions.
+        One call rather than two, because both sides come out of the same matching pass. Asking
+        for them separately would let the two answers drift apart between requests, and a
+        purchase could plausibly appear as missed in one and already-taken in the other.
         """
         logger.info(
             "Service method called",
@@ -957,19 +925,20 @@ class InsightsService:
         try:
             transactions = await self._transactions_for(user_id, time_filter, days, use_mock, sort=True)
             user_club_ids = await self.user_repository.get_user_clubs(user_id)
-            account_products = await self._account_products_for(user_id, use_mock)
-            shops = self.missed_savings_by_store(
-                transactions, user_club_ids=user_club_ids, account_products=account_products
-            )
+            answer = self.savings_opportunities(transactions, user_club_ids=user_club_ids)
 
             logger.info(
-                "Missed savings by store calculated successfully",
+                "Savings opportunities calculated successfully",
                 extra={
                     "reason": "Business logic complete",
-                    "extra_data": {"user_id": user_id, "shop_count": len(shops)},
+                    "extra_data": {
+                        "user_id": user_id,
+                        "missed_purchases": answer.missed.purchase_count,
+                        "applied_purchases": answer.applied.purchase_count,
+                    },
                 },
             )
-            return shops
+            return answer
         except Exception as e:
             logger.error(
                 f"Error: {str(e)}",

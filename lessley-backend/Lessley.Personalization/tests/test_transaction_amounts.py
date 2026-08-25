@@ -219,13 +219,25 @@ def test_a_settled_zero_charge_counts_the_same_as_a_blank_one(service):
     assert service.saving_of(_tx(charged=0.0, original=-49.80))[1] == "not_charged"
 
 
-def test_a_credit_that_has_not_been_paid_out_is_not_a_saving(service):
-    """A blank charge against a positive merchant figure is a refund pending, not a voucher."""
-    assert service.amount_saved(_tx(charged=None, original=42.5)) == 0.0
+def test_a_credit_is_a_refund_rather_than_a_voucher(service):
+    """
+    A blank charge against a *positive* merchant figure is money coming back, not a free purchase.
+
+    Both are worth the amount on the row, so the distinction is in the reason rather than the
+    number — and the reason is what tells a savings total made of refunds apart from one made
+    of club-card purchases.
+    """
+    assert service.saving_of(_tx(charged=None, original=42.5)) == (42.5, "refunded")
 
 
-def test_a_refund_is_not_a_discount(service):
-    assert service.amount_saved(_tx(charged=29.21, original=-29.21)) == 0.0
+def test_a_refund_counts_as_money_the_user_did_not_pay(service):
+    """
+    Not the gap between the two figures — that is the purchase counted twice — but what came back.
+
+    Deliberately the same figure `total_spent` subtracts, so the headline total and the savings
+    total can never disagree about what one refund was worth.
+    """
+    assert service.saving_of(_tx(charged=29.21, original=-29.21)) == (29.21, "refunded")
 
 
 def test_the_installment_flag_settles_it(service):
@@ -358,7 +370,7 @@ def test_savings_exclusions_names_why_each_purchase_was_dropped(service):
         _tx(charged=-60.26, original=-20.0, original_currency="USD"),                      # fx
         _tx(charged=-932, original=-3728, installment=True, installment_total=4),          # flagged
         _tx(charged=-216, original=-648),                                                  # inferred
-        _tx(charged=29.21, original=-29.21),                                               # refund
+        _tx(charged=29.21, original=-29.21),                                               # refunded
         _tx(charged=-86, original=-86, duplicate=True),                                    # duplicate
     ]
 
@@ -370,7 +382,7 @@ def test_savings_exclusions_names_why_each_purchase_was_dropped(service):
         "foreign_currency": 1,
         "installment": 1,
         "installment_inferred": 1,
-        "refund": 1,
+        "refunded": 1,
         "duplicate": 1,
     }
 
@@ -424,16 +436,29 @@ def test_net_purchase_value_lets_a_refund_cancel_what_it_reverses(service):
     assert service.net_purchase_value(_tx(charged=141.86)) == pytest.approx(-141.86)
 
 
-def test_total_spent_excludes_vouchers_and_nets_out_refunds(service):
-    """ILS 86 spent, ILS 176.15 on a voucher, ILS 20 refunded → 66 out of the account."""
+def test_total_spent_counts_the_club_card_and_nets_out_refunds(service):
+    """
+    ILS 86 charged, ILS 176.15 on a club card, ILS 20 refunded → 242.15 of things bought.
+
+    The club-card purchase counts at its full price. The user paid for it — through a card they
+    loaded — and it is money they got value for, which is what this figure answers. It is also
+    a saving; see `amount_saved`. The two are different questions, not a double count.
+    """
     transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15), _tx(charged=20.0)]
 
-    assert service.total_spent(transactions) == pytest.approx(66.0)
+    assert service.total_spent(transactions) == pytest.approx(242.15)
 
 
-def test_total_spent_disagrees_with_the_breakdowns_on_purpose(service):
-    """The breakdowns count the voucher at full worth; the headline total does not count it."""
-    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15)]
+def test_total_spent_is_exactly_the_sum_of_the_breakdowns(service):
+    """
+    The headline and every breakdown of it read the same figure off each row.
 
-    assert service.total_spent(transactions) == 86
-    assert sum(service.net_purchase_value(t) for t in transactions) == pytest.approx(262.15)
+    They used to disagree by exactly the club-card purchases: this counted what left the bank
+    while the per-category and per-account sums counted what was bought. A user adding up a
+    breakdown could not reach the total, and neither number was wrong on its own terms.
+    """
+    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15), _tx(charged=20.0)]
+
+    assert service.total_spent(transactions) == pytest.approx(
+        sum(service.net_purchase_value(t) for t in transactions)
+    )

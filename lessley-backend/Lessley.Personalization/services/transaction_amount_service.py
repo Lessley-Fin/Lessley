@@ -51,12 +51,15 @@ logger = logging.getLogger(__name__)
 
 
 # ── Why a purchase did or did not contribute to the savings total ─────────────────
-# Only `SAVING_COUNTED` carries money. The rest name a gap between the original and charged
-# amount that exists for a reason other than a discount. They are logged, not shown, so that a
-# savings figure that looks wrong can be explained without re-reading the feed by hand.
+# Three of these carry money — `SAVING_COUNTED` (a genuine gap), `SAVING_NOT_CHARGED` (the club
+# card paid) and `SAVING_REFUNDED` (the money came back). The rest name a gap between the
+# original and charged amount that exists for a reason other than a discount. They are logged,
+# not shown, so that a savings figure that looks wrong can be explained without re-reading the
+# feed by hand.
 
 SAVING_COUNTED = "counted"
 SAVING_NOT_CHARGED = "not_charged"
+SAVING_REFUNDED = "refunded"
 SAVING_NO_GAP = "no_gap"
 SAVING_MISSING_AMOUNT = "missing_amount"
 SAVING_FOREIGN_CURRENCY = "foreign_currency"
@@ -149,6 +152,23 @@ class TransactionAmountService:
         # A blank charge against a *credit* is a refund that has not been paid out, which is
         # the opposite of a saving.
         return original is not None and original < 0
+
+    def paid_with_club_card(self, transaction: Transaction) -> bool:
+        """
+        Whether a club's own benefit card paid for this, rather than the bank.
+
+        A Hever נטען card is loaded up front and only spends at the club's partner shops, so a
+        purchase charged to one already carried the discount. It arrives here as a settled row
+        the card was never billed for — `was_never_charged` — which is the same signature a gift
+        card or redeemed points leave. That is the limit of what the feed can tell us: it says
+        no money left the account, not which club is behind it, so nothing downstream may claim
+        to name the club from this alone.
+
+        This is deliberately *not* read off the accounts feed. The product string there is a
+        guess at wording nobody has confirmed, and it costs a second API call that can fail;
+        this signature is in the transaction already and cannot be worded differently.
+        """
+        return not self.is_duplicate(transaction) and self.was_never_charged(transaction)
 
     def direction(self, transaction: Transaction) -> str:
         """
@@ -311,6 +331,12 @@ class TransactionAmountService:
         if self.is_duplicate(transaction):
             return 0.0, SAVING_DUPLICATE
 
+        # Money coming back is money the user did not keep paying. Checked up front rather than
+        # left to the sign comparison below, which needs *both* amounts and so misses a refund
+        # that arrived with only one of them.
+        if self.direction(transaction) == INFLOW:
+            return self.amount_received(transaction), SAVING_REFUNDED
+
         charged, charged_currency = self._charged(transaction)
         original, original_currency = self._original(transaction)
 
@@ -330,10 +356,12 @@ class TransactionAmountService:
         if charged_currency != original_currency:
             return 0.0, SAVING_FOREIGN_CURRENCY
 
-        # A refund mirrors the purchase it reverses. Subtracting one figure from the other
-        # counts the transaction twice over rather than finding a discount in it.
+        # A refund mirrors the purchase it reverses, so the gap between the two figures is the
+        # transaction counted twice rather than a discount found in it. The money that came
+        # back is still money the user did not end up paying, and it is counted as such —
+        # `amount_received`, not the gap.
         if (charged > 0) != (original > 0):
-            return 0.0, SAVING_REFUND
+            return self.amount_received(transaction), SAVING_REFUNDED
 
         # The feed says so itself. This is the authoritative answer where it is present.
         if transaction.isCreditCardInstallment:
@@ -437,7 +465,17 @@ class TransactionAmountService:
                 if kind == KIND_REFUND
                 else sum(self.purchase_value(t) for t in of_kind)
             )
-            row = {"kind": kind, "count": len(of_kind), "amount": amount}
+            row = {
+                "kind": kind,
+                "count": len(of_kind),
+                "amount": amount,
+                # The same money, signed by which way it moved, so that summing this column
+                # over every row lands exactly on `total_spent`. `amount` is what the client
+                # prints — a refund of 40 reads as "40 came back", not "-40" — and a client
+                # that had to negate one row to make the total work would be doing arithmetic
+                # of its own, which is the thing these figures exist to prevent.
+                "signed_amount": sum(self.net_purchase_value(t) for t in of_kind),
+            }
 
             if kind == KIND_FOREIGN:
                 row["markup_fees"] = sum(self.markup_fee(t) for t in of_kind)
@@ -469,15 +507,19 @@ class TransactionAmountService:
 
     def total_spent(self, transactions: list[Transaction]) -> float:
         """
-        The headline figure: how much worse off the account is over these transactions.
+        The headline figure: everything the user paid for, however they paid, less what came back.
 
-        Money that left, less money that came back. Vouchers are absent by construction — they
-        cost nothing — which is what separates this from every per-category, per-shop and
-        per-account total, where the same voucher purchase is counted at its full worth.
+        `net_purchase_value`, summed — the same figure the per-category, per-shop and per-account
+        breakdowns add up, so the headline and every breakdown of it agree by construction. They
+        used to disagree by exactly the vouchers: this counted what left the bank and they counted
+        what was bought, and a club card bought ILS 1,367 of things while the bank paid nothing.
+
+        A purchase on a club card counts here at its full price. It is money the user paid,
+        through a card they loaded, and it is also a saving — `amount_saved` counts it too. That
+        is not double counting: the two answer different questions, "what did I get" and "what
+        did I not have to pay for now".
         """
-        return sum(self.amount_spent(t) for t in transactions) - sum(
-            self.amount_received(t) for t in transactions
-        )
+        return sum(self.net_purchase_value(t) for t in transactions)
 
     # ── Preparing a list for grouping ─────────────────────────────────────────────
 

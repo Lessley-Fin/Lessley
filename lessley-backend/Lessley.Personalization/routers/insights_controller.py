@@ -592,23 +592,28 @@ async def matching_clubs(
         raise
 
 
-@router.get("/missed-savings-by-store")
-async def missed_savings_by_store(
+@router.get("/savings-opportunities")
+async def savings_opportunities(
     request: Request,
     req: InsightsCalcRequests = Depends(),
     email: str = Depends(authenticated_email),
 ):
     """
-    Shops running a deal the user could have used, one row per shop.
+    What the user missed and what their club card already took, ready to render.
 
     Lives here rather than under /recommendations because it answers a question about the
     user's own spending and returns its answer directly. The /recommendations endpoints are
     fire-and-forget triggers whose results come back through RabbitMQ, and the edge only
     routes /insights/* and /open-finance/* to this service.
 
-    Read `match_band` before wording anything on screen: EXACT and STRONG mean the user
-    shopped at that shop; SIMILAR means only a line-of-business word matched ('קפה'), so it is
-    somewhere *like* theirs and must be worded that way.
+    Every figure on screen is in this payload. Clients render it and total nothing: the band
+    subtotals sum to `missed.total_amount` by construction, because each purchase is counted
+    under its strongest band only. A client re-deriving any of it is a second implementation
+    of the same rules and will eventually disagree with this one.
+
+    Read `match_band` on a shop before wording anything: EXACT and STRONG mean the user shopped
+    there; SIMILAR means only a line-of-business word matched ('קפה'), so it is somewhere
+    *like* theirs and must be worded that way.
     """
     start_time = time.time()
 
@@ -628,7 +633,7 @@ async def missed_savings_by_store(
 
     try:
         service = DIContainer.get_insights_service()
-        shops = await service.calculate_missed_savings_by_store_async(
+        answer = await service.calculate_savings_opportunities_async(
             email, req.time_filter, req.days
         )
 
@@ -643,16 +648,19 @@ async def missed_savings_by_store(
                     "method": request.method,
                     "endpoint": request.url.path,
                     "response_time_ms": response_time_ms,
-                    "record_count": len(shops),
+                    "missed_purchases": answer.missed.purchase_count,
+                    "applied_purchases": answer.applied.purchase_count,
                 },
             },
         )
 
-        return PaginatedResponse(status="success", data=shops, count=len(shops))
+        # A single object, not a page of rows: the two halves are one answer, and `count` over
+        # a list of shops was never a number any caller had a use for.
+        return BasicResponse(status="success", data=answer)
 
     except Exception as e:
         logger.error(
-            f"Error calculating missed savings by store: {str(e)}",
+            f"Error calculating savings opportunities: {str(e)}",
             exc_info=e,
             extra={
                 "reason": "Service call failed",

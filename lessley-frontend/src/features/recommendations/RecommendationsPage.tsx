@@ -7,19 +7,29 @@ import { ConnectionCheck } from "@/features/insights/components/ConnectionCheck"
 import {
   useHasConnection,
   useMatchingClubs,
-  useMissedSavingsByStore,
+  useSavingsOpportunities,
 } from "@/features/insights/hooks"
 import { INSIGHTS_DEFAULTS } from "@/lib/constants"
 import { getDirection } from "@/lib/i18n/config"
 import type { ClubRecommendation } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { AppliedDiscountsSlide } from "./components/AppliedDiscountsSlide"
 import { MissedShopsSlide } from "./components/MissedShopsSlide"
 import { TopClubMatchesSlide } from "./components/TopClubMatchesSlide"
 
 export function RecommendationsPage() {
   const { t, i18n } = useTranslation()
   const direction = getDirection(i18n.language)
-  const TABS = [t("recommendations.page.tabTopMatches"), t("recommendations.page.tabMissedShops")]
+  // Missed and applied read the same payload from opposite ends — what the user lost, and what
+  // their membership actually saved them. Two tabs rather than one list with a filter, because
+  // the second is not a subset of the first: a purchase belongs to exactly one of them, and
+  // burying the good news inside a screen headed "discounts you missed" was what made us tell
+  // people they had missed a discount they had in fact taken.
+  const TABS = [
+    t("recommendations.page.tabTopMatches"),
+    t("recommendations.page.tabMissedShops"),
+    t("recommendations.page.tabAppliedDiscounts"),
+  ]
   const [api, setApi] = useState<CarouselApi>()
   const [selected, setSelected] = useState(0)
 
@@ -27,11 +37,13 @@ export function RecommendationsPage() {
   const connected = isConnected === true
 
   const { data: clubData } = useMatchingClubs(connected)
-  const [missedShopDays, setMissedShopDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
-  const { data: missedShops = [], isLoading: missedShopsLoading } = useMissedSavingsByStore(
-    missedShopDays,
-    connected,
-  )
+  const [savingsDays, setSavingsDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
+  // One query behind both savings tabs. They are two halves of a single answer, and asking
+  // for them separately would let a purchase show up as missed on one and already-taken on
+  // the other between two requests.
+  const { data: savings, isLoading: savingsLoading } = useSavingsOpportunities(savingsDays, connected)
+  const missed = savings?.missed ?? { total_amount: 0, purchase_count: 0, bands: [] }
+  const applied = savings?.applied ?? { total_amount: 0, purchase_count: 0, merchants: [] }
 
   useEffect(() => {
     if (!api) return
@@ -91,10 +103,20 @@ export function RecommendationsPage() {
           </CarouselItem>
           <CarouselItem>
             <MissedShopsSlide
-              shops={missedShops}
-              isLoading={missedShopsLoading}
-              days={missedShopDays}
-              onDaysChange={setMissedShopDays}
+              missed={missed}
+              isLoading={savingsLoading}
+              days={savingsDays}
+              onDaysChange={setSavingsDays}
+            />
+          </CarouselItem>
+          <CarouselItem>
+            {/* Same query, same period control: changing the window on one tab changes it on
+                the other, because they are two readings of one answer, not two questions. */}
+            <AppliedDiscountsSlide
+              applied={applied}
+              isLoading={savingsLoading}
+              days={savingsDays}
+              onDaysChange={setSavingsDays}
             />
           </CarouselItem>
         </CarouselContent>

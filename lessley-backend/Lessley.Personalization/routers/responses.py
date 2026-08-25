@@ -45,70 +45,92 @@ class ClubRecommendationResponseSchema(BaseModel):
     recommendations: list[ClubRecommendationSchema]
 
 
-class MissedShopPurchaseSchema(BaseModel):
-    """One purchase a shop's deal could have applied to."""
+class SavingsPurchaseSchema(BaseModel):
+    """One purchase, as it appears under a merchant."""
 
     transaction_id: str = Field(..., description="Unique transaction identifier")
-    merchant_name: str = Field(..., description="The merchant name exactly as the bank reported it")
-    amount: float = Field(..., description="What the purchase cost")
+    amount: float = Field(..., description="What the purchase was worth")
     date: str | None = Field(default=None, description="When the purchase happened")
-    account_id: str | None = Field(
-        default=None,
-        description=(
-            "The account the purchase was charged to. Only the id travels — the client already "
-            "holds the accounts themselves from /open-finance/accounts and reads the product and "
-            "provider off its own copy, so this DTO never restates them."
-        ),
-    )
-    covered_by_club_ids: list[str] = Field(
-        default_factory=list,
-        description=(
-            "Clubs whose own benefit card paid for this purchase, so the saving was already "
-            "taken. Empty means the purchase genuinely missed out. Non-empty means the "
-            "opposite of a missed saving and must never be worded as one — see BENEFIT_CARDS."
-        ),
-    )
+    account_id: str | None = Field(default=None, description="The account it was charged to")
 
 
-class MissedShopSchema(BaseModel):
-    """
-    One shop that runs a deal, with the purchases it could have covered.
-
-    `match_band` is what the wording has to follow. EXACT and STRONG mean this is the shop the
-    user bought from — "you missed a coupon here". SIMILAR means the names only share a word
-    naming a line of business ('קפה'), so it is a shop *like* theirs and must be worded that
-    way. Anything weaker is not returned.
-
-    `missed_*` and `committed_*` split `covered_*`, and the split is the second thing to read.
-    A committed purchase was charged to a club's own benefit card and already took the discount
-    at the till, so it is a saving *made*, not missed. A shop with `missed_transaction_count`
-    of zero has nothing left to suggest and belongs wherever the client says "you already saved
-    here" — never in a list headed "you missed out".
-    """
+class SavingsShopSchema(BaseModel):
+    """A deal-running shop behind one merchant — what the user could have claimed, and where."""
 
     store_id: str = Field(..., description="The store ID")
     store_name: str = Field(..., description="The store name")
-    match_band: str = Field(..., description="EXACT | STRONG | SIMILAR — how sure the name match is")
+    match_band: str = Field(..., description="EXACT | STRONG | SIMILAR — how sure this shop match is")
     is_same_store: bool = Field(..., description="True when this is the shop the user actually used")
     deal_count: int = Field(..., description="How many deals this shop is running")
     deal_titles: list[str] = Field(default_factory=list, description="A few of the deals on offer")
     club_ids: list[str] = Field(default_factory=list, description="Clubs through which the deals apply")
-    also_known_as: list[str] = Field(
-        default_factory=list, description="Other names this shop is filed under in the catalogue"
-    )
-    covered_transaction_count: int = Field(..., description="How many purchases this shop could have covered")
-    covered_amount: float = Field(..., description="Total spend across those purchases")
-    missed_transaction_count: int = Field(
-        default=0, description="Of those, how many actually missed out — the number to lead with"
-    )
-    missed_amount: float = Field(default=0.0, description="Total spend across the missed purchases")
-    committed_transaction_count: int = Field(
-        default=0, description="Of those, how many already earned a club's benefit at the till"
-    )
-    committed_amount: float = Field(default=0.0, description="Total spend across the committed purchases")
-    committed_club_ids: list[str] = Field(
-        default_factory=list, description="The clubs that already paid off at this shop"
-    )
-    purchases: list[MissedShopPurchaseSchema] = Field(
-        default_factory=list, description="The purchases themselves"
-    )
+    also_known_as: list[str] = Field(default_factory=list, description="Other names it is filed under")
+
+
+class SavingsMerchantSchema(BaseModel):
+    """
+    One place the user shopped, with everything the screen shows about it.
+
+    The merchant is the unit because it is what the user recognises — a name off their own
+    statement — where a shop is a row in our catalogue. Grouping, de-duplication and every
+    total below are done here so that no client has to redo them and reach a different answer.
+    """
+
+    merchant_name: str = Field(..., description="The merchant, exactly as the bank reported it")
+    band: str = Field(..., description="The band these purchases were counted under")
+    purchase_count: int = Field(..., description="How many purchases, each counted once")
+    amount: float = Field(..., description="What those purchases were worth in total")
+    deal_count: int = Field(..., description="Deals live across every shop matched here")
+    account_ids: list[str] = Field(default_factory=list, description="Accounts these were charged to")
+    club_ids: list[str] = Field(default_factory=list, description="Clubs the deals apply through")
+    shops: list[SavingsShopSchema] = Field(default_factory=list, description="The shops that matched")
+    purchases: list[SavingsPurchaseSchema] = Field(default_factory=list, description="The purchases themselves")
+
+
+class SavingsBandSchema(BaseModel):
+    """
+    One band's worth of merchants, with its own subtotal.
+
+    Every purchase is counted under exactly one band — its strongest match — so the three
+    subtotals add up to `MissedSavingsSchema.total_amount` exactly. They used to overlap, and
+    a user adding the tabs up got a bigger number than the headline with nothing to explain it.
+    """
+
+    band: str = Field(..., description="EXACT | STRONG | SIMILAR")
+    total_amount: float = Field(..., description="What this band's purchases were worth")
+    purchase_count: int = Field(..., description="How many purchases fell in this band")
+    merchants: list[SavingsMerchantSchema] = Field(default_factory=list)
+
+
+class MissedSavingsSchema(BaseModel):
+    """Purchases that matched a deal the user could have used, and did not."""
+
+    total_amount: float = Field(..., description="Sum of the bands below, each purchase once")
+    purchase_count: int = Field(..., description="How many purchases missed out, each counted once")
+    bands: list[SavingsBandSchema] = Field(default_factory=list)
+
+
+class AppliedSavingsSchema(BaseModel):
+    """
+    Purchases a club's own benefit card paid for, so the discount came off at the till.
+
+    Every such purchase is here, whether or not our catalogue happens to know the shop — the
+    card is the evidence, not the match. `club_ids` on these merchants is empty by design: the
+    feed says no money left the account, which does not name the club behind the card.
+    """
+
+    total_amount: float = Field(..., description="What those purchases were worth")
+    purchase_count: int = Field(..., description="How many, each counted once")
+    merchants: list[SavingsMerchantSchema] = Field(default_factory=list)
+
+
+class SavingsAnswerSchema(BaseModel):
+    """
+    The whole savings picture for a period: what was missed, and what was already taken.
+
+    One payload rather than two endpoints, because the two are cut from the same matching pass
+    and must never disagree about which side a purchase fell on.
+    """
+
+    missed: MissedSavingsSchema
+    applied: AppliedSavingsSchema

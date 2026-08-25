@@ -25,12 +25,14 @@ def test_matching_clubs_is_a_get():
     assert route.methods == {"GET"}
 
 
-def test_the_per_transaction_missed_savings_route_is_gone():
-    # Superseded by /insights/missed-savings-by-store, which answers the same question one row
-    # per shop instead of repeating a suggestion against every matching purchase.
+def test_savings_are_one_route_answering_both_halves():
+    # Two earlier shapes are gone. The per-transaction one repeated a suggestion against every
+    # matching purchase; the by-store one made the client invert shops into merchants, total
+    # them and dedupe them, which is how two clients came to disagree with this service and
+    # with each other. One route now returns both halves, already in the shape the screen draws.
     paths = _paths()
-    assert "/insights/missed-savings-by-store" in paths
-    assert not any("missed-savings" in path and "by-store" not in path for path in paths)
+    assert "/insights/savings-opportunities" in paths
+    assert not any("missed-savings" in path for path in paths)
 
 
 def test_the_recommendations_router_no_longer_exists():

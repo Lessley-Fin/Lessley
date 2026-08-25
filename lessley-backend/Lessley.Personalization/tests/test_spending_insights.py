@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from models.transaction import AmountDetail, Transaction, TransactionAmount, TransactionDates
+from routers.responses import AppliedSavingsSchema, MissedSavingsSchema, SavingsAnswerSchema
 from services.insights_service import InsightsService
 
 
@@ -174,12 +175,17 @@ def test_spending_saved_ignores_a_plan_whose_payments_do_not_divide_evenly():
     assert service.spending_saved(transactions) == 0
 
 
-def test_spending_saved_ignores_a_refund():
-    """A credit mirrors the purchase; subtracting one from the other counts it twice."""
+def test_spending_saved_counts_a_refund_as_money_not_paid():
+    """
+    What came back, not the gap between the two figures — that gap is the purchase counted twice.
+
+    A refund belongs in this total because the question is "how much did the user not end up
+    paying", and money returned to them is exactly that.
+    """
     service = _service()
     transactions = [_tx(charged=29.21, original=-29.21)]
 
-    assert service.spending_saved(transactions) == 0
+    assert service.spending_saved(transactions) == 29.21
 
 
 def test_spending_saved_sums_across_transactions():
@@ -210,7 +216,7 @@ def test_savings_exclusions_names_why_each_purchase_was_dropped():
         "missing_amount": 1,
         "foreign_currency": 1,
         "installment_inferred": 1,
-        "refund": 1,
+        "refunded": 1,
     }
 
 
@@ -230,8 +236,13 @@ def test_an_account_used_only_for_vouchers_still_reports_its_activity():
     assert by_account["voucher"]["total_count"] == 1
 
 
-def test_the_headline_total_leaves_the_voucher_out():
-    """The same two purchases, under the question the total asks: only 100 left the bank."""
+def test_the_headline_total_counts_the_club_card_purchase_too():
+    """
+    The same two purchases: 276.15 of things bought, however each one was paid for.
+
+    The club-card purchase used to be missing from this figure while appearing at full worth in
+    every breakdown beside it, so the breakdowns did not add up to the total they sat under.
+    """
     service = _service()
     transactions = [
         _tx(charged=-100, account_id="bank"),
@@ -240,10 +251,30 @@ def test_the_headline_total_leaves_the_voucher_out():
 
     total = service.spending_total(transactions)
 
-    assert total["total_amount"] == 100
+    assert total["total_amount"] == pytest.approx(276.15)
     assert total["purchase_count"] == 2
-    # ...while the composition beside it still describes the voucher as a thing that happened.
-    assert {row["kind"]: row["count"] for row in total["composition"]} == {"ordinary": 1, "voucher": 1}
+
+
+def test_the_composition_adds_up_to_the_headline_total():
+    """
+    `signed_amount` over every kind lands exactly on `total_amount`.
+
+    `amount` is what the client prints — a refund of 40 reads as "40 came back", not "-40" — so
+    it is the signed figure that has to reconcile. Without it a client would have to know which
+    kinds to subtract, which is arithmetic it must never be asked to do.
+    """
+    service = _service()
+    transactions = [
+        _tx(charged=-100, account_id="bank"),
+        _tx(charged=None, original=-176.15, account_id="voucher"),
+        _tx(charged=40.0, account_id="bank"),
+    ]
+
+    total = service.spending_total(transactions)
+
+    assert sum(row["signed_amount"] for row in total["composition"]) == pytest.approx(
+        total["total_amount"]
+    )
 
 
 def test_the_headline_total_gives_back_what_was_reclaimed():
@@ -266,6 +297,12 @@ def test_a_refund_does_not_count_as_a_visit():
     transactions = [_tx(charged=-1000), _tx(charged=250.0)]
 
     assert service.top_spending_categories(transactions)[0]["total_count"] == 1
+
+
+_EMPTY_ANSWER = SavingsAnswerSchema(
+    missed=MissedSavingsSchema(total_amount=0.0, purchase_count=0, bands=[]),
+    applied=AppliedSavingsSchema(total_amount=0.0, purchase_count=0, merchants=[]),
+)
 
 
 # ── Task 4: spending saved by account ───────────────────────────────────────────
@@ -296,53 +333,64 @@ def test_spending_saved_by_account_drops_the_same_gaps_as_the_total():
     assert result == [{"accountId": "acc1", "accountNumber": "****1", "total_saved": 10}]
 
 
-# ── missed-savings sorts transactions before matching shops ───────────────────
+# ── savings opportunities: what the orchestration hands the matching ──────────
 
-def _missed_savings_service(open_finance) -> InsightsService:
+def _savings_service(open_finance) -> InsightsService:
     service = _service(
         open_finance_service=open_finance,
         publisher_service=MagicMock(),
         user_repository=MagicMock(get_user_clubs=AsyncMock(return_value=["c1"])),
     )
-    # The matching itself is covered by its own tests; here we only care that the
-    # orchestration hands it correctly-sorted transactions.
-    service.missed_savings_by_store = MagicMock(return_value=[])
+    # The matching itself is covered by its own tests; here we only care that the orchestration
+    # hands it correctly-sorted transactions and the user's own clubs.
+    service.savings_opportunities = MagicMock(return_value=_EMPTY_ANSWER)
     return service
 
 
-async def test_missed_savings_sorts_real_transactions_before_matching():
+async def test_savings_opportunities_sorts_real_transactions_before_matching():
     fetched = [_tx(charged=1)]
     sorted_transactions = [_tx(charged=2)]
 
     open_finance = MagicMock()
     open_finance.get_user_transactions_async = AsyncMock(return_value=fetched)
     open_finance.sort_transactions = MagicMock(return_value=sorted_transactions)
-    open_finance.get_user_accounts_async = AsyncMock(
-        return_value=[{"id": "acc-hever", "product": "חבר נטען"}]
-    )
 
-    service = _missed_savings_service(open_finance)
+    service = _savings_service(open_finance)
 
-    await service.calculate_missed_savings_by_store_async("user@test.com", time_filter=True, days=7)
+    await service.calculate_savings_opportunities_async("user@test.com", time_filter=True, days=7)
 
     open_finance.sort_transactions.assert_called_once_with(fetched)
-    # The accounts feed travels with the transactions: without it the matching cannot tell a
-    # club's own benefit card from an ordinary one, and reports a saving already made as missed.
-    service.missed_savings_by_store.assert_called_once_with(
-        sorted_transactions,
-        user_club_ids=["c1"],
-        account_products={"acc-hever": "חבר נטען"},
-    )
+    service.savings_opportunities.assert_called_once_with(sorted_transactions, user_club_ids=["c1"])
 
 
-async def test_missed_savings_does_not_sort_mock_data():
+async def test_savings_opportunities_does_not_sort_mock_data():
     open_finance = MagicMock()
     open_finance.sort_transactions = MagicMock()
-    service = _missed_savings_service(open_finance)
+    service = _savings_service(open_finance)
     service.files_service.read_json = MagicMock(return_value=[{"fake": "tx"}])
 
-    await service.calculate_missed_savings_by_store_async(
+    await service.calculate_savings_opportunities_async(
         "user@test.com", time_filter=True, days=7, use_mock=True
     )
 
     open_finance.sort_transactions.assert_not_called()
+
+
+async def test_savings_opportunities_never_reaches_for_the_accounts_feed():
+    """
+    The club card gives itself away in the transaction, so nothing here needs a second call.
+
+    Pinned because that call used to exist: it fetched an account `product` string to spot a
+    נטען card, against wording nobody had confirmed, and it could fail and take the whole
+    answer with it.
+    """
+    open_finance = MagicMock()
+    open_finance.get_user_transactions_async = AsyncMock(return_value=[_tx(charged=1)])
+    open_finance.sort_transactions = MagicMock(return_value=[_tx(charged=1)])
+    open_finance.get_user_accounts_async = AsyncMock()
+
+    service = _savings_service(open_finance)
+
+    await service.calculate_savings_opportunities_async("user@test.com", time_filter=True, days=7)
+
+    open_finance.get_user_accounts_async.assert_not_called()

@@ -20,8 +20,8 @@ export const queryKeys = {
     spendingSaved: (days: number) => [...queryKeys.insights.all, "spending-saved", days] as const,
     spendingSavedByAccount: (days: number) =>
       [...queryKeys.insights.all, "spending-saved-by-account", days] as const,
-    missedSavingsByStore: (days: number) =>
-      [...queryKeys.insights.all, "missed-savings-by-store", days] as const,
+    savingsOpportunities: (days: number) =>
+      [...queryKeys.insights.all, "savings-opportunities", days] as const,
   },
   recommendations: {
     all: ["recommendations"] as const,
