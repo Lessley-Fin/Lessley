@@ -64,10 +64,8 @@
           "subtitle": "מאחורי הקלעים",
           "point1Title": "חיסכון משולב",
           "point1Desc": "שילוב קופון חנות עם הטבת הכרטיס הנכונה בצעד אחד.",
-          "point2Title": "התאמת מוצר מדויקת",
-          "point2Desc": "אנחנו מתמחרים את הפריט שאתם באמת רוצים, לא פריט דומה.",
-          "point3Title": "קופונים חולפים",
-          "point3Desc": "נאספים מקמעונאים ופורומים דקות ספורות אחרי שהם מופיעים."
+          "point2Title": "קופונים חולפים",
+          "point2Desc": "נאספים מקמעונאים ופורומים דקות ספורות אחרי שהם מופיעים."
         },
         "safety": {
           "title": "נבנה כדי להיות בטוח",
@@ -88,6 +86,7 @@
     "optimizer": "אופטימיזציה",
     "recommend": "המלצות",
     "notifications": "התראות",
+    "notificationsUnread": "התראות, {{count}} שלא נקראו",
     "qa": "שאלות ותשובות",
     "profileAndSettings": "פרופיל והגדרות"
   },
@@ -312,7 +311,14 @@
       "empty": "אין עדיין מספיק היסטוריה להשוואת תקופות.",
       "thisPeriod": "התקופה הזו",
       "current": "נוכחי",
-      "previous": "קודם"
+      "previous": "קודם",
+      "summary": {
+        "more": "הוצאתם {{amount}} יותר בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}} — עלייה של {{percent}}%.",
+        "less": "הוצאתם {{amount}} פחות בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}} — ירידה של {{percent}}%.",
+        "moreAmountOnly": "הוצאתם {{amount}} יותר בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}}.",
+        "lessAmountOnly": "הוצאתם {{amount}} פחות בין {{currentStart}} ל-{{currentEnd}} מאשר בין {{previousStart}} ל-{{previousEnd}}.",
+        "same": "הוצאתם בערך אותו סכום בין {{currentStart}} ל-{{currentEnd}} כמו בין {{previousStart}} ל-{{previousEnd}}."
+      }
     },
     "statsGrid": {
       "transactions": "עסקאות",

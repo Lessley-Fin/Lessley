@@ -49,12 +49,26 @@ export function MainShell({ children }: { children: ReactNode }) {
           </Link>
           <Link
             to={ROUTES.NOTIFICATIONS}
-            aria-label={t("nav.notifications")}
+            aria-label={
+              unreadCount > 0
+                ? t("nav.notificationsUnread", { count: unreadCount })
+                : t("nav.notifications")
+            }
             className="relative flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-[var(--shadow-card)] sm:size-10"
           >
             <Bell className="size-[18px]" aria-hidden />
             {unreadCount > 0 ? (
-              <span className="absolute end-1.5 top-1.5 size-2.5 rounded-full bg-warning ring-2 ring-card" />
+              // The count itself, not just a dot. It sits proud of the button's
+              // corner and grows with the digits; past 99 the exact number stops
+              // being useful and would outgrow the header row, so it caps.
+              // aria-hidden because the link's own label already says the count —
+              // otherwise a screen reader reads the number twice.
+              <span
+                aria-hidden
+                className="absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none tabular-nums text-destructive-foreground ring-2 ring-card"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
             ) : null}
           </Link>
           <Link

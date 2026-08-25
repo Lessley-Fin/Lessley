@@ -49,6 +49,7 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
           const deal = deals[step.deal_id]
           const label = dealTypeLabel(deal?.deal_type)
           const clubLogo = getClubLogo(deal?.source_id, deal?.club_id)
+          // The club as people know it ("HOT Israel"), not the scraper id behind it.
           const clubName = resolveClubName(clubs, deal?.club_id, deal?.source_id)
           const isLast = index === steps.length - 1
           // A tender deal only discounts the slice of the bill routed through that
