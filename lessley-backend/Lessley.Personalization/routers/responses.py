@@ -60,6 +60,14 @@ class MissedShopPurchaseSchema(BaseModel):
             "provider off its own copy, so this DTO never restates them."
         ),
     )
+    covered_by_club_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Clubs whose own benefit card paid for this purchase, so the saving was already "
+            "taken. Empty means the purchase genuinely missed out. Non-empty means the "
+            "opposite of a missed saving and must never be worded as one — see BENEFIT_CARDS."
+        ),
+    )
 
 
 class MissedShopSchema(BaseModel):
@@ -70,6 +78,12 @@ class MissedShopSchema(BaseModel):
     user bought from — "you missed a coupon here". SIMILAR means the names only share a word
     naming a line of business ('קפה'), so it is a shop *like* theirs and must be worded that
     way. Anything weaker is not returned.
+
+    `missed_*` and `committed_*` split `covered_*`, and the split is the second thing to read.
+    A committed purchase was charged to a club's own benefit card and already took the discount
+    at the till, so it is a saving *made*, not missed. A shop with `missed_transaction_count`
+    of zero has nothing left to suggest and belongs wherever the client says "you already saved
+    here" — never in a list headed "you missed out".
     """
 
     store_id: str = Field(..., description="The store ID")
@@ -84,6 +98,17 @@ class MissedShopSchema(BaseModel):
     )
     covered_transaction_count: int = Field(..., description="How many purchases this shop could have covered")
     covered_amount: float = Field(..., description="Total spend across those purchases")
+    missed_transaction_count: int = Field(
+        default=0, description="Of those, how many actually missed out — the number to lead with"
+    )
+    missed_amount: float = Field(default=0.0, description="Total spend across the missed purchases")
+    committed_transaction_count: int = Field(
+        default=0, description="Of those, how many already earned a club's benefit at the till"
+    )
+    committed_amount: float = Field(default=0.0, description="Total spend across the committed purchases")
+    committed_club_ids: list[str] = Field(
+        default_factory=list, description="The clubs that already paid off at this shop"
+    )
     purchases: list[MissedShopPurchaseSchema] = Field(
         default_factory=list, description="The purchases themselves"
     )

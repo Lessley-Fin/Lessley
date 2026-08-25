@@ -9,7 +9,7 @@ another café is useful, landing on a car park is not.
 
 from itertools import combinations
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from models.transaction import (
     AmountDetail,
@@ -46,9 +46,10 @@ def _club(club_id, store_ids):
 
 
 def _tx(tx_id="t1", merchant="קפה קפה", category_code="5812", charged=100.0,
-        sub="RESTAURANT", town=None):
+        sub="RESTAURANT", town=None, account=None):
     return Transaction(
         id=tx_id,
+        accountId=account,
         categoryCode=category_code,
         merchantName=merchant,
         merchantAddress=MerchantAddress(townName=town) if town else None,
@@ -397,3 +398,181 @@ def test_by_store_keeps_the_most_confident_reading_of_a_shop():
 
 def test_by_store_returns_nothing_without_transactions():
     assert _service(_world([_store("s1", "סטימצקי")])).missed_savings_by_store([]) == []
+
+
+# ── Purchases that already took the discount ──────────────────────────────────
+#
+# A Hever נטען card only spends at Hever's partner shops, so a purchase charged to one did
+# not miss the saving — it made it. The transaction cannot say so: it names an account id and
+# nothing else, and the product string that gives the card away arrives separately, as the
+# `account_products` map these tests pass in.
+
+HEVER = "club_hever_gift_card_company"
+LOADED_CARD = {"acc-hever": "חבר נטען"}
+
+
+def _hever_world():
+    """One shop, carried by Hever and by an unrelated club the user is also in."""
+    return _world(
+        [_store("s1", "סטימצקי")],
+        clubs={HEVER: _club(HEVER, ["s1"]), "c1": _club("c1", ["s1"])},
+    )
+
+
+def test_a_purchase_on_the_clubs_own_card_already_saved():
+    """The whole point: paying with Hever's card at a Hever shop is not a missed saving."""
+    service = _service(_hever_world())
+
+    shops = service.missed_savings_by_store(
+        [_tx("t1", merchant="סטימצקי", charged=80.0, account="acc-hever")],
+        user_club_ids=[HEVER],
+        account_products=LOADED_CARD,
+    )
+
+    shop = shops[0]
+    assert shop.missed_transaction_count == 0, "the user did not miss out — they used the card"
+    assert shop.committed_transaction_count == 1
+    assert shop.committed_amount == 80.0
+    assert shop.committed_club_ids == [HEVER]
+    assert shop.purchases[0].covered_by_club_ids == [HEVER]
+
+
+def test_the_same_shop_on_an_ordinary_card_is_still_missed():
+    service = _service(_hever_world())
+
+    shops = service.missed_savings_by_store(
+        [
+            _tx("t1", merchant="סטימצקי", charged=80.0, account="acc-hever"),
+            _tx("t2", merchant="סטימצקי", charged=20.0, account="acc-visa"),
+        ],
+        user_club_ids=[HEVER],
+        account_products=LOADED_CARD,
+    )
+
+    shop = shops[0]
+    assert shop.covered_transaction_count == 2, "both visits still belong to the shop"
+    assert shop.covered_amount == 100.0
+    assert shop.missed_transaction_count == 1 and shop.missed_amount == 20.0
+    assert shop.committed_transaction_count == 1 and shop.committed_amount == 80.0
+
+
+def test_a_benefit_card_only_settles_the_clubs_that_carry_the_shop():
+    """
+    Hever's card cannot have paid off a club Hever does not run.
+
+    Without the intersection, a shop reached only through another club would be marked
+    committed on the strength of the card alone, and the user would lose a saving they
+    really did miss.
+    """
+    repo = _world(
+        [_store("s1", "סטימצקי")],
+        clubs={HEVER: _club(HEVER, []), "c1": _club("c1", ["s1"])},
+    )
+    service = _service(repo)
+
+    shops = service.missed_savings_by_store(
+        [_tx("t1", merchant="סטימצקי", charged=80.0, account="acc-hever")],
+        user_club_ids=[HEVER, "c1"],
+        account_products=LOADED_CARD,
+    )
+
+    assert shops[0].missed_transaction_count == 1
+    assert shops[0].committed_club_ids == []
+
+
+def test_a_shop_where_every_visit_already_saved_sinks_below_one_still_losing_out():
+    repo = _world(
+        [_store("s1", "סטימצקי"), _store("s2", "גולדה")],
+        clubs={HEVER: _club(HEVER, ["s1", "s2"])},
+    )
+    service = _service(repo)
+
+    shops = service.missed_savings_by_store(
+        [
+            _tx("t1", merchant="סטימצקי", charged=500.0, account="acc-hever"),  # already saved
+            _tx("t2", merchant="גולדה", charged=10.0, account="acc-visa"),      # still missing out
+        ],
+        user_club_ids=[HEVER],
+        account_products=LOADED_CARD,
+    )
+
+    assert [shop.store_name for shop in shops] == ["גולדה", "סטימצקי"], (
+        "the bigger spend already saved; leading with it would tell the user to do what they did"
+    )
+
+
+def test_without_the_accounts_feed_every_purchase_still_reads_as_missed():
+    """The answer degrades to what it was before this existed, never to silence."""
+    service = _service(_hever_world())
+    transactions = [_tx("t1", merchant="סטימצקי", charged=80.0, account="acc-hever")]
+
+    shops = service.missed_savings_by_store(transactions, user_club_ids=[HEVER])
+
+    assert shops[0].missed_transaction_count == 1
+    assert shops[0].committed_transaction_count == 0
+    assert shops[0].purchases[0].covered_by_club_ids == []
+
+
+def test_a_card_no_club_claims_leaves_the_purchase_missed():
+    service = _service(_hever_world())
+
+    shops = service.missed_savings_by_store(
+        [_tx("t1", merchant="סטימצקי", charged=80.0, account="acc-visa")],
+        user_club_ids=[HEVER],
+        account_products={"acc-visa": "מסטרקארד זהב"},
+    )
+
+    assert shops[0].missed_transaction_count == 1
+
+
+def test_the_product_wording_is_matched_loosely():
+    """
+    Nobody has seen a real Hever accounts payload, so the keyword is a guess at the wording.
+    Matching a substring rather than the whole string is what keeps that guess survivable.
+    """
+    service = _service(_hever_world())
+
+    for product in ("נטען", "חבר נטען", "  כרטיס נטען טעינה  "):
+        shops = service.missed_savings_by_store(
+            [_tx("t1", merchant="סטימצקי", account="acc-hever")],
+            user_club_ids=[HEVER],
+            account_products={"acc-hever": product},
+        )
+        assert shops[0].committed_transaction_count == 1, product
+
+
+# ── Reading the accounts feed ─────────────────────────────────────────────────
+
+
+async def test_account_products_are_read_off_the_accounts_feed():
+    service = _service(_world([_store("s1", "סטימצקי")]))
+    service.open_finance_service.get_user_accounts_async = AsyncMock(
+        return_value=[
+            {"id": "acc-hever", "product": "חבר נטען"},
+            {"id": "acc-visa", "product": "מסטרקארד זהב"},
+            {"id": "acc-nameless"},  # no product to read
+        ]
+    )
+
+    assert await service._account_products_for("someone@example.com", use_mock=False) == {
+        "acc-hever": "חבר נטען",
+        "acc-visa": "מסטרקארד זהב",
+    }
+
+
+async def test_a_failing_accounts_call_costs_the_reading_not_the_answer():
+    """An outage on a second call must not take down an endpoint it never used to touch."""
+    service = _service(_world([_store("s1", "סטימצקי")]))
+    service.open_finance_service.get_user_accounts_async = AsyncMock(
+        side_effect=RuntimeError("open finance is down")
+    )
+
+    assert await service._account_products_for("someone@example.com", use_mock=False) == {}
+
+
+async def test_the_mock_feed_never_reaches_for_real_accounts():
+    service = _service(_world([_store("s1", "סטימצקי")]))
+    service.open_finance_service.get_user_accounts_async = AsyncMock()
+
+    assert await service._account_products_for("someone@example.com", use_mock=True) == {}
+    service.open_finance_service.get_user_accounts_async.assert_not_called()

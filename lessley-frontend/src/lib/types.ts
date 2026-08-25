@@ -117,6 +117,14 @@ export interface MissedShopPurchase {
   date: string | null
   /** Which account paid for it — resolve against {@link OpenFinanceAccount} to name it. */
   account_id?: string | null
+  /**
+   * Clubs whose own benefit card paid for this purchase, so the discount was already taken.
+   *
+   * Empty means the purchase genuinely missed out. Non-empty is the *opposite* of a missed
+   * saving — a Hever נטען card only spends at Hever's shops, so the user did the thing this
+   * screen would otherwise be telling them to do. Never word it as a loss.
+   */
+  covered_by_club_ids?: string[]
 }
 
 export interface MissedShop {
@@ -130,6 +138,13 @@ export interface MissedShop {
   also_known_as: string[]
   covered_transaction_count: number
   covered_amount: number
+  /** Of those, the ones that actually missed out — the numbers to lead with. */
+  missed_transaction_count?: number
+  missed_amount?: number
+  /** Of those, the ones a club's own card already paid off. */
+  committed_transaction_count?: number
+  committed_amount?: number
+  committed_club_ids?: string[]
   purchases: MissedShopPurchase[]
 }
 

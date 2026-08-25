@@ -317,13 +317,22 @@ async def test_missed_savings_sorts_real_transactions_before_matching():
     open_finance = MagicMock()
     open_finance.get_user_transactions_async = AsyncMock(return_value=fetched)
     open_finance.sort_transactions = MagicMock(return_value=sorted_transactions)
+    open_finance.get_user_accounts_async = AsyncMock(
+        return_value=[{"id": "acc-hever", "product": "חבר נטען"}]
+    )
 
     service = _missed_savings_service(open_finance)
 
     await service.calculate_missed_savings_by_store_async("user@test.com", time_filter=True, days=7)
 
     open_finance.sort_transactions.assert_called_once_with(fetched)
-    service.missed_savings_by_store.assert_called_once_with(sorted_transactions, user_club_ids=["c1"])
+    # The accounts feed travels with the transactions: without it the matching cannot tell a
+    # club's own benefit card from an ordinary one, and reports a saving already made as missed.
+    service.missed_savings_by_store.assert_called_once_with(
+        sorted_transactions,
+        user_club_ids=["c1"],
+        account_products={"acc-hever": "חבר נטען"},
+    )
 
 
 async def test_missed_savings_does_not_sort_mock_data():

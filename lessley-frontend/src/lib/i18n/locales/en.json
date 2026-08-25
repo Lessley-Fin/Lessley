@@ -446,7 +446,19 @@
         "title": "Why you are seeing this",
         "intro": "Your clubs run deals at specific shops. We compare the shop names on your card statement against the shops running those deals, so we can tell you when you paid full price somewhere your membership would have given you a discount.",
         "exact": "the shop you actually paid at, so the discount really was yours to claim.",
-        "similar": "only the kind of business matches — one coffee place against another. Take it as a tip for next time, not a discount you lost."
+        "similar": "only the kind of business matches — one coffee place against another. Take it as a tip for next time, not a discount you lost.",
+        "settled": "purchases you paid for with the club's own card, so the discount already came off at the till. Not something you missed — money you already saved."
+      },
+      "settled": {
+        "tabLabel": "Saved",
+        "title": "Already saved",
+        "hint": "Purchases where your club card took the discount at the till.",
+        "subtitle": "{{amount}} at {{count}} shop where your club card took the discount at the till",
+        "subtitle_other": "{{amount}} at {{count}} shops where your club card took the discount at the till",
+        "withClub": "through {{clubs}}",
+        "alsoHere": "{{count}} purchase here already saved {{amount}} with {{clubs}}",
+        "alsoHere_other": "{{count}} purchases here already saved {{amount}} with {{clubs}}",
+        "nothingLeft": "Nothing missed — every purchase that matched a deal was paid with your club card."
       }
     }
   },
