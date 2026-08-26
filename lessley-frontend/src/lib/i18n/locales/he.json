@@ -476,7 +476,7 @@
       "hint": "קניות שבהן כרטיס המועדון כבר נתן את ההנחה בקופה.",
       "loading": "בודקים באילו קניות כבר מימשת הנחה…",
       "empty": "בתקופה הזו לא זיהינו קנייה ששולמה בכרטיס מועדון.",
-      "spentLabel": "שילמת",
+      "spentLabel": "חסכת",
       "purchaseCount": "קנייה אחת",
       "purchaseCount_two": "{{count}} קניות",
       "purchaseCount_other": "{{count}} קניות",

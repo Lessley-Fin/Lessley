@@ -470,7 +470,7 @@
       "hint": "Purchases where your club card took the discount at the till.",
       "loading": "Checking which purchases already used a discount…",
       "empty": "No purchase this period was paid for with a club card.",
-      "spentLabel": "You paid",
+      "spentLabel": "You Saved",
       "purchaseCount": "{{count}} purchase",
       "purchaseCount_other": "{{count}} purchases",
       "infoDialog": {
