@@ -79,7 +79,16 @@ function PasswordLoginForm({ onUseEmailCode }: { onUseEmailCode: () => void }) {
             <FormItem className="space-y-1.5">
               <FormLabel>{t("auth.login.username")}</FormLabel>
               <FormControl>
-                <Input {...field} autoComplete="username" className="h-12 rounded-2xl" disabled={isLoading} />
+                {/* Latin by syntax, so it is pinned LTR for the same reason `Input` pins
+                    email and password: in Hebrew the page is RTL, and a trailing `.` or `_`
+                    in a username would otherwise be reordered to the visual start. */}
+                <Input
+                  {...field}
+                  autoComplete="username"
+                  dir="ltr"
+                  className="h-12 rounded-2xl"
+                  disabled={isLoading}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

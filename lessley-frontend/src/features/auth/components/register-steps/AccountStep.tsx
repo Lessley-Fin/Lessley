@@ -49,7 +49,9 @@ export function AccountStep({ form, isLoading = false, serverError, onContinue }
           <FormItem className="space-y-1.5">
             <FormLabel>{t("auth.register.account.username")}</FormLabel>
             <FormControl>
-              <Input {...field} autoComplete="username" className="h-12 rounded-2xl" />
+              {/* LTR for the same reason as the login form's username field: an RTL page
+                  would reorder a trailing `.` or `_` to the visual start. */}
+              <Input {...field} autoComplete="username" dir="ltr" className="h-12 rounded-2xl" />
             </FormControl>
             <FormMessage />
           </FormItem>

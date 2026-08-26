@@ -39,11 +39,20 @@ class BackfillResult:
 
 
 def build_club_by_source(db: Any) -> dict[str, str]:
-    """``source_id`` -> ``club_id``, straight from the ``clubs`` collection."""
+    """``source_id`` -> ``club_id``, straight from the ``clubs`` collection.
+
+    The business key sits in one of two places, so both are read, ``id`` first.
+    ``seed_clubs`` pops ``id`` into ``_id``, leaving a row keyed on the string
+    "club_hot"; a row loaded straight from ``seed/clubs.json`` with mongoimport
+    keeps ``id`` and gets a generated ObjectId ``_id``. Preferring ``_id`` there
+    would stamp every deal with an ObjectId string, which matches nothing —
+    users hold the "club_hot" form. Same precedence the Gateway's
+    ``StoreDocument.StoreId`` and ``DealDocument.DealId`` already use.
+    """
     mapping: dict[str, str] = {}
     for club in db["clubs"].find({}):
         source_id = club.get("source_id")
-        club_id = club.get("_id") or club.get("id")
+        club_id = club.get("id") or club.get("_id")
         if source_id and club_id:
             mapping[str(source_id)] = str(club_id)
     return mapping

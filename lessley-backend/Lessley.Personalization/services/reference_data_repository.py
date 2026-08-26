@@ -91,7 +91,10 @@ class ReferenceDataRepository:
                 },
             )
 
-            deals = await Deal.find_all().to_list()
+            # Deals the source has stopped offering are excluded here rather than at every
+            # use site: recommending a benefit that no longer exists is worse than missing
+            # one. ``$ne`` also keeps rows that predate the field, which are still live.
+            deals = await Deal.find({"status": {"$ne": "expired"}}).to_list()
 
             deals_by_id = (
                 seq(deals)                                 # every deal

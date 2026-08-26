@@ -54,6 +54,7 @@ from lessley_deals.versioning.hashing import (
     diff_snapshots,
     extract_source_expiry,
 )
+from lessley_deals.versioning.projection import DealProjector
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,15 @@ class IngestionConfig:
     enable_expiry_sweep: bool = True
     """Master switch — turn off for one-off backfills that only see a subset."""
 
+    allow_reactivation: bool = True
+    """Whether seeing an expired deal again brings it back.
+
+    True for a scrape, which is a fresh observation of what a source offers
+    right now.  **False for a rebuild from the raw archive** (``deals process``):
+    that archive keeps every record ever scraped, so an expired deal's raw row is
+    still sitting in it and would resurrect every offer the sources have retired.
+    """
+
 
 @dataclass
 class IngestionReport:
@@ -107,6 +117,14 @@ class IngestionReport:
     duplicates_dropped: int = 0
     expiry_sweep_skipped: str | None = None
     changed_keys: list[str] = field(default_factory=list)
+    projected: int = 0
+    """Rows written back to the flat ``deals`` collection (see projection.py)."""
+
+    removed: int = 0
+    """Expired rows deleted from ``deals`` rather than flagged."""
+
+    reactivation_suppressed: int = 0
+    """Expired deals left expired because this was a rebuild, not a scrape."""
 
     @property
     def total_written(self) -> int:
@@ -123,6 +141,12 @@ class IngestionReport:
         ]
         if self.duplicates_dropped:
             parts.append(f"dupes={self.duplicates_dropped}")
+        if self.projected:
+            parts.append(f"projected={self.projected}")
+        if self.removed:
+            parts.append(f"removed={self.removed}")
+        if self.reactivation_suppressed:
+            parts.append(f"kept-expired={self.reactivation_suppressed}")
         if self.expiry_sweep_skipped:
             parts.append(f"expiry-sweep SKIPPED ({self.expiry_sweep_skipped})")
         return " ".join(parts)
@@ -211,6 +235,11 @@ def plan_ingestion(
         if head is None:
             change = DealChangeType.NEW
         elif head.status == DealLifecycleStatus.EXPIRED:
+            if not config.allow_reactivation:
+                # A rebuild re-reads records the source stopped publishing long
+                # ago; that is not evidence the offer is back on.
+                report.reactivation_suppressed += 1
+                continue
             change = DealChangeType.REACTIVATED
         elif head.content_hash != content_hash:
             change = DealChangeType.UPDATED
@@ -469,12 +498,16 @@ class IngestionService:
         identity: DealIdentityResolver | None = None,
         config: IngestionConfig | None = None,
         clock: Clock = _utcnow,
+        projector: DealProjector | None = None,
     ) -> None:
         self._versions = version_repo
         self._current = current_repo
         self._identity = identity or DealIdentityResolver()
         self._config = config or IngestionConfig()
         self._clock = clock
+        # Optional, but without it nothing downstream ever learns that a deal
+        # expired — ``deals`` is the collection every consumer actually reads.
+        self._projector = projector
 
     async def ingest(
         self,
@@ -507,6 +540,12 @@ class IngestionService:
             await asyncio.to_thread(self._versions.append_many, plan.versions)
         if plan.heads:
             await asyncio.to_thread(self._current.bulk_upsert, plan.heads)
+            # Last, and only once the heads are durable: the read model may lag
+            # the head table for a moment, but must never lead it.
+            if self._projector is not None:
+                projection = await asyncio.to_thread(self._projector.apply, plan.heads)
+                plan.report.projected = projection.active + projection.expired
+                plan.report.removed = projection.deleted
 
         if plan.report.expiry_sweep_skipped:
             logger.warning(

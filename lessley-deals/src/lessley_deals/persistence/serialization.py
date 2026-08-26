@@ -220,6 +220,14 @@ def deal_from_dict(d: dict[str, Any]) -> Deal:
         club_id=d.get("club_id"),
         group_member_stores=d.get("group_member_stores") or None,
         group_member_store_ids=d.get("group_member_store_ids") or None,
+        deal_key=d.get("deal_key"),
+        # Rows written before the lifecycle existed carry no ``status``; they
+        # are on offer as far as anyone knew, so they read back as ACTIVE.
+        status=DealLifecycleStatus(d.get("status") or DealLifecycleStatus.ACTIVE),
+        first_seen_at=_parse_datetime(d.get("first_seen_at")),
+        last_seen_at=_parse_datetime(d.get("last_seen_at")),
+        expires_at=_parse_datetime(d.get("expires_at")),
+        expired_at=_parse_datetime(d.get("expired_at")),
     )
 
 

@@ -1,3 +1,5 @@
+import { normalizeClubId } from "@/lib/clubs"
+
 import heverGiftCardLogo from "../../assets/hever_giftcard_logo.jpg"
 import heverTeamimLogo from "../../assets/hever_teamim_logo.jpg"
 import hotLogo from "../../assets/hot_logo.png"
@@ -48,20 +50,6 @@ const LOGOS_BY_SOURCE_ID: Record<string, ClubLogo> = {
 }
 
 /**
- * Normalise the id forms a deal can reach the UI with: the clubs collection
- * prefixes ids with `club_`, and the LLM scraper emits `llm:<site>` site ids
- * that hyphenate where the native adapters use underscores.
- */
-function normalizeId(raw: string): string {
-  return raw
-    .trim()
-    .toLowerCase()
-    .replace(/^llm:/, "")
-    .replace(/^club_/, "")
-    .replace(/-/g, "_")
-}
-
-/**
  * The club artwork for a deal, or `undefined` when that source has none. Pass
  * whichever ids the deal carries — `source_id` wins, `club_id` covers records
  * where only the club is stamped.
@@ -69,7 +57,7 @@ function normalizeId(raw: string): string {
 export function getClubLogo(sourceId?: string | null, clubId?: string | null): ClubLogo | undefined {
   for (const candidate of [sourceId, clubId]) {
     if (!candidate) continue
-    const logo = LOGOS_BY_SOURCE_ID[normalizeId(candidate)]
+    const logo = LOGOS_BY_SOURCE_ID[normalizeClubId(candidate)]
     if (logo) return logo
   }
   return undefined

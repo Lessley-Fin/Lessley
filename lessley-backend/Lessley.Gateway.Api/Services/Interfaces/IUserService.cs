@@ -23,5 +23,7 @@ public interface IUserService
     Task<UserOperationResult> AssignTagsAsync(string email, string[] tags, CancellationToken ct = default);
     /// <summary>Returns the user's tags from the DB, or null if the user does not exist.</summary>
     Task<List<string>?> GetUserTagsAsync(string email, CancellationToken ct = default);
+    /// <summary>Returns the user's selected loyalty clubs, or null if the user does not exist.</summary>
+    Task<List<string>?> GetUserClubsAsync(string email, CancellationToken ct = default);
     Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default);
 }

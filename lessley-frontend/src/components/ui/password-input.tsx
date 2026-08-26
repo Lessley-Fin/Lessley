@@ -36,7 +36,20 @@ const PasswordInput = React.forwardRef<HTMLInputElement, Omit<React.ComponentPro
     const usesTextSecurity = MASK_WITH_TEXT_SECURITY && canMaskTextInput
 
     return (
-      <div className="relative">
+      /* An LTR island inside an otherwise RTL page.
+       *
+       * A native `input[type=password]` is laid out left-to-right by the browser whatever
+       * the surrounding direction is. The masked text input above is not — it inherits
+       * `dir="rtl"` from <html> in Hebrew, and the bidi algorithm then reorders what is
+       * typed: a neutral character (`!`, `?`, `-`, `@`) at the end of a Latin run takes the
+       * paragraph direction and jumps to the *visual start*, so "MyPass123!" renders as
+       * "!MyPass123" and looks like the wrong password was typed.
+       *
+       * `dir="ltr"` on the wrapper restores what a real password field would have done, and
+       * because it covers the button too, `pe-10` and `end-0` below both resolve against
+       * LTR — text from the left, reveal toggle on the right, no collision. Putting it on
+       * the input alone would split those two apart and run the text under the button. */
+      <div className="relative" dir="ltr">
         <Input
           {...props}
           ref={ref}

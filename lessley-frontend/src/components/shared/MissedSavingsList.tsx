@@ -1,6 +1,7 @@
 import { Lightbulb, Store, TrendingDown } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { resolveClubName } from "@/lib/clubs"
 import { fintech } from "@/lib/fintech-styles"
 import { formatAmount } from "@/lib/formatters"
 import type { ClubDto } from "@/lib/types"
@@ -21,10 +22,6 @@ interface MissedSavingsListProps {
   clubs?: ClubDto[]
   compact?: boolean
   limit?: number
-}
-
-function resolveClubName(clubs: ClubDto[], clubId: string): string {
-  return clubs.find((c) => c.id === clubId)?.name ?? clubId
 }
 
 export function MissedSavingsList({ items, clubs = [], compact = false, limit = 5 }: MissedSavingsListProps) {

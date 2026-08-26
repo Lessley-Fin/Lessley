@@ -2,23 +2,35 @@ import { useState } from "react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { ClubLogoTile } from "@/components/shared/ClubLogoTile"
 import { Button } from "@/components/ui/button"
 import { useClubs } from "@/features/clubs/hooks"
 import type { MeResponse } from "@/features/user/api"
 import { useUpdateMyProfile } from "@/features/user/hooks"
-import { MATCH_LEVEL_OPTIONS, emojiForClub, formatCategoryLabel } from "@/lib/constants"
+import { MATCH_LEVEL_OPTIONS, formatCategoryLabel } from "@/lib/constants"
 import { cn, toggleArrayValue } from "@/lib/utils"
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+interface ChipProps {
+  active: boolean
+  onClick: () => void
+  /** Artwork shown before the label. Tightens the leading padding so the plate
+      sits flush inside the pill instead of floating in text-sized padding. */
+  leading?: ReactNode
+  children: ReactNode
+}
+
+function Chip({ active, onClick, leading, children }: ChipProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full border py-1.5 text-xs font-medium transition-colors",
+        leading ? "ps-1.5 pe-3" : "px-3",
         active ? "border-primary bg-accent text-accent-foreground" : "border-border bg-card text-muted-foreground",
       )}
     >
+      {leading}
       {children}
     </button>
   )
@@ -51,8 +63,9 @@ export function PreferencesView({ profile }: PreferencesViewProps) {
               key={club.id}
               active={selectedClubs.includes(club.id)}
               onClick={() => setSelectedClubs((prev) => toggleArrayValue(prev, club.id))}
+              leading={<ClubLogoTile clubId={club.id} clubName={club.name} variant="inline" />}
             >
-              {emojiForClub(club.name)} {club.name}
+              {club.name}
             </Chip>
           ))}
         </div>

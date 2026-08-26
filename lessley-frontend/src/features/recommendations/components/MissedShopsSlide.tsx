@@ -9,6 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 import { useClubs } from "@/features/clubs/hooks"
 import { AnalysisPeriodCard } from "@/features/insights/components/AnalysisPeriodCard"
 import { useAccounts } from "@/features/insights/hooks"
+import { resolveClubName } from "@/lib/clubs"
 import { emojiForStore } from "@/lib/constants"
 import { formatAmount } from "@/lib/formatters"
 import { getDirection } from "@/lib/i18n/config"
@@ -157,7 +158,7 @@ interface NamesByIdProps {
   /** account id → "product · provider", read off the accounts the client fetched itself. */
   accountNames: Map<string, string>
   /** club id → club name. */
-  clubNames: Map<string, string>
+  clubNames: (id: string) => string
 }
 
 function BandCard({ band, accountNames, clubNames }: { band: SavingsBand } & NamesByIdProps) {
@@ -288,7 +289,7 @@ function MerchantCard({
           {merchant.shops.map((shop) => {
             // The club is the whole point of the row: the deal existed and the user is a
             // member, so naming the club is what tells them how they could have claimed it.
-            const missedClubs = shop.club_ids.map((id) => clubNames.get(id) ?? id)
+            const missedClubs = shop.club_ids.map((id) => clubNames(id))
 
             return (
               <li key={shop.store_id} className="flex items-start gap-2 rounded-xl bg-card px-2.5 py-2">
