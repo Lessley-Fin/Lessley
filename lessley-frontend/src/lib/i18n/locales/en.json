@@ -296,7 +296,7 @@
     },
     "connectionCheck": "Verifying bank connection...",
     "savingsHero": {
-      "label": "Saved with Lessley",
+      "label": "You Saved",
       "club": "club",
       "clubs": "clubs",
       "purchaseCount": "({{count}} purchases)"

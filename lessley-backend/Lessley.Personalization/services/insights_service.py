@@ -115,6 +115,10 @@ class InsightsService:
         """What this purchase was worth, whoever paid for it. Signed, so a refund cancels one."""
         return self.amount_service.value(transaction)
 
+    def _spend(self, transaction: Transaction) -> float:
+        """This row as the bank statement shows it. A coupon is zero."""
+        return self.amount_service.spend_of(transaction)
+
     def _purchase_count(self, transactions: list[Transaction]) -> int:
         return self.amount_service.purchase_count(transactions)
 
@@ -294,19 +298,25 @@ class InsightsService:
         return DAY_NAMES[(self._date_of(transaction).weekday() + 1) % 7]
 
     def spending_difference_between_two_periods(self, transactions: list[Transaction], days: int) -> dict:
-        """Whether the user spent more or less than they did in the run-up to this period."""
+        """
+        Whether the bank billed the user more or less than it did in the run-up to this period.
+
+        The bank figure rather than what was bought, so this reads against the same number as
+        the headline total. A coupon counts zero on both sides: comparing two periods on money
+        that never left the account would move the bars for a month the user paid nothing extra.
+        """
         cutoff = (datetime.utcnow() - timedelta(days=days)).date()
         dated_purchases = seq(self._countable(transactions)).where(lambda purchase: self._date_of(purchase))
 
         current_total = (
             dated_purchases                                                    # every dated purchase
             .where(lambda purchase: self._date_of(purchase) >= cutoff)         # the recent stretch
-            .sum(self._value)                                           # added up
+            .sum(self._spend)                                                  # as the bank billed it
         )
         previous_total = (
             dated_purchases                                                    # every dated purchase
             .where(lambda purchase: self._date_of(purchase) < cutoff)          # the stretch before that
-            .sum(self._value)                                           # added up
+            .sum(self._spend)                                                  # as the bank billed it
         )
 
         return {

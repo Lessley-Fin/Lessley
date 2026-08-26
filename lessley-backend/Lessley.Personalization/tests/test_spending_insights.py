@@ -100,6 +100,25 @@ def test_spending_difference_splits_by_cutoff_date():
     assert result["difference"] == 60
 
 
+def test_the_period_comparison_reads_the_bank_figure_not_what_was_bought():
+    """
+    The overview compares what the bank billed, so it lines up with the headline total.
+
+    A coupon counts zero on both sides. Counting it at full price moved the bars for a period
+    the user paid nothing extra in, and left the overview disagreeing with the total above it.
+    """
+    service = _service()
+    recent = date.today() - timedelta(days=5)
+    transactions = [
+        _tx(tx_date=recent, charged=-100),
+        _tx(tx_date=recent, charged=None, original=-176.15),
+    ]
+
+    comparison = service.spending_difference_between_two_periods(transactions, days=30)
+
+    assert comparison["current_period_total"] == 100
+
+
 # ── Task 1: what the user did not have to pay ─────────────────────────────
 #
 # Which gaps count as a discount is settled one row at a time in test_transaction_amounts.py.

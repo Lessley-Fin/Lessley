@@ -279,9 +279,18 @@ class TransactionAmountService:
 
     # ── Totals over a list ────────────────────────────────────────────────────────
 
+    def spend_of(self, transaction: Transaction) -> float:
+        """
+        This row as the bank statement shows it: billed, less anything credited back.
+
+        Zero for a coupon — no money left the account — which is what separates this from
+        `value`, where the same purchase counts at its full worth.
+        """
+        return self.paid(transaction) - self.returned(transaction)
+
     def spend(self, transactions: list[Transaction]) -> float:
-        """What the bank statement shows: billed less returned. Coupons are absent, having cost nothing."""
-        return sum(self.paid(t) for t in transactions) - sum(self.returned(t) for t in transactions)
+        """What the bank statement shows over these rows."""
+        return sum(self.spend_of(t) for t in transactions)
 
     def savings(self, transactions: list[Transaction]) -> float:
         """Everything the user did not have to pay."""
