@@ -71,6 +71,28 @@ public class DealDocument
     [BsonElement("deal_type")]
     public string? DealType { get; set; }
 
+    /// <summary>
+    /// <c>"active"</c> or <c>"expired"</c>, stamped by the scraping pipeline's versioning
+    /// layer after every run. Null on rows written before it existed.
+    /// </summary>
+    [BsonElement("status")]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? Status { get; set; }
+
+    /// <summary>
+    /// Whether the source has stopped offering this deal. Search filters expired deals out,
+    /// but a lookup by id still returns one so a saved deal reads as "this offer ended"
+    /// rather than vanishing — hence the flag on the response.
+    /// <para>Null means the row predates the field, i.e. still on offer as far as anyone knew.</para>
+    /// </summary>
+    [BsonIgnore]
+    public bool IsExpired => Status == "expired";
+
+    /// <summary>When the pipeline concluded the deal was gone. Null while it is on offer.</summary>
+    [BsonElement("expired_at")]
+    [BsonSerializer(typeof(FlexibleNullableDateTimeSerializer))]
+    public DateTime? ExpiredAt { get; set; }
+
     [BsonElement("currency")]
     public string? Currency { get; set; }
 

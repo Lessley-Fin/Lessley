@@ -256,6 +256,8 @@ simply redoes the same work.
 | `DEALS_DATA_DIR` | `./data` | Data dir; also where `seed/schedules.json` is looked up first |
 | `DEALS_VERSIONING` | `1` | Enable SCD2 ingestion |
 | `DEALS_WRITE_LEGACY` | `1` | Write the shared `deals` collection every consumer reads |
+| `DEALS_PROJECT` | `1` | Let versioning own `deals`, so expired deals stop being served |
+| `DEALS_DELETE_EXPIRED` | `0` | Delete expired rows instead of flagging them |
 | `DEALS_MAX_CONCURRENCY` | `3` | Sources in flight at once |
 | `DEALS_SHUTDOWN_GRACE` | `30` | Seconds to let in-flight runs finish |
 | `DEALS_SCHEDULE_<SOURCE>` | — | `off` \| cron \| interval (`15m`, `6h`) |
@@ -271,16 +273,47 @@ simply redoes the same work.
 
 ## 5. What consumers read
 
-`deals` — flat documents, one per deal, written on every run while
-`DEALS_WRITE_LEGACY=1` (the default). `deal-optimizer`, the Gateway's deal search and
+`deals` — flat documents, one per deal. `deal-optimizer`, the Gateway's deal search and
 Personalization's reference data all bind it directly, alongside `stores`, `clubs` and
 `mccs`. There is no projected copy of any of them.
 
-Versioning is additive to that: `deals_current` and `deal_versions` answer "what changed,
-when, and what is live", and they are the only place lifecycle metadata (`status`,
-`missing_runs`, `valid_from`) exists. A consumer that wants to hide expired deals filters
-`deals_current` for the `deal_key`s it cares about — it does not switch its read path
-over, because `deals_current` only covers the sources of whichever run last populated it.
+**The versioning layer owns this collection** (`DEALS_PROJECT=1`, the default). After
+each run `DealProjector` mirrors the head table onto it — see
+`versioning/projection.py`:
+
+| Head is  | The `deals` row becomes                                            |
+|----------|--------------------------------------------------------------------|
+| ACTIVE   | upserted under its **stable** `deal_id`, `status: "active"`, fresh `last_seen_at` |
+| EXPIRED  | `status: "expired"` + `expired_at` — or deleted, with `DEALS_DELETE_EXPIRED=1` |
+
+Two things follow, and both are the point:
+
+* an offer a source stops listing **stops being served**, once the expiry guards below
+  are satisfied. Before this, `deals` was append-only and nothing ever removed a row;
+* a deal keeps **one** row for its whole life. It used to get a freshly generated id
+  every time it was rebuilt, so each rewording left an untracked duplicate behind.
+
+Every consumer therefore filters `status: {$ne: "expired"}` rather than `== "active"`:
+rows written before the lifecycle existed carry no `status`, and they are live deals that
+simply predate the field.
+
+`deals_current` and `deal_versions` remain the history behind that: they answer "what
+changed, when, and what did this look like on the 6th", which the flat collection cannot.
+
+### Cleaning up what the append-only era left behind
+
+Rows the projector has no head for — old duplicates — are invisible to it and stay
+served. `python -m deals reconcile-deals` sweeps them:
+
+```bash
+python -m deals reconcile-deals                  # dry run: how many, per source
+python -m deals reconcile-deals --apply          # flag them expired
+python -m deals reconcile-deals --apply --delete # remove them outright
+```
+
+It only touches sources that actually have heads. A source whose deals all predate
+versioning has none, and sweeping it would read every row as an orphan and wipe the
+source — hence the guard, and hence the dry run by default.
 
 Backfill of existing `deals` documents into the versioned collections is not
 included — the first worker run recreates every currently-listed deal as

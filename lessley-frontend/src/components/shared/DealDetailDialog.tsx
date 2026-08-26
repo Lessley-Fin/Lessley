@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Check, Copy, ExternalLink } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { ClubLogoTile } from "@/components/shared/ClubLogoTile"
 import { DealTerms } from "@/components/shared/DealTerms"
 import { DiscountBadge } from "@/components/shared/DiscountBadge"
 import { Button } from "@/components/ui/button"
@@ -14,10 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { resolveClubName } from "@/lib/clubs"
 import { emojiForCategory, formatCategoryLabel } from "@/lib/constants"
 import { formatDate } from "@/lib/formatters"
 import type { ClubDto, DealSearchResultItem } from "@/lib/types"
-import { getClubName } from "@/lib/utils"
 
 interface DealDetailDialogProps {
   item: DealSearchResultItem | null
@@ -66,8 +67,13 @@ export function DealDetailDialog({ item, clubs, onOpenChange }: DealDetailDialog
 
               <div className="flex flex-wrap items-center gap-2">
                 <DiscountBadge discount={item.deal.discount} />
-                <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                  {getClubName(clubs, item.deal.clubId)}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary py-0.5 pe-2.5 ps-1 text-xs font-medium text-secondary-foreground">
+                  <ClubLogoTile
+                    clubId={item.deal.clubId}
+                    clubName={resolveClubName(clubs, item.deal.clubId) ?? item.deal.clubId}
+                    variant="inline"
+                  />
+                  {resolveClubName(clubs, item.deal.clubId)}
                 </span>
                 {item.deal.dealType ? (
                   <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium capitalize text-secondary-foreground">

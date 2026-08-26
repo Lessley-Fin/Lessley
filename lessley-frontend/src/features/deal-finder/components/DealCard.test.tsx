@@ -5,7 +5,11 @@ import userEvent from "@testing-library/user-event"
 import type { ClubDto, DealSearchResultItem } from "@/lib/types"
 import { DealCard } from "./DealCard"
 
-const mockClubs: ClubDto[] = [{ id: "club_hot", name: "HOT Israel" }]
+const mockClubs: ClubDto[] = [
+  { id: "club_hot", name: "HOT Israel" },
+  // The clubs collection holds only the un-suffixed parent; deals carry the rungs.
+  { id: "club_paisplus_networks", name: "PaisPlus — Networks Cash Card" },
+]
 
 const baseItem: DealSearchResultItem = {
   deal: {
@@ -44,6 +48,32 @@ describe("DealCard", () => {
     const item = { ...baseItem, deal: { ...baseItem.deal, clubId: "club_unknown" } }
     render(<DealCard item={item} clubs={mockClubs} />)
     expect(screen.getByText("club_unknown")).toBeInTheDocument()
+  })
+
+  it("names a tiered card by its parent club rather than printing the raw rung", () => {
+    // A tiered card has no club record of its own, so an exact-id lookup printed
+    // `club_paisplus_networks_regular` on the badge.
+    const item = {
+      ...baseItem,
+      deal: { ...baseItem.deal, clubId: "club_paisplus_networks_regular" },
+    }
+    render(<DealCard item={item} clubs={mockClubs} />)
+
+    expect(screen.getByText("PaisPlus — Networks Cash Card")).toBeInTheDocument()
+    expect(screen.queryByText("club_paisplus_networks_regular")).not.toBeInTheDocument()
+  })
+
+  it("shows the club artwork next to the name, and both rungs share it", () => {
+    const { container, unmount } = render(<DealCard item={baseItem} clubs={mockClubs} />)
+    expect(container.querySelector("img[aria-hidden]")).toBeInTheDocument()
+    unmount()
+
+    const tiered = {
+      ...baseItem,
+      deal: { ...baseItem.deal, clubId: "club_paisplus_networks_vip" },
+    }
+    const { container: tieredContainer } = render(<DealCard item={tiered} clubs={mockClubs} />)
+    expect(tieredContainer.querySelector("img[aria-hidden]")).toBeInTheDocument()
   })
 
   it("is collapsed by default — description not visible", () => {

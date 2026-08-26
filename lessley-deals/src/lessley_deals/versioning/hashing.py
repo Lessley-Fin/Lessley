@@ -42,6 +42,11 @@ CONTENT_FIELDS: tuple[str, ...] = (
     "group_member_store_ids",
 )
 
+# Bookkeeping the head/version rows own — never part of a snapshot or a hash.
+LIFECYCLE_FIELDS: frozenset[str] = frozenset(
+    {"deal_key", "status", "first_seen_at", "last_seen_at", "expires_at", "expired_at"}
+)
+
 _WHITESPACE_RE = re.compile(r"\s+")
 _TRACKING_PARAMS = ("utm_", "gclid", "fbclid", "mc_cid", "mc_eid", "ref")
 
@@ -172,11 +177,20 @@ class DealIdentityResolver:
 # ---------------------------------------------------------------------------
 
 def deal_snapshot(deal: Deal) -> dict[str, Any]:
-    """Serialize a ``Deal`` to the dict stored on versions and heads."""
+    """Serialize a ``Deal`` to the dict stored on versions and heads.
+
+    Lifecycle fields are dropped: the version row and the head already carry
+    ``status`` / ``valid_from`` / ``last_seen_at`` as first-class columns, and a
+    second stale copy buried in the snapshot would be a fact that quietly rots.
+    """
     from lessley_deals.persistence.serialization import to_dict
 
     snapshot: dict[str, Any] = to_dict(deal)
-    return {k: v for k, v in snapshot.items() if v is not None}
+    return {
+        k: v
+        for k, v in snapshot.items()
+        if v is not None and k not in LIFECYCLE_FIELDS
+    }
 
 
 def compute_content_hash(deal: Deal) -> str:

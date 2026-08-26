@@ -472,6 +472,7 @@
       "searchDeals": "Search deals",
       "needsFilter": "Add a store, deal text, or category to search.",
       "promptSearch": "Use the filters above to search deals across your loyalty clubs.",
+      "scopedToClubs": "Showing deals from the {{count}} clubs you selected. Change this in Settings.",
       "searching": "Searching deals…",
       "noMatches": "No deals match those filters yet 🔍",
       "previous": "Previous",

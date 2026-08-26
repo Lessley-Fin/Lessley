@@ -44,6 +44,46 @@ class DealJsonRepository:
             self._store.write(data)
         return updated
 
+    def bulk_upsert(self, deals: Sequence[Deal]) -> int:
+        """Insert-or-replace deals matched by ``id``, in one read and one write.
+
+        The versioning counterpart to ``save``: a deal's id is stable across all
+        its versions, so re-projecting an offer overwrites its row instead of
+        appending a second copy of the same thing.
+        """
+        if not deals:
+            return 0
+        data = self._store.read()
+        positions = {d["id"]: i for i, d in enumerate(data)}
+        for deal in deals:
+            record = self._to_clean_dict(deal)
+            index = positions.get(deal.id)
+            if index is None:
+                positions[deal.id] = len(data)
+                data.append(record)
+            else:
+                data[index] = record
+        self._store.write(data)
+        return len(deals)
+
+    def delete_by_ids(self, deal_ids: Sequence[str]) -> int:
+        if not deal_ids:
+            return 0
+        doomed = set(deal_ids)
+        data = self._store.read()
+        kept = [d for d in data if d.get("id") not in doomed]
+        removed = len(data) - len(kept)
+        if removed:
+            self._store.write(kept)
+        return removed
+
+    def get_ids_by_source(self, source_id: str) -> set[str]:
+        """Business keys of every row this source owns, expired ones included."""
+        return {
+            d["id"] for d in self._store.read()
+            if d.get("source_id") == source_id and d.get("id")
+        }
+
     @staticmethod
     def _to_clean_dict(deal: Deal) -> dict[str, Any]:
         d = to_dict(deal)
@@ -53,6 +93,11 @@ class DealJsonRepository:
             d.pop("group_member_store_ids", None)
         if d.get("constraints") is None:
             d.pop("constraints", None)
+        # ``status`` always stays — it is what consumers filter on, and an
+        # absent field would read as "unknown" rather than "on offer".
+        for lifecycle_field in ("deal_key", "first_seen_at", "last_seen_at", "expires_at", "expired_at"):
+            if d.get(lifecycle_field) is None:
+                d.pop(lifecycle_field, None)
         return d
 
     def exists_by_fingerprint(self, fingerprint: str) -> bool:

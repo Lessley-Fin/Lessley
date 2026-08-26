@@ -2,10 +2,10 @@ import type { UseFormReturn } from "react-hook-form"
 import { Check } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { ClubLogoTile } from "@/components/shared/ClubLogoTile"
 import { ErrorAlert } from "@/components/shared/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import { useClubs } from "@/features/clubs/hooks"
-import { emojiForClub } from "@/lib/constants"
 import { cn, toggleArrayValue } from "@/lib/utils"
 import type { RegisterValues } from "../../schemas"
 
@@ -42,7 +42,7 @@ export function ClubsStep({ form, onContinue }: ClubsStepProps) {
                 isSelected ? "border-primary bg-accent" : "border-border bg-secondary hover:border-primary/40"
               )}
             >
-              <span className="text-2xl">{emojiForClub(club.name)}</span>
+              <ClubLogoTile clubId={club.id} clubName={club.name} />
               <span className="text-sm font-semibold leading-tight">{club.name}</span>
               {isSelected ? (
                 <span className="flex items-center gap-1 text-[11px] font-medium text-primary">

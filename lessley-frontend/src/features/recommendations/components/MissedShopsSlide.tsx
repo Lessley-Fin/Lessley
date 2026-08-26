@@ -9,6 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 import { useClubs } from "@/features/clubs/hooks"
 import { AnalysisPeriodCard } from "@/features/insights/components/AnalysisPeriodCard"
 import { useAccounts } from "@/features/insights/hooks"
+import { resolveClubName } from "@/lib/clubs"
 import { emojiForStore } from "@/lib/constants"
 import { formatAmount } from "@/lib/formatters"
 import { getDirection } from "@/lib/i18n/config"
@@ -118,7 +119,13 @@ export function MissedShopsSlide({ shops, isLoading, days, onDaysChange }: Misse
     return named
   }, [accounts])
 
-  const clubNames = useMemo(() => new Map(clubs.map((club) => [club.id, club.name])), [clubs])
+  // Keyed by the id a shop record carries, which for a tiered card is the rung
+  // (`club_paisplus_networks_vip`) and not the parent the clubs collection holds —
+  // so the name has to be resolved, not looked up.
+  const clubNames = useMemo(
+    () => (id: string) => resolveClubName(clubs, id) ?? id,
+    [clubs],
+  )
 
   const byBand = useMemo(() => {
     const grouped = {} as Record<StoreMatchBand, MissedShop[]>
@@ -188,8 +195,16 @@ export function MissedShopsSlide({ shops, isLoading, days, onDaysChange }: Misse
 
         <AnalysisPeriodCard value={days} onChange={onDaysChange} />
 
+        {/* The three labels do not fit on one line on a phone: at the 318px this bar gets
+            inside the card on a 390px screen they need 366px, and trimming padding or type
+            only buys back about half of that. They used to be held on one line anyway, so the
+            last tab was cut off mid-word behind the bar's edge — silently, because
+            no-scrollbar hid the scrollbar that would have hinted at it. Letting the labels
+            wrap keeps all three readable at any width and costs a second line only while the
+            bar is narrow; rounded-3xl rather than rounded-full so the taller two-line state
+            still reads as a deliberate shape. */}
         {!isLoading && shops.length > 0 && (
-          <div className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-full border border-border bg-card p-1 text-sm">
+          <div className="flex items-stretch gap-1 rounded-3xl border border-border bg-card p-1 text-sm">
             {BANDS.map((key) => (
               <button
                 key={key}
@@ -197,7 +212,7 @@ export function MissedShopsSlide({ shops, isLoading, days, onDaysChange }: Misse
                 onClick={() => setBand(key)}
                 disabled={merchantsByBand[key].length === 0}
                 className={cn(
-                  "flex-1 rounded-full whitespace-nowrap px-3 py-2 font-medium transition-colors disabled:opacity-40",
+                  "flex-1 rounded-full px-2 py-2 text-center font-medium transition-colors disabled:opacity-40",
                   band === key ? "surface-navy shadow-[var(--shadow-card)]" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -233,7 +248,7 @@ interface NamesByIdProps {
   /** account id → "product · provider", read off the accounts the client fetched itself. */
   accountNames: Map<string, string>
   /** club id → club name. */
-  clubNames: Map<string, string>
+  clubNames: (id: string) => string
 }
 
 function BandCard({
@@ -367,7 +382,7 @@ function TransactionCard({
           {merchant.shops.map((shop) => {
             // The club is the whole point of the row: the deal existed and the user is a
             // member, so naming the club is what tells them how they could have claimed it.
-            const missedClubs = shop.club_ids.map((id) => clubNames.get(id) ?? id)
+            const missedClubs = shop.club_ids.map((id) => clubNames(id))
 
             return (
               <li key={shop.store_id} className="flex items-start gap-2 rounded-xl bg-card px-2.5 py-2">

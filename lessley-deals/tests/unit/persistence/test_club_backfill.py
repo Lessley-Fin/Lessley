@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from bson import ObjectId
 
 from lessley_deals.persistence.club_backfill import backfill_club_ids, build_club_by_source
 
@@ -109,6 +110,20 @@ def test_no_clubs_means_no_join_and_no_writes():
 def test_club_business_key_is_read_from_either_field(club_key):
     # `clubs` keys on _id; rows imported by hand can carry `id` instead.
     db = FakeDb([{club_key: "club_hot", "source_id": "hot"}], [{"_id": "d1", "source_id": "hot"}])
+
+    result = backfill_club_ids(db)
+
+    assert result.matched == 1
+    assert db["deals"].written[0][1]["$set"]["club_id"] == "club_hot"
+
+
+def test_generated_object_id_never_wins_over_the_business_key():
+    # A club loaded with mongoimport keeps `id` and gets a generated ObjectId `_id`.
+    # Stamping deals with the ObjectId would match no user: users hold "club_hot".
+    db = FakeDb(
+        [{"_id": ObjectId("6a7cd2ac663bdbf7439535af"), "id": "club_hot", "source_id": "hot"}],
+        [{"_id": "d1", "source_id": "hot"}],
+    )
 
     result = backfill_club_ids(db)
 

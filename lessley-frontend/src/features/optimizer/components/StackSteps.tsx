@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next"
 
 import { useClubs } from "@/features/clubs/hooks"
 import { getClubLogo } from "@/lib/club-logos"
+import { resolveClubName } from "@/lib/clubs"
 import { formatAmount } from "@/lib/formatters"
-import { cn, getClubNameBySource } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import type { OptimizerDealSummary, OptimizerStep, OptimizerStore } from "@/lib/types"
 import { DealInfoDialog } from "./DealInfoDialog"
 
@@ -49,7 +50,7 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
           const label = dealTypeLabel(deal?.deal_type)
           const clubLogo = getClubLogo(deal?.source_id, deal?.club_id)
           // The club as people know it ("HOT Israel"), not the scraper id behind it.
-          const club = getClubNameBySource(clubs, deal?.source_id)
+          const clubName = resolveClubName(clubs, deal?.club_id, deal?.source_id)
           const isLast = index === steps.length - 1
           // A tender deal only discounts the slice of the bill routed through that
           // instrument; a price-level deal reports null and works off the whole bill.
@@ -105,7 +106,7 @@ export function StackSteps({ steps, deals, store }: StackStepsProps) {
                     <p className="text-sm font-medium">{deal?.title ?? step.deal_id}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       {label ? <span className="rounded-md bg-card px-1.5 py-0.5 capitalize">{label}</span> : null}
-                      {club ? <span>{club}</span> : null}
+                      {clubName ? <span>{clubName}</span> : null}
                     </div>
                   </div>
 

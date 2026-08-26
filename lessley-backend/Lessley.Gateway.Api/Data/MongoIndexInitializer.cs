@@ -168,5 +168,11 @@ public static class MongoIndexInitializer
             Builders<BsonDocument>.IndexKeys.Ascending("title"),
             new CreateIndexOptions { Name = "idx_deal_title" }
         ));
+
+        // deals: club_id $in filter — every search now narrows to the caller's own clubs
+        await deals.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("club_id"),
+            new CreateIndexOptions { Name = "idx_deal_club_id" }
+        ));
     }
 }

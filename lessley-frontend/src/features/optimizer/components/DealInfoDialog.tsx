@@ -14,9 +14,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useClubs } from "@/features/clubs/hooks"
+import { resolveClubName } from "@/lib/clubs"
 import { formatAmount } from "@/lib/formatters"
 import type { OptimizerDealSummary, OptimizerStep, OptimizerStore } from "@/lib/types"
-import { getClubNameBySource } from "@/lib/utils"
 
 interface DealInfoDialogProps {
   deal: OptimizerDealSummary | null
@@ -40,7 +40,7 @@ export function DealInfoDialog({ deal, step, store, open, onOpenChange }: DealIn
   const { data: clubs = [] } = useClubs()
 
   const typeLabel = dealTypeLabel(deal?.deal_type)
-  const club = getClubNameBySource(clubs, deal?.source_id)
+  const club = resolveClubName(clubs, deal?.club_id, deal?.source_id)
   const storeImages = store?.image_urls ?? []
 
   return (
