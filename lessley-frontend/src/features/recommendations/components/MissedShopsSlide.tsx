@@ -64,7 +64,10 @@ export function MissedShopsSlide({ missed, isLoading, days, onDaysChange }: Miss
   const accountNames = new Map(
     accounts.map((account) => [account.id, [account.product, account.providerId].filter(Boolean).join(" · ") || account.id]),
   )
-  const clubNames = new Map(clubs.map((club) => [club.id, club.name]))
+  // resolveClubName rather than a plain id→name map: a shop can carry a `club_`-prefixed id, a
+  // scraper source id, or a tiered `_regular`/`_vip` variant, and none of those key straight
+  // into the clubs collection's own ids.
+  const clubNames = (id: string) => resolveClubName(clubs, id) ?? id
 
   // The service returns only the bands that have something in them, in confidence order.
   // Falling through to the first keeps the user off an empty tab when the period changes,
