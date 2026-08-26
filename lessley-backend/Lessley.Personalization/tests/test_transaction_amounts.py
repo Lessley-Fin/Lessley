@@ -3,6 +3,10 @@ TransactionAmountService — reading money off one row of the card feed.
 
 Every case here fired on a real year of transactions (`data/shmer.json`, 355 rows). The amounts
 are the real ones, kept verbatim so a failure points at the row it came from.
+
+A row is one of four kinds and the kind decides what its money means. Three of the four are a
+gap between the two amounts and only one of them is a discount, so most of what follows is
+about telling those three apart.
 """
 
 import pytest
@@ -15,8 +19,15 @@ from models.transaction import (
     TransactionClassification,
 )
 from services.transaction_amount_service import (
+    COUPON,
+    FOREIGN,
     INFLOW,
+    INSTALLMENT,
+    ORDINARY,
     OUTFLOW,
+    REFUND,
+    REGULAR,
+    STATEMENT,
     UNKNOWN,
     TransactionAmountService,
 )
@@ -34,9 +45,11 @@ def _tx(
     markup: float | None = None,
     classification: str | None = None,
     status: str = "BOOKED",
+    merchant: str | None = None,
 ) -> Transaction:
     return Transaction(
         status=status,
+        merchantName=merchant,
         amount=TransactionAmount(
             # The charged node is always present on a real row, carrying its currency even when
             # the amount itself arrives blank — so a blank charge is `amount=None`, not a
@@ -59,381 +72,303 @@ def _tx(
 
 
 @pytest.fixture
-def service() -> TransactionAmountService:
+def service():
     return TransactionAmountService()
 
 
-# ── The model keeps what the provider sends ───────────────────────────────────
-# These fields arrive on every row and were being dropped on the floor, which is why the
-# calculations were guessing at what the feed states outright.
-
-def test_the_model_keeps_the_installment_flag_and_plan():
-    transaction = Transaction.model_validate(
-        {
-            "amount": {
-                "originalAmount": {"amount": -3728, "currency": "ILS"},
-                "chargedAmount": {"amount": -932, "currency": "ILS"},
-            },
-            "isCreditCardInstallment": True,
-            "installments": {"number": 2, "total": 4},
-            "isDuplicate": False,
-            "markupFee": {"amount": 0, "currency": "ILS"},
-            "classification": {"type": "VARIABLE_EXPENSE", "classifiedBy": "SYSTEM"},
-        }
-    )
-
-    assert transaction.isCreditCardInstallment is True
-    assert transaction.installments.number == 2
-    assert transaction.installments.total == 4
-    assert transaction.classification.type == "VARIABLE_EXPENSE"
+# ── Which way the money moved ─────────────────────────────────────────────────
 
 
-def test_a_blank_amount_string_becomes_none():
-    """The feed sends `"amount": ""` on real rows, not null."""
-    transaction = Transaction.model_validate(
-        {"amount": {"chargedAmount": {"amount": "", "currency": "ILS"},
-                    "originalAmount": {"amount": -176.15, "currency": "ILS"}}}
-    )
-
-    assert transaction.amount.chargedAmount.amount is None
+def test_a_purchase_is_an_outflow(service):
+    assert service.direction(_tx(charged=-86.0)) == OUTFLOW
 
 
-# ── Which way did the money move? ─────────────────────────────────────────────
-
-def test_a_negative_charge_is_money_leaving(service):
-    assert service.direction(_tx(charged=-86)) == OUTFLOW
+def test_a_credit_is_an_inflow(service):
+    assert service.direction(_tx(charged=29.21)) == INFLOW
 
 
-def test_a_positive_charge_is_money_coming_back(service):
-    assert service.direction(_tx(charged=141.86)) == INFLOW
+def test_a_row_with_no_amount_at_all_says_so(service):
+    assert service.direction(_tx()) == UNKNOWN
 
 
-def test_nothing_billed_takes_its_direction_from_the_merchants_figure(service):
-    assert service.direction(_tx(charged=0.0, original=-40)) == OUTFLOW
+def test_the_sign_beats_the_providers_own_label(service):
+    """Two mirrored refunds arrived flagged VARIABLE_EXPENSE on real data. The sign was right."""
+    assert service.direction(_tx(charged=29.21, classification="VARIABLE_EXPENSE")) == INFLOW
 
 
-def test_direction_falls_back_to_the_merchants_figure_when_nothing_is_billed(service):
-    assert service.direction(_tx(charged=None, original=-176.15)) == OUTFLOW
+# ── What kind of row is this? ─────────────────────────────────────────────────
 
 
-# ── How much left the account ─────────────────────────────────────────────────
-
-def test_amount_spent_is_the_billed_figure_as_a_positive_number(service):
-    assert service.amount_spent(_tx(charged=-86)) == 86
-
-
-def test_a_refund_is_not_spending(service):
-    """Four refunded hotel nights were counted as ILS 567 of holiday spending."""
-    refund = _tx(charged=141.86, original=942, original_currency="CZK", classification="VARIABLE_INCOME")
-
-    assert service.amount_spent(refund) == 0.0
-    assert service.amount_received(refund) == pytest.approx(141.86)
+def test_an_ordinary_purchase(service):
+    assert service.detailed_kind_of(_tx(charged=-86.0, original=-86.0)) == ORDINARY
+    assert service.kind_of(_tx(charged=-86.0, original=-86.0)) == REGULAR
 
 
-def test_a_refund_the_provider_mislabelled_as_an_expense_is_still_a_refund(service):
-    """The sign is the reliable signal; `classification` called this one VARIABLE_EXPENSE."""
-    assert service.amount_spent(_tx(charged=29.21, original=-29.21, classification="VARIABLE_EXPENSE")) == 0.0
+def test_a_credit_is_a_refund(service):
+    assert service.detailed_kind_of(_tx(charged=29.21)) == REFUND
 
 
-def test_a_duplicate_is_not_a_second_purchase(service):
-    assert service.amount_spent(_tx(charged=-86, duplicate=True)) == 0.0
+def test_a_settled_row_the_card_was_never_billed_for_is_a_coupon(service):
+    """A loaded club card paid: the merchant recorded the sale, the bank billed nothing."""
+    assert service.detailed_kind_of(_tx(charged=None, original=-176.15)) == COUPON
 
 
-def test_each_installment_row_bills_one_payment(service):
-    """Four rows of 932 add up to the 3,728 purchase exactly once."""
-    plan_row = _tx(charged=-932, original=-3728, installment=True, installment_number=2, installment_total=4)
-
-    assert service.amount_spent(plan_row) == 932
+def test_a_zero_charge_is_read_the_same_as_a_blank_one(service):
+    assert service.detailed_kind_of(_tx(charged=0, original=-176.15)) == COUPON
 
 
-def test_a_settled_purchase_that_was_never_billed_cost_nothing(service):
-    """TERMINAL X, BOOKED and invoiced, ILS 176.15 asked and nothing charged: a voucher paid."""
-    assert service.amount_spent(_tx(charged=None, original=-176.15)) == 0.0
+def test_a_charge_that_has_not_landed_yet_is_not_a_coupon(service):
+    """Before settlement a blank charge means the billing is still coming."""
+    assert service.detailed_kind_of(_tx(charged=None, original=-40, status="PENDING")) != COUPON
 
 
-def test_a_charge_still_to_come_falls_back_to_the_merchants_figure(service):
-    """Before settlement a blank charge is billing that has not happened yet, not a voucher."""
-    assert service.amount_spent(
-        _tx(charged=None, original=-176.15, status="PENDING")
-    ) == pytest.approx(176.15)
-
-
-def test_the_fallback_refuses_to_sum_a_foreign_figure_as_shekels(service):
-    """`originalAmount` here is koruna; summing it as ILS is how 41,328 got into a total."""
-    assert service.amount_spent(
-        _tx(charged=None, charged_currency="ILS", original=-41328, original_currency="CZK",
-            status="PENDING")
-    ) == 0.0
-
-
-def test_the_fallback_refuses_to_use_a_plans_full_price_as_one_payment(service):
-    assert service.amount_spent(
-        _tx(charged=None, original=-3728, installment=True, installment_total=4, status="PENDING")
-    ) == 0.0
-
-
-# ── The signed view, and what the conversion cost ─────────────────────────────
-
-def test_net_amount_is_negative_for_a_purchase_and_positive_for_a_refund(service):
-    assert service.net_amount(_tx(charged=-86)) == -86
-    assert service.net_amount(_tx(charged=141.86)) == pytest.approx(141.86)
-
-
-def test_markup_fee_is_the_real_cost_of_a_foreign_purchase(service):
-    """The row that read as ILS 34,512 saved in fact cost ILS 198.51 in issuer markup."""
-    abroad = _tx(charged=-6815.43, original=-41328, original_currency="CZK", markup=198.51)
-
-    assert service.markup_fee(abroad) == pytest.approx(198.51)
-    assert service.amount_saved(abroad) == 0.0
-
-
-# ── How much of the gap was a discount ────────────────────────────────────────
-
-def test_a_genuine_discount_is_counted(service):
-    assert service.amount_saved(_tx(charged=-47.81, original=-49.80)) == pytest.approx(1.99)
-
-
-def test_equal_amounts_save_nothing(service):
-    assert service.amount_saved(_tx(charged=-50, original=-50)) == 0.0
-
-
-def test_a_conversion_is_not_a_discount(service):
-    assert service.amount_saved(
-        _tx(charged=-6815.43, charged_currency="ILS", original=-41328, original_currency="CZK")
-    ) == 0.0
-
-
-def test_a_settled_purchase_that_was_never_billed_is_the_whole_price_saved(service):
-    """The one gap in this feed that is a real saving: the user was asked 176.15 and paid none."""
-    amount, reason = service.saving_of(_tx(charged=None, original=-176.15))
-
-    assert (amount, reason) == (pytest.approx(176.15), "not_charged")
-
-
-def test_a_charge_still_to_come_is_not_a_saving(service):
-    """It would reverse itself the moment the charge lands."""
-    assert service.amount_saved(_tx(charged=None, original=-176.15, status="PENDING")) == 0.0
-
-
-def test_a_settled_zero_charge_counts_the_same_as_a_blank_one(service):
-    assert service.saving_of(_tx(charged=0.0, original=-49.80))[1] == "not_charged"
-
-
-def test_a_credit_that_has_not_been_paid_out_is_not_a_saving(service):
-    """A blank charge against a positive merchant figure is a refund pending, not a voucher."""
-    assert service.amount_saved(_tx(charged=None, original=42.5)) == 0.0
-
-
-def test_a_refund_is_not_a_discount(service):
-    assert service.amount_saved(_tx(charged=29.21, original=-29.21)) == 0.0
+def test_two_currencies_make_it_foreign_not_a_discount(service):
+    """41,328 koruna billed as 6,815 shekels is a conversion, not 34,512 saved."""
+    assert service.detailed_kind_of(_tx(charged=-6815.43, original=-41328.0, original_currency="CZK")) == FOREIGN
 
 
 def test_the_installment_flag_settles_it(service):
-    """With the flag present nothing has to be inferred from the numbers."""
-    amount, reason = service.saving_of(
-        _tx(charged=-932, original=-3728, installment=True, installment_number=1, installment_total=4)
-    )
-
-    assert (amount, reason) == (0.0, "installment")
+    """3,728 charged as four payments of 932 looks exactly like 75% off. The feed says otherwise."""
+    assert service.detailed_kind_of(_tx(charged=-932, original=-3728, installment=True)) == INSTALLMENT
 
 
-def test_a_plan_is_still_caught_when_the_feed_omits_the_flag(service):
-    """A trimmed payload drops `isCreditCardInstallment`; the ratio is the backstop."""
-    amount, reason = service.saving_of(_tx(charged=-932, original=-3728))
-
-    assert (amount, reason) == (0.0, "installment_inferred")
+def test_a_plan_is_recognised_by_its_shape_when_the_flag_is_missing(service):
+    """The fallback for a trimmed payload: the charge divides the price a whole number of times."""
+    assert service.detailed_kind_of(_tx(charged=-216, original=-648)) == INSTALLMENT
 
 
-def test_a_plan_whose_payments_do_not_divide_evenly_is_still_a_plan(service):
-    """The issuer rounds the last payment, so the ratio is near-integer, not exact."""
-    assert service.amount_saved(_tx(charged=-333.34, original=-1000.0)) == 0.0
+def test_a_gap_that_divides_unevenly_is_a_real_discount(service):
+    assert service.detailed_kind_of(_tx(charged=-47.81, original=-49.80)) == STATEMENT
 
 
-def test_a_gap_too_uneven_to_be_a_plan_is_counted(service):
-    assert service.amount_saved(_tx(charged=-160, original=-200)) == 40
+def test_a_duplicate_is_not_a_second_purchase(service):
+    assert service.detailed_kind_of(_tx(charged=-86, duplicate=True)) == "duplicate"
 
 
-def test_a_duplicate_saves_nothing(service):
-    assert service.saving_of(_tx(charged=-47.81, original=-49.80, duplicate=True)) == (0.0, "duplicate")
+def test_a_refund_abroad_is_read_as_a_refund_first(service):
+    """Four Prague credits are both. Being told money came back matters more than the currency."""
+    assert service.detailed_kind_of(_tx(charged=120.0, original=700.0, original_currency="CZK")) == REFUND
 
 
-# ── What kind of thing happened ───────────────────────────────────────────────
-
-def test_kind_of_names_each_sort_of_row(service):
-    assert service.kind_of(_tx(charged=-86)) == "ordinary"
-    assert service.kind_of(_tx(charged=-60.26, original=-20.0, original_currency="USD")) == "foreign"
-    assert service.kind_of(_tx(charged=-932, original=-3728, installment=True, installment_total=4)) == "installment"
-    assert service.kind_of(_tx(charged=141.86)) == "refund"
-    assert service.kind_of(_tx(charged=None, original=-176.15)) == "voucher"
-    assert service.kind_of(_tx(charged=-86, duplicate=True)) == "duplicate"
+# ── The four figures ──────────────────────────────────────────────────────────
 
 
-def test_a_refund_from_abroad_is_labelled_a_refund(service):
-    """Four Prague credits are both; being told money came back matters more than the currency."""
-    assert service.kind_of(_tx(charged=141.86, original=942, original_currency="CZK")) == "refund"
+def test_a_regular_purchase_was_paid_for(service):
+    transaction = _tx(charged=-86.0, original=-86.0)
+
+    assert service.paid(transaction) == 86.0
+    assert service.returned(transaction) == 0.0
+    assert service.saved(transaction) == 0.0
+    assert service.value(transaction) == 86.0
 
 
-def test_every_countable_row_gets_exactly_one_kind(service):
-    """What makes the census add up to the transaction count, and so readable as a bar."""
+def test_a_statement_was_paid_at_the_billed_figure_and_saved_the_gap(service):
+    transaction = _tx(charged=-47.81, original=-49.80)
+
+    assert service.paid(transaction) == 47.81
+    assert service.saved(transaction) == pytest.approx(1.99)
+    assert service.value(transaction) == 47.81
+
+
+def test_a_coupon_cost_nothing_and_saved_the_whole_price(service):
+    transaction = _tx(charged=None, original=-176.15)
+
+    assert service.paid(transaction) == 0.0
+    assert service.saved(transaction) == 176.15
+    # Still worth its full price wherever the question is what the user bought, or a card used
+    # only for coupons would report no activity at all.
+    assert service.value(transaction) == 176.15
+
+
+def test_a_refund_came_back_and_is_never_a_saving(service):
+    """
+    A returned pair of shoes and a topcash cashback arrive identically: a positive amount.
+
+    The feed cannot tell them apart, so calling either a saving would call both one. Money
+    coming back reduces what was spent instead.
+    """
+    transaction = _tx(charged=29.21)
+
+    assert service.returned(transaction) == 29.21
+    assert service.saved(transaction) == 0.0
+    assert service.paid(transaction) == 0.0
+    assert service.value(transaction) == -29.21
+
+
+def test_a_pending_charge_falls_back_to_the_merchants_figure(service):
+    assert service.paid(_tx(charged=None, original=-42.5, status="PENDING")) == 42.5
+
+
+def test_a_pending_charge_abroad_is_left_out_rather_than_guessed_at(service):
+    """The merchant's figure is koruna and would be summed as shekels."""
+    assert service.paid(_tx(charged=None, original=-700.0, original_currency="CZK", status="PENDING")) == 0.0
+
+
+def test_a_duplicate_is_worth_nothing(service):
+    assert service.value(_tx(charged=-86, duplicate=True)) == 0.0
+
+
+def test_the_conversion_fee_is_a_fee_not_a_saving(service):
+    assert service.markup_fee(_tx(charged=-6815.43, markup=-235.69)) == 235.69
+
+
+# ── Totals over a list ────────────────────────────────────────────────────────
+
+
+def test_spend_is_what_the_bank_statement_shows(service):
+    """86 billed, 176.15 on a coupon, 20 returned → 66 out of the account."""
+    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15), _tx(charged=20.0)]
+
+    assert service.spend(transactions) == pytest.approx(66.0)
+
+
+def test_the_source_blind_total_counts_the_coupon_and_is_larger(service):
+    """
+    The two disagree by exactly the coupons, and that is the point rather than a bug.
+
+    `spend` answers "what does my bank show"; `total_value` answers "what did I buy". A coupon
+    purchase belongs in the second and not the first.
+    """
+    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15)]
+
+    assert service.spend(transactions) == 86.0
+    assert service.total_value(transactions) == pytest.approx(262.15)
+
+
+def test_savings_are_coupons_and_statement_gaps_only(service):
     transactions = [
-        _tx(charged=-86),
-        _tx(charged=-60.26, original=-20.0, original_currency="USD"),
-        _tx(charged=141.86, original=942, original_currency="CZK"),
-        _tx(charged=None, original=-176.15),
-        _tx(charged=-932, original=-3728, installment=True, installment_total=4),
+        _tx(charged=None, original=-176.15),   # coupon: the whole price
+        _tx(charged=-47.81, original=-49.80),  # statement: the gap
+        _tx(charged=20.0),                     # refund: not a saving
+        _tx(charged=-86, original=-86),        # regular: nothing
     ]
 
-    assert sum(row["count"] for row in service.composition(transactions)) == len(transactions)
+    assert service.savings(transactions) == pytest.approx(178.14)
 
 
-def test_composition_reports_count_and_worth_per_kind(service):
-    transactions = [_tx(charged=-86), _tx(charged=-100), _tx(charged=None, original=-176.15)]
+def test_the_spend_breakdown_adds_up_to_spend(service):
+    transactions = [_tx(charged=-86), _tx(charged=-47.81, original=-49.80), _tx(charged=20.0)]
 
-    by_kind = {row["kind"]: row for row in service.composition(transactions)}
+    rows = {row["source"]: row["amount"] for row in service.spend_breakdown(transactions)}
 
-    assert by_kind["ordinary"]["count"] == 2
-    assert by_kind["ordinary"]["amount"] == 186
-    assert by_kind["voucher"]["count"] == 1
-    assert by_kind["voucher"]["amount"] == pytest.approx(176.15)
-
-
-def test_composition_values_a_refund_by_what_came_back(service):
-    by_kind = {row["kind"]: row for row in service.composition([_tx(charged=141.86)])}
-
-    assert by_kind["refund"]["amount"] == pytest.approx(141.86)
+    assert rows[REGULAR] == 86.0
+    assert rows[STATEMENT] == 47.81
+    assert rows[REFUND] == 20.0
+    assert rows[REGULAR] + rows[STATEMENT] - rows[REFUND] == pytest.approx(service.spend(transactions))
 
 
-def test_composition_reports_what_the_conversions_cost(service):
-    """The honest figure for a foreign purchase is the markup, not the gap in the amounts."""
-    transactions = [_tx(charged=-6815.43, original=-41328, original_currency="CZK", markup=198.51)]
+def test_the_savings_breakdown_adds_up_to_savings(service):
+    transactions = [_tx(charged=None, original=-176.15), _tx(charged=-47.81, original=-49.80)]
 
-    assert service.composition(transactions)[0]["markup_fees"] == pytest.approx(198.51)
+    rows = {row["source"]: row["amount"] for row in service.savings_breakdown(transactions)}
+
+    assert rows[COUPON] == 176.15
+    assert rows[STATEMENT] == pytest.approx(1.99)
+    assert sum(rows.values()) == pytest.approx(service.savings(transactions))
 
 
-def test_composition_counts_plans_not_just_payments(service):
+# ── The mix, and the sum it is meant to explain ───────────────────────────────
+
+
+def test_the_mix_contributions_add_up_to_spend(service):
+    """
+    The whole reason `contributes` exists beside `amount`.
+
+    `amount` is what the screen prints, always positive — a refund reads as what came back. It
+    is the signed column that reconciles, so no client ever has to know which rows to subtract.
+    """
+    transactions = [
+        _tx(charged=-86, original=-86),
+        _tx(charged=-6815.43, original=-41328.0, original_currency="CZK", markup=-235.69),
+        _tx(charged=-932, original=-3728, installment=True, installment_total=4, merchant="a"),
+        _tx(charged=-47.81, original=-49.80),
+        _tx(charged=None, original=-176.15),
+        _tx(charged=20.0),
+    ]
+
+    mix = service.mix(transactions)
+
+    assert sum(row["contributes"] for row in mix) == pytest.approx(service.spend(transactions))
+
+
+def test_a_coupon_contributes_nothing_but_is_still_shown(service):
+    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15)]
+
+    coupon = next(row for row in service.mix(transactions) if row["kind"] == COUPON)
+
+    assert coupon["amount"] == 176.15
+    assert coupon["contributes"] == 0.0
+
+
+def test_a_refund_is_shown_positive_and_counted_negative(service):
+    refund = next(row for row in service.mix([_tx(charged=20.0)]) if row["kind"] == REFUND)
+
+    assert (refund["amount"], refund["contributes"]) == (20.0, -20.0)
+
+
+def test_the_mix_counts_every_row_exactly_once(service):
+    transactions = [
+        _tx(charged=-86),
+        _tx(charged=-6815.43, original=-41328.0, original_currency="CZK"),
+        _tx(charged=None, original=-176.15),
+        _tx(charged=20.0),
+    ]
+
+    assert sum(row["count"] for row in service.mix(transactions)) == len(transactions)
+
+
+def test_the_mix_names_what_the_conversions_cost(service):
+    transactions = [_tx(charged=-6815.43, original=-41328.0, original_currency="CZK", markup=-235.69)]
+
+    foreign = next(row for row in service.mix(transactions) if row["kind"] == FOREIGN)
+
+    assert foreign["markup_fees"] == 235.69
+
+
+def test_the_mix_counts_plans_rather_than_repeating_the_payment_count(service):
     """Seven payments across two plans reads very differently from seven plans."""
     transactions = [
-        _tx(charged=-932, original=-3728, installment=True, installment_number=n, installment_total=4)
-        for n in (1, 2, 3, 4)
-    ] + [
-        _tx(charged=-216, original=-648, installment=True, installment_number=n, installment_total=3)
-        for n in (1, 2, 3)
+        _tx(charged=-932, original=-3728, installment=True, installment_total=4, merchant="a"),
+        _tx(charged=-932, original=-3728, installment=True, installment_total=4, merchant="a"),
+        _tx(charged=-100, original=-300, installment=True, installment_total=3, merchant="b"),
     ]
 
-    row = service.composition(transactions)[0]
+    plan = next(row for row in service.mix(transactions) if row["kind"] == INSTALLMENT)
 
-    assert (row["count"], row["plan_count"]) == (7, 2)
-
-
-def test_composition_omits_kinds_the_year_did_not_contain(service):
-    assert [row["kind"] for row in service.composition([_tx(charged=-86)])] == ["ordinary"]
+    assert (plan["count"], plan["plan_count"]) == (3, 2)
 
 
-def test_composition_leaves_duplicates_out_entirely(service):
-    """A duplicate is not a thing that happened to the user, so it gets no row."""
-    assert service.composition([_tx(charged=-86, duplicate=True)]) == []
-
-
-def test_composition_keeps_a_fixed_order_so_the_legend_does_not_reshuffle(service):
+def test_the_kind_census_explains_a_total_that_looks_wrong(service):
     transactions = [
-        _tx(charged=141.86),
-        _tx(charged=None, original=-176.15),
-        _tx(charged=-86),
-        _tx(charged=-60.26, original=-20.0, original_currency="USD"),
+        _tx(charged=-47.81, original=-49.80),
+        _tx(charged=-50, original=-50),
+        _tx(charged=None, original=-40),
+        _tx(charged=-6815.43, original=-41328.0, original_currency="CZK"),
+        _tx(charged=29.21),
+        _tx(charged=-86, duplicate=True),
     ]
 
-    assert [row["kind"] for row in service.composition(transactions)] == [
-        "ordinary", "foreign", "refund", "voucher",
-    ]
-
-
-# ── Explaining a total ────────────────────────────────────────────────────────
-
-def test_savings_exclusions_names_why_each_purchase_was_dropped(service):
-    transactions = [
-        _tx(charged=-47.81, original=-49.80),                                              # counted
-        _tx(charged=-50, original=-50),                                                    # no gap
-        _tx(charged=None, original=-40),                                                   # voucher
-        _tx(charged=None, original=-40, status="PENDING"),                                 # missing
-        _tx(charged=-60.26, original=-20.0, original_currency="USD"),                      # fx
-        _tx(charged=-932, original=-3728, installment=True, installment_total=4),          # flagged
-        _tx(charged=-216, original=-648),                                                  # inferred
-        _tx(charged=29.21, original=-29.21),                                               # refund
-        _tx(charged=-86, original=-86, duplicate=True),                                    # duplicate
-    ]
-
-    assert service.savings_exclusions(transactions) == {
-        "counted": 1,
-        "not_charged": 1,
-        "no_gap": 1,
-        "missing_amount": 1,
-        "foreign_currency": 1,
-        "installment": 1,
-        "installment_inferred": 1,
-        "refund": 1,
+    assert service.kind_census(transactions) == {
+        STATEMENT: 1,
+        ORDINARY: 1,
+        COUPON: 1,
+        FOREIGN: 1,
+        REFUND: 1,
         "duplicate": 1,
     }
 
 
 # ── Preparing a list for grouping ─────────────────────────────────────────────
 
-def test_countable_drops_duplicates_but_keeps_refunds(service):
-    """A refund has to reach its category to cancel the purchase it reverses."""
-    purchase, refund = _tx(charged=-86), _tx(charged=141.86)
 
-    assert service.countable([purchase, refund, _tx(charged=-86, duplicate=True)]) == [purchase, refund]
+def test_countable_drops_duplicates_and_keeps_refunds(service):
+    transactions = [_tx(charged=-86), _tx(charged=20.0), _tx(charged=-86, duplicate=True)]
+
+    assert len(service.countable(transactions)) == 2
 
 
 def test_purchases_only_drops_refunds_too(service):
-    """For questions about shopping habits, a credit is not a visit."""
-    purchase = _tx(charged=-86)
+    transactions = [_tx(charged=-86), _tx(charged=20.0)]
 
-    assert service.purchases_only([purchase, _tx(charged=141.86), _tx(charged=-86, duplicate=True)]) == [purchase]
-
-
-def test_purchase_count_ignores_refunds_and_duplicates(service):
-    assert service.purchase_count([_tx(charged=-86), _tx(charged=141.86), _tx(charged=-86, duplicate=True)]) == 1
-
-
-# ── The two amount questions, which have two different answers ────────────────
-
-def test_a_voucher_purchase_is_worth_its_price_but_costs_nothing(service):
-    """The whole point of the split: the voucher account must not report zero activity."""
-    voucher = _tx(charged=None, original=-176.15)
-
-    assert service.amount_spent(voucher) == 0.0
-    assert service.purchase_value(voucher) == pytest.approx(176.15)
-
-
-def test_an_ordinary_purchase_is_the_same_under_both(service):
-    ordinary = _tx(charged=-86)
-
-    assert service.amount_spent(ordinary) == 86
-    assert service.purchase_value(ordinary) == 86
-
-
-def test_an_installment_row_is_worth_one_payment_under_both(service):
-    plan_row = _tx(charged=-932, original=-3728, installment=True, installment_total=4)
-
-    assert service.amount_spent(plan_row) == 932
-    assert service.purchase_value(plan_row) == 932
-
-
-def test_net_purchase_value_lets_a_refund_cancel_what_it_reverses(service):
-    assert service.net_purchase_value(_tx(charged=-86)) == 86
-    assert service.net_purchase_value(_tx(charged=141.86)) == pytest.approx(-141.86)
-
-
-def test_total_spent_excludes_vouchers_and_nets_out_refunds(service):
-    """ILS 86 spent, ILS 176.15 on a voucher, ILS 20 refunded → 66 out of the account."""
-    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15), _tx(charged=20.0)]
-
-    assert service.total_spent(transactions) == pytest.approx(66.0)
-
-
-def test_total_spent_disagrees_with_the_breakdowns_on_purpose(service):
-    """The breakdowns count the voucher at full worth; the headline total does not count it."""
-    transactions = [_tx(charged=-86), _tx(charged=None, original=-176.15)]
-
-    assert service.total_spent(transactions) == 86
-    assert sum(service.net_purchase_value(t) for t in transactions) == pytest.approx(262.15)
+    assert len(service.purchases_only(transactions)) == 1
+    assert service.purchase_count(transactions) == 1

@@ -29,7 +29,10 @@ export function AccountsSlide({ accounts }: AccountsSlideProps) {
     return (
       <CarouselSlideCard title={t("insights.accountsSlide.title")} subtitle={t("insights.accountsSlide.subtitle")}>
         <p className="text-sm text-muted-foreground">{t("insights.accountsSlide.empty")}</p>
-      </CarouselSlideCard>
+        <p className="px-1 pt-1 text-[11px] leading-relaxed text-muted-foreground">
+        {t("insights.explain.sourceBlind")}
+      </p>
+    </CarouselSlideCard>
     )
   }
 

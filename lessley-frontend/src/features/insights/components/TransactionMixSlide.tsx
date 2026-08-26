@@ -12,16 +12,19 @@ const KIND_STYLE: Record<TransactionMixEntry["kind"], { bar: string; dot: string
   ordinary: { bar: "bg-primary/25", dot: "bg-primary/25" },
   foreign: { bar: "bg-primary", dot: "bg-primary" },
   installment: { bar: "bg-navy", dot: "bg-navy" },
+  statement: { bar: "bg-sky-500", dot: "bg-sky-500" },
   refund: { bar: "bg-emerald-500", dot: "bg-emerald-500" },
-  voucher: { bar: "bg-amber-500", dot: "bg-amber-500" },
+  coupon: { bar: "bg-amber-500", dot: "bg-amber-500" },
 }
 
 interface TransactionMixSlideProps {
   composition: TransactionMixEntry[]
   periodLabel: string
+  /** The spend these parts add up to, so the sum below can be shown reaching it. */
+  totalAmount: number
 }
 
-export function TransactionMixSlide({ composition, periodLabel }: TransactionMixSlideProps) {
+export function TransactionMixSlide({ composition, periodLabel, totalAmount }: TransactionMixSlideProps) {
   const { t } = useTranslation()
   const title = t("insights.transactionMixSlide.title")
   const subtitle = t("insights.transactionMixSlide.subtitle", { period: periodLabel })
@@ -38,50 +41,80 @@ export function TransactionMixSlide({ composition, periodLabel }: TransactionMix
 
   return (
     <CarouselSlideCard title={title} subtitle={subtitle}>
-      {/* The bar is proportional to counts, not money: this answers "how often", and the
-          amount beside each row answers "how much". A single voucher worth ₪176 should not
-          out-measure twenty everyday purchases. */}
-      <div
-        className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full"
-        role="img"
-        aria-label={composition
-          .map((entry) => `${t(`insights.transactionKinds.${entry.kind}.label`)}: ${entry.count}`)
-          .join(", ")}
-      >
-        {composition.map((entry) => (
-          <div
-            key={entry.kind}
-            className={cn("h-full rounded-full", KIND_STYLE[entry.kind].bar)}
-            // A kind with a single transaction still has to be visible, so every segment keeps
-            // a floor of 2% regardless of how small its true share is.
-            style={{ width: `${Math.max((entry.count / total) * 100, 2)}%` }}
-          />
-        ))}
-      </div>
-
-      <ul className="no-scrollbar mt-4 max-h-52 space-y-2 overflow-y-auto pe-1">
-        {composition.map((entry) => (
-          <li key={entry.kind} className="flex items-start gap-3 rounded-2xl bg-secondary p-3">
-            <span
-              className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", KIND_STYLE[entry.kind].dot)}
-              aria-hidden
+      {/* The bar stays put and everything below it scrolls as one, so the sum at the bottom is
+          reachable instead of being clipped by the card's fixed height. */}
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        {/* The bar is proportional to counts, not money: this answers "how often", and the
+            amount beside each row answers "how much". A single coupon worth ₪176 should not
+            out-measure twenty everyday purchases. */}
+        <div
+          className="flex h-2.5 w-full shrink-0 gap-0.5 overflow-hidden rounded-full"
+          role="img"
+          aria-label={composition
+            .map((entry) => `${t(`insights.transactionKinds.${entry.kind}.label`)}: ${entry.count}`)
+            .join(", ")}
+        >
+          {composition.map((entry) => (
+            <div
+              key={entry.kind}
+              className={cn("h-full rounded-full", KIND_STYLE[entry.kind].bar)}
+              // A kind with a single transaction still has to be visible, so every segment keeps
+              // a floor of 2% regardless of how small its true share is.
+              style={{ width: `${Math.max((entry.count / total) * 100, 2)}%` }}
             />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{t(`insights.transactionKinds.${entry.kind}.label`)}</p>
-              <p className="text-xs text-muted-foreground">
-                {t(`insights.transactionKinds.${entry.kind}.note`)}
-              </p>
-              <MixDetail entry={entry} />
-            </div>
-            <div className="shrink-0 text-end">
-              <p className="text-sm font-bold">{formatAmount(entry.amount)}</p>
-              <p className="text-xs text-muted-foreground">
-                {t("insights.transactionMixSlide.count", { count: entry.count })}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto pe-1">
+          <ul className="mt-4 space-y-2">
+            {composition.map((entry) => (
+              <li key={entry.kind} className="flex items-start gap-3 rounded-2xl bg-secondary p-3">
+                <span
+                  className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", KIND_STYLE[entry.kind].dot)}
+                  aria-hidden
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">{t(`insights.transactionKinds.${entry.kind}.label`)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(`insights.transactionKinds.${entry.kind}.note`)}
+                  </p>
+                  <MixDetail entry={entry} />
+                </div>
+                <div className="shrink-0 text-end">
+                  <p className="text-sm font-bold">{formatAmount(entry.amount)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("insights.transactionMixSlide.count", { count: entry.count })}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* The arithmetic, written out. A coupon shows as +₪0 because no money left the account,
+              and a refund subtracts — the two things people most often think are a mistake. */}
+          <div className="mt-2.5 rounded-2xl bg-secondary p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {t("insights.transactionMixSlide.sumHeading")}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {composition.map((entry, index) => (
+                <span key={entry.kind}>
+                  {index > 0 && <span className="mx-1">{entry.contributes < 0 ? "−" : "+"}</span>}
+                  <span className="font-medium text-foreground">
+                    {t(`insights.transactionKinds.${entry.kind}.label`)}
+                  </span>{" "}
+                  {formatAmount(Math.abs(entry.contributes))}
+                </span>
+              ))}
+              <span className="mx-1">=</span>
+              <span className="font-bold text-foreground">{formatAmount(totalAmount)}</span>
+            </p>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              {t("insights.transactionMixSlide.sumNote")}
+            </p>
+          </div>
+        </div>
+      </div>
     </CarouselSlideCard>
   )
 }
@@ -106,7 +139,7 @@ function MixDetail({ entry }: { entry: TransactionMixEntry }) {
     )
   }
 
-  if (entry.kind === "voucher") {
+  if (entry.kind === "coupon") {
     return (
       <p className="mt-0.5 text-xs font-medium text-amber-600">
         {t("insights.transactionMixSlide.savedNote")}

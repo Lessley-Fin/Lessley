@@ -7,9 +7,11 @@ user actually shopped. The bar is deliberately lower than the strict matcher's: 
 another café is useful, landing on a car park is not.
 """
 
+import pytest
+
 from itertools import combinations
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from models.transaction import (
     AmountDetail,
@@ -46,9 +48,10 @@ def _club(club_id, store_ids):
 
 
 def _tx(tx_id="t1", merchant="קפה קפה", category_code="5812", charged=100.0,
-        sub="RESTAURANT", town=None):
+        sub="RESTAURANT", town=None, account=None):
     return Transaction(
         id=tx_id,
+        accountId=account,
         categoryCode=category_code,
         merchantName=merchant,
         merchantAddress=MerchantAddress(townName=town) if town else None,
@@ -256,7 +259,39 @@ def test_an_alias_reaches_a_shop_filed_under_its_english_name():
     assert repo.find_deal_shops("פיצה האט המושבה הגרמ", "חיפה")[0].identity.store_id == "s1"
 
 
-# ── What reaches the user ─────────────────────────────────────────────────────
+# ── What reaches the user ──────────────────────────────────────
+
+
+def _club_card_tx(tx_id="t1", merchant="סטימצקי", price=80.0, sub="RESTAURANT"):
+    """
+    A purchase a club's own נטען card paid for, exactly as the feed reports one.
+
+    Settled, and the card was never billed: the merchant recorded the sale, the loaded card
+    covered it, and no money left the bank. That is the whole signature — there is no field
+    naming the club, which is why nothing downstream may claim to.
+    """
+    transaction = _tx(tx_id, merchant=merchant, sub=sub)
+    transaction.status = "BOOKED"
+    transaction.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-abs(price), currency="ILS"),
+        chargedAmount=AmountDetail(amount=None, currency="ILS"),
+    )
+    return transaction
+
+
+def _merchants(answer, band):
+    """The merchants under one band, or an empty list when the band did not surface."""
+    for row in answer.missed.bands:
+        if row.band == band:
+            return row.merchants
+    return []
+
+
+def _band(answer, band):
+    for row in answer.missed.bands:
+        if row.band == band:
+            return row
+    return None
 
 
 def test_shops_without_a_deal_are_never_offered():
@@ -272,8 +307,8 @@ def test_a_shop_outside_the_users_clubs_is_dropped():
     )
     service = _service(repo)
 
-    assert service.missed_savings_by_store([_tx(merchant="סטימצקי")], user_club_ids=["c1"])
-    assert service.missed_savings_by_store([_tx(merchant="סטימצקי")], user_club_ids=["c2"]) == []
+    assert service.savings_opportunities([_tx(merchant="סטימצקי")], user_club_ids=["c1"]).missed.purchase_count == 1
+    assert service.savings_opportunities([_tx(merchant="סטימצקי")], user_club_ids=["c2"]).missed.purchase_count == 0
 
 
 def _distinct_names(count):
@@ -293,107 +328,305 @@ def test_every_shop_a_purchase_could_have_been_made_at_is_returned():
     assert all(shop.band == STRONG for shop in shops)
 
 
-def test_the_whole_answer_is_capped_so_one_feed_cannot_return_thousands():
+def test_a_band_is_capped_so_one_feed_cannot_return_thousands():
     words = _distinct_names(60)
     repo = _world([_store(f"shop{i}", word) for i, word in enumerate(words)])
     service = _service(repo)
 
-    # Three purchases, each naming twenty shops — more than the ceiling between them.
-    shops = service.missed_savings_by_store(
-        [_tx(f"t{i}", merchant=" ".join(words[i * 20 : (i + 1) * 20])) for i in range(3)],
-        user_club_ids=["c1"],
+    # 60 purchases at 60 distinct merchants, so the cap bites on merchants rather than shops.
+    answer = service.savings_opportunities(
+        [_tx(f"t{i}", merchant=word) for i, word in enumerate(words)], user_club_ids=["c1"]
     )
 
-    assert len(shops) == SHOP_MATCH.MAX_SHOPS
+    counted = sum(len(row.merchants) for row in answer.missed.bands)
+    assert counted <= SHOP_MATCH.MAX_SHOPS * len(answer.missed.bands)
+    for row in answer.missed.bands:
+        assert len(row.merchants) <= SHOP_MATCH.MAX_SHOPS
 
 
-def test_a_shop_the_user_visited_outranks_a_pile_of_lookalikes():
+def test_a_capped_band_still_totals_only_what_it_returned():
     """
-    Sorting on money alone lets a dozen lookalike cafés crowd out the shop actually used.
+    A subtotal must never describe rows the client was not given.
 
-    Being told about your own shop is worth more than any number of shops merely like it, so
-    the confident bands come first and the cap eats into the lookalikes instead.
+    The cap is applied first and the total taken from what survives, so a user adding up the
+    merchants on screen lands on the figure above them.
     """
-    repo = _world(
-        [_store("s1", "סטימצקי", ["BOOKS_&_GAMES"]), _store("s2", "קפה קפה", ["COFFEE_&_SNACKS"])]
-    )
+    words = _distinct_names(60)
+    repo = _world([_store(f"shop{i}", word) for i, word in enumerate(words)])
     service = _service(repo)
 
-    shops = service.missed_savings_by_store(
-        [
-            # Small spend at the shop they actually used, against a big spend whose only
-            # matches are lookalikes.
-            _tx("t1", merchant="סטימצקי כפר סבא", charged=10.0, sub="BOOKS_&_GAMES"),
-            _tx("t2", merchant="קפה ברלין", charged=900.0, sub="RESTAURANT"),
-        ],
+    answer = service.savings_opportunities(
+        [_tx(f"t{i}", merchant=word, charged=10.0) for i, word in enumerate(words)],
         user_club_ids=["c1"],
     )
 
-    assert shops[0].store_name == "סטימצקי"
-    assert shops[0].is_same_store
+    for row in answer.missed.bands:
+        assert row.total_amount == pytest.approx(sum(m.amount for m in row.merchants))
+        assert row.purchase_count == sum(m.purchase_count for m in row.merchants)
 
 
 def test_purchases_without_an_id_are_skipped():
     repo = _world([_store("s1", "סטימצקי")])
     service = _service(repo)
 
-    shops = service.missed_savings_by_store(
+    answer = service.savings_opportunities(
         [_tx(tx_id=None), _tx(tx_id="t3", merchant="סטימצקי")], user_club_ids=["c1"]
     )
-    assert [purchase.transaction_id for purchase in shops[0].purchases] == ["t3"]
+
+    ids = [p.transaction_id for row in answer.missed.bands for m in row.merchants for p in m.purchases]
+    assert ids == ["t3"]
 
 
 def test_falls_back_to_the_original_amount_when_nothing_was_charged():
     service = _service(_world([_store("s1", "סטימצקי")]))
     transaction = _tx(merchant="סטימצקי")
     # How a not-yet-billed row really arrives: the charged node is there with its currency,
-    # only the amount is blank.
+    # only the amount is blank. Still PENDING, so the charge is coming — not a club card.
     transaction.amount = TransactionAmount(
         originalAmount=AmountDetail(amount=-42.5, currency="ILS"),
         chargedAmount=AmountDetail(amount=None, currency="ILS"),
     )
 
-    shops = service.missed_savings_by_store([transaction], user_club_ids=["c1"])
-    assert shops[0].covered_amount == 42.5
+    answer = service.savings_opportunities([transaction], user_club_ids=["c1"])
+    assert answer.missed.total_amount == 42.5
 
 
-# ── Gathered by shop instead of by purchase ───────────────────────────────────
+# ── Gathered by merchant, counted once ────────────────────────────────
 
 
-def test_by_store_gathers_every_purchase_one_shop_could_have_covered():
+def test_every_purchase_at_one_merchant_is_gathered_under_it():
     repo = _world([_store("s1", "קפה קפה", ["COFFEE_&_SNACKS"])])
     service = _service(repo)
 
-    shops = service.missed_savings_by_store(
+    answer = service.savings_opportunities(
         [
             _tx("t1", merchant="קפה קפה", charged=30.0),
-            _tx("t2", merchant="קפה ברלין", charged=20.0),
+            _tx("t2", merchant="קפה קפה", charged=20.0),
             _tx("t3", merchant="סטימצקי", charged=99.0),  # nothing to offer
         ],
         user_club_ids=["c1"],
     )
 
-    assert len(shops) == 1
-    shop = shops[0]
-    assert shop.store_name == "קפה קפה"
-    assert shop.covered_transaction_count == 2
-    assert shop.covered_amount == 50.0
-    assert {p.transaction_id for p in shop.purchases} == {"t1", "t2"}
+    merchants = _merchants(answer, EXACT)
+    assert len(merchants) == 1
+    assert merchants[0].merchant_name == "קפה קפה"
+    assert merchants[0].purchase_count == 2
+    assert merchants[0].amount == 50.0
 
 
-def test_by_store_keeps_the_most_confident_reading_of_a_shop():
-    """One purchase names the shop outright, another only shares the trade word."""
-    repo = _world([_store("s1", "קפה קפה", ["COFFEE_&_SNACKS"])])
+def test_a_purchase_matching_several_bands_is_counted_once_under_the_strongest():
+    """
+    The bug a user hit: one coffee matching the café itself and a lookalike was counted twice.
+
+    Reported per shop it appeared under both; the tabs then added up to more than the headline,
+    with nothing on screen to explain the gap. It belongs to its strongest match, and there only.
+    """
+    repo = _world([_store("s1", "קפה קפה", ["COFFEE_&_SNACKS"]), _store("s2", "קפה ברלין")])
     service = _service(repo)
 
-    shops = service.missed_savings_by_store(
-        [_tx("t1", merchant="קפה ברלין"), _tx("t2", merchant="קפה קפה")],
+    answer = service.savings_opportunities(
+        [_tx("t1", merchant="קפה קפה", charged=30.0)], user_club_ids=["c1"]
+    )
+
+    assert answer.missed.purchase_count == 1
+    assert answer.missed.total_amount == 30.0
+    assert _band(answer, EXACT).purchase_count == 1
+    assert _band(answer, SIMILAR) is None, "the weaker reading must not carry the purchase too"
+
+
+def test_the_bands_always_add_up_to_the_headline():
+    """
+    The invariant the whole shape exists for, over a feed built to overlap as much as possible.
+
+    Every purchase names a café and a bookshop, so several match at several strengths at once.
+    """
+    repo = _world([
+        _store("s1", "קפה קפה", ["COFFEE_&_SNACKS"]),
+        _store("s2", "קפה ברלין"),
+        _store("s3", "סטימצקי", ["BOOKS_&_GAMES"]),
+    ])
+    service = _service(repo)
+
+    answer = service.savings_opportunities(
+        [
+            _tx("t1", merchant="קפה קפה", charged=30.0),
+            _tx("t2", merchant="קפה ברלין", charged=20.0),
+            _tx("t3", merchant="סטימצקי כפר סבא", charged=99.0, sub="BOOKS_&_GAMES"),
+        ],
         user_club_ids=["c1"],
     )
 
-    assert shops[0].match_band == EXACT
-    assert shops[0].is_same_store
+    assert answer.missed.total_amount == pytest.approx(sum(b.total_amount for b in answer.missed.bands))
+    assert answer.missed.purchase_count == sum(b.purchase_count for b in answer.missed.bands)
+
+    # And no transaction id appears under two bands.
+    seen = [p.transaction_id for b in answer.missed.bands for m in b.merchants for p in m.purchases]
+    assert len(seen) == len(set(seen))
 
 
-def test_by_store_returns_nothing_without_transactions():
-    assert _service(_world([_store("s1", "סטימצקי")])).missed_savings_by_store([]) == []
+def test_returns_nothing_without_transactions():
+    answer = _service(_world([_store("s1", "סטימצקי")])).savings_opportunities([])
+    assert answer.missed.total_amount == 0
+    assert answer.applied.total_amount == 0
+    assert answer.missed.bands == []
+
+
+# ── Purchases the club card already paid for ──────────────────────────
+
+
+def test_a_purchase_on_the_club_card_is_never_a_missed_saving():
+    """The whole point: paying with the club's own card is the opposite of missing out."""
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_club_card_tx("t1", merchant="סטימצקי", price=80.0)], user_club_ids=["c1"]
+    )
+
+    assert answer.missed.purchase_count == 0
+    assert answer.missed.total_amount == 0
+    assert answer.applied.purchase_count == 1
+    assert answer.applied.total_amount == 80.0
+    assert answer.applied.merchants[0].merchant_name == "סטימצקי"
+
+
+def test_a_club_card_purchase_counts_even_where_the_catalogue_knows_no_shop():
+    """
+    The card is the evidence, not the match.
+
+    A נטען card only spends at the club's own shops, so a purchase on one took the discount
+    whether or not our catalogue happens to carry that shop. Dropping it for want of a match
+    would hide a saving the user really made.
+    """
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_club_card_tx("t1", merchant="שום חנות שאין לנו", price=55.0)], user_club_ids=["c1"]
+    )
+
+    assert answer.applied.purchase_count == 1
+    assert answer.applied.total_amount == 55.0
+
+
+def test_the_same_merchant_on_an_ordinary_card_is_still_missed():
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [
+            _club_card_tx("t1", merchant="סטימצקי", price=80.0),
+            _tx("t2", merchant="סטימצקי", charged=20.0),
+        ],
+        user_club_ids=["c1"],
+    )
+
+    assert answer.applied.total_amount == 80.0
+    assert answer.missed.total_amount == 20.0
+    assert answer.missed.purchase_count == 1
+
+
+def test_a_club_card_merchant_never_claims_to_know_which_club_paid():
+    """
+    The feed says no money left the account. It does not say whose card it was.
+
+    Naming a club here would be a guess dressed as a fact, and the screen would repeat it.
+    """
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_club_card_tx("t1", merchant="סטימצקי")], user_club_ids=["c1"]
+    )
+
+    assert answer.applied.merchants[0].club_ids == []
+
+
+def test_a_refund_is_neither_missed_nor_applied():
+    """Money coming back is not a purchase, so it never had a deal to miss."""
+    service = _service(_world([_store("s1", "סטימצקי")]))
+    refund = _tx("t1", merchant="סטימצקי")
+    refund.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-29.21, currency="ILS"),
+        chargedAmount=AmountDetail(amount=29.21, currency="ILS"),
+    )
+
+    answer = service.savings_opportunities([refund], user_club_ids=["c1"])
+
+    assert answer.missed.purchase_count == 0
+    assert answer.applied.purchase_count == 0
+
+
+# ── Statements: a discount taken, and a coupon still missed ─────────────────
+
+
+def _statement_tx(tx_id="t1", merchant="סטימצקי", asked=100.0, billed=90.0):
+    """The issuer billed less than the merchant asked, in the same currency."""
+    transaction = _tx(tx_id, merchant=merchant)
+    transaction.status = "BOOKED"
+    transaction.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-abs(asked), currency="ILS"),
+        chargedAmount=AmountDetail(amount=-abs(billed), currency="ILS"),
+    )
+    return transaction
+
+
+def test_a_statement_purchase_is_both_missed_and_applied():
+    """
+    It took a statement discount and could still have used a coupon, so it is both.
+
+    The two amounts are different and neither is the purchase: missed counts what the bank
+    actually billed, applied counts only the gap the issuer knocked off.
+    """
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_statement_tx("t1", asked=100.0, billed=90.0)], user_club_ids=["c1"]
+    )
+
+    assert answer.missed.total_amount == 90.0
+    assert answer.applied.total_amount == 10.0
+
+
+def test_the_applied_side_names_which_discount_landed():
+    service = _service(_world([_store("s1", "סטימצקי"), _store("s2", "גולדה")]))
+
+    answer = service.savings_opportunities(
+        [
+            _statement_tx("t1", merchant="סטימצקי", asked=100.0, billed=90.0),
+            _club_card_tx("t2", merchant="גולדה", price=80.0),
+        ],
+        user_club_ids=["c1"],
+    )
+
+    sources = {p.source for m in answer.applied.merchants for p in m.purchases}
+    assert sources == {"statement", "coupon"}
+    assert answer.applied.total_amount == 90.0
+
+
+def test_a_statement_needs_no_shop_match_to_count_as_applied():
+    """The gap between what was asked and what was billed is evidence in itself."""
+    service = _service(_world([_store("s1", "סטימצקי")]))
+
+    answer = service.savings_opportunities(
+        [_statement_tx("t1", merchant="שום חנות שאין לנו", asked=100.0, billed=90.0)],
+        user_club_ids=["c1"],
+    )
+
+    assert answer.applied.total_amount == 10.0
+    assert answer.missed.total_amount == 0.0
+
+
+def test_a_refund_is_never_an_applied_discount():
+    """
+    A returned purchase and a cashback arrive identically, so neither is called a saving.
+
+    It reduces what was spent instead, which is the spending total's job rather than this one.
+    """
+    service = _service(_world([_store("s1", "סטימצקי")]))
+    refund = _tx("t1", merchant="סטימצקי")
+    refund.amount = TransactionAmount(
+        originalAmount=AmountDetail(amount=-29.21, currency="ILS"),
+        chargedAmount=AmountDetail(amount=29.21, currency="ILS"),
+    )
+
+    answer = service.savings_opportunities([refund], user_club_ids=["c1"])
+
+    assert answer.applied.purchase_count == 0
+    assert answer.missed.purchase_count == 0

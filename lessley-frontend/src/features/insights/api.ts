@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api-client"
 import type {
   BasicApiResponse,
-  MissedShop,
+  SavingsAnswer,
   OpenFinanceAccount,
   PaginatedApiResponse,
   PersonalizationTransaction,
@@ -142,10 +142,16 @@ export async function fetchMatchingClubs(): Promise<ClubRecommendationResponse |
   return payload.data ?? null
 }
 
-export async function fetchMissedSavingsByStore(days: number = 90): Promise<MissedShop[]> {
+const NO_SAVINGS: SavingsAnswer = {
+  missed: { total_amount: 0, purchase_count: 0, bands: [] },
+  applied: { total_amount: 0, purchase_count: 0, merchants: [] },
+}
+
+export async function fetchSavingsOpportunities(days: number = 90): Promise<SavingsAnswer> {
   const params = new URLSearchParams({ days: String(days) })
-  const payload = await apiFetch<PaginatedApiResponse<MissedShop>>(
-    `/api/v1/insights/missed-savings-by-store?${params.toString()}`,
+  const payload = await apiFetch<BasicApiResponse<SavingsAnswer>>(
+    `/api/v1/insights/savings-opportunities?${params.toString()}`,
   )
-  return Array.isArray(payload.data) ? payload.data : []
+  // An empty answer rather than null, so no caller has to guard every total it reads.
+  return payload.data ?? NO_SAVINGS
 }

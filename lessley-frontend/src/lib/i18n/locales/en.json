@@ -296,14 +296,10 @@
     },
     "connectionCheck": "Verifying bank connection...",
     "savingsHero": {
-      "label": "Saved with Lessley",
+      "label": "You Saved",
       "club": "club",
       "clubs": "clubs",
-      "infoDialog": {
-        "ariaLabel": "What does 'saved' mean?",
-        "title": "How this is calculated",
-        "body": "This reflects club and card discounts matched to purchases you made in this period — not a projection, but savings tied to transactions that already happened."
-      }
+      "purchaseCount": "({{count}} purchases)"
     },
     "spendingOverviewSlide": {
       "title": "Spending overview",
@@ -328,7 +324,9 @@
       "abroad": "{{count}} abroad",
       "installments": "{{count}} in payments",
       "refunded": "{{count}} refunded",
-      "vouchers": "{{count}} on vouchers"
+      "vouchers": "{{count}} on vouchers",
+      "discounted": "{{count}} billed less",
+      "coupons": "{{count}} on a coupon"
     },
     "topCategorySlide": {
       "title": "Top category",
@@ -358,7 +356,9 @@
       "markupFees": "{{amount}} of it went on conversion fees",
       "plans": "Payments on {{count}} plan",
       "plans_other": "Payments on {{count}} plans",
-      "savedNote": "Money you kept"
+      "savedNote": "Money you kept",
+      "sumHeading": "How this adds up",
+      "sumNote": "A coupon adds ₪0 because no money left the bank, and a credit subtracts. The result is exactly what your bank statement shows."
     },
     "transactionKinds": {
       "ordinary": {
@@ -377,10 +377,19 @@
         "label": "Came back",
         "note": "Refunds and credits returned to your card"
       },
-      "voucher": {
-        "label": "Cost nothing",
-        "note": "A voucher, gift card or waived fee covered it"
+      "coupon": {
+        "label": "Coupon",
+        "note": "Paid with a loaded club card, so no money left the bank."
+      },
+      "statement": {
+        "label": "Billed less",
+        "note": "The issuer charged less than the shop asked — the gap is the discount."
       }
+    },
+    "explain": {
+      "spendTotal": "What the bank billed: regular purchases plus what was actually charged on discounted ones, less credits. Coupon purchases are not counted — no money left your account for them.",
+      "savedTotal": "Every shekel you did not pay: the full price of a coupon purchase, plus the gap on a billing discount. Credits are not counted here — the feed reports a returned purchase and a cashback identically.",
+      "sourceBlind": "This counts every purchase, including ones paid by coupon, so it comes to more than your bank statement total."
     }
   },
   "recommendations": {
@@ -390,7 +399,8 @@
       "notConnectedTitle": "Connect to get recommendations",
       "notConnectedSubtitle": "Link your bank account from the Insights tab to unlock personalized recommendations and savings analysis.",
       "tabTopMatches": "Top matches",
-      "tabMissedShops": "Missed discounts"
+      "tabMissedShops": "Missed discounts",
+      "tabAppliedDiscounts": "Discounts applied"
     },
     "topClubMatchesSlide": {
       "title": "Top club matches",
@@ -409,8 +419,8 @@
     },
     "missedShopsSlide": {
       "title": "Discounts you missed",
-      "subtitle": "{{amount}} spent at {{count}} shop that matched a deal from your clubs",
-      "subtitle_other": "{{amount}} spent across {{count}} shops that matched deals from your clubs",
+      "subtitle": "{{amount}} on {{count}} purchase that matched a deal from your clubs",
+      "subtitle_other": "{{amount}} on {{count}} purchases that matched deals from your clubs",
       "loading": "Checking which of your purchases had a discount waiting…",
       "empty": "Nothing missed this period — none of your purchases matched a club deal.",
       "spentLabel": "You paid",
@@ -446,8 +456,30 @@
         "title": "Why you are seeing this",
         "intro": "Your clubs run deals at specific shops. We compare the shop names on your card statement against the shops running those deals, so we can tell you when you paid full price somewhere your membership would have given you a discount.",
         "exact": "the shop you actually paid at, so the discount really was yours to claim.",
-        "similar": "only the kind of business matches — one coffee place against another. Take it as a tip for next time, not a discount you lost."
+        "similar": "only the kind of business matches — one coffee place against another. Take it as a tip for next time, not a discount you lost.",
+        "settled": "purchases you paid for with the club's own card, so the discount already came off at the till. Not something you missed — money you already saved.",
+        "applied": "Purchases paid for with a club's own card are not listed here — the discount already came off at the till, and they are gathered on the “Discounts applied” tab.",
+        "tabsOverlap": "the total above counts each purchase once. The numbers on the tabs count shops, and one purchase can match both your own shop and shops like it — so adding the tabs up gives a bigger number than the total.",
+        "bandsAddUp": "every purchase is counted once, under its strongest match — so the three tab numbers add up to exactly the total above."
       }
+    },
+    "appliedDiscountsSlide": {
+      "title": "Discounts you used",
+      "subtitle": "{{amount}} saved on {{count}} purchase you paid for with a club card",
+      "subtitle_other": "{{amount}} saved on {{count}} purchases you paid for with a club card",
+      "hint": "Purchases where your club card took the discount at the till.",
+      "loading": "Checking which purchases already used a discount…",
+      "empty": "No purchase this period was paid for with a club card.",
+      "spentLabel": "You Saved",
+      "purchaseCount": "{{count}} purchase",
+      "purchaseCount_other": "{{count}} purchases",
+      "infoDialog": {
+        "ariaLabel": "About applied discounts",
+        "title": "Why you are seeing this",
+        "intro": "These are purchases you paid for with the club's own card, so the discount already came off at the till. They are not chances you missed — they are money you already saved, which is why they are kept out of the missed-discounts list.",
+        "howWeKnow": "We tell from the charge itself: the sale settled and the card was billed nothing, which is what a purchase on a loaded נטען card looks like. The feed does not say which club is behind the card, so we do not name one."
+      },
+      "paidWith": "Paid with {{sources}}"
     }
   },
   "dealFinder": {

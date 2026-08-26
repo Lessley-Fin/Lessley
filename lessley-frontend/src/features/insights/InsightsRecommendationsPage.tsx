@@ -134,7 +134,8 @@ export function InsightsRecommendationsPage() {
       ) : (
         <>
           <SavingsHeroCard
-            totalSaved={spendingSaved?.total_saved ?? 0}
+            totalSaved={spendingSaved?.total_amount ?? 0}
+            breakdown={spendingSaved?.breakdown ?? []}
             periodLabel={periodLabel}
             clubsCount={profile?.clubs?.length ?? 0}
           />
@@ -142,7 +143,7 @@ export function InsightsRecommendationsPage() {
             transactionCount={spendingTotal?.purchase_count ?? 0}
             totalAmount={spendingTotal?.total_amount ?? 0}
             periodLabel={periodLabel}
-            composition={spendingTotal?.composition}
+            composition={spendingTotal?.mix}
           />
         </>
       )}
@@ -182,8 +183,9 @@ export function InsightsRecommendationsPage() {
                 </CarouselItem>
                 <CarouselItem>
                   <TransactionMixSlide
-                    composition={deepDiveTotal?.composition ?? []}
+                    composition={deepDiveTotal?.mix ?? []}
                     periodLabel={deepDivePeriodLabel}
+                    totalAmount={deepDiveTotal?.total_amount ?? 0}
                   />
                 </CarouselItem>
               </CarouselContent>

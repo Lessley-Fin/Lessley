@@ -18,7 +18,10 @@ export function TopCategorySlide({ categories }: TopCategorySlideProps) {
     return (
       <CarouselSlideCard title={t("insights.topCategorySlide.title")} subtitle={t("insights.topCategorySlide.subtitle")}>
         <p className="text-sm text-muted-foreground">{t("insights.topCategorySlide.empty")}</p>
-      </CarouselSlideCard>
+        <p className="px-1 pt-1 text-[11px] leading-relaxed text-muted-foreground">
+        {t("insights.explain.sourceBlind")}
+      </p>
+    </CarouselSlideCard>
     )
   }
 

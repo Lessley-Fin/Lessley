@@ -110,16 +110,16 @@ export interface ClubRecommendationResponse {
  */
 export type StoreMatchBand = "EXACT" | "STRONG" | "SIMILAR"
 
-export interface MissedShopPurchase {
+export interface SavingsPurchase {
   transaction_id: string
-  merchant_name: string
   amount: number
   date: string | null
-  /** Which account paid for it — resolve against {@link OpenFinanceAccount} to name it. */
   account_id?: string | null
+  /** Which kind of discount landed here. Empty on a missed purchase. */
+  source?: DiscountSource | ""
 }
 
-export interface MissedShop {
+export interface SavingsShop {
   store_id: string
   store_name: string
   match_band: StoreMatchBand
@@ -128,9 +128,66 @@ export interface MissedShop {
   deal_titles: string[]
   club_ids: string[]
   also_known_as: string[]
-  covered_transaction_count: number
-  covered_amount: number
-  purchases: MissedShopPurchase[]
+}
+
+/**
+ * One place the user shopped, already grouped, de-duplicated and totalled by the service.
+ *
+ * Every number here is final. Nothing on this screen re-adds, re-groups or re-counts any of
+ * it: two implementations of the same rules is two chances to disagree, and the app spent a
+ * while telling users they had missed a discount they had in fact taken because of exactly
+ * that. If a figure is needed and is not on this type, it belongs in the payload.
+ */
+export interface SavingsMerchant {
+  merchant_name: string
+  /** The band these purchases were counted under. Empty on an applied merchant. */
+  band: StoreMatchBand | ""
+  purchase_count: number
+  amount: number
+  deal_count: number
+  account_ids: string[]
+  /** Clubs the deals apply through. Always empty on an applied merchant — see below. */
+  club_ids: string[]
+  /** Which kinds of discount landed at this merchant. Empty on a missed merchant. */
+  sources: DiscountSource[]
+  shops: SavingsShop[]
+  purchases: SavingsPurchase[]
+}
+
+/**
+ * One band's merchants and its own subtotal.
+ *
+ * The subtotals add up to {@link MissedSavings.total_amount} exactly, because the service
+ * counts each purchase under its strongest band and nowhere else.
+ */
+export interface SavingsBand {
+  band: StoreMatchBand
+  total_amount: number
+  purchase_count: number
+  merchants: SavingsMerchant[]
+}
+
+export interface MissedSavings {
+  total_amount: number
+  purchase_count: number
+  bands: SavingsBand[]
+}
+
+/**
+ * Purchases a club's own card paid for, so the discount came off at the till.
+ *
+ * `club_ids` on these merchants is empty by design: the feed says no money left the account,
+ * which does not name the club behind the card. Never word these as "saved with <club>".
+ */
+export interface AppliedSavings {
+  total_amount: number
+  purchase_count: number
+  merchants: SavingsMerchant[]
+}
+
+export interface SavingsAnswer {
+  missed: MissedSavings
+  applied: AppliedSavings
 }
 
 export interface MccCategoryDto {
@@ -221,29 +278,52 @@ export interface SpendingPeriodComparison {
   difference: number
 }
 
+/** Which kind of row this is. The first three are all "the user simply paid"; the last three
+ *  each mean something different about the money. */
+export type TransactionKind = "ordinary" | "foreign" | "installment" | "statement" | "refund" | "coupon"
+
+/** Which kind of discount landed on a purchase. */
+export type DiscountSource = "coupon" | "statement"
+
 /** One kind of thing that happened in the period. Every countable transaction carries exactly
  *  one kind, so the counts sum to the transaction total and can be drawn as a proportional bar. */
 export interface TransactionMixEntry {
-  kind: "ordinary" | "foreign" | "installment" | "refund" | "voucher"
+  kind: TransactionKind
   count: number
-  /** What was bought, or for a refund, what came back. */
+  /** What the screen prints, always positive — a refund reads as what came back. */
   amount: number
+  /** The same money signed by which way it moved. Summing this column lands on
+   *  {@link SpendingTotalInsight.total_amount} exactly; a coupon contributes nothing. */
+  contributes: number
   /** foreign only — what the currency conversions cost in issuer markup. */
   markup_fees?: number
   /** installment only — how many distinct plans these payments belong to. */
   plan_count?: number
 }
 
+/** One part of a total, named by where it came from. */
+export interface SourceBreakdownEntry {
+  source: TransactionKind
+  count: number
+  amount: number
+}
+
 export interface SpendingTotalInsight {
-  /** Money that left the account, less money that came back. Excludes vouchers, which cost
-   *  nothing — so this is deliberately smaller than the sum of the per-category breakdowns. */
+  /** Exactly what the bank statement shows: billed, plus statement discounts at what was
+   *  actually charged, less refunds. Coupons are absent — no money left the account for them —
+   *  so this is deliberately smaller than the per-category and per-account breakdowns. */
   total_amount: number
   purchase_count: number
-  composition: TransactionMixEntry[]
+  /** regular + statement − refund. */
+  breakdown: SourceBreakdownEntry[]
+  mix: TransactionMixEntry[]
 }
 
 export interface SpendingSavedInsight {
-  total_saved: number
+  /** Coupons at the whole price they covered, plus the gap on a statement discount. Refunds
+   *  are not here: the feed reports a returned purchase and a cashback identically. */
+  total_amount: number
+  breakdown: SourceBreakdownEntry[]
 }
 
 export interface SpendingSavedByAccountInsight {

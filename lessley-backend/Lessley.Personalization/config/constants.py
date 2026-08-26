@@ -125,3 +125,31 @@ class SAVINGS:
     # Rounding slack on |original| / |charged|. Payments do not always divide evenly — the
     # issuer rounds the last one — so 4.000 and 3.998 are both four payments.
     INSTALLMENT_RATIO_TOLERANCE = 0.005
+
+
+class BENEFIT_CARDS:
+    """
+    Accounts that *are* a club's discount, rather than a way of having missed it.
+
+    A Hever נטען card only spends at Hever's partner shops, so a purchase charged to one
+    already carried the club's benefit. Reporting it back as a missed saving tells the user
+    to go and do the thing they just did.
+
+    Matched on the account's ``product``, because the transaction feed does not carry it —
+    a row names only ``accountId``, ``accountNumber`` and ``type: "CARD"``. The product string
+    lives on ``/open-finance/accounts``, which is why `InsightsService` has to fetch accounts
+    before it can answer this at all.
+
+    Only Hever is mapped, and its two catalogue clubs are both loading-bonus products, which
+    is exactly what a נטען card is. ``club_behatsdaa``, ``club_paisplus*`` and ``club_topcash``
+    are clubs we already hold, but nobody has yet seen what their accounts look like in the
+    feed — each is one line here once someone does.
+    """
+
+    # club id -> product keywords that identify that club's own benefit card.
+    # Matched as a normalised substring, not equality: the feed may well say 'חבר נטען'
+    # rather than a bare 'נטען', and we have never seen a real payload to settle it.
+    PRODUCT_KEYWORDS_BY_CLUB = {
+        "club_hever_gift_card_company": ("נטען",),
+        "club_hever_teamim_card_store": ("נטען",),
+    }

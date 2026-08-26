@@ -10,7 +10,8 @@ const KIND_PHRASE: Partial<Record<TransactionMixEntry["kind"], string>> = {
   foreign: "abroad",
   installment: "installments",
   refund: "refunded",
-  voucher: "vouchers",
+  statement: "discounted",
+  coupon: "coupons",
 }
 
 interface StatsGridCardProps {
@@ -54,6 +55,11 @@ export function StatsGridCard({
           <p className="text-xs text-muted-foreground">{t("insights.statsGrid.allLinkedCards")}</p>
         </div>
       </div>
+      {/* Inline, not behind an info button. A total that quietly leaves something out is worse
+          than one that says so where it is read. */}
+      <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+        {t("insights.explain.spendTotal")}
+      </p>
       {notable.length > 0 && (
         <p className="px-1 text-xs text-muted-foreground">
           {notable.join(t("insights.statsGrid.breakdownSeparator"))}

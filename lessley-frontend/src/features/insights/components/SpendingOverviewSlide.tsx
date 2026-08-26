@@ -141,6 +141,11 @@ export function SpendingOverviewSlide({ comparison, days }: SpendingOverviewSlid
           <SummaryIcon className={cn("mt-px size-4 shrink-0", summaryTone)} aria-hidden />
           <p className="text-xs leading-snug text-secondary-foreground">{summaryText}</p>
         </div>
+        {/* Both bars are the bank figure, so they read against the headline total rather than
+            against the per-category breakdowns, which count a coupon at its full worth. */}
+        <p className="shrink-0 text-[11px] leading-relaxed text-muted-foreground">
+          {t("insights.explain.spendTotal")}
+        </p>
       </div>
     </CarouselSlideCard>
   )

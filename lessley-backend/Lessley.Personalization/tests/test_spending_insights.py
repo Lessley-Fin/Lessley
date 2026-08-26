@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from models.transaction import AmountDetail, Transaction, TransactionAmount, TransactionDates
+from routers.responses import AppliedSavingsSchema, MissedSavingsSchema, SavingsAnswerSchema
 from services.insights_service import InsightsService
 
 
@@ -99,173 +100,127 @@ def test_spending_difference_splits_by_cutoff_date():
     assert result["difference"] == 60
 
 
-# ── Task 3: spending saved (charged vs original amount) ────────────────────────
+def test_the_period_comparison_reads_the_bank_figure_not_what_was_bought():
+    """
+    The overview compares what the bank billed, so it lines up with the headline total.
+
+    A coupon counts zero on both sides. Counting it at full price moved the bars for a period
+    the user paid nothing extra in, and left the overview disagreeing with the total above it.
+    """
+    service = _service()
+    recent = date.today() - timedelta(days=5)
+    transactions = [
+        _tx(tx_date=recent, charged=-100),
+        _tx(tx_date=recent, charged=None, original=-176.15),
+    ]
+
+    comparison = service.spending_difference_between_two_periods(transactions, days=30)
+
+    assert comparison["current_period_total"] == 100
+
+
+# ── Task 1: what the user did not have to pay ─────────────────────────────
 #
-# A gap between the two amounts is only a discount once a conversion, a refund, an installment
-# plan and a missing figure have been ruled out. Each of those produced a gap on real data, and
-# together they reported a year's savings as 51,499 against a total spend of 51,668.
-
-def test_spending_saved_counts_a_genuine_discount():
-    service = _service()
-    transactions = [_tx(charged=-47.81, original=-49.80)]
-
-    assert service.spending_saved(transactions) == pytest.approx(1.99)
+# Which gaps count as a discount is settled one row at a time in test_transaction_amounts.py.
+# What matters here is that the total and the breakdown beside it describe the same money.
 
 
-def test_spending_saved_equal_amounts_is_zero():
-    service = _service()
-    transactions = [_tx(charged=-50, original=-50)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_a_charge_larger_than_the_original():
-    service = _service()
-    transactions = [_tx(charged=-100, original=-90)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_counts_a_settled_purchase_that_was_never_billed():
-    """Nothing was charged and the row has settled: the voucher paid, so the price was saved."""
-    service = _service()
-    transactions = [_tx(charged=None, original=-40)]
-
-    assert service.spending_saved(transactions) == 40
-
-
-def test_spending_saved_ignores_a_charge_that_has_not_landed_yet():
-    """Before settlement the charge is still coming, so there is nothing saved to report."""
-    service = _service()
-    transactions = [_tx(charged=None, original=-40, status="PENDING")]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_treats_a_settled_zero_charge_like_a_blank_one():
-    """Billed exactly nothing and billed nothing at all say the same thing about what was paid."""
-    service = _service()
-    transactions = [_tx(charged=0.0, original=-40)]
-
-    assert service.spending_saved(transactions) == 40
-
-
-def test_spending_saved_ignores_a_currency_conversion():
-    """USD 20 billed as ILS 60.26 is a conversion, not ILS 40.26 saved."""
-    service = _service()
-    transactions = [_tx(charged=-60.26, charged_currency="ILS", original=-20.0, original_currency="USD")]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_an_installment_plan():
-    """ILS 3,728 charged as four payments of 932 is the full price, paid in four."""
-    service = _service()
-    transactions = [_tx(charged=-932, original=-3728)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_a_plan_whose_payments_do_not_divide_evenly():
-    """The issuer rounds the last payment, so a plan's ratio is near-integer, not exact."""
-    service = _service()
-    transactions = [_tx(charged=-333.34, original=-1000.0)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_ignores_a_refund():
-    """A credit mirrors the purchase; subtracting one from the other counts it twice."""
-    service = _service()
-    transactions = [_tx(charged=29.21, original=-29.21)]
-
-    assert service.spending_saved(transactions) == 0
-
-
-def test_spending_saved_sums_across_transactions():
+def test_spending_saved_splits_the_total_by_the_discount_that_did_it():
     service = _service()
     transactions = [
-        _tx(charged=-90, original=-100),
-        _tx(charged=-47.81, original=-49.80),
-        _tx(charged=None, original=-40, status="PENDING"),
+        _tx(charged=None, original=-176.15),   # coupon: the whole price
+        _tx(charged=-47.81, original=-49.80),  # statement: the gap
+        _tx(charged=-86, original=-86),        # regular: nothing
     ]
 
-    assert service.spending_saved(transactions) == pytest.approx(11.99)
+    saved = service.spending_saved(transactions)
+    rows = {row["source"]: row["amount"] for row in saved["breakdown"]}
+
+    assert saved["total_amount"] == pytest.approx(178.14)
+    assert rows["coupon"] == 176.15
+    assert rows["statement"] == pytest.approx(1.99)
+    assert sum(rows.values()) == pytest.approx(saved["total_amount"])
 
 
-def test_savings_exclusions_names_why_each_purchase_was_dropped():
+def test_spending_saved_leaves_refunds_out():
+    """
+    A returned purchase and a cashback arrive identically, so neither is counted as a saving.
+
+    Money coming back reduces what was spent instead — see the spending total below.
+    """
     service = _service()
-    transactions = [
-        _tx(charged=-90, original=-100),                                                    # counted
-        _tx(charged=-50, original=-50),                                                     # no gap
-        _tx(charged=None, original=-40, status="PENDING"),                                  # missing
-        _tx(charged=-60.26, charged_currency="ILS", original=-20.0, original_currency="USD"),  # fx
-        _tx(charged=-932, original=-3728),                                                  # installment
-        _tx(charged=29.21, original=-29.21),                                                # refund
-    ]
 
-    assert service.savings_exclusions(transactions) == {
-        "counted": 1,
-        "no_gap": 1,
-        "missing_amount": 1,
-        "foreign_currency": 1,
-        "installment_inferred": 1,
-        "refund": 1,
-    }
+    assert service.spending_saved([_tx(charged=29.21, original=-29.21)])["total_amount"] == 0
 
 
-# ── Vouchers count as activity everywhere except the headline total ────────────
-
-def test_an_account_used_only_for_vouchers_still_reports_its_activity():
-    """A voucher card reporting 0 spent was the whole complaint: it is used, so it must show."""
-    service = _service()
-    transactions = [
-        _tx(charged=-100, account_id="bank", account_number="****1"),
-        _tx(charged=None, original=-176.15, account_id="voucher", account_number="****2"),
-    ]
-
-    by_account = {row["accountId"]: row for row in service.top_spending_accounts(transactions)}
-
-    assert by_account["voucher"]["total_amount"] == pytest.approx(176.15)
-    assert by_account["voucher"]["total_count"] == 1
+# ── Tasks 2, 3 and 8: what the bank statement shows, and what it is made of ─────
 
 
-def test_the_headline_total_leaves_the_voucher_out():
-    """The same two purchases, under the question the total asks: only 100 left the bank."""
+def test_the_headline_total_is_what_the_bank_billed():
+    """
+    100 billed and 176.15 on a coupon → 100. No money left the account for the coupon.
+
+    Deliberately smaller than the per-category and per-account breakdowns, which count the
+    coupon at its full worth: they answer what the user buys, this answers what it cost them.
+    """
     service = _service()
     transactions = [
         _tx(charged=-100, account_id="bank"),
-        _tx(charged=None, original=-176.15, account_id="voucher"),
+        _tx(charged=None, original=-176.15, account_id="coupon"),
     ]
 
     total = service.spending_total(transactions)
 
     assert total["total_amount"] == 100
     assert total["purchase_count"] == 2
-    # ...while the composition beside it still describes the voucher as a thing that happened.
-    assert {row["kind"]: row["count"] for row in total["composition"]} == {"ordinary": 1, "voucher": 1}
 
 
-def test_the_headline_total_gives_back_what_was_reclaimed():
+def test_the_spend_breakdown_adds_up_to_the_headline():
     service = _service()
-    transactions = [_tx(charged=-100), _tx(charged=30.0)]
+    transactions = [
+        _tx(charged=-100),
+        _tx(charged=-47.81, original=-49.80),
+        _tx(charged=20.0),
+    ]
 
-    assert service.spending_total(transactions)["total_amount"] == 70
+    total = service.spending_total(transactions)
+    rows = {row["source"]: row["amount"] for row in total["breakdown"]}
+
+    assert rows["regular"] + rows["statement"] - rows["refund"] == pytest.approx(total["total_amount"])
 
 
-def test_a_refund_cancels_the_purchase_it_reverses_in_a_category():
-    """Four NUMASTAYS credits against one hotel charge: VACATION nets down, it does not ignore."""
+def test_the_mix_contributions_add_up_to_the_headline():
+    """
+    `contributes` is the column that reconciles; `amount` is the one the screen prints.
+
+    A client that had to know which rows to negate would be doing arithmetic of its own, which
+    is how the screen came to disagree with this service before.
+    """
     service = _service()
-    transactions = [_tx(charged=-1000), _tx(charged=250.0)]
+    transactions = [
+        _tx(charged=-100),
+        _tx(charged=None, original=-176.15),
+        _tx(charged=20.0),
+    ]
 
-    assert service.top_spending_categories(transactions)[0]["total_amount"] == 750
+    total = service.spending_total(transactions)
+
+    assert sum(row["contributes"] for row in total["mix"]) == pytest.approx(total["total_amount"])
 
 
-def test_a_refund_does_not_count_as_a_visit():
+def test_the_mix_shows_the_coupon_without_counting_it():
     service = _service()
-    transactions = [_tx(charged=-1000), _tx(charged=250.0)]
+    transactions = [_tx(charged=-100), _tx(charged=None, original=-176.15)]
 
-    assert service.top_spending_categories(transactions)[0]["total_count"] == 1
+    coupon = next(row for row in service.spending_total(transactions)["mix"] if row["kind"] == "coupon")
+
+    assert (coupon["amount"], coupon["contributes"]) == (176.15, 0.0)
+
+
+_EMPTY_ANSWER = SavingsAnswerSchema(
+    missed=MissedSavingsSchema(total_amount=0.0, purchase_count=0, bands=[]),
+    applied=AppliedSavingsSchema(total_amount=0.0, purchase_count=0, merchants=[]),
+)
 
 
 # ── Task 4: spending saved by account ───────────────────────────────────────────
@@ -296,21 +251,21 @@ def test_spending_saved_by_account_drops_the_same_gaps_as_the_total():
     assert result == [{"accountId": "acc1", "accountNumber": "****1", "total_saved": 10}]
 
 
-# ── missed-savings sorts transactions before matching shops ───────────────────
+# ── savings opportunities: what the orchestration hands the matching ──────────
 
-def _missed_savings_service(open_finance) -> InsightsService:
+def _savings_service(open_finance) -> InsightsService:
     service = _service(
         open_finance_service=open_finance,
         publisher_service=MagicMock(),
         user_repository=MagicMock(get_user_clubs=AsyncMock(return_value=["c1"])),
     )
-    # The matching itself is covered by its own tests; here we only care that the
-    # orchestration hands it correctly-sorted transactions.
-    service.missed_savings_by_store = MagicMock(return_value=[])
+    # The matching itself is covered by its own tests; here we only care that the orchestration
+    # hands it correctly-sorted transactions and the user's own clubs.
+    service.savings_opportunities = MagicMock(return_value=_EMPTY_ANSWER)
     return service
 
 
-async def test_missed_savings_sorts_real_transactions_before_matching():
+async def test_savings_opportunities_sorts_real_transactions_before_matching():
     fetched = [_tx(charged=1)]
     sorted_transactions = [_tx(charged=2)]
 
@@ -318,22 +273,42 @@ async def test_missed_savings_sorts_real_transactions_before_matching():
     open_finance.get_user_transactions_async = AsyncMock(return_value=fetched)
     open_finance.sort_transactions = MagicMock(return_value=sorted_transactions)
 
-    service = _missed_savings_service(open_finance)
+    service = _savings_service(open_finance)
 
-    await service.calculate_missed_savings_by_store_async("user@test.com", time_filter=True, days=7)
+    await service.calculate_savings_opportunities_async("user@test.com", time_filter=True, days=7)
 
     open_finance.sort_transactions.assert_called_once_with(fetched)
-    service.missed_savings_by_store.assert_called_once_with(sorted_transactions, user_club_ids=["c1"])
+    service.savings_opportunities.assert_called_once_with(sorted_transactions, user_club_ids=["c1"])
 
 
-async def test_missed_savings_does_not_sort_mock_data():
+async def test_savings_opportunities_does_not_sort_mock_data():
     open_finance = MagicMock()
     open_finance.sort_transactions = MagicMock()
-    service = _missed_savings_service(open_finance)
+    service = _savings_service(open_finance)
     service.files_service.read_json = MagicMock(return_value=[{"fake": "tx"}])
 
-    await service.calculate_missed_savings_by_store_async(
+    await service.calculate_savings_opportunities_async(
         "user@test.com", time_filter=True, days=7, use_mock=True
     )
 
     open_finance.sort_transactions.assert_not_called()
+
+
+async def test_savings_opportunities_never_reaches_for_the_accounts_feed():
+    """
+    The club card gives itself away in the transaction, so nothing here needs a second call.
+
+    Pinned because that call used to exist: it fetched an account `product` string to spot a
+    נטען card, against wording nobody had confirmed, and it could fail and take the whole
+    answer with it.
+    """
+    open_finance = MagicMock()
+    open_finance.get_user_transactions_async = AsyncMock(return_value=[_tx(charged=1)])
+    open_finance.sort_transactions = MagicMock(return_value=[_tx(charged=1)])
+    open_finance.get_user_accounts_async = AsyncMock()
+
+    service = _savings_service(open_finance)
+
+    await service.calculate_savings_opportunities_async("user@test.com", time_filter=True, days=7)
+
+    open_finance.get_user_accounts_async.assert_not_called()
