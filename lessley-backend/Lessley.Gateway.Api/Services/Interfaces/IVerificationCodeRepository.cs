@@ -13,4 +13,11 @@ public interface IVerificationCodeRepository
     Task UpdateAsync(VerificationCode code, CancellationToken ct = default);
 
     Task DeleteAsync(VerificationCode code, CancellationToken ct = default);
+
+    /// <summary>
+    /// Drops every live code for an address, whatever its purpose. On account deletion this stops
+    /// an unused reset or sign-in code outliving the account and greeting whoever registers the
+    /// address next.
+    /// </summary>
+    Task DeleteByEmailAsync(string normalizedEmail, CancellationToken ct = default);
 }

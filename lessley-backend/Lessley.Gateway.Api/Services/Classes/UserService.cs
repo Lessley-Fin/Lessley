@@ -12,17 +12,20 @@ public class UserService : IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserTagService _userTagService;
     private readonly IPersonalizationService _personalizationService;
+    private readonly IAccountDeletionService _accountDeletionService;
     private readonly ApplicationDbContext _db;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
         IUserTagService userTagService,
         IPersonalizationService personalizationService,
+        IAccountDeletionService accountDeletionService,
         ApplicationDbContext db)
     {
         _userManager            = userManager;
         _userTagService         = userTagService;
         _personalizationService = personalizationService;
+        _accountDeletionService = accountDeletionService;
         _db                     = db;
     }
 
@@ -133,4 +136,11 @@ public class UserService : IUserService
             matchLevel = user.MatchingScore.ToMatchLevel(),
         });
     }
+
+    // Deletion keeps its own service: re-authentication, the Open Finance revoke and the cascade
+    // across five collections are one cohesive job that would otherwise double this class's
+    // dependencies for a path most callers never take.
+    public Task<AccountDeletionResult> DeleteMyAccountAsync(
+        string email, DeleteAccountDto dto, CancellationToken ct = default)
+        => _accountDeletionService.DeleteAsync(email, dto, ct);
 }

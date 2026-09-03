@@ -1,5 +1,6 @@
 ﻿using Lessley.Gateway.Api.Contracts;
 using Lessley.Gateway.Api.Services.Interfaces;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -131,6 +132,70 @@ namespace Lessley.Gateway.Api.Services.Classes
                 Uri.IsWellFormedUriString(requested, UriKind.Relative);
 
             return isSafeRelativePath ? new Uri(baseUri, requested).ToString() : baseUri.ToString();
+        }
+
+        public async Task<IReadOnlyList<string>> GetConnectionIdsAsync(string username, CancellationToken ct = default)
+        {
+            var accessToken = await CreateAccessToken(username);
+            return await ListConnectionIdsAsync(accessToken, ct);
+        }
+
+        public async Task CloseAllConnectionsAsync(string username, CancellationToken ct = default)
+        {
+            // One token covers the listing and every delete that follows. The read paths mint
+            // their own per call, which is fine for a single request — here it would cost an
+            // extra round trip for each connection the user holds.
+            var accessToken   = await CreateAccessToken(username);
+            var connectionIds = await ListConnectionIdsAsync(accessToken, ct);
+
+            if (connectionIds.Count == 0)
+            {
+                _logger.LogInformation("Open Finance reported no connections to close");
+                return;
+            }
+
+            foreach (var connectionId in connectionIds)
+            {
+                using var request = new HttpRequestMessage(
+                    HttpMethod.Delete, $"v2/connections/{Uri.EscapeDataString(connectionId)}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                using var response = await _httpClient.SendAsync(request, ct);
+
+                // Already gone is the outcome we wanted, not a failure. Closing has to stay
+                // idempotent: a retry after a partially completed run must not be blocked by
+                // the connections the first run succeeded in closing.
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogInformation(
+                        "Open Finance connection {ConnectionId} was already closed", connectionId);
+                    continue;
+                }
+
+                response.EnsureSuccessStatusCode();
+                _logger.LogInformation("Closed Open Finance connection {ConnectionId}", connectionId);
+            }
+        }
+
+        /// <summary>Lists a user's connection ids with a token already minted for them.</summary>
+        private async Task<IReadOnlyList<string>> ListConnectionIdsAsync(string accessToken, CancellationToken ct)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "v2/connections");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using var response = await _httpClient.SendAsync(request, ct);
+            response.EnsureSuccessStatusCode();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var res = await response.Content.ReadFromJsonAsync<OpenFinanceConnectionsResponse>(options, ct);
+
+            // The token is minted for one userId, so the listing is already scoped to that user.
+            return res?.Items
+                       .Select(c => c.Identifier)
+                       .Where(id => !string.IsNullOrWhiteSpace(id))
+                       .Select(id => id!)
+                       .ToList()
+                   ?? new List<string>();
         }
 
         public async Task<OBTransactionsResponse> GetTransactions(string username)

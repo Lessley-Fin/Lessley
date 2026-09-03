@@ -62,6 +62,18 @@ public class NotificationRepository : INotificationRepository
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task DeleteByUserAsync(string userId, CancellationToken ct = default)
+    {
+        var owned = await _db.Notifications
+            .Where(n => n.UserId == userId)
+            .ToListAsync(ct);
+
+        if (owned.Count == 0) return;
+
+        _db.Notifications.RemoveRange(owned);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default)
         => _db.Notifications
               .Where(n => n.UserId == userId && n.Type == "calc" && n.CalcType == calcType)

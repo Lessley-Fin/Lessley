@@ -289,6 +289,110 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    // ── DELETE /api/user/me ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// The body exactly as the SPA sends it (features/user/api.ts) — camelCase, and the
+    /// identifier as confirmation rather than as identity.
+    /// </summary>
+    private static HttpRequestMessage DeleteAccountRequest(
+        string userNameOrEmail, string password, bool closeConnection = false)
+        => new(HttpMethod.Delete, "api/user/me")
+        {
+            Content = JsonContent.Create(new
+            {
+                userNameOrEmail,
+                password,
+                closeOpenFinanceConnection = closeConnection,
+            }),
+        };
+
+    [Fact]
+    public async Task DeleteMyAccount_WithOwnCredentials_RemovesTheUser()
+    {
+        var email = await CreateUserAsync();
+        var token = NotificationE2ETests.BuildJwt("delete-me", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var response = await http.SendAsync(DeleteAccountRequest(email, "Test1234!"));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.Null(await userManager.FindByEmailAsync(email));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_WrongPassword_Returns400AndKeepsTheAccount()
+    {
+        // Deliberately not 401: the SPA reads a 401 as an expired session and signs the user
+        // out, so a mistyped password would end the session instead of showing an error.
+        var email = await CreateUserAsync();
+        var token = NotificationE2ETests.BuildJwt("delete-wrong-pw", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var response = await http.SendAsync(DeleteAccountRequest(email, "NotMyPassword1!"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.NotNull(await userManager.FindByEmailAsync(email));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_SomeoneElsesIdentifier_Returns400AndKeepsBothAccounts()
+    {
+        var email      = await CreateUserAsync();
+        var otherEmail = await CreateUserAsync();
+        var token      = NotificationE2ETests.BuildJwt("delete-other", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var response = await http.SendAsync(DeleteAccountRequest(otherEmail, "Test1234!"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.NotNull(await userManager.FindByEmailAsync(email));
+        Assert.NotNull(await userManager.FindByEmailAsync(otherEmail));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_WithoutToken_Returns401()
+    {
+        using var http = _factory.CreateClient();
+
+        var response = await http.SendAsync(DeleteAccountRequest("someone@test.com", "Test1234!"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_MissingPassword_Returns400()
+    {
+        var email = await CreateUserAsync();
+        var token = NotificationE2ETests.BuildJwt("delete-no-pw", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, "api/user/me")
+        {
+            Content = JsonContent.Create(new { userNameOrEmail = email }),
+        };
+        var response = await http.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<string> CreateUserAsync()

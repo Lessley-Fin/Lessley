@@ -788,6 +788,8 @@
       "qaDesc": "איך לסלי עובדת",
       "logoutTitle": "התנתקות",
       "logoutDesc": "סיום ההפעלה הנוכחית",
+      "deleteAccountTitle": "מחיקת חשבון",
+      "deleteAccountDesc": "הסרה לצמיתות של החשבון שלכם",
       "adminConsoleTitle": "מסוף ניהול",
       "adminConsoleDesc": "תפקידים, תגיות והתראות"
     },
@@ -806,6 +808,29 @@
       "signedInAs": "מחוברים בתור {{username}}",
       "notice": "התנתקות שומרת על המידע שלכם בטוח במכשיר הזה — המועדונים, ההעדפות והכרטיסים המחוברים נשארים בדיוק כפי שהם.",
       "signOut": "התנתקות"
+    },
+    "deleteAccount": {
+      "title": "מחיקת החשבון שלכם",
+      "warning": "הפעולה מוחקת לצמיתות את חשבון לסלי שלכם, את ההעדפות ואת היסטוריית ההתראות. לא ניתן לבטל אותה.",
+      "deleteButton": "מחיקת החשבון שלי",
+      "optionsTitle": "מה לעשות עם החיבור לבנק?",
+      "optionLessleyOnly": "למחוק רק את חשבון לסלי",
+      "optionLessleyOnlyDesc": "החיבור לבנק יישאר פתוח, ויחכה לכם אם תירשמו שוב.",
+      "optionWithConnection": "לסגור גם את החיבור לבנק",
+      "optionWithConnectionDesc": "מבטל את גישת הקריאה בלבד שנתתם לבנק שלכם.",
+      "credentialsTitle": "אימות הזהות שלכם",
+      "identifierLabel": "שם משתמש או אימייל",
+      "passwordLabel": "סיסמה",
+      "confirmTitle": "אתם בטוחים?",
+      "confirmBody": "החשבון שלכם וכל מה שבתוכו יימחקו מיד. לא ניתן לבטל את הפעולה.",
+      "confirmWithConnection": "גם החיבור לבנק ייסגר.",
+      "confirmWithoutConnection": "החיבור לבנק יישאר פתוח.",
+      "confirmButton": "כן, מחקו את החשבון שלי",
+      "deleting": "מוחק...",
+      "invalidCredentials": "שם המשתמש או הסיסמה אינם נכונים. שום דבר לא נמחק.",
+      "lockedOut": "יותר מדי ניסיונות שגויים. החשבון נעול לזמן קצר — נסו שוב מאוחר יותר.",
+      "connectionCloseFailed": "לא הצלחנו לסגור את החיבור לבנק, ולכן שום דבר לא נמחק. נסו שוב.",
+      "genericError": "משהו השתבש ושום דבר לא נמחק. נסו שוב."
     },
     "preferences": {
       "loyaltyClubs": "מועדוני נאמנות",

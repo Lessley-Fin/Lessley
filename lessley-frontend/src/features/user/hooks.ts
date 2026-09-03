@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuthStore } from "@/features/auth/store"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchMyProfile, initOpenFinanceConnection, patchMyProfile } from "./api"
+import { deleteMyAccount, fetchMyProfile, initOpenFinanceConnection, patchMyProfile } from "./api"
 
 export function useMyProfile() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -39,5 +39,21 @@ export function useUpdateMyProfile() {
 export function useInitOpenFinance() {
   return useMutation({
     mutationFn: initOpenFinanceConnection,
+  })
+}
+
+export function useDeleteAccount() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteMyAccount,
+    onSuccess: () => {
+      // Every cached query belongs to an account that no longer exists — dropping the whole
+      // cache is the only way none of it is handed to the next person who signs in on this
+      // device. Sign-out normally leaves the cache alone, which is fine when the data is still
+      // the same user's.
+      queryClient.clear()
+      useAuthStore.getState().logout()
+    },
   })
 }

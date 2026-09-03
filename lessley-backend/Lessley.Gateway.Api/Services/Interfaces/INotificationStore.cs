@@ -10,6 +10,8 @@ public interface INotificationRepository
     Task<List<Notification>> GetByUserAsync(string userId, CancellationToken ct = default);
     Task<bool> MarkAsReadAsync(ObjectId id, string userId, CancellationToken ct = default);
     Task MarkAllAsReadAsync(string userId, CancellationToken ct = default);
+    /// <summary>Removes every notification held for a user. Used when the account is deleted.</summary>
+    Task DeleteByUserAsync(string userId, CancellationToken ct = default);
     Task<Notification?> GetLatestCalcAsync(string userId, string calcType, CancellationToken ct = default);
     Task<List<Notification>> GetAllCalcAsync(string userId, CancellationToken ct = default);
 }

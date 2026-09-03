@@ -97,6 +97,7 @@ builder.Services.AddScoped<IPersonalizationService, PersonalizationService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAccountDeletionService, AccountDeletionService>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISendNotificationService, SendNotificationService>();

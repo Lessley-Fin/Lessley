@@ -26,4 +26,11 @@ public interface IUserService
     /// <summary>Returns the user's selected loyalty clubs, or null if the user does not exist.</summary>
     Task<List<string>?> GetUserClubsAsync(string email, CancellationToken ct = default);
     Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes the caller's own account, optionally revoking their Open Finance consent with it.
+    /// Returns its own result type — the outcomes here (wrong password, provider unreachable) map
+    /// to status codes <see cref="UserOperationResult"/> has no case for.
+    /// </summary>
+    Task<AccountDeletionResult> DeleteMyAccountAsync(string email, DeleteAccountDto dto, CancellationToken ct = default);
 }
