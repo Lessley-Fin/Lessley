@@ -19,5 +19,11 @@ public interface IAuthSessionService
     /// <summary>Revokes every live refresh token for a user (password change, theft response).</summary>
     Task RevokeAllRefreshTokensAsync(string userId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Removes every refresh token for a user, revoked ones included. Revoking is enough while
+    /// the account survives; deletion has to leave nothing keyed to it behind.
+    /// </summary>
+    Task DeleteAllRefreshTokensAsync(string userId, CancellationToken ct = default);
+
     Task<List<string>> GetRolesAsync(string userId, CancellationToken ct = default);
 }

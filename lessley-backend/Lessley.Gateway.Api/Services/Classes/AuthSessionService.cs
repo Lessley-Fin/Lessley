@@ -44,6 +44,18 @@ public class AuthSessionService : IAuthSessionService
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task DeleteAllRefreshTokensAsync(string userId, CancellationToken ct = default)
+    {
+        var owned = await _db.RefreshTokens
+            .Where(r => r.UserId == userId)
+            .ToListAsync(ct);
+
+        if (owned.Count == 0) return;
+
+        _db.RefreshTokens.RemoveRange(owned);
+        await _db.SaveChangesAsync(ct);
+    }
+
     // UserManager.GetRolesAsync emits a Join the MongoDB EF provider cannot translate, so roles
     // are resolved with the two-step (query + Contains) pattern used elsewhere in the Gateway.
     public async Task<List<string>> GetRolesAsync(string userId, CancellationToken ct = default)

@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using Lessley.Gateway.Api.Configuration;
 using Lessley.Gateway.Api.Controllers;
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -19,7 +21,8 @@ public class UserControllerTests
     {
         _controller = new UserController(
             _userService.Object,
-            _openFinanceService.Object);
+            _openFinanceService.Object,
+            Options.Create(new AuthConfig()));
 
         SetCallerContext("user@test.com", "Admin");
     }
@@ -75,5 +78,60 @@ public class UserControllerTests
         var result = await _controller.UpdateUser(new UpdateUserDto(null, null, null));
 
         Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    // ── DeleteMyAccount (DELETE /api/user/me) ─────────────────────────────────
+
+    private void DeletionReturns(AccountDeletionResult result) =>
+        _userService
+            .Setup(s => s.DeleteMyAccountAsync("user@test.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+    [Fact]
+    public async Task DeleteMyAccount_Success_Returns204AndClearsTheAuthCookies()
+    {
+        DeletionReturns(AccountDeletionResult.Ok());
+
+        var result = await _controller.DeleteMyAccount();
+
+        Assert.IsType<NoContentResult>(result);
+
+        // Deleting the cookies means expiring them, which shows up as Set-Cookie headers.
+        var setCookies = _controller.Response.Headers["Set-Cookie"].ToString();
+        Assert.Contains("access_token=", setCookies);
+        Assert.Contains("refresh_token=", setCookies);
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_TakesTheEmailFromTheJwtAndNothingElse()
+    {
+        // The action has no body parameter at all, so the deleted account can only ever be the
+        // one the token names — asserted here so a "convenience" DTO cannot creep back in.
+        DeletionReturns(AccountDeletionResult.Ok());
+
+        await _controller.DeleteMyAccount();
+
+        _userService.Verify(
+            s => s.DeleteMyAccountAsync("user@test.com", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_OpenFinanceFailed_Returns502()
+    {
+        DeletionReturns(AccountDeletionResult.OpenFinance("provider down"));
+
+        var result = await _controller.DeleteMyAccount();
+
+        Assert.Equal(StatusCodes.Status502BadGateway, Assert.IsType<ObjectResult>(result).StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_UserNotFound_Returns404()
+    {
+        DeletionReturns(AccountDeletionResult.NotFound());
+
+        var result = await _controller.DeleteMyAccount();
+
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

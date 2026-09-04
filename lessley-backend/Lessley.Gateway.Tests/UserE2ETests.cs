@@ -289,6 +289,89 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    // ── DELETE /api/user/me ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task DeleteMyAccount_RemovesTheUserAndClosesTheBankConnection()
+    {
+        var email = await CreateUserAsync();
+        var token = NotificationE2ETests.BuildJwt("delete-me", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        // No body at all — exactly what the SPA sends (features/user/api.ts).
+        var response = await http.DeleteAsync("api/user/me");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Contains(email, _factory.OpenFinance.ClosedFor);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.Null(await userManager.FindByEmailAsync(email));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_DeletesTheTokensOwnAccount_NotOneNamedInABody()
+    {
+        // A leftover body naming someone else must change nothing: identity is the JWT's email.
+        var email      = await CreateUserAsync();
+        var otherEmail = await CreateUserAsync();
+        var token      = NotificationE2ETests.BuildJwt("delete-other", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, "api/user/me")
+        {
+            Content = JsonContent.Create(new { userNameOrEmail = otherEmail }),
+        };
+        var response = await http.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.Null(await userManager.FindByEmailAsync(email));
+        Assert.NotNull(await userManager.FindByEmailAsync(otherEmail));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_BankConnectionCannotBeClosed_Returns502AndKeepsTheAccount()
+    {
+        var email = await CreateUserAsync();
+        var token = NotificationE2ETests.BuildJwt("delete-of-down", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        _factory.OpenFinance.CloseFailure = new HttpRequestException("provider down");
+        try
+        {
+            var response = await http.DeleteAsync("api/user/me");
+
+            Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        }
+        finally
+        {
+            _factory.OpenFinance.CloseFailure = null;
+        }
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.NotNull(await userManager.FindByEmailAsync(email));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_WithoutToken_Returns401()
+    {
+        using var http = _factory.CreateClient();
+
+        var response = await http.DeleteAsync("api/user/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<string> CreateUserAsync()

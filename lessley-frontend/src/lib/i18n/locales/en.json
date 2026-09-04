@@ -774,6 +774,8 @@
       "qaDesc": "How Lessley works",
       "logoutTitle": "Log out",
       "logoutDesc": "End this session",
+      "deleteAccountTitle": "Delete account",
+      "deleteAccountDesc": "Permanently remove your account",
       "adminConsoleTitle": "Admin console",
       "adminConsoleDesc": "Roles, tags and notifications"
     },
@@ -792,6 +794,18 @@
       "signedInAs": "Signed in as {{username}}",
       "notice": "Signing out keeps your data safe on this device — your clubs, preferences and connected cards stay exactly as they are.",
       "signOut": "Sign out"
+    },
+    "deleteAccount": {
+      "title": "Delete your account",
+      "warning": "This removes your Lessley account, your preferences and your notification history for good. It cannot be undone.",
+      "deleteButton": "Delete my account",
+      "confirmTitle": "Are you sure?",
+      "confirmBody": "Your Lessley account and your bank connection will both be deleted immediately. This cannot be undone.",
+      "confirmCodeLabel": "Type the code above to confirm",
+      "confirmButton": "Yes, delete my account",
+      "deleting": "Deleting...",
+      "connectionCloseFailed": "We could not close your bank connection, so nothing was deleted. Please try again.",
+      "genericError": "Something went wrong and nothing was deleted. Please try again."
     },
     "preferences": {
       "loyaltyClubs": "Loyalty clubs",

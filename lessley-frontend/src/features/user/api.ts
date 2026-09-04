@@ -50,3 +50,15 @@ export async function patchMyProfile(body: PatchMeRequest): Promise<PatchMeRespo
 export async function initOpenFinanceConnection(): Promise<ConnectionInitResponse> {
   return apiFetch<ConnectionInitResponse>("/api/v1/User/init", { method: "POST" })
 }
+
+/**
+ * Permanently deletes the signed-in account, along with its bank connection. Answers 204 with
+ * the auth cookies cleared.
+ *
+ * Sends no body on purpose: the account deleted is the one in the session, and the confirmation
+ * the user types is checked here in the client. A 502 means the bank connection could not be
+ * closed and *nothing* was deleted.
+ */
+export async function deleteMyAccount(): Promise<void> {
+  return apiFetch<void>("/api/v1/User/me", { method: "DELETE" })
+}

@@ -1,3 +1,4 @@
+using Lessley.Gateway.Api.Contracts;
 using Lessley.Gateway.Api.Data;
 using Lessley.Gateway.Api.Middleware;
 using Lessley.Gateway.Api.Services.Interfaces;
@@ -38,6 +39,46 @@ public sealed class FakePersonalizationService : IPersonalizationService
 
 }
 
+/// <summary>
+/// Stand-in for the Open Finance provider so tests don't make outbound HTTP calls. Only the
+/// connection-closing path is implemented: account deletion always revokes the bank consent, so
+/// every E2E delete goes through here. The read paths throw rather than return a lie — a test
+/// that starts needing them should say so loudly.
+/// </summary>
+public sealed class FakeOpenFinanceService : IOpenFinanceService
+{
+    private readonly List<string> _closedFor = new();
+
+    /// <summary>Usernames whose connections were closed, in order.</summary>
+    public IReadOnlyList<string> ClosedFor
+    {
+        get { lock (_closedFor) return _closedFor.ToList(); }
+    }
+
+    /// <summary>Set to make every close fail, standing in for an unreachable provider.</summary>
+    public Exception? CloseFailure { get; set; }
+
+    public Task<string> CreateAccessToken(string username) => Task.FromResult("fake-access-token");
+
+    public Task<OBTransactionsResponse> GetTransactions(string username) =>
+        throw new NotSupportedException("FakeOpenFinanceService only implements connection closing.");
+
+    public Task<ConnectionResponse> InitiateConnectionJourney(string username, string? redirectUrl = null) =>
+        throw new NotSupportedException("FakeOpenFinanceService only implements connection closing.");
+
+    public Task<IReadOnlyList<string>> GetConnectionIdsAsync(string username, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+    public Task CloseAllConnectionsAsync(string username, CancellationToken ct = default)
+    {
+        if (CloseFailure is not null)
+            return Task.FromException(CloseFailure);
+
+        lock (_closedFor) _closedFor.Add(username);
+        return Task.CompletedTask;
+    }
+}
+
 public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
 {
     internal const string JwtKey = "e2e-test-secret-key-must-be-at-least-32-chars!!";
@@ -48,6 +89,9 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
     private readonly string _dbName = $"GatewayE2ETestDb_{Guid.NewGuid():N}";
 
     public readonly FakePersonalizationService PersonalizationService = new();
+
+    /// <summary>Lets tests see (and fail) the bank-consent revoke that deletion always runs.</summary>
+    public readonly FakeOpenFinanceService OpenFinance = new();
 
     /// <summary>Lets tests read the verification codes the auth flows "emailed".</summary>
     public readonly CapturingEmailSender Emails = new();
@@ -75,6 +119,9 @@ public class GatewayWebApplicationFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<IPersonalizationService>();
             services.AddSingleton<IPersonalizationService>(PersonalizationService);
+
+            services.RemoveAll<IOpenFinanceService>();
+            services.AddSingleton<IOpenFinanceService>(OpenFinance);
 
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
