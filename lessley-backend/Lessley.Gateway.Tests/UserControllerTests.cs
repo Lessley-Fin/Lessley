@@ -15,6 +15,7 @@ public class UserControllerTests
 {
     private readonly Mock<IUserService> _userService = new();
     private readonly Mock<IOpenFinanceService> _openFinanceService = new();
+    private readonly Mock<IPersonalizationService> _personalizationService = new();
     private readonly UserController _controller;
 
     public UserControllerTests()
@@ -22,6 +23,7 @@ public class UserControllerTests
         _controller = new UserController(
             _userService.Object,
             _openFinanceService.Object,
+            _personalizationService.Object,
             Options.Create(new AuthConfig()));
 
         SetCallerContext("user@test.com", "Admin");

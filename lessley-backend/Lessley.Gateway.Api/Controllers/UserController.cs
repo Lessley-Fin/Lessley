@@ -19,15 +19,18 @@ public class UserController : ControllerBase
     private readonly IUserService _userService;
     private readonly IOpenFinanceService _openFinanceService;
     private readonly AuthConfig _authConfig;
+    private readonly IPersonalizationService _personalizationService;
 
     public UserController(
         IUserService userService,
         IOpenFinanceService openFinanceService,
+        IPersonalizationService personalizationService,
         IOptions<AuthConfig> authConfig)
     {
         _userService        = userService;
         _openFinanceService = openFinanceService;
         _authConfig         = authConfig.Value;
+        _personalizationService = personalizationService;
     }
 
     /// <summary>Returns the full configuration for the authenticated user.</summary>
@@ -50,6 +53,27 @@ public class UserController : ControllerBase
     {
         var connection = await _openFinanceService.InitiateConnectionJourney(CallerEmail());
         return Ok(connection);
+    }
+
+    /// <summary>Asks Personalization to recalculate the authenticated user's spending categories.</summary>
+    /// <remarks>
+    /// The client calls this when it sees a linked bank but no stored categories — the state a
+    /// brand-new user is left in. Both automatic triggers fire before Open Finance can answer:
+    /// registration runs before the user has linked anything, and the bank-journey trigger runs
+    /// as the journey *starts*, not when consent lands. Neither can see any transactions, so
+    /// neither produces tags, and nothing else asks again before the weekly sweep.
+    ///
+    /// Accepted rather than Ok: this publishes a command and computes nothing. The tags travel
+    /// back over the bus and reach the client as a CategoriesUpdated push, so a caller that
+    /// re-reads its profile on this response will still see the old value.
+    /// </remarks>
+    [HttpPost("recalculate-categories")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RequestCategoryRecalculation(CancellationToken ct = default)
+    {
+        await _personalizationService.TriggerCalculateUserCategoriesAsync(CallerEmail(), ct: ct);
+        return Accepted();
     }
 
     /// <summary>Updates the authenticated user's settings: loyalty clubs, match level, or muted categories.</summary>

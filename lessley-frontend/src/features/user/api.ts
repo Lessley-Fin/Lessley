@@ -62,3 +62,13 @@ export async function initOpenFinanceConnection(): Promise<ConnectionInitRespons
 export async function deleteMyAccount(): Promise<void> {
   return apiFetch<void>("/api/v1/User/me", { method: "DELETE" })
 }
+
+/**
+ * Asks the Gateway to recalculate this user's spending categories.
+ *
+ * Nothing useful comes back: the Gateway publishes a command and answers 202 while the
+ * calculation is still travelling the bus. The tags arrive later as a CategoriesUpdated push.
+ */
+export async function requestCategoryRecalculation(): Promise<void> {
+  await apiFetch<void>("/api/v1/User/recalculate-categories", { method: "POST" })
+}

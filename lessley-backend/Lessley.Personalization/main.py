@@ -145,6 +145,23 @@ async def _handle_gateway_command(routing_key: str, data: dict) -> None:
                     "extra_data": {"user_id": user_id, "existing_tag_count": len(existing)},
                 },
             )
+        else:
+            # A user who has never been tagged and produced nothing this time. Usually a new
+            # account whose bank data has not landed yet: both the registration and the
+            # bank-journey trigger fire before Open Finance can answer, so the first
+            # calculations of a user's life legitimately come back empty.
+            #
+            # Logged because this path used to return in silence, which made a first-run
+            # failure indistinguishable from one that never ran. Info, not warning — for a user
+            # with no bank linked this is the correct and expected outcome, and the client asks
+            # again once accounts appear.
+            logger.warning(
+                "Calculation returned no categories for a user who has none — nothing to store",
+                extra={
+                    "reason": "Empty result for an untagged user",
+                    "extra_data": {"user_id": user_id},
+                },
+            )
     else:
         logger.warning("Unhandled Gateway command routing key: %s", routing_key)
 

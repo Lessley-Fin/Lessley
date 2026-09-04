@@ -1,5 +1,7 @@
+import { useEffect } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
+import { useMyProfile, useRecalculateCategories } from "@/features/user/hooks"
 import { queryKeys } from "@/lib/query-keys"
 import {
   checkHasConnection,
@@ -132,4 +134,37 @@ export function useSavingsOpportunities(days: number, enabled: boolean) {
     queryFn: () => fetchSavingsOpportunities(days),
     enabled,
   })
+}
+
+/**
+ * Recovers the one state no server-side trigger can reach: a linked bank with no stored tags.
+ *
+ * Both automatic triggers fire before Open Finance has anything to give. Registration runs
+ * before the user has linked a bank at all, and the bank-journey trigger runs as the journey
+ * *starts* rather than when consent lands — there is no provider callback to hang it on. So a
+ * genuinely new user finishes onboarding with an empty tag list and nothing scheduled to fix it
+ * before the weekly sweep. This asks again from the client, which is the only vantage point
+ * that exists after the transactions have actually synced.
+ *
+ * Self-limiting: the request is what makes its own condition false. Once tags are written the
+ * Gateway pushes CategoriesUpdated, the profile is refetched, and `tagCount` stops being 0.
+ *
+ * `tagCount` is a number rather than the array itself on purpose — react-query hands back a
+ * fresh array reference on every refetch, so depending on `profile.tags` would re-fire this on
+ * each background refresh instead of once per mount.
+ */
+export function useCategoryBackfill() {
+  const { data: isConnected } = useHasConnection()
+  const { data: profile } = useMyProfile()
+  const { mutate } = useRecalculateCategories()
+
+  const connected = isConnected === true
+  const tagCount = profile?.tags.length
+
+  useEffect(() => {
+    // Neither loading state can trigger a request: `tagCount` is undefined until the profile
+    // lands, and checkHasConnection reports false when the accounts call fails.
+    if (!connected || tagCount !== 0) return
+    mutate()
+  }, [connected, tagCount, mutate])
 }

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { ConnectionCheck } from "@/features/insights/components/ConnectionCheck"
 import {
+  useCategoryBackfill,
   useHasConnection,
   useMatchingClubs,
   useSavingsOpportunities,
@@ -35,6 +36,9 @@ export function RecommendationsPage() {
 
   const { data: isConnected, isLoading: checkingConnection } = useHasConnection()
   const connected = isConnected === true
+
+  // Onboarding can leave a new user with a linked bank and no categories; ask again from here.
+  useCategoryBackfill()
 
   const { data: clubData } = useMatchingClubs(connected)
   const [savingsDays, setSavingsDays] = useState<number>(INSIGHTS_DEFAULTS.DEFAULT_TIME_RANGE_DAYS)
