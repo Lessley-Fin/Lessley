@@ -137,10 +137,9 @@ public class UserService : IUserService
         });
     }
 
-    // Deletion keeps its own service: re-authentication, the Open Finance revoke and the cascade
-    // across five collections are one cohesive job that would otherwise double this class's
-    // dependencies for a path most callers never take.
-    public Task<AccountDeletionResult> DeleteMyAccountAsync(
-        string email, DeleteAccountDto dto, CancellationToken ct = default)
-        => _accountDeletionService.DeleteAsync(email, dto, ct);
+    // Deletion keeps its own service: the Open Finance revoke and the cascade across five
+    // collections are one cohesive job that would otherwise double this class's dependencies
+    // for a path most callers never take.
+    public Task<AccountDeletionResult> DeleteMyAccountAsync(string email, CancellationToken ct = default)
+        => _accountDeletionService.DeleteAsync(email, ct);
 }

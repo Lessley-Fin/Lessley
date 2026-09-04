@@ -1,7 +1,6 @@
 using Lessley.Gateway.Api.Models;
 using Lessley.Gateway.Api.Services.Classes;
 using Lessley.Gateway.Api.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -15,7 +14,6 @@ public class AccountDeletionServiceTests
     private const string UserName = "tester";
 
     private readonly Mock<UserManager<ApplicationUser>> _userManager;
-    private readonly Mock<SignInManager<ApplicationUser>> _signInManager;
     private readonly Mock<IOpenFinanceService> _openFinance = new();
     private readonly Mock<INotificationRepository> _notifications = new();
     private readonly Mock<IAuthSessionService> _sessions = new();
@@ -39,19 +37,12 @@ public class AccountDeletionServiceTests
         _userManager = new Mock<UserManager<ApplicationUser>>(
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
-        _signInManager = new Mock<SignInManager<ApplicationUser>>(
-            _userManager.Object,
-            new Mock<IHttpContextAccessor>().Object,
-            new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>().Object,
-            null!, null!, null!, null!);
-
         _userManager.Setup(m => m.FindByEmailAsync(Email)).ReturnsAsync(_user);
         _userManager.Setup(m => m.DeleteAsync(_user)).ReturnsAsync(IdentityResult.Success);
         _connectionManager.Setup(c => c.GetConnections(Email)).Returns(Array.Empty<string>());
 
         _service = new AccountDeletionService(
             _userManager.Object,
-            _signInManager.Object,
             _openFinance.Object,
             _notifications.Object,
             _sessions.Object,
@@ -60,20 +51,6 @@ public class AccountDeletionServiceTests
             _connectionManager.Object,
             NullLogger<AccountDeletionService>.Instance);
     }
-
-    private void PasswordCheckReturns(SignInResult result) =>
-        _signInManager
-            .Setup(s => s.CheckPasswordSignInAsync(_user, It.IsAny<string>(), true))
-            .ReturnsAsync(result);
-
-    private static DeleteAccountDto Dto(
-        string identifier = UserName, string password = "correct-horse", bool closeConnection = false)
-        => new()
-        {
-            UserNameOrEmail            = identifier,
-            Password                   = password,
-            CloseOpenFinanceConnection = closeConnection,
-        };
 
     private void AssertNothingDeleted()
     {
@@ -87,96 +64,47 @@ public class AccountDeletionServiceTests
     {
         _userManager.Setup(m => m.FindByEmailAsync("ghost@test.com")).ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _service.DeleteAsync("ghost@test.com", Dto());
+        var result = await _service.DeleteAsync("ghost@test.com");
 
         Assert.IsType<AccountDeletionResult.NotFoundResult>(result);
         AssertNothingDeleted();
     }
 
     [Fact]
-    public async Task DeleteAsync_IdentifierDoesNotMatchCaller_ReturnsInvalidAndSkipsPasswordCheck()
+    public async Task DeleteAsync_DeletesTheAccountTheJwtNames_NotOneNamedByTheCaller()
     {
-        var result = await _service.DeleteAsync(Email, Dto(identifier: "someone-else"));
-
-        Assert.IsType<AccountDeletionResult.InvalidCredentials>(result);
-        _signInManager.Verify(
-            s => s.CheckPasswordSignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<bool>()),
-            Times.Never);
-        AssertNothingDeleted();
-    }
-
-    [Theory]
-    [InlineData(UserName)]
-    [InlineData(Email)]
-    [InlineData("TESTER")]
-    [InlineData("  user@test.com  ")]
-    public async Task DeleteAsync_AcceptsEitherIdentifierRegardlessOfCaseOrPadding(string identifier)
-    {
-        PasswordCheckReturns(SignInResult.Success);
-
-        var result = await _service.DeleteAsync(Email, Dto(identifier: identifier));
+        // The only input is the caller's own email claim, so there is no parameter a caller
+        // could aim at another account. This asserts the account looked up is that one.
+        var result = await _service.DeleteAsync(Email);
 
         Assert.IsType<AccountDeletionResult.Success>(result);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_WrongPassword_ReturnsInvalid()
-    {
-        PasswordCheckReturns(SignInResult.Failed);
-
-        var result = await _service.DeleteAsync(Email, Dto());
-
-        Assert.IsType<AccountDeletionResult.InvalidCredentials>(result);
-        AssertNothingDeleted();
-    }
-
-    [Fact]
-    public async Task DeleteAsync_LockedOut_ReturnsLockedOut()
-    {
-        PasswordCheckReturns(SignInResult.LockedOut);
-
-        var result = await _service.DeleteAsync(Email, Dto());
-
-        Assert.IsType<AccountDeletionResult.LockedOut>(result);
-        AssertNothingDeleted();
+        _userManager.Verify(m => m.FindByEmailAsync(Email), Times.Once);
+        _userManager.Verify(m => m.DeleteAsync(_user), Times.Once);
     }
 
     [Fact]
     public async Task DeleteAsync_OpenFinanceUnreachable_DeletesNothing()
     {
-        PasswordCheckReturns(SignInResult.Success);
         _openFinance
             .Setup(o => o.CloseAllConnectionsAsync(Email, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("provider down"));
 
-        var result = await _service.DeleteAsync(Email, Dto(closeConnection: true));
+        var result = await _service.DeleteAsync(Email);
 
         Assert.IsType<AccountDeletionResult.OpenFinanceFailed>(result);
         AssertNothingDeleted();
     }
 
     [Fact]
-    public async Task DeleteAsync_WithoutClosingConnection_LeavesOpenFinanceAlone()
-    {
-        PasswordCheckReturns(SignInResult.Success);
-
-        var result = await _service.DeleteAsync(Email, Dto(closeConnection: false));
-
-        Assert.IsType<AccountDeletionResult.Success>(result);
-        _openFinance.Verify(
-            o => o.CloseAllConnectionsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-        _userManager.Verify(m => m.DeleteAsync(_user), Times.Once);
-    }
-
-    [Fact]
     public async Task DeleteAsync_Success_PurgesEveryCollectionKeyedToTheUser()
     {
-        PasswordCheckReturns(SignInResult.Success);
         _connectionManager.Setup(c => c.GetConnections(Email)).Returns(new[] { "conn-1", "conn-2" });
 
-        var result = await _service.DeleteAsync(Email, Dto(closeConnection: true));
+        var result = await _service.DeleteAsync(Email);
 
         Assert.IsType<AccountDeletionResult.Success>(result);
+
+        // Never conditional: choosing to keep the bank connection is not an option the user has.
         _openFinance.Verify(o => o.CloseAllConnectionsAsync(Email, It.IsAny<CancellationToken>()), Times.Once);
 
         // Notifications are keyed by email, refresh tokens by the Identity id — using one value
@@ -198,11 +126,10 @@ public class AccountDeletionServiceTests
     [Fact]
     public async Task DeleteAsync_IdentityRefusesTheDelete_Throws()
     {
-        PasswordCheckReturns(SignInResult.Success);
         _userManager
             .Setup(m => m.DeleteAsync(_user))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "concurrency failure" }));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.DeleteAsync(Email, Dto()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.DeleteAsync(Email));
     }
 }

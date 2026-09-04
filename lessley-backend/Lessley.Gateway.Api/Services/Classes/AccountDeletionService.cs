@@ -7,7 +7,6 @@ namespace Lessley.Gateway.Api.Services.Classes;
 public class AccountDeletionService : IAccountDeletionService
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IOpenFinanceService _openFinanceService;
     private readonly INotificationRepository _notifications;
     private readonly IAuthSessionService _sessions;
@@ -18,7 +17,6 @@ public class AccountDeletionService : IAccountDeletionService
 
     public AccountDeletionService(
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
         IOpenFinanceService openFinanceService,
         INotificationRepository notifications,
         IAuthSessionService sessions,
@@ -28,7 +26,6 @@ public class AccountDeletionService : IAccountDeletionService
         ILogger<AccountDeletionService> logger)
     {
         _userManager          = userManager;
-        _signInManager        = signInManager;
         _openFinanceService   = openFinanceService;
         _notifications        = notifications;
         _sessions             = sessions;
@@ -38,48 +35,26 @@ public class AccountDeletionService : IAccountDeletionService
         _logger               = logger;
     }
 
-    public async Task<AccountDeletionResult> DeleteAsync(
-        string callerEmail, DeleteAccountDto dto, CancellationToken ct = default)
+    public async Task<AccountDeletionResult> DeleteAsync(string callerEmail, CancellationToken ct = default)
     {
+        // Who is deleted comes from the JWT and only from the JWT, so a caller can never do
+        // anything here but delete themselves. The confirmation the user types is a client-side
+        // speed bump against a stray click — it is deliberately not part of this contract.
         var user = await _userManager.FindByEmailAsync(callerEmail);
         if (user is null)
             return AccountDeletionResult.NotFound();
 
-        // The identifier decides nothing about *who* is deleted — that is the JWT's email, so a
-        // caller can only ever delete themselves. It is a deliberate speed bump: typing your own
-        // name is what separates "I meant this" from a stray click on someone else's session.
-        var identifier = dto.UserNameOrEmail.Trim();
-        var identifierMatches =
-            string.Equals(identifier, user.UserName, StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(identifier, user.Email,    StringComparison.OrdinalIgnoreCase);
-
-        if (!identifierMatches)
-        {
-            _logger.LogWarning("Account deletion rejected: the identifier did not match the caller");
-            return AccountDeletionResult.Invalid();
-        }
-
-        // Same check password login runs (AuthController.Login), so these attempts count toward
-        // the configured lockout instead of giving this endpoint an unmetered password oracle.
-        var signIn = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: true);
-        if (signIn.IsLockedOut)
-            return AccountDeletionResult.Locked();
-        if (!signIn.Succeeded)
-            return AccountDeletionResult.Invalid();
-
         // Nothing has been deleted yet, and nothing is until the bank consent is settled: a live
         // Open Finance connection must never outlive the only account that could revoke it.
-        if (dto.CloseOpenFinanceConnection)
+        // Closing is unconditional — deleting the account means deleting the connection with it.
+        try
         {
-            try
-            {
-                await _openFinanceService.CloseAllConnectionsAsync(callerEmail, ct);
-            }
-            catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
-            {
-                _logger.LogError(ex, "Could not close the Open Finance connections; account left intact");
-                return AccountDeletionResult.OpenFinance(ex.Message);
-            }
+            await _openFinanceService.CloseAllConnectionsAsync(callerEmail, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            _logger.LogError(ex, "Could not close the Open Finance connections; account left intact");
+            return AccountDeletionResult.OpenFinance(ex.Message);
         }
 
         await PurgeUserDataAsync(user, ct);
@@ -95,9 +70,7 @@ public class AccountDeletionService : IAccountDeletionService
                 string.Join(" ", deleted.Errors.Select(e => e.Description)));
         }
 
-        _logger.LogInformation(
-            "Account deleted (open finance connections closed: {ClosedConnections})",
-            dto.CloseOpenFinanceConnection);
+        _logger.LogInformation("Account deleted along with its Open Finance connections");
 
         return AccountDeletionResult.Ok();
     }

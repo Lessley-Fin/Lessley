@@ -66,37 +66,27 @@ public class UserController : ControllerBase
 
     /// <summary>Permanently deletes the authenticated user's account.</summary>
     /// <remarks>
-    /// Requires the caller's own username/email and password. Set
-    /// <c>closeOpenFinanceConnection</c> to also revoke their bank consent — if that revoke
-    /// fails, nothing is deleted and the account is left intact so the caller can retry.
+    /// Takes no body: the account deleted is the one in the JWT. The bank consent always goes
+    /// with it — if that revoke fails, nothing is deleted and the account is left intact so the
+    /// caller can retry. The confirmation the user types is checked in the client only.
     /// </remarks>
     [HttpDelete("me")]
-    // This action takes a password, so it belongs on the stricter auth bucket rather than the
-    // general per-user one — 10 attempts/minute per IP.
+    // Irreversible and fans out to the Open Finance provider, so it belongs on the stricter auth
+    // bucket rather than the general per-user one — 10 attempts/minute per IP.
     [EnableRateLimiting("auth")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status423Locked)]
     [ProducesResponseType(StatusCodes.Status502BadGateway)]
-    public async Task<IActionResult> DeleteMyAccount([FromBody] DeleteAccountDto dto, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteMyAccount(CancellationToken ct = default)
     {
-        var result = await _userService.DeleteMyAccountAsync(CallerEmail(), dto, ct);
+        var result = await _userService.DeleteMyAccountAsync(CallerEmail(), ct);
 
-        // Bad credentials answer 400, never 401: the SPA treats a 401 as an expired session and
-        // signs the user out, so a mistyped password on this form would end the session instead
-        // of showing an error.
         return result switch
         {
             AccountDeletionResult.Success => ClearCookiesAndReportDeleted(),
             AccountDeletionResult.NotFoundResult
                 => NotFound(new { detail = "User not found" }),
-            AccountDeletionResult.InvalidCredentials
-                => BadRequest(new { detail = "Invalid credentials" }),
-            AccountDeletionResult.LockedOut
-                => StatusCode(StatusCodes.Status423Locked,
-                    new { detail = "Account temporarily locked due to repeated failed attempts. Try again later." }),
             AccountDeletionResult.OpenFinanceFailed
                 => StatusCode(StatusCodes.Status502BadGateway,
                     new { detail = "Could not close the bank connection. Nothing was deleted — please try again." }),

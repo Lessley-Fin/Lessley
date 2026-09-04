@@ -35,14 +35,6 @@ interface ConnectionInitResponse {
   connectionId: string
 }
 
-export interface DeleteAccountRequest {
-  /** The caller's own username or email — confirmation, not identity: the server uses the session. */
-  userNameOrEmail: string
-  password: string
-  /** Also revoke the Open Finance bank consent, not just the Lessley account. */
-  closeOpenFinanceConnection: boolean
-}
-
 export async function fetchMyProfile(): Promise<MeResponse> {
   return apiFetch<MeResponse>("/api/v1/User/me")
 }
@@ -60,16 +52,13 @@ export async function initOpenFinanceConnection(): Promise<ConnectionInitRespons
 }
 
 /**
- * Permanently deletes the signed-in account. Answers 204 with the auth cookies cleared.
+ * Permanently deletes the signed-in account, along with its bank connection. Answers 204 with
+ * the auth cookies cleared.
  *
- * Failures are told apart by status, not by message: 400 is bad credentials (deliberately
- * never 401, which apiFetch would read as an expired session and sign the user out), 423 is
- * the lockout, and 502 means the bank connection could not be closed and *nothing* was deleted.
+ * Sends no body on purpose: the account deleted is the one in the session, and the confirmation
+ * the user types is checked here in the client. A 502 means the bank connection could not be
+ * closed and *nothing* was deleted.
  */
-export async function deleteMyAccount(body: DeleteAccountRequest): Promise<void> {
-  return apiFetch<void>("/api/v1/User/me", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
+export async function deleteMyAccount(): Promise<void> {
+  return apiFetch<void>("/api/v1/User/me", { method: "DELETE" })
 }

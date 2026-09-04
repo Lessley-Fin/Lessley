@@ -291,24 +291,8 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
 
     // ── DELETE /api/user/me ───────────────────────────────────────────────────
 
-    /// <summary>
-    /// The body exactly as the SPA sends it (features/user/api.ts) — camelCase, and the
-    /// identifier as confirmation rather than as identity.
-    /// </summary>
-    private static HttpRequestMessage DeleteAccountRequest(
-        string userNameOrEmail, string password, bool closeConnection = false)
-        => new(HttpMethod.Delete, "api/user/me")
-        {
-            Content = JsonContent.Create(new
-            {
-                userNameOrEmail,
-                password,
-                closeOpenFinanceConnection = closeConnection,
-            }),
-        };
-
     [Fact]
-    public async Task DeleteMyAccount_WithOwnCredentials_RemovesTheUser()
+    public async Task DeleteMyAccount_RemovesTheUserAndClosesTheBankConnection()
     {
         var email = await CreateUserAsync();
         var token = NotificationE2ETests.BuildJwt("delete-me", "Viewer", email);
@@ -316,9 +300,11 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
-        var response = await http.SendAsync(DeleteAccountRequest(email, "Test1234!"));
+        // No body at all — exactly what the SPA sends (features/user/api.ts).
+        var response = await http.DeleteAsync("api/user/me");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Contains(email, _factory.OpenFinance.ClosedFor);
 
         using var scope = _factory.Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -326,28 +312,9 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     }
 
     [Fact]
-    public async Task DeleteMyAccount_WrongPassword_Returns400AndKeepsTheAccount()
+    public async Task DeleteMyAccount_DeletesTheTokensOwnAccount_NotOneNamedInABody()
     {
-        // Deliberately not 401: the SPA reads a 401 as an expired session and signs the user
-        // out, so a mistyped password would end the session instead of showing an error.
-        var email = await CreateUserAsync();
-        var token = NotificationE2ETests.BuildJwt("delete-wrong-pw", "Viewer", email);
-
-        using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
-
-        var response = await http.SendAsync(DeleteAccountRequest(email, "NotMyPassword1!"));
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        using var scope = _factory.Services.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        Assert.NotNull(await userManager.FindByEmailAsync(email));
-    }
-
-    [Fact]
-    public async Task DeleteMyAccount_SomeoneElsesIdentifier_Returns400AndKeepsBothAccounts()
-    {
+        // A leftover body naming someone else must change nothing: identity is the JWT's email.
         var email      = await CreateUserAsync();
         var otherEmail = await CreateUserAsync();
         var token      = NotificationE2ETests.BuildJwt("delete-other", "Viewer", email);
@@ -355,14 +322,44 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
         using var http = _factory.CreateClient();
         http.DefaultRequestHeaders.Authorization = new("Bearer", token);
 
-        var response = await http.SendAsync(DeleteAccountRequest(otherEmail, "Test1234!"));
+        var request = new HttpRequestMessage(HttpMethod.Delete, "api/user/me")
+        {
+            Content = JsonContent.Create(new { userNameOrEmail = otherEmail }),
+        };
+        var response = await http.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        Assert.Null(await userManager.FindByEmailAsync(email));
+        Assert.NotNull(await userManager.FindByEmailAsync(otherEmail));
+    }
+
+    [Fact]
+    public async Task DeleteMyAccount_BankConnectionCannotBeClosed_Returns502AndKeepsTheAccount()
+    {
+        var email = await CreateUserAsync();
+        var token = NotificationE2ETests.BuildJwt("delete-of-down", "Viewer", email);
+
+        using var http = _factory.CreateClient();
+        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        _factory.OpenFinance.CloseFailure = new HttpRequestException("provider down");
+        try
+        {
+            var response = await http.DeleteAsync("api/user/me");
+
+            Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        }
+        finally
+        {
+            _factory.OpenFinance.CloseFailure = null;
+        }
 
         using var scope = _factory.Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         Assert.NotNull(await userManager.FindByEmailAsync(email));
-        Assert.NotNull(await userManager.FindByEmailAsync(otherEmail));
     }
 
     [Fact]
@@ -370,27 +367,9 @@ public class UserE2ETests : IClassFixture<GatewayWebApplicationFactory>
     {
         using var http = _factory.CreateClient();
 
-        var response = await http.SendAsync(DeleteAccountRequest("someone@test.com", "Test1234!"));
+        var response = await http.DeleteAsync("api/user/me");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task DeleteMyAccount_MissingPassword_Returns400()
-    {
-        var email = await CreateUserAsync();
-        var token = NotificationE2ETests.BuildJwt("delete-no-pw", "Viewer", email);
-
-        using var http = _factory.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new("Bearer", token);
-
-        var request = new HttpRequestMessage(HttpMethod.Delete, "api/user/me")
-        {
-            Content = JsonContent.Create(new { userNameOrEmail = email }),
-        };
-        var response = await http.SendAsync(request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

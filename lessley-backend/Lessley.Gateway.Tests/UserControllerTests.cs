@@ -84,18 +84,15 @@ public class UserControllerTests
 
     private void DeletionReturns(AccountDeletionResult result) =>
         _userService
-            .Setup(s => s.DeleteMyAccountAsync("user@test.com", It.IsAny<DeleteAccountDto>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.DeleteMyAccountAsync("user@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
-
-    private static DeleteAccountDto DeleteDto() =>
-        new() { UserNameOrEmail = "user@test.com", Password = "correct-horse" };
 
     [Fact]
     public async Task DeleteMyAccount_Success_Returns204AndClearsTheAuthCookies()
     {
         DeletionReturns(AccountDeletionResult.Ok());
 
-        var result = await _controller.DeleteMyAccount(DeleteDto());
+        var result = await _controller.DeleteMyAccount();
 
         Assert.IsType<NoContentResult>(result);
 
@@ -106,25 +103,16 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task DeleteMyAccount_InvalidCredentials_Returns400Never401()
+    public async Task DeleteMyAccount_TakesTheEmailFromTheJwtAndNothingElse()
     {
-        // A 401 here would be read by the SPA as an expired session and sign the user out,
-        // so a mistyped password has to stay a plain 400.
-        DeletionReturns(AccountDeletionResult.Invalid());
+        // The action has no body parameter at all, so the deleted account can only ever be the
+        // one the token names — asserted here so a "convenience" DTO cannot creep back in.
+        DeletionReturns(AccountDeletionResult.Ok());
 
-        var result = await _controller.DeleteMyAccount(DeleteDto());
+        await _controller.DeleteMyAccount();
 
-        Assert.IsType<BadRequestObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task DeleteMyAccount_LockedOut_Returns423()
-    {
-        DeletionReturns(AccountDeletionResult.Locked());
-
-        var result = await _controller.DeleteMyAccount(DeleteDto());
-
-        Assert.Equal(StatusCodes.Status423Locked, Assert.IsType<ObjectResult>(result).StatusCode);
+        _userService.Verify(
+            s => s.DeleteMyAccountAsync("user@test.com", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -132,7 +120,7 @@ public class UserControllerTests
     {
         DeletionReturns(AccountDeletionResult.OpenFinance("provider down"));
 
-        var result = await _controller.DeleteMyAccount(DeleteDto());
+        var result = await _controller.DeleteMyAccount();
 
         Assert.Equal(StatusCodes.Status502BadGateway, Assert.IsType<ObjectResult>(result).StatusCode);
     }
@@ -142,7 +130,7 @@ public class UserControllerTests
     {
         DeletionReturns(AccountDeletionResult.NotFound());
 
-        var result = await _controller.DeleteMyAccount(DeleteDto());
+        var result = await _controller.DeleteMyAccount();
 
         Assert.IsType<NotFoundObjectResult>(result);
     }

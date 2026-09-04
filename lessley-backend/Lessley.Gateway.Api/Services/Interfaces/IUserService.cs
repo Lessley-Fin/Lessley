@@ -28,9 +28,9 @@ public interface IUserService
     Task<UserOperationResult> GetMyConfigAsync(string email, CancellationToken ct = default);
 
     /// <summary>
-    /// Deletes the caller's own account, optionally revoking their Open Finance consent with it.
-    /// Returns its own result type — the outcomes here (wrong password, provider unreachable) map
-    /// to status codes <see cref="UserOperationResult"/> has no case for.
+    /// Deletes the caller's own account, revoking their Open Finance consent with it. Returns its
+    /// own result type — the outcome here (provider unreachable) maps to a status code
+    /// <see cref="UserOperationResult"/> has no case for.
     /// </summary>
-    Task<AccountDeletionResult> DeleteMyAccountAsync(string email, DeleteAccountDto dto, CancellationToken ct = default);
+    Task<AccountDeletionResult> DeleteMyAccountAsync(string email, CancellationToken ct = default);
 }

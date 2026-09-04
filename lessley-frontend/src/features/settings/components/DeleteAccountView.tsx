@@ -5,11 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { DeleteAccountDialog } from "./DeleteAccountDialog"
 
-interface DeleteAccountViewProps {
-  username: string
-}
-
-export function DeleteAccountView({ username }: DeleteAccountViewProps) {
+export function DeleteAccountView() {
   const { t } = useTranslation()
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -22,7 +18,7 @@ export function DeleteAccountView({ username }: DeleteAccountViewProps) {
         {t("settings.deleteAccount.deleteButton")}
       </Button>
 
-      <DeleteAccountDialog open={dialogOpen} onOpenChange={setDialogOpen} username={username} />
+      <DeleteAccountDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   )
 }

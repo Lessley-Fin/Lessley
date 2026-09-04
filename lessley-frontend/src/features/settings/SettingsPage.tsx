@@ -42,7 +42,7 @@ export function SettingsPage() {
             {view === "banking" ? <BankingView /> : null}
             {view === "language" ? <LanguageView /> : null}
             {view === "logout" ? <LogoutView username={profile.userName} /> : null}
-            {view === "deleteAccount" ? <DeleteAccountView username={profile.userName} /> : null}
+            {view === "deleteAccount" ? <DeleteAccountView /> : null}
           </>
         )}
       </div>
