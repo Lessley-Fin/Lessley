@@ -39,7 +39,7 @@ services:
     build:
       context: ../lessley-frontend
       dockerfile: Dockerfile
-    image: lessley/edge:1.0.5
+    image: lessley/edge:1.0.6
     container_name: caddy
     restart: always
     ports:
@@ -162,7 +162,7 @@ services:
 
   # --- Gateway (reached from the edge as gateway:5001, same as prod) ---
   gateway:
-    image: lessley/gateway:1.0.5
+    image: lessley/gateway:1.0.6
     container_name: gateway
     build:
       context: ../lessley-backend/Lessley.Gateway.Api
@@ -195,7 +195,7 @@ services:
       - OpenFinanceConfig__ClientSecret=${OpenFinanceConfig_ClientSecret}
       # Where the bank-linking journey returns the user. Without it Open Finance has nowhere
       # to send them and they never come back to the SPA. Same origin as the edge.
-      - OpenFinanceConfig__RedirectUrl=https://${DOMAIN:-localhost}/insights
+      - OpenFinanceConfig__RedirectUrl=https://${DOMAIN:-localhost}/optimizer
 
       # The Gateway never calls Personalization over HTTP. It only needs to recognise the
       # edge: Caddy stamps X-Edge-Key on every request it forwards here.
@@ -361,7 +361,7 @@ services:
 
   # --- Personalization (internal only; reached as personalization:5002, same as prod) ---
   personalization:
-    image: lessley/personalization:1.0.5
+    image: lessley/personalization:1.0.6
     container_name: personalization
     build:
       context: ../lessley-backend/Lessley.Personalization
@@ -407,7 +407,7 @@ services:
   # Reached by the SPA at /api/v1/optimizer/*, which Caddy forward_auths and proxies
   # here — the Gateway is not in that path.
   deal-optimizer:
-    image: lessley/deal-optimizer:1.0.5
+    image: lessley/deal-optimizer:1.0.6
     container_name: optimizer
     build:
       context: ../deal-optimizer
