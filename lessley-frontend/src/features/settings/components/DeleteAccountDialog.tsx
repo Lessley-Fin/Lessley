@@ -68,8 +68,10 @@ function DeleteAccountFlow({ onClose }: { onClose: () => void }) {
         <DialogDescription>{t("settings.deleteAccount.confirmTitle")}</DialogDescription>
       </DialogHeader>
 
-      <DialogBody>
-        <div className="space-y-3">
+      {/* `pb-2` keeps the input's focus ring off the scroll edge — without it the ring is clipped
+          the moment the body scrolls, and the field reads as sitting on top of the footer. */}
+      <DialogBody className="pb-2">
+        <div className="space-y-4">
           <ErrorAlert message={errorMessage} />
 
           <p className="text-sm text-foreground">{t("settings.deleteAccount.confirmBody")}</p>
@@ -100,7 +102,10 @@ function DeleteAccountFlow({ onClose }: { onClose: () => void }) {
         </div>
       </DialogBody>
 
-      <DialogFooter>
+      {/* A rule across the full dialog width (the negative margins mirror DialogContent's
+          responsive padding) so the confirmation field above and the destructive button below
+          read as two separate things rather than one stack of look-alike bars. */}
+      <DialogFooter className="-mx-4 border-t border-border px-4 pt-3 xs:-mx-6 xs:px-6 xs:pt-4">
         <Button
           type="button"
           variant="destructive"
