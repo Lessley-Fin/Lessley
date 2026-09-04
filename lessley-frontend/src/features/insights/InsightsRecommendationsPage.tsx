@@ -25,6 +25,7 @@ import { TopCategorySlide } from "./components/TopCategorySlide"
 import { TopStoresSlide } from "./components/TopStoresSlide"
 import { TransactionMixSlide } from "./components/TransactionMixSlide"
 import {
+  useCategoryBackfill,
   useCategoryInsights,
   useHasConnection,
   useInitOpenFinance,
@@ -60,6 +61,9 @@ export function InsightsRecommendationsPage() {
   const connected = isConnected === true
 
   const { data: profile } = useMyProfile()
+
+  // Onboarding can leave a new user with a linked bank and no categories; ask again from here.
+  useCategoryBackfill()
 
   // Not summed on the client. Falling back to originalAmount when the charge is blank counted
   // voucher purchases as money spent, and the rules for what a row is worth live in one place

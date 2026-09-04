@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuthStore } from "@/features/auth/store"
 import { queryKeys } from "@/lib/query-keys"
-import { deleteMyAccount, fetchMyProfile, initOpenFinanceConnection, patchMyProfile } from "./api"
+import { deleteMyAccount, fetchMyProfile, initOpenFinanceConnection, patchMyProfile, requestCategoryRecalculation } from "./api"
 
 export function useMyProfile() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -55,5 +55,18 @@ export function useDeleteAccount() {
       queryClient.clear()
       useAuthStore.getState().logout()
     },
+  })
+  }
+/**
+ * Queues a category recalculation.
+ *
+ * Deliberately does not invalidate the profile on success. The POST returns 202 while the tags
+ * are still being computed, published and persisted, so refetching here would read the same
+ * empty value straight back. The write announces itself over SignalR (`CategoriesUpdated`),
+ * and that handler is what refreshes the profile — see useSignalR.
+ */
+export function useRecalculateCategories() {
+  return useMutation({
+    mutationFn: requestCategoryRecalculation,
   })
 }
